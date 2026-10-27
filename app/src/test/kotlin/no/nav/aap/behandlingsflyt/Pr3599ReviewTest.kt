@@ -11,8 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringRegelsett
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilGammeltFormat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somFasetidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.erFunksjoneltLik
@@ -130,7 +129,7 @@ class Pr3599ReviewTest {
         val (_, behandling) = opprettInMemorySakOgBehandling(start.minusDays(4))
         val vurdering = dto(fase = null).copy(virksomhetErNy = false)
             .toEtableringEgenVirksomhetVurdering(Bruker("saks"), behandling.id)
-        assertThat(vurdering.regelsett).isEqualTo(EtableringRegelsett.FASEBASERT)
+        assertThat(vurdering.versjon).isEqualTo(EtableringVersjon.V1)
     }
 
     @Test
@@ -152,7 +151,7 @@ class Pr3599ReviewTest {
                     .toEtableringEgenVirksomhetVurdering(Bruker("saks"), behandlingId)
                     .copy(
                         utviklingsPerioder = listOf(Periode(start, start.plusDays(4))),
-                        regelsett = EtableringRegelsett.LEGACY,
+                        versjon = EtableringVersjon.V0,
                     )
                 provider.provide<EtableringEgenVirksomhetRepository>().lagre(behandlingId, listOf(gammel))
                 val dbService = EtableringEgenVirksomhetService(provider)
@@ -184,7 +183,7 @@ class Pr3599ReviewTest {
         val periode = Periode(start, start.plusDays(200))
         val gammel = dto(fase = null, tom = periode.tom)
             .toEtableringEgenVirksomhetVurdering(Bruker("saks"), forrige.id)
-            .copy(utviklingsPerioder = listOf(periode), regelsett = EtableringRegelsett.LEGACY)
+            .copy(utviklingsPerioder = listOf(periode), versjon = EtableringVersjon.V0)
         InMemoryEtableringEgenVirksomRepository.lagre(forrige.id, listOf(gammel))
         val response = EtableringEgenVirksomhetVurderingResponse.fraDomene(
             gammel,
@@ -270,7 +269,7 @@ class Pr3599ReviewTest {
             InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(behandling.id)
         ).vurderinger.single()
         assertThat(lagret.tom).isEqualTo(tom)
-        assertThat(lagret.regelsett).isEqualTo(EtableringRegelsett.LEGACY)
+        assertThat(lagret.versjon).isEqualTo(EtableringVersjon.V0)
     }
 
     @Test
@@ -319,12 +318,12 @@ class Pr3599ReviewTest {
                 oppstartsPerioder = listOf(Periode(start.plusDays(7), start.plusDays(11))),
                 jobberBrukerAktivMedVirksomheten = null,
                 erRegistrertINødvendigeOffentligeRegister = null,
-                regelsett = EtableringRegelsett.LEGACY,
+                versjon = EtableringVersjon.V0,
             )
         val migrerte = listOf(gammel).tilNyttFormat()
         assertThat(migrerte.map { it.evaluerVirksomhetVurdering() }).containsExactly(true, true)
         assertThat(migrerte).allSatisfy {
-            assertThat(it.regelsett).isEqualTo(EtableringRegelsett.LEGACY)
+            assertThat(it.versjon).isEqualTo(EtableringVersjon.V0)
             assertThat(it.jobberBrukerAktivMedVirksomheten).isNull()
             assertThat(it.erRegistrertINødvendigeOffentligeRegister).isNull()
         }

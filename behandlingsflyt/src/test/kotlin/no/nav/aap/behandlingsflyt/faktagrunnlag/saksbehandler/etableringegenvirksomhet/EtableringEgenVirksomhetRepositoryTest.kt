@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -33,8 +32,8 @@ class EtableringEgenVirksomhetRepositoryTest {
     }
 
     @ParameterizedTest
-    @EnumSource(EtableringRegelsett::class)
-    fun `lagrer og henter vurderinger riktig`(regelsett: EtableringRegelsett) {
+    @EnumSource(EtableringVersjon::class)
+    fun `lagrer og henter vurderinger riktig`(versjon: EtableringVersjon) {
         dataSource.transaction { connection ->
             val repository = EtableringEgenVirksomhetRepositoryImpl(connection)
             val sak = sak(connection)
@@ -59,18 +58,18 @@ class EtableringEgenVirksomhetRepositoryTest {
                     fase = null,
                     erRegistrertINødvendigeOffentligeRegister = null,
                     jobberBrukerAktivMedVirksomheten = null,
-                    regelsett = regelsett,
+                    versjon = versjon,
                 )
 
             repository.lagre(behandling.id, listOf(vurdering))
 
-            val lagredeRegelsett = connection.queryList(
-                "SELECT regelsett FROM etablering_egen_virksomhet_vurdering WHERE vurdert_i_behandling = ?"
+            val lagredeVersjoner = connection.queryList(
+                "SELECT versjon FROM etablering_egen_virksomhet_vurdering WHERE vurdert_i_behandling = ?"
             ) {
                 setParams { setLong(1, behandling.id.id) }
-                setRowMapper { it.getString("regelsett") }
+                setRowMapper { it.getString("versjon") }
             }
-            assertThat(lagredeRegelsett).containsExactly(regelsett.name)
+            assertThat(lagredeVersjoner).containsExactly(versjon.name)
 
             val actual = repository.hentHvisEksisterer(behandling.id)
             assertThat(actual?.vurderinger)
@@ -86,12 +85,12 @@ class EtableringEgenVirksomhetRepositoryTest {
                 .isEqualTo(listOf(vurdering))
 
             connection.execute(
-                "UPDATE etablering_egen_virksomhet_vurdering SET regelsett = DEFAULT WHERE vurdert_i_behandling = ?"
+                "UPDATE etablering_egen_virksomhet_vurdering SET versjon = DEFAULT WHERE vurdert_i_behandling = ?"
             ) {
                 setParams { setLong(1, behandling.id.id) }
             }
-            assertThat(repository.hentHvisEksisterer(behandling.id)?.vurderinger?.single()?.regelsett)
-                .isEqualTo(EtableringRegelsett.LEGACY)
+            assertThat(repository.hentHvisEksisterer(behandling.id)?.vurderinger?.single()?.versjon)
+                .isEqualTo(EtableringVersjon.V0)
         }
     }
 
@@ -120,7 +119,8 @@ class EtableringEgenVirksomhetRepositoryTest {
                         kanFøreTilSelvforsørget = true,
                         fase = EtableringFase.OPPSTART,
                         erRegistrertINødvendigeOffentligeRegister = true,
-                        jobberBrukerAktivMedVirksomheten = true
+                        jobberBrukerAktivMedVirksomheten = true,
+                        versjon = EtableringVersjon.V0,
                     )
                 )
             )

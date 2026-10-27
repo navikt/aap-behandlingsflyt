@@ -30,7 +30,7 @@ data class EtableringEgenVirksomhetVurdering(
     val fase: EtableringFase?,
     val erRegistrertINødvendigeOffentligeRegister: Boolean?,
     val jobberBrukerAktivMedVirksomheten: Boolean?,
-    val regelsett: EtableringRegelsett = EtableringRegelsett.LEGACY,
+    val versjon: EtableringVersjon,
 ) : PeriodisertVurdering {
     fun evaluerVirksomhetVurdering(): Boolean {
         val grunnvilkårOppfylt = virksomhetErNy == true && kanFøreTilSelvforsørget == true &&
@@ -38,9 +38,9 @@ data class EtableringEgenVirksomhetVurdering(
             EierVirksomhet.EIER_MINST_50_PROSENT,
             EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
         )
-        return when (regelsett) {
-            EtableringRegelsett.LEGACY -> grunnvilkårOppfylt
-            EtableringRegelsett.FASEBASERT -> grunnvilkårOppfylt &&
+        return when (versjon) {
+            EtableringVersjon.V0 -> grunnvilkårOppfylt
+            EtableringVersjon.V1 -> grunnvilkårOppfylt &&
                     jobberBrukerAktivMedVirksomheten == true && when (fase) {
                 EtableringFase.UTVIKLING -> true
                 EtableringFase.OPPSTART -> erRegistrertINødvendigeOffentligeRegister == true
@@ -130,9 +130,10 @@ enum class EierVirksomhet {
     NEI
 }
 
-enum class EtableringRegelsett {
-    LEGACY,
-    FASEBASERT,
+enum class EtableringVersjon {
+    /** Grunnvilkårene alene avgjør utfallet, også etter oppdeling i faser. */
+    V0,
+    V1,
 }
 
 enum class EtableringFase(val maksHverdager: Int) {
@@ -158,6 +159,6 @@ fun List<EtableringEgenVirksomhetVurdering>.erFunksjoneltLik(other: List<Etabler
                 a.fase == b.fase &&
                 a.erRegistrertINødvendigeOffentligeRegister == b.erRegistrertINødvendigeOffentligeRegister &&
                 a.jobberBrukerAktivMedVirksomheten == b.jobberBrukerAktivMedVirksomheten &&
-                a.regelsett == b.regelsett
+                a.versjon == b.versjon
     }
 }

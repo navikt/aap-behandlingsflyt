@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringRegelsett
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tellDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -50,7 +50,7 @@ class EtableringEgenVirksomhetServiceTest {
             fom = LocalDate.now().plusDays(1),
             tom = null,
             fase = EtableringFase.UTVIKLING,
-            regelsett = EtableringRegelsett.FASEBASERT,
+            versjon = EtableringVersjon.V1,
         )
         val førsteBeregning = assertInstanceOf(
             VirksomhetEtableringResultat.Gyldig::class.java,
@@ -91,6 +91,7 @@ class EtableringEgenVirksomhetServiceTest {
             fase = null,
             erRegistrertINødvendigeOffentligeRegister = null,
             jobberBrukerAktivMedVirksomheten = null,
+            versjon = EtableringVersjon.V0,
         )
         val service = EtableringEgenVirksomhetService(
             InMemoryEtableringEgenVirksomRepository,

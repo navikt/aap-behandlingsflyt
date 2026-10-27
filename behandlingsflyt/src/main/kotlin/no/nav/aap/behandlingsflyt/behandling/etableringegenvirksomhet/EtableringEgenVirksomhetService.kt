@@ -4,7 +4,7 @@ package no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringRegelsett
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.TilOgMedBeregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.antallHverdagerIFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.beregnTomForSistePeriode
@@ -243,11 +243,11 @@ private fun validerSvar(
     vurderinger.firstNotNullOfOrNull { vurdering ->
         val fase = vurdering.fase
         when {
-            vurdering.regelsett == EtableringRegelsett.LEGACY && fase == null &&
+            vurdering.versjon == EtableringVersjon.V0 && fase == null &&
                     vurdering.evaluerVirksomhetVurdering() && vurdering.utviklingsPerioder.isEmpty() &&
                     vurdering.oppstartsPerioder.isEmpty() ->
                 VirksomhetEtableringResultat.Ugyldig.KreverPeriodeHvisVilkårOppfylt
-            vurdering.regelsett == EtableringRegelsett.LEGACY || fase == null -> null
+            vurdering.versjon == EtableringVersjon.V0 || fase == null -> null
             vurdering.jobberBrukerAktivMedVirksomheten == null ->
                 VirksomhetEtableringResultat.Ugyldig.MåOppgiOmBrukerJobberAktivt
             else -> validerOppstartRegistrering(fase, vurdering)
@@ -258,7 +258,7 @@ private fun validerOppstartRegistrering(
     fase: EtableringFase,
     vurdering: EtableringEgenVirksomhetVurdering
 ): VirksomhetEtableringResultat.Ugyldig.MåOppgiRegistrertIOffentligeRegister? {
-    if (fase != EtableringFase.OPPSTART || vurdering.regelsett == EtableringRegelsett.LEGACY) return null
+    if (fase != EtableringFase.OPPSTART || vurdering.versjon == EtableringVersjon.V0) return null
     return if (vurdering.erRegistrertINødvendigeOffentligeRegister != true) {
         VirksomhetEtableringResultat.Ugyldig.MåOppgiRegistrertIOffentligeRegister
     } else null

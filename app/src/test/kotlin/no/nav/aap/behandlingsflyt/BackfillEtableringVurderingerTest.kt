@@ -16,7 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringRegelsett
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilGammeltFormat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
@@ -78,7 +78,7 @@ class BackfillEtableringVurderingerTest {
                 repository.lagre(behandlingId, listOf(gammel))
                 repository.lagre(
                     behandlingId,
-                    listOf(gammel.copy(begrunnelse = "Ny vurdering", regelsett = EtableringRegelsett.FASEBASERT))
+                    listOf(gammel.copy(begrunnelse = "Ny vurdering", versjon = EtableringVersjon.V1))
                 )
                 behandlingId
             }
@@ -103,9 +103,9 @@ class BackfillEtableringVurderingerTest {
                         assertThat(it.fase).isNotNull()
                         assertThat(it.utviklingsPerioder).isEmpty()
                         assertThat(it.oppstartsPerioder).isEmpty()
-                        assertThat(it.regelsett).isEqualTo(
-                            if (it.begrunnelse == "Ny vurdering") EtableringRegelsett.FASEBASERT
-                            else EtableringRegelsett.LEGACY
+                        assertThat(it.versjon).isEqualTo(
+                            if (it.begrunnelse == "Ny vurdering") EtableringVersjon.V1
+                            else EtableringVersjon.V0
                         )
                         assertThat(it.jobberBrukerAktivMedVirksomheten).isNull()
                         assertThat(it.erRegistrertINødvendigeOffentligeRegister).isNull()
@@ -885,6 +885,7 @@ class BackfillEtableringVurderingerTest {
         fase = fase,
         erRegistrertINødvendigeOffentligeRegister = erRegistrert,
         jobberBrukerAktivMedVirksomheten = null,
+        versjon = EtableringVersjon.V0,
     )
 
     private fun opprettBehandling(): BehandlingId = dataSource.transaction { connection ->
