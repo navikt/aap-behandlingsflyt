@@ -476,10 +476,10 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `førstegangsbehandling med barnetillegg for oppgitte, registrerte og saksbehandler-oppgitte barn`() {
         val periode = Periode(LocalDate.of(2026, 1, 1), Tid.MAKS)
-        val oppgitteBarn = lagTestPerson("Tone", "Dovendyr", LocalDate.now().minusYears(9))
+        val oppgitteBarn = lagTestPerson("Tone", "Dovendyr", periode.fom.minusYears(9))
         val fraDatoOppgitteBarn = periode.fom
-        val fraDatoRegisterBarn = LocalDate.now().plusMonths(1).plusDays(12)
-        val fraDatoSaksbehandlerOppgitteBarn = LocalDate.now().plusMonths(2).plusDays(5)
+        val fraDatoRegisterBarn = periode.fom.plusMonths(1).plusDays(12)
+        val fraDatoSaksbehandlerOppgitteBarn = periode.fom.plusMonths(1).plusDays(13)
 
         val søknadMedOppgittBarn = TestSøknader.SØKNAD_MED_BARN(
             listOf(
@@ -490,9 +490,15 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             )
         )
 
-        val registerBarn = lagTestPerson("Jenny", "Løvland", LocalDate.now().minusYears(7))
+        val registerBarn = lagTestPerson("Jenny", "Løvland", periode.fom.minusYears(7))
         val registerBarnIdent = ident()
-        val personMedRegistrerteBarn = TestPersoner.STANDARD_PERSON().medBarn(
+        val personMedRegistrerteBarn = FakePersoner.leggTil(
+            TestPerson(
+                fødselsdato = Fødselsdato(periode.fom.minusYears(30)),
+                yrkesskade = emptyList(),
+                sykepenger = emptyList()
+            )
+        ).medBarn(
             listOf(
                 TestPerson(
                     identer = setOf(registerBarnIdent),
@@ -501,7 +507,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                 )
             )
         )
-        val saksbehandlerOppgitteBarn = lagTestPerson("Fornuftig", "Bukk", LocalDate.now().minusYears(3))
+        val saksbehandlerOppgitteBarn = lagTestPerson("Fornuftig", "Bukk", periode.fom.minusYears(3))
 
         val saksbehandlerOppgitteBarnVurderteBarnDto = VurdertBarnDto(
             ident = saksbehandlerOppgitteBarn.identer.first().identifikator,
@@ -1182,7 +1188,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                 FastsettBeregningstidspunktLøsning(
                     beregningVurdering = BeregningstidspunktVurderingDto(
                         begrunnelse = "Trenger hjelp fra Nav",
-                        nedsattArbeidsevneDato = LocalDate.now(),
+                        nedsattArbeidsevneDato = fraDato,
                         ytterligereNedsattArbeidsevneDato = null,
                         ytterligereNedsattBegrunnelse = null
                     ),
