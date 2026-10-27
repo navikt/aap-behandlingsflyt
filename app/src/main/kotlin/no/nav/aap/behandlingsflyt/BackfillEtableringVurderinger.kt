@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilGammeltFormat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -17,6 +19,12 @@ import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("no.nav.aap.behandlingsflyt.BackfillEtableringVurderinger")
 private val teamLogs = LoggerFactory.getLogger("team-logs")
+
+private fun List<Migreringssteg>.vurderingsutfall() =
+    flatMap { it.vurderingerEtterMigrering }
+        .gjeldendeVurderinger()
+        .mapValue { it.fase to it.evaluerVirksomhetVurdering() }
+        .komprimer().segmenter().map { it.periode to it.verdi }
 
 /** Deler historiske etableringsvurderinger opp i én vurdering per periode. */
 class BackfillEtableringVurderinger(
@@ -215,7 +223,9 @@ class BackfillEtableringVurderinger(
                 if (vurdering.fase != null) vurdering.tilGammeltFormat() else vurdering
             }
             val varighetFør = varighet(før)
-            val valideringsresultatFør = service.erVurderingerGyldig(behandlingId, før)
+            val valideringsfeilFør =
+                service.erVurderingerGyldig(behandlingId, før) as? VirksomhetEtableringResultat.Ugyldig
+            val forventetUtfall = migreringsplan.vurderingsutfall()
             migreringsplan.filter { it.skalErstattes }.forEach { steg ->
                 val vurderingerGruppeId = connection.hentVurderingerGruppeId(steg.vurderingId)
                 steg.oppdaterteVurderinger.forEach { oppdatertVurdering ->
@@ -223,14 +233,20 @@ class BackfillEtableringVurderinger(
                 }
                 slettVurdering(connection, steg.vurderingId)
             }
-            val etter = this.vurderinger(connection, grunnlagId).map { (_, vurdering) ->
+            val vurderingerEtter = this.vurderinger(connection, grunnlagId)
+            val etter = vurderingerEtter.map { (_, vurdering) ->
                 if (vurdering.fase != null) vurdering.tilGammeltFormat() else vurdering
             }
             check(varighetFør == varighet(etter)) {
                 "Varighet endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }
-            check(valideringsresultatFør == service.erVurderingerGyldig(behandlingId, etter)) {
+            val valideringsfeilEtter =
+                service.erVurderingerGyldig(behandlingId, etter) as? VirksomhetEtableringResultat.Ugyldig
+            check(valideringsfeilFør == valideringsfeilEtter) {
                 "Valideringsresultat endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
+            }
+            check(forventetUtfall == lagMigreringsplan(vurderingerEtter).vurderingsutfall()) {
+                "Vurderingsutfall endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }
         }
     }
