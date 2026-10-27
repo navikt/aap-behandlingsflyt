@@ -59,6 +59,72 @@ class BackfillEtableringVurderingerTest {
     }
 
     @Test
+    fun `migrering committer når validering før og etter er gyldig`() {
+        val behandlingId = opprettBehandling()
+        val legacy = vurdering(
+            behandlingId,
+            fom = 7 januar 2025,
+            tom = 16 januar 2025,
+            utviklingsPerioder = listOf(Periode(7 januar 2025, 16 januar 2025)),
+            virksomhetErNy = true,
+        )
+        lagre(behandlingId, legacy)
+        dataSource.transaction { connection ->
+            val provider = postgresRepositoryRegistry.provider(connection)
+            provider.provide<SykdomRepository>().lagre(
+                behandlingId, listOf(
+                    Sykdomsvurdering(
+                        begrunnelse = "Oppfylt før etableringen",
+                        vurderingenGjelderFra = 6 januar 2025,
+                        vurderingenGjelderTil = null,
+                        harSkadeSykdomEllerLyte = true,
+                        harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
+                        erSkadeSykdomEllerLyteVesentligdel = true,
+                        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
+                        yrkesskadeBegrunnelse = null,
+                        diagnose = null,
+                        vurdertIBehandling = behandlingId,
+                        opprettet = Instant.now(),
+                        vurdertAv = Bruker("saks"),
+                    )
+                )
+            )
+            provider.provide<BistandRepository>().lagre(
+                behandlingId, listOf(
+                    Bistandsvurdering(
+                        begrunnelse = "Oppfylt før etableringen",
+                        erBehovForAktivBehandling = true,
+                        erBehovForArbeidsrettetTiltak = true,
+                        erBehovForAnnenOppfølging = false,
+                        overgangBegrunnelse = null,
+                        skalVurdereAapIOvergangTilArbeid = false,
+                        vurdertAv = Bruker("saks"),
+                        fom = 6 januar 2025,
+                        tom = null,
+                        opprettet = Instant.now(),
+                        vurdertIBehandling = behandlingId,
+                    )
+                )
+            )
+            val service = EtableringEgenVirksomhetService(provider)
+            assertThat(service.beregnOgValider(behandlingId, listOf(legacy)))
+                .isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
+            assertThat(
+                service.beregnOgValider(behandlingId, listOf(legacy).tilNyttFormat().map { it.tilGammeltFormat() })
+            ).isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
+        }
+
+        repeat(2) {
+            migrer(behandlingId)
+
+            val lagret = hentVurderinger(behandlingId)
+            assertThat(lagret).usingRecursiveComparison().isEqualTo(listOf(legacy).tilNyttFormat())
+            assertThat(varighet(lagret)).isEqualTo(varighet(listOf(legacy)))
+        }
+    }
+
+    @Test
     fun `splitter hver periode i egen vurdering med fase`() {
         //                       |des      |jan      |feb      |mar
         // FØR
