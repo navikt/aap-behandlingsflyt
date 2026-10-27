@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService.Companion.ANTALL_ÅRLIGE_ARBEIDSDAGER
@@ -14,6 +13,7 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
@@ -38,14 +38,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
-import no.nav.aap.meldeplikt.MeldepliktGrunnlag
-import no.nav.aap.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepository
@@ -82,10 +80,11 @@ import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.meldeplikt.MeldepliktGrunnlag
+import no.nav.aap.meldeplikt.MeldepliktRepository
 import org.slf4j.LoggerFactory
 import java.math.RoundingMode
 import java.time.LocalDate
-import kotlin.collections.emptyList
 
 class BrevUtlederService(
     private val resultatUtleder: ResultatUtleder,
@@ -212,9 +211,6 @@ class BrevUtlederService(
 
             TypeBehandling.Revurdering -> {
                 val resultat = resultatUtleder.utledRevurderingResultat(behandlingId)
-                val perioder = underveisRepository.hentHvisEksisterer(behandling.id)?.perioder.orEmpty()
-                val harUføretrygd =
-                    perioder.any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
                 if (resultat == Resultat.AVBRUTT) {
                     return null
                 }
@@ -231,10 +227,6 @@ class BrevUtlederService(
 
                 if (skalSendeVedtakForArbeidsopptrapping) {
                     return VedtakArbeidsopptrapping11_23SjetteLedd
-                }
-
-                if (harUføretrygd) {
-                    return brevBehovVurderesForUføretrygdV2(behandling, erRevurdering = true)
                 }
 
                 val vurderingsbehov = behandling.vurderingsbehov().map { it.type }.toSet()
@@ -273,7 +265,12 @@ class BrevUtlederService(
                         RettighetsType.VURDERES_FOR_UFØRETRYGD
                     )
                 ) {
-                    return brevBehovVurderesForUføretrygd(behandling)
+                    // TODO inn bak en feature-toggle
+                    if (!Miljø.erProd()) {
+                        return brevBehovVurderesForUføretrygdV2(behandling, erRevurdering = true)
+                    } else {
+                        return brevBehovVurderesForUføretrygd(behandling)
+                    }
                 }
                 if (harRettighetsType(behandling.id, RettighetsType.ARBEIDSSØKER) &&
                     forrigeBehandlingId != null &&
