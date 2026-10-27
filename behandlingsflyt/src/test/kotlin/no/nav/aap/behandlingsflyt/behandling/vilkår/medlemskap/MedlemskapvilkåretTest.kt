@@ -98,6 +98,7 @@ class MedlemskapvilkåretTest {
         kanBehandlesAutomatisk = kanBehandlesAutomatisk,
         tilhørighetVurdering = emptyList(),
         periode = rettighetsperiode,
+        referansedato = rettighetsperiode.fom,
         delvurderingId = 1L,
     )
 

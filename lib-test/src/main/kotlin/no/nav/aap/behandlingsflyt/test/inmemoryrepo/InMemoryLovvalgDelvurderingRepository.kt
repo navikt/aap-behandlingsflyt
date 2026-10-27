@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.KanBehandlesAuto
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingerGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import java.time.LocalDate
 
 object InMemoryLovvalgDelvurderingRepository : LovvalgDelvurderingRepository {
     private val grunnlag = mutableMapOf<BehandlingId, List<Long>>()
@@ -19,15 +20,21 @@ object InMemoryLovvalgDelvurderingRepository : LovvalgDelvurderingRepository {
     override fun hentBasertPåDelvurderingId(delvurderingId: Long): LovvalgDelvurderingerGrunnlag? =
         synchronized(lock) { vurderinger[delvurderingId] }
 
-    override fun lagre(behandlingId: BehandlingId, vurdering: KanBehandlesAutomatiskVurdering) {
+    override fun lagre(
+        behandlingId: BehandlingId,
+        vurdering: KanBehandlesAutomatiskVurdering,
+        referansedato: LocalDate
+    ) {
         synchronized(lock) {
-            if (hentHvisEksisterer(behandlingId)?.vurdering() == vurdering) return
+            val eksisterende = hentHvisEksisterer(behandlingId)
+            if (eksisterende?.vurdering() == vurdering && eksisterende?.referansedato == referansedato) return
 
             val id = ++nesteId
             vurderinger[id] = LovvalgDelvurderingerGrunnlag(
                 kanBehandlesAutomatisk = vurdering.kanBehandlesAutomatisk,
                 tilhørighetVurdering = vurdering.tilhørighetVurdering,
                 periode = vurdering.periode,
+                referansedato = referansedato,
                 delvurderingId = id
             )
             grunnlag[behandlingId] = grunnlag[behandlingId].orEmpty() + id

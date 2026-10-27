@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurder
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
+import java.time.LocalDate
 
 class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : LovvalgDelvurderingRepository {
     companion object : Factory<LovvalgDelvurderingRepositoryImpl> {
@@ -41,7 +42,7 @@ class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : 
     private fun mapVurdering(vurderingerId: Long): LovvalgDelvurderingerGrunnlag =
         connection.queryFirst(
             """
-            SELECT id, versjon, vurdering FROM LOVVALG_DELVURDERING
+            SELECT id, versjon, vurdering, referansedato FROM LOVVALG_DELVURDERING
             WHERE vurderinger_id = ?
             """.trimIndent()
         ) {
@@ -52,14 +53,19 @@ class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : 
                     kanBehandlesAutomatisk = vurdering.kanBehandlesAutomatisk,
                     tilhørighetVurdering = vurdering.tilhørighetVurdering,
                     periode = vurdering.periode,
+                    referansedato = row.getLocalDate("referansedato"),
                     delvurderingId = row.getLong("id")
                 )
             }
         }
 
-    override fun lagre(behandlingId: BehandlingId, vurdering: KanBehandlesAutomatiskVurdering) {
+    override fun lagre(
+        behandlingId: BehandlingId,
+        vurdering: KanBehandlesAutomatiskVurdering,
+        referansedato: LocalDate
+    ) {
         val eksisterende = hentHvisEksisterer(behandlingId)
-        if (eksisterende?.vurdering() != vurdering) {
+        if (eksisterende?.vurdering() != vurdering || eksisterende.referansedato != referansedato) {
             if (eksisterende != null) {
                 deaktiverGrunnlag(behandlingId)
             }
@@ -79,8 +85,9 @@ class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : 
 
             connection.execute(
                 """
-            INSERT INTO LOVVALG_DELVURDERING (vurderinger_id, vurdert_i_behandling, versjon, vurdering)
-            VALUES (?, ?, ?, ?::jsonb)
+            INSERT INTO LOVVALG_DELVURDERING
+                (vurderinger_id, vurdert_i_behandling, versjon, vurdering, referansedato)
+            VALUES (?, ?, ?, ?::jsonb, ?)
             """.trimIndent()
             ) {
                 setParams {
@@ -88,6 +95,7 @@ class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : 
                     setLong(2, behandlingId.toLong())
                     setInt(3, LovvalgDelvurderingJson.versjon)
                     setString(4, json)
+                    setLocalDate(5, referansedato)
                 }
                 setResultValidator { require(it == 1) }
             }

@@ -9,7 +9,8 @@ CREATE TABLE LOVVALG_DELVURDERING (
     vurdert_i_behandling BIGINT NOT NULL REFERENCES BEHANDLING(id),
     opprettet_tid TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     versjon INTEGER NOT NULL CHECK (versjon > 0),
-    vurdering JSONB NOT NULL
+    vurdering JSONB NOT NULL,
+    referansedato DATE NOT NULL
 );
 
 CREATE INDEX idx_lovvalg_delvurdering_sett ON LOVVALG_DELVURDERING (vurderinger_id);

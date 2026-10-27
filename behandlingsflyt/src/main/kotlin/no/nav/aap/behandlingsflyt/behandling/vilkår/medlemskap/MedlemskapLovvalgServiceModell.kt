@@ -17,6 +17,7 @@ data class LovvalgDelvurderingerGrunnlag(
     val kanBehandlesAutomatisk: Boolean,
     val tilhørighetVurdering: List<TilhørighetVurdering>,
     val periode: Periode,
+    val referansedato: LocalDate,
     val delvurderingId: Long
 ) {
     fun vurdering(): KanBehandlesAutomatiskVurdering = KanBehandlesAutomatiskVurdering(kanBehandlesAutomatisk, tilhørighetVurdering, periode)
