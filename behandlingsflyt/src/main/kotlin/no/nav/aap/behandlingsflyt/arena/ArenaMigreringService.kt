@@ -59,6 +59,14 @@ class ArenaMigreringService(
         return refusjonskrav.tilDomene()
     }
 
+    fun hentBeregningstidspunkt(sakId: SakId): ArenaBeregningstidspunkt {
+        logger.info("Henter beregningstidspunkt fra Arena for sak $sakId.")
+        val beregningstidspunkt = arenaOppslagGateway.hentBeregningstidspunkt(hentSaksnummerArena(sakId)).tilDomene()
+        return requireNotNull(beregningstidspunkt) {
+            "Kan ikke migrere beregningstidspunkt fra Arena for sak $sakId fordi Arena mangler beregningstidspunkt"
+        }
+    }
+
     fun hentKravDataForSak(sakId: SakId): ArenaKrav? {
         return arenaMigreringRepository.hentForSakHvisEksisterer(sakId)?.let {
             arenaOppslagGateway.hentKravDataForSak(it.saksnummerArena).tilDomene()

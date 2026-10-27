@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.arena
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
@@ -284,6 +285,20 @@ class ArenaMigreringMapperTest {
         assertThatThrownBy {
             mapVedtakslengde(vedtaksperiode(fraDato = 1 januar 2023, tilDato = null))
         }.isInstanceOf(IllegalArgumentException::class.java).hasMessageContaining("tilDato")
+    }
+
+    @Test
+    fun `mapBeregningstidspunktVurdering mapper dato, årsak ANNET og begrunnelse`() {
+        val vurdering = ArenaMigreringMapper.mapBeregningstidspunktVurdering(
+            ArenaBeregningstidspunkt(beregningstidspunkt = 1 januar 2023)
+        )
+
+        assertThat(vurdering.nedsattArbeidsevneEllerStudieevneDato).isEqualTo(1 januar 2023)
+        assertThat(vurdering.årsak).isEqualTo(ÅrsakBeregningstidspunkt.ANNET)
+        assertThat(vurdering.begrunnelse).isEqualTo("Migrert fra Arena")
+        assertThat(vurdering.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
+        assertThat(vurdering.ytterligereNedsattArbeidsevneDato).isNull()
+        assertThat(vurdering.ytterligereNedsattÅrsak).isNull()
     }
 
     private fun vedtaksperiode(fraDato: LocalDate?, tilDato: LocalDate?) =
