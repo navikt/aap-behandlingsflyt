@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt
 
-import no.nav.aap.behandlingsflyt.behandling.BackfillBehandlingResultat
 import no.nav.aap.behandlingsflyt.behandling.BackfillRedusertDagsatsService
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -32,6 +31,7 @@ class BackfillRedusertDagsats(
     private val gatewayProvider: GatewayProvider,
 ) {
     private val unleashGateway = gatewayProvider.provide<UnleashGateway>()
+    private var antallBackfillUtførtIKjøring = 0
 
     /**
      * Backfill kjører kontinuerlig, vær obs ved toggle bruk
@@ -135,9 +135,6 @@ class BackfillRedusertDagsats(
         if (intervallUtvalg.size != 2) {
             return false
         }
-        if (intervallUtvalg.any { it == null }) {
-            return false
-        }
         val (første, siste) = intervallUtvalg
         if (første >= siste) {
             return false
@@ -157,29 +154,28 @@ class BackfillRedusertDagsats(
         aktueltUtvalg: SammenlignbartUtvalg
     ): Boolean = forrigeUtvalg == null || forrigeUtvalg != aktueltUtvalg
 
-    private var antallBackfillUtført = 0
 
     private fun backfillRedusertDagsatsLoop(sakIder: Iterable<Long>) {
         log.info("Begynner backfill redusertDagsats for sak-ider $sakIder")
-        antallBackfillUtført = 0
+        antallBackfillUtførtIKjøring = 0
 
         for (sakId in sakIder) {
             // Tillater å avbryte backfill mellom sakIder
             if (!unleashGateway.isEnabled(BackfillRedusertDagsats)) break
-            backfillSak(sakId)
+            val antallBackfillUtførtISak = backfillSak(sakId)
+            antallBackfillUtførtIKjøring += antallBackfillUtførtISak
         }
 
-        log.info(
-            "Backfill redusertDagsats ferdig: {} behandlinger for sak-ider $sakIder",
-            antallBackfillUtført
-        )
+        log.info("Backfill redusertDagsats ferdig: ${antallBackfillUtførtIKjøring} rader backfillet for sak-ider $sakIder")
         Thread.sleep(Duration.ofMinutes(5))
     }
 
-    internal fun backfillSak(sakId: Long) {
+    internal fun backfillSak(sakId: Long) : Int =
         dataSource.transaction { connection ->
+            var antallBackfillUtførtISak = 0
             val sakRepository = SakRepositoryImpl(connection)
-            val sak = sakRepository.hentSakHvisEksisterer(sakId) ?: return@transaction
+            val sak = sakRepository.hentSakHvisEksisterer(sakId)
+                ?: return@transaction 0
 
             val behandlingService = BehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
             val behandlinger = behandlingService.finnBehandlingerSomManglerRedusertDagsats(sak.id)
@@ -191,13 +187,11 @@ class BackfillRedusertDagsats(
                 var sakenErFerdigBackfilled = false
                 for (behandlingId in behandlinger) {
                     if (sakenErFerdigBackfilled) break
-                    val resultat = backfillService.backfillBehandling(behandlingId)
-                    when (resultat) {
-                        BackfillBehandlingResultat.Backfilled -> {
-                            antallBackfillUtført++
-                            if (antallBackfillUtført % 1000 == 0) {
-                                log.info("Backfilled redusertDagsats for {} behandlinger", antallBackfillUtført)
-                            }
+                    val antallBackfillUtført = backfillService.backfillBehandling(behandlingId)
+                    if (antallBackfillUtført > 0) {
+                        antallBackfillUtførtISak += antallBackfillUtført
+                        if (antallBackfillUtførtISak % 1000 == 0) {
+                            log.info("Backfilled redusertDagsats for {} tilkjent_periode rader", antallBackfillUtført)
                         }
                     }
                 }
@@ -207,6 +201,7 @@ class BackfillRedusertDagsats(
                     e
                 )
             }
-        }
+
+            antallBackfillUtførtISak
     }
 }

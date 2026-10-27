@@ -17,10 +17,11 @@ class BackfillRedusertDagsatsService(
     /**
      * Backfiller redusertDagsats for én behandling.
      */
-    fun backfillBehandling(behandlingId: BehandlingId): BackfillBehandlingResultat {
+    fun backfillBehandling(behandlingId: BehandlingId): Int {
+        var antallBackfillUtført = 0
         val tilkjentBackfillKandidater = tilkjentYtelseRepository.hentTilkjentUtenRedusertDagsats(behandlingId)
         if (tilkjentBackfillKandidater.isEmpty()) {
-            return BackfillBehandlingResultat.Backfilled
+            return antallBackfillUtført
         }
 
         for (tilkjent in tilkjentBackfillKandidater) {
@@ -30,10 +31,11 @@ class BackfillRedusertDagsatsService(
         tilkjentYtelseRepository.backfillRedusertDagsats(tilkjentBackfillKandidater)
 
         val gjenstående = tilkjentYtelseRepository.hentTilkjentUtenRedusertDagsats(behandlingId)
+        antallBackfillUtført = tilkjentBackfillKandidater.size - gjenstående.size
         if (gjenstående.isNotEmpty()) {
-            log.warn("Backfill av redusertDagsats er gjennomført, men ${gjenstående.size} antall kandidater ble ikke oppdatert.")
+            log.warn("Backfill av redusertDagsats for $behandlingId ble gjennomført for $antallBackfillUtført tilkjent_periode rader, men ${gjenstående.size} rader gjenstår.")
         }
 
-        return BackfillBehandlingResultat.Backfilled
+        return antallBackfillUtført
     }
 }
