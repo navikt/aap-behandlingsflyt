@@ -4,6 +4,12 @@ import no.nav.aap.bistandsbehov.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgRevurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tellDager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBistandRepository
@@ -17,6 +23,46 @@ import java.time.Instant
 import java.time.LocalDate
 
 class EtableringEgenVirksomhetServiceTest {
+    @Test
+    fun `kvoter inkluderer migrerte vurderinger fra forrige behandling`() {
+        val (_, forrige, behandling) = opprettInMemorySakOgRevurdering()
+        oppfyllSykdomOgBistand(behandling)
+        val periode = Periode(LocalDate.now().plusDays(1), LocalDate.now().plusDays(200))
+        val gammel = EtableringEgenVirksomhetVurdering(
+            begrunnelse = "Historisk vurdering",
+            virksomhetNavn = "Virksomhet",
+            foreliggerFagligVurdering = true,
+            virksomhetErNy = true,
+            brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
+            kanFøreTilSelvforsørget = true,
+            utviklingsPerioder = listOf(periode),
+            oppstartsPerioder = emptyList(),
+            vurdertAv = Bruker("Z123456"),
+            opprettet = Instant.now(),
+            vurdertIBehandling = forrige.id,
+            fom = periode.fom,
+            tom = periode.tom,
+            fase = null,
+            erRegistrertINødvendigeOffentligeRegister = null,
+            jobberBrukerAktivMedVirksomheten = null,
+        )
+        val service = EtableringEgenVirksomhetService(
+            InMemoryEtableringEgenVirksomRepository,
+            InMemoryBehandlingRepository,
+            InMemoryBistandRepository,
+            InMemorySykdomRepository,
+        )
+        val forventet = VirksomhetEtableringResultat.Ugyldig.OverstigerKvoter(
+            EtableringFase.UTVIKLING, listOf(gammel).tellDager { it.utviklingsPerioder }
+        )
+        assertThat(forventet.brukteDager).isGreaterThan(131)
+
+        listOf(listOf(gammel), listOf(gammel).tilNyttFormat()).forEach { vurderinger ->
+            InMemoryEtableringEgenVirksomRepository.lagre(forrige.id, vurderinger)
+            assertThat(service.erVurderingerGyldig(behandling.id, emptyList())).isEqualTo(forventet)
+        }
+    }
+
     @Test
     fun `tom liste av vurderinger gyldig`() {
         val (_, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())

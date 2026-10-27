@@ -69,6 +69,9 @@ fun List<EtableringEgenVirksomhetVurdering>.tilNyttFormat(): List<EtableringEgen
     }
 }
 
+fun EtableringEgenVirksomhetVurdering.somLegacyVisning(): EtableringEgenVirksomhetVurdering =
+    if (fase != null) tilGammeltFormat() else this
+
 fun EtableringEgenVirksomhetVurdering.tilGammeltFormat(): EtableringEgenVirksomhetVurdering {
     return this.copy(
         oppstartsPerioder = if (this.fase == EtableringFase.OPPSTART) listOf(
@@ -89,7 +92,7 @@ fun EtableringEgenVirksomhetVurdering.tilGammeltFormat(): EtableringEgenVirksomh
 fun Collection<EtableringEgenVirksomhetVurdering>.tellDager(
     selector: (EtableringEgenVirksomhetVurdering) -> List<Periode>
 ): Int {
-    return this.flatMap(selector).somTidslinje { it }.komprimer().segmenter()
+    return this.map { it.somLegacyVisning() }.flatMap(selector).somTidslinje { it }.komprimer().segmenter()
         .sumOf { it.periode.antallHverdager().asInt }
 }
 
