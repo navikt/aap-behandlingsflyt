@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.TilOgMedBeregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.beregnTomForSistePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
@@ -197,7 +198,8 @@ class EtableringEgenVirksomhetLøserTest {
                     kanFøreTilSelvforsørget = true,
                     erRegistrertINødvendigeOffentligeRegister = true,
                     fase = EtableringFase.UTVIKLING,
-                    jobberBrukerAktivMedVirksomheten = true
+                    jobberBrukerAktivMedVirksomheten = true,
+                    versjon = EtableringVersjon.V0,
                 )
             )
         )
@@ -239,7 +241,8 @@ class EtableringEgenVirksomhetLøserTest {
                     kanFøreTilSelvforsørget = true,
                     erRegistrertINødvendigeOffentligeRegister = true,
                     jobberBrukerAktivMedVirksomheten = true,
-                    fase = EtableringFase.OPPSTART
+                    fase = EtableringFase.OPPSTART,
+                    versjon = EtableringVersjon.V0,
                 )
             )
         )
@@ -297,7 +300,8 @@ class EtableringEgenVirksomhetLøserTest {
                     kanFøreTilSelvforsørget = true,
                     erRegistrertINødvendigeOffentligeRegister = true,
                     fase = EtableringFase.OPPSTART,
-                    jobberBrukerAktivMedVirksomheten = true
+                    jobberBrukerAktivMedVirksomheten = true,
+                    versjon = EtableringVersjon.V0,
                 )
             )
         )
@@ -341,7 +345,8 @@ class EtableringEgenVirksomhetLøserTest {
                     kanFøreTilSelvforsørget = true,
                     erRegistrertINødvendigeOffentligeRegister = true,
                     fase = EtableringFase.UTVIKLING,
-                    jobberBrukerAktivMedVirksomheten = true
+                    jobberBrukerAktivMedVirksomheten = true,
+                    versjon = EtableringVersjon.V0,
                 )
             )
         )
