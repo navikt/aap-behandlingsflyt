@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.EtableringEgenVirksomhetLøsning
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
@@ -26,6 +27,7 @@ import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
@@ -35,22 +37,37 @@ import java.time.LocalDate
 class EtableringEgenVirksomhetLøserTest {
 
     @Test
-    fun `oppgitt sluttdato beholdes i stedet for å erstattes av hele kvoten`() {
-        val (_, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
-        oppfyllSykdomOgBistand(behandling)
+    fun `beregning av sluttdato bruker gjenstående kvote uten å lagre`() {
+        val (_, forrige, revurdering) = opprettInMemorySakOgRevurdering(LocalDate.now())
+        oppfyllSykdomOgBistand(revurdering)
         val fom = LocalDate.now().plusDays(1)
-        val tom = fom.plusDays(4)
-
-        løser.løs(
-            avklaringsbehovKontekst { this.behandling = behandling },
-            EtableringEgenVirksomhetLøsning(listOf(oppfyltVurdering(fom, tom = tom))),
+        val historisk = oppfyltVurdering(fom, tom = fom.plusDays(13))
+            .toEtableringEgenVirksomhetVurdering(Bruker("saks"), forrige.id)
+        InMemoryEtableringEgenVirksomRepository.lagre(forrige.id, listOf(historisk))
+        val nyFom = fom.plusDays(14)
+        val ny = oppfyltVurdering(nyFom).copy(tom = null)
+            .toEtableringEgenVirksomhetVurdering(Bruker("saks"), revurdering.id)
+        val service = EtableringEgenVirksomhetService(
+            InMemoryEtableringEgenVirksomRepository,
+            InMemoryBehandlingRepository,
+            InMemoryBistandRepository,
+            InMemorySykdomRepository,
         )
 
-        val lagret = requireNotNull(
-            InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(behandling.id)
+        assertThat(service.validerVurdering(revurdering.id, listOf(historisk))).isNull()
+        val beregning = assertInstanceOf(
+            VirksomhetEtableringResultat.Gyldig::class.java,
+            service.beregnOgValider(revurdering.id, listOf(ny)),
+        ).beregning
+        val beregnet = beregning.beregnedeVurderinger.single { it.vurdertIBehandling == revurdering.id }
+
+        assertThat(beregnet.tom).isEqualTo(Hverdager(121).fraOgMed(nyFom))
+        assertThat(Periode(nyFom, requireNotNull(beregnet.tom)).antallHverdager().asInt).isEqualTo(121)
+        val lagretHistorikk = requireNotNull(
+            InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(forrige.id)
         ).vurderinger.single()
-        assertThat(lagret.fom).isEqualTo(fom)
-        assertThat(lagret.tom).isEqualTo(tom)
+        assertThat(lagretHistorikk).usingRecursiveComparison().isEqualTo(historisk)
+        assertThat(InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(revurdering.id)).isNull()
     }
 
     @Test
