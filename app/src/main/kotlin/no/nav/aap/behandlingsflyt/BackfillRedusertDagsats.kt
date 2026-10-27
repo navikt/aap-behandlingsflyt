@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.BackfillBehandlingResultat
 import no.nav.aap.behandlingsflyt.behandling.BackfillRedusertDagsatsService
-import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
@@ -185,7 +184,6 @@ class BackfillRedusertDagsats(
             val behandlingService = BehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
             val behandlinger = behandlingService.finnBehandlingerSomManglerRedusertDagsats(sak.id)
 
-            val taSkriveLåsRepository = TaSkriveLåsRepositoryImpl(connection)
             val backfillService = BackfillRedusertDagsatsService(postgresRepositoryRegistry.provider(connection))
 
             try {
@@ -193,14 +191,12 @@ class BackfillRedusertDagsats(
                 var sakenErFerdigBackfilled = false
                 for (behandlingId in behandlinger) {
                     if (sakenErFerdigBackfilled) break
-                    taSkriveLåsRepository.withLåstBehandling(behandlingId) {
-                        val resultat = backfillService.backfillBehandling(behandlingId)
-                        when (resultat) {
-                            BackfillBehandlingResultat.Backfilled -> {
-                                antallBackfillUtført++
-                                if (antallBackfillUtført % 1000 == 0) {
-                                    log.info("Backfilled redusertDagsats for {} behandlinger", antallBackfillUtført)
-                                }
+                    val resultat = backfillService.backfillBehandling(behandlingId)
+                    when (resultat) {
+                        BackfillBehandlingResultat.Backfilled -> {
+                            antallBackfillUtført++
+                            if (antallBackfillUtført % 1000 == 0) {
+                                log.info("Backfilled redusertDagsats for {} behandlinger", antallBackfillUtført)
                             }
                         }
                     }
