@@ -34,6 +34,26 @@ import java.time.LocalDate
 
 class EtableringEgenVirksomhetLøserTest {
 
+    @Test
+    fun `revurdering uten nye vurderinger viderefører historikken nøyaktig én gang`() {
+        val (_, forrige, revurdering) = opprettInMemorySakOgRevurdering(LocalDate.now())
+        oppfyllSykdomOgBistand(revurdering)
+        val fom = LocalDate.now().plusDays(1)
+        val tidligere = oppfyltVurdering(fom, tom = fom.plusDays(4))
+            .toEtableringEgenVirksomhetVurdering(Bruker("saks"), forrige.id)
+        InMemoryEtableringEgenVirksomRepository.lagre(forrige.id, listOf(tidligere))
+
+        løser.løs(
+            avklaringsbehovKontekst { this.behandling = revurdering },
+            EtableringEgenVirksomhetLøsning(emptyList()),
+        )
+
+        val lagret = requireNotNull(
+            InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(revurdering.id)
+        ).vurderinger
+        assertThat(lagret).usingRecursiveComparison().isEqualTo(listOf(tidligere))
+    }
+
     private val løser = EtableringEgenVirksomhetLøser(
         InMemoryEtableringEgenVirksomRepository,
         InMemoryBehandlingRepository,
