@@ -20,6 +20,24 @@ import java.time.ZoneOffset
 
 class TilNyttFormatTest {
     @Test
+    fun `historiske positive vurderinger beholder utfallet uten å finne på svar`() {
+        val historisk = konstruerVurdering {
+            utviklingsperioder = listOf((5 januar 2026) to (9 januar 2026))
+            oppstartsperioder = listOf((12 januar 2026) to (16 januar 2026))
+        }
+
+        val konverterte = listOf(historisk).tilNyttFormat()
+
+        assertThat(konverterte).hasSize(2)
+        assertThat(konverterte).allSatisfy {
+            assertThat(it.jobberBrukerAktivMedVirksomheten).isNull()
+            assertThat(it.erRegistrertINødvendigeOffentligeRegister).isNull()
+        }
+        assertThat(konverterte.map { it.evaluerVirksomhetVurdering() })
+            .containsExactly(true, true)
+    }
+
+    @Test
     fun `splitter oppstartsfaser i to vurderinger`() {
         val gammel = listOf(
             konstruerVurdering {
