@@ -108,11 +108,10 @@ class BackfillEtableringVurderingerTest {
                 )
             )
             val service = EtableringEgenVirksomhetService(provider)
-            assertThat(service.beregnOgValider(behandlingId, listOf(legacy)))
-                .isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
+            assertThat(service.validerVurdering(behandlingId, listOf(legacy))).isNull()
             assertThat(
-                service.beregnOgValider(behandlingId, listOf(legacy).tilNyttFormat().map { it.tilGammeltFormat() })
-            ).isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
+                service.validerVurdering(behandlingId, listOf(legacy).tilNyttFormat().map { it.tilGammeltFormat() })
+            ).isNull()
         }
 
         repeat(2) {

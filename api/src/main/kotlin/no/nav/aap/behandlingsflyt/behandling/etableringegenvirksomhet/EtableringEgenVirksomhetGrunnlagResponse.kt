@@ -70,16 +70,8 @@ data class EtableringEgenVirksomhetVurderingResponse(
             fom: LocalDate = etableringEgenVirksomhetVurdering.fom,
             tom: LocalDate? = etableringEgenVirksomhetVurdering.tom
         ) = EtableringEgenVirksomhetVurderingResponse(
-            utviklingsPeriode = when {
-                etableringEgenVirksomhetVurdering.fase == EtableringFase.UTVIKLING && tom != null ->
-                    listOf(Periode(fom, tom))
-                else -> emptyList()
-            },
-            oppstartsPeriode = when {
-                etableringEgenVirksomhetVurdering.fase == EtableringFase.OPPSTART && tom != null ->
-                    listOf(Periode(fom, tom))
-                else -> emptyList()
-            },
+            utviklingsPeriode = etableringEgenVirksomhetVurdering.utviklingsPerioder,
+            oppstartsPeriode = etableringEgenVirksomhetVurdering.oppstartsPerioder,
             begrunnelse = etableringEgenVirksomhetVurdering.begrunnelse,
             virksomhetNavn = etableringEgenVirksomhetVurdering.virksomhetNavn,
             orgNr = etableringEgenVirksomhetVurdering.orgNr,
