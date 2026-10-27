@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somLegacyVisning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -69,30 +70,33 @@ data class EtableringEgenVirksomhetVurderingResponse(
             vurdertAvService: VurdertAvService,
             fom: LocalDate = etableringEgenVirksomhetVurdering.fom,
             tom: LocalDate? = etableringEgenVirksomhetVurdering.tom
-        ) = EtableringEgenVirksomhetVurderingResponse(
-            utviklingsPeriode = etableringEgenVirksomhetVurdering.utviklingsPerioder,
-            oppstartsPeriode = etableringEgenVirksomhetVurdering.oppstartsPerioder,
-            begrunnelse = etableringEgenVirksomhetVurdering.begrunnelse,
-            virksomhetNavn = etableringEgenVirksomhetVurdering.virksomhetNavn,
-            orgNr = etableringEgenVirksomhetVurdering.orgNr,
-            foreliggerFagligVurdering = etableringEgenVirksomhetVurdering.foreliggerFagligVurdering,
-            virksomhetErNy = etableringEgenVirksomhetVurdering.virksomhetErNy,
-            brukerEierVirksomheten = etableringEgenVirksomhetVurdering.brukerEierVirksomheten,
-            kanFøreTilSelvforsørget = etableringEgenVirksomhetVurdering.kanFøreTilSelvforsørget,
-            vurderingerMeta = vurdertAvService.byggVurderingerMeta(
-                definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
-                behandlingId = etableringEgenVirksomhetVurdering.vurdertIBehandling,
-                vurdertAv = vurdertAvService.medNavnOgEnhet(
-                    etableringEgenVirksomhetVurdering.vurdertAv,
-                    etableringEgenVirksomhetVurdering.opprettet,
+        ): EtableringEgenVirksomhetVurderingResponse {
+            val legacyVisning = etableringEgenVirksomhetVurdering.somLegacyVisning()
+            return EtableringEgenVirksomhetVurderingResponse(
+                begrunnelse = etableringEgenVirksomhetVurdering.begrunnelse,
+                virksomhetNavn = etableringEgenVirksomhetVurdering.virksomhetNavn,
+                orgNr = etableringEgenVirksomhetVurdering.orgNr,
+                foreliggerFagligVurdering = etableringEgenVirksomhetVurdering.foreliggerFagligVurdering,
+                virksomhetErNy = etableringEgenVirksomhetVurdering.virksomhetErNy,
+                brukerEierVirksomheten = etableringEgenVirksomhetVurdering.brukerEierVirksomheten,
+                kanFøreTilSelvforsørget = etableringEgenVirksomhetVurdering.kanFøreTilSelvforsørget,
+                utviklingsPeriode = legacyVisning.utviklingsPerioder,
+                oppstartsPeriode = legacyVisning.oppstartsPerioder,
+                vurderingerMeta = vurdertAvService.byggVurderingerMeta(
+                    definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
+                    behandlingId = etableringEgenVirksomhetVurdering.vurdertIBehandling,
+                    vurdertAv = vurdertAvService.medNavnOgEnhet(
+                        etableringEgenVirksomhetVurdering.vurdertAv,
+                        etableringEgenVirksomhetVurdering.opprettet,
+                    ),
                 ),
-            ),
-            fom = fom,
-            tom = tom,
-            oppfylt = etableringEgenVirksomhetVurdering.evaluerVirksomhetVurdering(),
-            fase = etableringEgenVirksomhetVurdering.fase,
-            erRegistrertINødvendigeOffentligeRegister = etableringEgenVirksomhetVurdering.erRegistrertINødvendigeOffentligeRegister,
-            jobberBrukerAktivMedVirksomheten = etableringEgenVirksomhetVurdering.jobberBrukerAktivMedVirksomheten
-        )
+                fom = fom,
+                tom = tom,
+                oppfylt = etableringEgenVirksomhetVurdering.evaluerVirksomhetVurdering(),
+                fase = etableringEgenVirksomhetVurdering.fase,
+                erRegistrertINødvendigeOffentligeRegister = etableringEgenVirksomhetVurdering.erRegistrertINødvendigeOffentligeRegister,
+                jobberBrukerAktivMedVirksomheten = etableringEgenVirksomhetVurdering.jobberBrukerAktivMedVirksomheten
+            )
+        }
     }
 }

@@ -12,13 +12,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.finnUgyldigRettighetsperiode
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.somTidslinje
-import no.nav.aap.komponenter.tidslinje.tidslinjeOf
-import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.Repository
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -64,22 +60,11 @@ class SøknadSteg(
              * Det er ikke uvanlig at saker blir trukket ved en feil, og at det så opprettes
              * en ny sak som ville ha overlappet med den trukne saken. Vi setter derfor
              * en fiktiv rettighetsperiode på den trukne saken. */
-            sakRepository.oppdaterRettighetsperiode(kontekst.sakId, finnUgyldigRettighetsperiode(kontekst.sakId))
+            sakRepository.oppdaterRettighetsperiode(kontekst.sakId, sakRepository.finnUgyldigRettighetsperiode(kontekst.sakId))
             slettVurderingerOgRegisterdata(kontekst.behandlingId)
         }
 
         return Fullført
-    }
-
-    private fun finnUgyldigRettighetsperiode(sakId: SakId): Periode {
-        val førsteLedigeDato = sakRepository.finnSakerFor(sakRepository.finnPersonId(sakId))
-            .somTidslinje({ it.rettighetsperiode }, { false }).komprimer()
-            .mergePrioriterVenstre(tidslinjeOf(Periode(Tid.MIN, Tid.MAKS) to true))
-            .filter { it.verdi }
-            .perioder()
-            .first()
-            .fom
-        return Periode(førsteLedigeDato, førsteLedigeDato)
     }
 
     private fun slettVurderingerOgRegisterdata(behandlingId: BehandlingId) {
