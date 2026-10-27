@@ -42,7 +42,7 @@ class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : 
     private fun mapVurdering(vurderingerId: Long): LovvalgDelvurderingerGrunnlag =
         connection.queryFirst(
             """
-            SELECT id, versjon, vurdering, referansedato FROM LOVVALG_DELVURDERING
+            SELECT id, versjon, vurdering, relevant_dato FROM LOVVALG_DELVURDERING
             WHERE vurderinger_id = ?
             """.trimIndent()
         ) {
@@ -52,8 +52,7 @@ class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : 
                 LovvalgDelvurderingerGrunnlag(
                     kanBehandlesAutomatisk = vurdering.kanBehandlesAutomatisk,
                     tilhørighetVurdering = vurdering.tilhørighetVurdering,
-                    periode = vurdering.periode,
-                    referansedato = row.getLocalDate("referansedato"),
+                    relevantDato = row.getLocalDate("relevant_dato"),
                     delvurderingId = row.getLong("id")
                 )
             }
@@ -62,10 +61,10 @@ class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : 
     override fun lagre(
         behandlingId: BehandlingId,
         vurdering: KanBehandlesAutomatiskVurdering,
-        referansedato: LocalDate
+        relevantDato: LocalDate
     ) {
         val eksisterende = hentHvisEksisterer(behandlingId)
-        if (eksisterende?.vurdering() != vurdering || eksisterende.referansedato != referansedato) {
+        if (eksisterende?.vurdering() != vurdering || eksisterende.relevantDato != relevantDato) {
             if (eksisterende != null) {
                 deaktiverGrunnlag(behandlingId)
             }
@@ -86,7 +85,7 @@ class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : 
             connection.execute(
                 """
             INSERT INTO LOVVALG_DELVURDERING
-                (vurderinger_id, vurdert_i_behandling, versjon, vurdering, referansedato)
+                (vurderinger_id, vurdert_i_behandling, versjon, vurdering, relevant_dato)
             VALUES (?, ?, ?, ?::jsonb, ?)
             """.trimIndent()
             ) {
@@ -95,7 +94,7 @@ class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : 
                     setLong(2, behandlingId.toLong())
                     setInt(3, LovvalgDelvurderingJson.versjon)
                     setString(4, json)
-                    setLocalDate(5, referansedato)
+                    setLocalDate(5, relevantDato)
                 }
                 setResultValidator { require(it == 1) }
             }

@@ -68,7 +68,7 @@ class LovvalgDelvurderingRepositoryImplTest {
 
             val grunnlag = requireNotNull(repository.hentHvisEksisterer(behandlingId))
             assertThat(grunnlag.vurdering()).isEqualTo(vurdering)
-            assertThat(grunnlag.referansedato).isEqualTo(startDato)
+            assertThat(grunnlag.relevantDato).isEqualTo(startDato)
             assertThat(grunnlag.delvurderingId).isPositive()
             assertThat(repository.hentBasertPåDelvurderingId(grunnlag.delvurderingId)).isEqualTo(grunnlag)
             assertThat(historikk(connection, behandlingId)).containsExactly(true)
@@ -76,7 +76,7 @@ class LovvalgDelvurderingRepositoryImplTest {
     }
 
     @Test
-    fun `endret referansedato lagres som ny historikk`() {
+    fun `endret relevant dato lagres som ny historikk`() {
         dataSource.transaction { connection ->
             val behandlingId = opprettBehandling(connection)
             val repository = LovvalgDelvurderingRepositoryImpl(connection)
@@ -85,7 +85,7 @@ class LovvalgDelvurderingRepositoryImplTest {
             repository.lagre(behandlingId, vurdering, startDato)
             repository.lagre(behandlingId, vurdering, nyDato)
 
-            assertThat(repository.hentHvisEksisterer(behandlingId)?.referansedato).isEqualTo(nyDato)
+            assertThat(repository.hentHvisEksisterer(behandlingId)?.relevantDato).isEqualTo(nyDato)
             assertThat(historikk(connection, behandlingId)).containsExactly(false, true)
         }
     }

@@ -23,18 +23,17 @@ object InMemoryLovvalgDelvurderingRepository : LovvalgDelvurderingRepository {
     override fun lagre(
         behandlingId: BehandlingId,
         vurdering: KanBehandlesAutomatiskVurdering,
-        referansedato: LocalDate
+        relevantDato: LocalDate
     ) {
         synchronized(lock) {
             val eksisterende = hentHvisEksisterer(behandlingId)
-            if (eksisterende?.vurdering() == vurdering && eksisterende?.referansedato == referansedato) return
+            if (eksisterende?.vurdering() == vurdering && eksisterende.relevantDato == relevantDato) return
 
             val id = ++nesteId
             vurderinger[id] = LovvalgDelvurderingerGrunnlag(
                 kanBehandlesAutomatisk = vurdering.kanBehandlesAutomatisk,
                 tilhørighetVurdering = vurdering.tilhørighetVurdering,
-                periode = vurdering.periode,
-                referansedato = referansedato,
+                relevantDato = relevantDato,
                 delvurderingId = id
             )
             grunnlag[behandlingId] = grunnlag[behandlingId].orEmpty() + id

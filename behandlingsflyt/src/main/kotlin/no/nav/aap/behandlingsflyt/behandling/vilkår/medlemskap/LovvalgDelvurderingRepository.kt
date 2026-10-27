@@ -6,7 +6,7 @@ import java.time.LocalDate
 
 interface LovvalgDelvurderingRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): LovvalgDelvurderingerGrunnlag?
-    fun lagre(behandlingId: BehandlingId, vurdering: KanBehandlesAutomatiskVurdering, referansedato: LocalDate)
+    fun lagre(behandlingId: BehandlingId, vurdering: KanBehandlesAutomatiskVurdering, relevantDato: LocalDate)
     fun hentBasertPåDelvurderingId(delvurderingId: Long): LovvalgDelvurderingerGrunnlag?
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

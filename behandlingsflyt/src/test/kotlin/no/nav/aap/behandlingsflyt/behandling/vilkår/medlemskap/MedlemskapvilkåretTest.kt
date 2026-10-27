@@ -97,8 +97,7 @@ class MedlemskapvilkåretTest {
     private fun delvurdering(kanBehandlesAutomatisk: Boolean) = LovvalgDelvurderingerGrunnlag(
         kanBehandlesAutomatisk = kanBehandlesAutomatisk,
         tilhørighetVurdering = emptyList(),
-        periode = rettighetsperiode,
-        referansedato = rettighetsperiode.fom,
+        relevantDato = rettighetsperiode.fom,
         delvurderingId = 1L,
     )
 

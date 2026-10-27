@@ -114,8 +114,8 @@ class VurderLovvalgSteg private constructor(
                     kontekst.rettighetsperiode,
                     kontekst.vurderingType
                 )
-                val referansedato = kontekst.rettighetsperiode.fom
-                lovvalgDelvurderingRepository.lagre(kontekst.behandlingId, tilhørighetVurdering, referansedato)
+                val relevantDato = kontekst.rettighetsperiode.fom
+                lovvalgDelvurderingRepository.lagre(kontekst.behandlingId, tilhørighetVurdering, relevantDato)
             }
 
             else -> {
