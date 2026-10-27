@@ -29,6 +29,7 @@ data class EtableringEgenVirksomhetVurdering(
     val fase: EtableringFase?,
     val erRegistrertINødvendigeOffentligeRegister: Boolean?,
     val jobberBrukerAktivMedVirksomheten: Boolean?,
+    val versjon: EtableringVersjon,
 ) : PeriodisertVurdering {
     fun evaluerVirksomhetVurdering(): Boolean {
         return this.virksomhetErNy == true && this.kanFøreTilSelvforsørget == true && this.foreliggerFagligVurdering && this.brukerEierVirksomheten in listOf(
@@ -108,6 +109,11 @@ enum class EierVirksomhet {
     NEI
 }
 
+enum class EtableringVersjon {
+    /** Grunnvilkårene alene avgjør utfallet, også etter oppdeling i faser. */
+    V0,
+}
+
 enum class EtableringFase(val maksHverdager: Int) {
     UTVIKLING(maksHverdager = 131),
     OPPSTART(maksHverdager = 66);
@@ -130,6 +136,7 @@ fun List<EtableringEgenVirksomhetVurdering>.erFunksjoneltLik(other: List<Etabler
                 a.tom == b.tom &&
                 a.fase == b.fase &&
                 a.erRegistrertINødvendigeOffentligeRegister == b.erRegistrertINødvendigeOffentligeRegister &&
-                a.jobberBrukerAktivMedVirksomheten == b.jobberBrukerAktivMedVirksomheten
+                a.jobberBrukerAktivMedVirksomheten == b.jobberBrukerAktivMedVirksomheten &&
+                a.versjon == b.versjon
     }
 }
