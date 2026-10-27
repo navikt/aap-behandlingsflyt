@@ -5,9 +5,7 @@ plugins {
 tasks {
     val projectProps = register<WriteProperties>("projectProps") {
         destinationFile = layout.buildDirectory.file("behandlingsflyt-version.properties")
-        // Define property. Provider utsetter kjøring av git-kommandoen til tasken faktisk kjøres,
-        // i stedet for å kjøre den ved hver konfigurasjon av bygget.
-        property("project.version", providers.provider { getCheckedOutGitCommitHash() })
+        property("project.version", "development")
     }
 
     processResources {
@@ -22,29 +20,6 @@ dokka {
     dokkaSourceSets.configureEach {
         includes.from("behandlingsflyt.md")
     }
-}
-
-fun getCheckedOutGitCommitHash(): String {
-    // Check for explicit environment variable first (useful when git is unavailable)
-    System.getenv("GIT_COMMIT")?.takeIf { it.isNotBlank() }?.let { return it }
-    System.getenv("GITHUB_SHA")?.takeIf { it.isNotBlank() }?.let { return it }
-
-    // Try to run git command
-    return try {
-        runCommand("git rev-parse --verify HEAD")
-    } catch (_: Exception) {
-        // Fallback: use a deterministic value when git is unavailable
-        "unknown-no-git"
-    }
-}
-
-fun runCommand(command: String): String {
-    val execResult = providers.exec {
-        this.workingDir = project.projectDir
-        commandLine(command.split("\\s".toRegex()))
-    }.standardOutput.asText
-
-    return execResult.get().trim()
 }
 
 dependencies {

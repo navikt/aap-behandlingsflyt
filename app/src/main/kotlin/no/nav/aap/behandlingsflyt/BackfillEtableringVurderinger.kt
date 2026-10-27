@@ -14,6 +14,7 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.time.LocalDate
 import javax.sql.DataSource
 
@@ -51,25 +52,28 @@ class BackfillEtableringVurderinger(
         Thread.ofVirtual()
             .name("backfillEtableringVurderinger")
             .start {
-                if (isLeader(log)) {
-                    log.info("Begynner backfill av etableringsvurderinger, dryRun=$dryRun")
-                    try {
-                        val resultat = dataSource.transaction { connection ->
-                            migrer(connection)
+                while (true) {
+                    if (isLeader(log)) {
+                        log.info("Begynner backfill av etableringsvurderinger, dryRun=$dryRun")
+                        try {
+                            val resultat = dataSource.transaction { connection ->
+                                migrer(connection)
+                            }
+                            log.info("Backfill av etableringsvurderinger fullført, dryRun=$dryRun, $resultat")
+                        } catch (e: Exception) {
+                            log.warn(
+                                "BackfillEtableringVurderinger: uncaughtException {}, se secure / team log",
+                                e.javaClass.name
+                            )
+                            teamLogs.warn(
+                                "BackfillEtableringVurderinger: uncaughtException {}: {}",
+                                e.javaClass.name,
+                                e.message,
+                                e
+                            )
                         }
-                        log.info("Backfill av etableringsvurderinger fullført, dryRun=$dryRun, $resultat")
-                    } catch (e: Exception) {
-                        log.warn(
-                            "BackfillEtableringVurderinger: uncaughtException {}, se secure / team log",
-                            e.javaClass.name
-                        )
-                        teamLogs.warn(
-                            "BackfillEtableringVurderinger: uncaughtException {}: {}",
-                            e.javaClass.name,
-                            e.message,
-                            e
-                        )
                     }
+                    Thread.sleep(Duration.ofMinutes(5))
                 }
             }
     }

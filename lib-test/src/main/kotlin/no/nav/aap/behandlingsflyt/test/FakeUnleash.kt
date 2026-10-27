@@ -89,6 +89,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigrererKravFraArenaAutomatisk to true,
         BehandlingsflytFeature.MigrererOppholdskravFraArenaAutomatisk to true,
         BehandlingsflytFeature.MigrererVedtakslengdeFraArenaAutomatisk to true,
+        BehandlingsflytFeature.MigrererBeregningstidspunktFraArenaAutomatisk to true,
 
         // --- Utbetaling ---
         BehandlingsflytFeature.FjerneAvventUtbetalingForSamordningArbeidsgiver to false,

@@ -51,15 +51,15 @@ data class EtableringEgenVirksomhetLøsningDto(
             oppstartsPerioder = if (fase == null) oppstartsPerioder.orEmpty() else emptyList(),
             erRegistrertINødvendigeOffentligeRegister = erRegistrertINødvendigeOffentligeRegister,
             jobberBrukerAktivMedVirksomheten = jobberBrukerAktivMedVirksomheten,
-            versjon = if (fase == null && (utviklingsPerioder != null || oppstartsPerioder != null))
-                EtableringVersjon.V0 else EtableringVersjon.V1,
             vurdertAv = bruker,
             opprettet = Instant.now(),
             vurdertIBehandling = vurdertIBehandling,
             fom = fom,
             tom = tom,
             virksomhetNavn = virksomhetNavn,
-            orgNr = orgNr
+            orgNr = orgNr,
+            versjon = if (fase == null && (utviklingsPerioder != null || oppstartsPerioder != null))
+                EtableringVersjon.V0 else EtableringVersjon.V1,
         )
     }
 

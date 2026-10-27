@@ -218,7 +218,7 @@ class EtableringEgenVirksomhetLøserTest {
                     erRegistrertINødvendigeOffentligeRegister = true,
                     fase = EtableringFase.UTVIKLING,
                     jobberBrukerAktivMedVirksomheten = true,
-                    versjon = EtableringVersjon.V0,
+                    versjon = EtableringVersjon.V1,
                 )
             )
         )
@@ -258,10 +258,10 @@ class EtableringEgenVirksomhetLøserTest {
                     virksomhetErNy = true,
                     brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
                     kanFøreTilSelvforsørget = true,
+                    versjon = EtableringVersjon.V1,
+                    fase = EtableringFase.OPPSTART,
                     erRegistrertINødvendigeOffentligeRegister = true,
                     jobberBrukerAktivMedVirksomheten = true,
-                    fase = EtableringFase.OPPSTART,
-                    versjon = EtableringVersjon.V0,
                 )
             )
         )
@@ -320,7 +320,7 @@ class EtableringEgenVirksomhetLøserTest {
                     erRegistrertINødvendigeOffentligeRegister = true,
                     fase = EtableringFase.OPPSTART,
                     jobberBrukerAktivMedVirksomheten = true,
-                    versjon = EtableringVersjon.V0,
+                    versjon = EtableringVersjon.V1,
                 )
             )
         )
@@ -365,7 +365,7 @@ class EtableringEgenVirksomhetLøserTest {
                     erRegistrertINødvendigeOffentligeRegister = true,
                     fase = EtableringFase.UTVIKLING,
                     jobberBrukerAktivMedVirksomheten = true,
-                    versjon = EtableringVersjon.V0,
+                    versjon = EtableringVersjon.V1,
                 )
             )
         )

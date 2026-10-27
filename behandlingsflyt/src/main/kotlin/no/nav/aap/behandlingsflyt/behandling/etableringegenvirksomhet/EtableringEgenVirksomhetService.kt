@@ -72,6 +72,7 @@ class EtableringEgenVirksomhetService(
         nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
     ): VirksomhetEtableringResultat {
         val behandling = behandlingRepository.hent(behandlingId)
+
         val gamleVurderinger = behandling.forrigeBehandlingId
             ?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }
             ?.vurderinger

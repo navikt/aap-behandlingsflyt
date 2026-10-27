@@ -8,6 +8,7 @@ import io.ktor.server.routing.*
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaBeregningstidspunktResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaDiagnose
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
@@ -113,6 +114,9 @@ class ArenaoppslagFake : FakeServer() {
                         tilDato = LocalDate.now().plusYears(1),
                     )
                 )
+            }
+            get("/api/migrering/{saksnummerArena}/beregningstidspunkt") {
+                call.respond(ArenaBeregningstidspunktResponse(beregningstidspunkt = LocalDate.now().minusMonths(6)))
             }
             get("/api/migrering/{saksnummerArena}/refusjonskrav") {
                 call.respond(ArenaRefusjonskravResponse(refusjonskrav = null))

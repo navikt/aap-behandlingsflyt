@@ -26,6 +26,6 @@ class AvklarSamordningUføreLøsning(
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5024`
 ) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
-        return AvklarSamordningUføreLøser(repositoryProvider).løs(kontekst, this)
+        return AvklarSamordningUføreLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
     }
 }
