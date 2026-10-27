@@ -135,7 +135,17 @@ class LovvalgInformasjonskrav internal constructor(
 
         val nyData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        return if (nyData == eksisterendeData) IKKE_ENDRET else ENDRET
+        return if (erRelevantEndring(eksisterendeData, nyData)) IKKE_ENDRET else ENDRET
+    }
+
+    private fun erRelevantEndring(
+        grunnlag1: MedlemskapArbeidInntektGrunnlag?,
+        grunnlag2: MedlemskapArbeidInntektGrunnlag?
+    ): Boolean {
+        return grunnlag1?.medlemskapGrunnlag != grunnlag2?.medlemskapGrunnlag
+                || grunnlag1?.inntekterINorgeGrunnlag != grunnlag2?.inntekterINorgeGrunnlag // Ignorerer inntekterINorgePerRelevanteKrav
+                || grunnlag1?.arbeiderINorgeGrunnlag != grunnlag2?.arbeiderINorgeGrunnlag
+                || grunnlag1?.vurderinger != grunnlag2?.vurderinger
     }
 
     private fun innhentAARegisterGrunnlag(sak: Sak): List<ArbeidINorgeGrunnlag> {
