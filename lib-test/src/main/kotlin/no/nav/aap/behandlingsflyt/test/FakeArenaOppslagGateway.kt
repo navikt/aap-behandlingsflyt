@@ -6,6 +6,7 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaBeregningstidspunktResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVedtaksperiodeResponse
@@ -63,6 +64,10 @@ class FakeArenaOppslagGateway : ArenaOppslagGateway {
 
     override fun hentRefusjonskrav(saksnummerArena: String): ArenaRefusjonskravResponse {
         return ArenaRefusjonskravResponse(refusjonskrav = null)
+    }
+
+    override fun hentBeregningstidspunkt(saksnummerArena: String): ArenaBeregningstidspunktResponse {
+        return ArenaBeregningstidspunktResponse(beregningstidspunkt = LocalDate.now().minusMonths(6))
     }
 
     override fun hentOppholdskrav(saksnummerArena: String): ArenaOppholdskravResponse {

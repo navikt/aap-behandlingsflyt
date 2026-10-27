@@ -81,6 +81,9 @@ fun List<EtableringEgenVirksomhetVurdering>.tilNyttFormat(): List<EtableringEgen
     }
 }
 
+fun EtableringEgenVirksomhetVurdering.somLegacyVisning(): EtableringEgenVirksomhetVurdering =
+    if (fase != null) tilGammeltFormat() else this
+
 fun EtableringEgenVirksomhetVurdering.tilGammeltFormat(): EtableringEgenVirksomhetVurdering {
     return this.copy(
         oppstartsPerioder = if (this.fase == EtableringFase.OPPSTART) listOf(
@@ -111,7 +114,7 @@ fun Tidslinje<EtableringEgenVirksomhetVurdering>.perioderForFase(fase: Etablerin
 fun Collection<EtableringEgenVirksomhetVurdering>.tellDager(
     selector: (EtableringEgenVirksomhetVurdering) -> List<Periode>
 ): Int {
-    return this.flatMap(selector).somTidslinje { it }.komprimer().segmenter()
+    return this.map { it.somLegacyVisning() }.flatMap(selector).somTidslinje { it }.komprimer().segmenter()
         .sumOf { it.periode.antallHverdager().asInt }
 }
 
@@ -130,6 +133,7 @@ enum class EierVirksomhet {
 enum class EtableringVersjon {
     /** Grunnvilkårene alene avgjør utfallet, også etter oppdeling i faser. */
     V0,
+    V1
 }
 
 enum class EtableringFase(val maksHverdager: Int) {
