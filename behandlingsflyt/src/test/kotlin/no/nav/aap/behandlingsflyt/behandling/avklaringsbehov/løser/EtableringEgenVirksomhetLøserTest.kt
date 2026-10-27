@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.TilOgMedBeregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.beregnTomForSistePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -523,13 +524,96 @@ class EtableringEgenVirksomhetLøserTest {
     }
 
     @Test
+    fun `sluttdatoberegning teller gamle migrerte og blandede perioder likt`() {
+        val fom = LocalDate.of(2026, 1, 5)
+        val (_, behandling) = opprettInMemorySakOgBehandling(fom)
+        val første = oppfyltVurdering(fom, tom = fom.plusDays(4)).copy(
+            fase = null,
+            utviklingsPerioder = listOf(Periode(fom, fom.plusDays(4))),
+            jobberBrukerAktivMedVirksomheten = null,
+        ).toEtableringEgenVirksomhetVurdering(Bruker("saks"), behandling.id)
+        val andre = første.copy(
+            fom = fom.plusDays(7),
+            tom = fom.plusDays(11),
+            utviklingsPerioder = listOf(Periode(fom.plusDays(7), fom.plusDays(11))),
+        )
+        val gamle = listOf(første, andre)
+        val ny = oppfyltVurdering(fom.plusDays(14))
+            .toEtableringEgenVirksomhetVurdering(Bruker("saks"), behandling.id)
+        val forventet = TilOgMedBeregning.Beregnet(
+            Hverdager(EtableringFase.UTVIKLING.maksHverdager - 10).fraOgMed(ny.fom)
+        )
+
+        listOf(gamle, gamle.tilNyttFormat(), listOf(første) + listOf(andre).tilNyttFormat())
+            .forEach { historikk ->
+                assertThat(beregnTomForSistePeriode(historikk + ny, ny))
+                    .usingRecursiveComparison().isEqualTo(forventet)
+            }
+    }
+
+    @Test
+    fun `sluttdatoberegning teller ikke overstyrte gamle perioder etter et opphold`() {
+        val fom = LocalDate.of(2026, 1, 5)
+        val (_, behandling) = opprettInMemorySakOgBehandling(fom)
+        val eldre = oppfyltVurdering(fom).copy(
+            fase = null,
+            tom = null,
+            utviklingsPerioder = listOf(Periode(fom, fom.plusDays(25))),
+            jobberBrukerAktivMedVirksomheten = null,
+        ).toEtableringEgenVirksomhetVurdering(Bruker("saks"), behandling.id)
+        val nyere = eldre.copy(
+            fom = fom.plusDays(7),
+            utviklingsPerioder = listOf(Periode(fom.plusDays(7), fom.plusDays(11))),
+        )
+        val ny = oppfyltVurdering(fom.plusDays(28))
+            .toEtableringEgenVirksomhetVurdering(Bruker("saks"), behandling.id)
+        val forventet = TilOgMedBeregning.Beregnet(
+            Hverdager(EtableringFase.UTVIKLING.maksHverdager - 10).fraOgMed(ny.fom)
+        )
+
+        assertThat(beregnTomForSistePeriode(listOf(eldre, nyere, ny), ny))
+            .usingRecursiveComparison().isEqualTo(forventet)
+    }
+
+    @Test
+    fun `legacy innsending bevarer alle utviklingsperioder og oppstartsperioder`() {
+        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
+        oppfyllSykdomOgBistand(behandling)
+        val fom = sak.rettighetsperiode.fom.plusDays(1)
+        val utviklingsperioder = listOf(
+            Periode(fom, fom.plusDays(4)),
+            Periode(fom.plusDays(7), fom.plusDays(11)),
+        )
+        val oppstartsperioder = listOf(
+            Periode(fom.plusDays(14), fom.plusDays(18)),
+            Periode(fom.plusDays(21), fom.plusDays(25)),
+        )
+        val vurdering = oppfyltVurdering(fom, tom = fom.plusDays(25)).copy(
+            fase = null,
+            utviklingsPerioder = utviklingsperioder,
+            oppstartsPerioder = oppstartsperioder,
+            jobberBrukerAktivMedVirksomheten = null,
+        )
+
+        løser.løs(
+            avklaringsbehovKontekst { this.behandling = behandling },
+            EtableringEgenVirksomhetLøsning(listOf(vurdering)),
+        )
+
+        val lagret = requireNotNull(
+            InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(behandling.id)
+        ).vurderinger.single()
+        assertThat(lagret.utviklingsPerioder).containsExactlyElementsOf(utviklingsperioder)
+        assertThat(lagret.oppstartsPerioder).containsExactlyElementsOf(oppstartsperioder)
+    }
+
+    @Test
     fun `Legacy frontend uten fase skal fortsatt kunne vurdere virksomhet via oppstartsPerioder`() {
         val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
 
         val fom = sak.rettighetsperiode.fom.plusDays(1)
-        val tom = fom.plusMonths(3)
-        val forventetTom = Hverdager(EtableringFase.OPPSTART.maksHverdager).fraOgMed(fom)
+        val tom = fom.plusDays(4)
 
         val kontekst = avklaringsbehovKontekst { this.behandling = behandling }
         val løsning = EtableringEgenVirksomhetLøsning(
@@ -554,17 +638,18 @@ class EtableringEgenVirksomhetLøserTest {
 
         assertDoesNotThrow { løser.løs(kontekst, løsning) }
 
-        val lagretVurdering = InMemoryEtableringEgenVirksomRepository
-            .hentHvisEksisterer(behandling.id)
-            ?.vurderinger
-            ?.single()
+        val lagretVurdering = requireNotNull(
+            InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(behandling.id)
+        ).vurderinger.single()
 
-        assertThat(lagretVurdering).isNotNull
-        assertThat(lagretVurdering!!.fase).isEqualTo(EtableringFase.OPPSTART)
+        assertThat(lagretVurdering.fase).isNull()
+        assertThat(lagretVurdering.versjon).isEqualTo(EtableringVersjon.V0)
         assertThat(lagretVurdering.fom).isEqualTo(fom)
-        assertThat(lagretVurdering.tom).isEqualTo(forventetTom)
-        // Legacy-regel: oppstart ble alltid ansett som registrert i offentlige register i gammelt flyt
-        assertThat(lagretVurdering.erRegistrertINødvendigeOffentligeRegister).isTrue()
+        assertThat(lagretVurdering.tom).isEqualTo(tom)
+        assertThat(lagretVurdering.oppstartsPerioder).containsExactly(Periode(fom, tom))
+        assertThat(lagretVurdering.erRegistrertINødvendigeOffentligeRegister).isNull()
+        assertThat(lagretVurdering.jobberBrukerAktivMedVirksomheten).isNull()
+        assertThat(lagretVurdering.evaluerVirksomhetVurdering()).isTrue()
     }
 
 }

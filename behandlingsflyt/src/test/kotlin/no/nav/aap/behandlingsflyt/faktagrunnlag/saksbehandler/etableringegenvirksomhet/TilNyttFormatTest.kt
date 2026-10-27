@@ -27,6 +27,70 @@ import java.time.ZoneOffset
 
 class TilNyttFormatTest {
     @Test
+    fun `V1 beholdes uendret mens V0 fortsatt konverteres i samme liste`() {
+        val historisk = konstruerVurdering {
+            utviklingsperioder = listOf(5 januar 2026 to (9 januar 2026))
+        }
+        val forventetHistorisk = historisk.copy(
+            utviklingsPerioder = emptyList(),
+            fase = EtableringFase.UTVIKLING,
+            fom = 5 januar 2026,
+            tom = 9 januar 2026,
+        )
+
+        listOf(EtableringFase.UTVIKLING, EtableringFase.OPPSTART, null).forEach { fase ->
+            val ny = historisk.copy(
+                versjon = EtableringVersjon.V1,
+                fase = fase,
+                fom = 2 februar 2026,
+                tom = 6 februar 2026,
+            )
+
+            val resultat = listOf(ny, historisk).tilNyttFormat()
+
+            assertThat(resultat).usingRecursiveComparison().isEqualTo(listOf(ny, forventetHistorisk))
+            assertThat(resultat.first()).isSameAs(ny)
+        }
+    }
+
+    @Test
+    fun `nye fasevurderinger krever aktivitet og oppstart krever registrering`() {
+        val utvikling = konstruerVurdering { fase = EtableringFase.UTVIKLING }
+            .copy(versjon = EtableringVersjon.V1, jobberBrukerAktivMedVirksomheten = true)
+        val oppstart = utvikling.copy(fase = EtableringFase.OPPSTART)
+
+        assertThat(utvikling.evaluerVirksomhetVurdering()).isTrue()
+        assertThat(utvikling.copy(jobberBrukerAktivMedVirksomheten = null).evaluerVirksomhetVurdering()).isFalse()
+        assertThat(oppstart.evaluerVirksomhetVurdering()).isFalse()
+        assertThat(service.validerFaseOgPeriode(oppstart))
+            .isEqualTo(VirksomhetEtableringResultat.Ugyldig.MåOppgiRegistrertIOffentligeRegister)
+        assertThat(oppstart.copy(erRegistrertINødvendigeOffentligeRegister = true).evaluerVirksomhetVurdering())
+            .isTrue()
+    }
+
+    @Test
+    fun `historiske positive vurderinger beholder utfallet uten å finne på svar`() {
+        val historisk = konstruerVurdering {
+            utviklingsperioder = listOf((5 januar 2026) to (9 januar 2026))
+            oppstartsperioder = listOf((12 januar 2026) to (16 januar 2026))
+        }
+        assertThat(historisk.evaluerVirksomhetVurdering()).isTrue()
+
+        val konverterte = listOf(historisk).tilNyttFormat()
+
+        assertThat(konverterte.map { it.fase })
+            .containsExactly(EtableringFase.UTVIKLING, EtableringFase.OPPSTART)
+        assertThat(konverterte).allSatisfy {
+            assertThat(it.versjon).isEqualTo(EtableringVersjon.V0)
+            assertThat(it.jobberBrukerAktivMedVirksomheten).isNull()
+            assertThat(it.erRegistrertINødvendigeOffentligeRegister).isNull()
+            assertThat(it.evaluerVirksomhetVurdering()).isTrue()
+            assertThat(it.copy(versjon = EtableringVersjon.V1).evaluerVirksomhetVurdering()).isFalse()
+        }
+        assertValideringUendret(listOf(historisk))
+    }
+
+    @Test
     fun `teller dager likt for gamle migrerte og blandede vurderinger`() {
         val utvikling = konstruerVurdering {
             fom = 2 februar 2026
