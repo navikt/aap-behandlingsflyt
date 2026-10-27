@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningBarnepensjonLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnepensjon.BarnepensjonLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnepensjon.BarnepensjonLøsningPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonPeriode
@@ -21,6 +22,7 @@ import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mai
+import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -45,6 +47,9 @@ class BarnepensjonFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
         val søknadsdato = periode.fom
         val (sak, behandling) = sendInnFørsteSøknad(
             mottattTidspunkt = søknadsdato.atStartOfDay(),
+            person = TestPerson(
+                fødselsdato = Fødselsdato(søknadsdato.minusYears(20)),
+            ),
             søknad = SøknadV0(
                 student = SøknadStudentDto(StudentStatus.Nei),
                 yrkesskade = "NEI",

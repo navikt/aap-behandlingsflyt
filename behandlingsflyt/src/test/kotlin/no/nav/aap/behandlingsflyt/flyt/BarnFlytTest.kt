@@ -606,7 +606,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `revurdering barnetillegg med ekstra saksbehandler-oppgitt barn øker utbetaling fra et til to barn`() {
         val periode = Periode(LocalDate.of(2026, 1, 1), Tid.MAKS)
-        val oppgitteBarn = lagTestPerson("Lilly", "Løve", LocalDate.now().minusYears(6))
+        val oppgitteBarn = lagTestPerson("Lilly", "Løve", periode.fom.minusYears(6))
 
         // Sender inn en søknad
         val søknad = TestSøknader.SØKNAD_MED_BARN(
@@ -675,11 +675,11 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         val sak: Sak = sakOgBehandlingPar.first
         val førstegangsbehandling = hentSisteOpprettedeBehandlingForSak(sak.id)
 
-        val fomSaksbehandlerOppgitteBarn = LocalDate.now().plusMonths(1).plusDays(4)
+        val fomSaksbehandlerOppgitteBarn = periode.fom.plusMonths(1).plusDays(4)
         val saksbehandlerOppgitteBarn = VurdertBarnDto(
             ident = null,
             navn = "Flinke Bamse",
-            fødselsdato = LocalDate.now().minusYears(6),
+            fødselsdato = periode.fom.minusYears(6),
             dødsdato = null,
             vurderinger = listOf(
                 VurderingAvForeldreAnsvarDto(
@@ -936,7 +936,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         val saksbehandlerOppgitteBarn = VurdertBarnDto(
             ident = "hhhh",
             navn = "Kjær Boks",
-            fødselsdato = LocalDate.now().minusYears(4),
+            fødselsdato = periode.fom.minusYears(4),
             dødsdato = null,
             vurderinger = listOf(
                 VurderingAvForeldreAnsvarDto(
@@ -1053,7 +1053,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         val saksbehandlerOppgitteBarn = VurdertBarnDto(
             ident = "hhhh",
             navn = "Konkret Oktober",
-            fødselsdato = LocalDate.now().minusYears(6),
+            fødselsdato = periode.fom.minusYears(6),
             dødsdato = null,
             vurderinger = listOf(
                 VurderingAvForeldreAnsvarDto(
