@@ -81,7 +81,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapApi(
                         .hentHvisEksisterer(behandling.id)
                     if (personopplysningGrunnlag == null) {
                         // Steget har ikke fått kjørt enda, så
-                        return@transaction KanBehandlesAutomatiskVurdering(false, emptyList(), sak.rettighetsperiode)
+                        return@transaction KanBehandlesAutomatiskVurdering(false, emptyList())
                     }
 
                     val medlemskapArbeidInntektGrunnlag =
@@ -120,7 +120,7 @@ private fun utledFallbackKanBehandlesAutomatiskVurdering(
             .hentBrukerPersonOpplysningHvisEksisterer(behandling.id)
     if (brukerPersonopplysning == null) {
         // Steget har ikke fått kjørt enda, så ingen vurdering kan gis ut
-        return KanBehandlesAutomatiskVurdering(false, emptyList(), sak.rettighetsperiode)
+        return KanBehandlesAutomatiskVurdering(false, emptyList())
     }
     val medlemskapArbeidInntektGrunnlag =
         repositoryProvider.provide<MedlemskapArbeidInntektRepository>()

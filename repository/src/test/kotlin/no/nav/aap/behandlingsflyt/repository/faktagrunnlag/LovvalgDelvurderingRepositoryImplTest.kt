@@ -14,7 +14,6 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -52,8 +51,7 @@ class LovvalgDelvurderingRepositoryImplTest {
                     )
                 )
             )
-        ),
-        periode = Periode(startDato, Tid.MAKS)
+        )
     )
 
     @Test

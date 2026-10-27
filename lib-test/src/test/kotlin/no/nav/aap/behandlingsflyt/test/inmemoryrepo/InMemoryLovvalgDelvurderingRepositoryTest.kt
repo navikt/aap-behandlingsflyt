@@ -10,14 +10,15 @@ import java.time.LocalDate
 
 class InMemoryLovvalgDelvurderingRepositoryTest {
     private val repository = InMemoryLovvalgDelvurderingRepository
-    private val vurdering = KanBehandlesAutomatiskVurdering(true, emptyList(), Periode(LocalDate.now(), Tid.MAKS))
+    private val relevantDato = LocalDate.now()
+    private val vurdering = KanBehandlesAutomatiskVurdering(true, emptyList())
 
     @Test
     fun `kan hente aktiv og historisk vurdering etter id`() {
         val (_, behandling) = opprettInMemorySakOgBehandling()
-        repository.lagre(behandling.id, vurdering, vurdering.periode.fom)
+        repository.lagre(behandling.id, vurdering, relevantDato)
         val opprinnelig = requireNotNull(repository.hentHvisEksisterer(behandling.id))
-        repository.lagre(behandling.id, vurdering.copy(kanBehandlesAutomatisk = false), vurdering.periode.fom)
+        repository.lagre(behandling.id, vurdering.copy(kanBehandlesAutomatisk = false), relevantDato)
         val ny = requireNotNull(repository.hentHvisEksisterer(behandling.id))
 
         assertThat(ny.delvurderingId).isNotEqualTo(opprinnelig.delvurderingId)
@@ -35,13 +36,13 @@ class InMemoryLovvalgDelvurderingRepositoryTest {
     fun `kopiering og uendret lagring beholder samme id`() {
         val (_, fra) = opprettInMemorySakOgBehandling()
         val (_, til) = opprettInMemorySakOgBehandling()
-        repository.lagre(fra.id, vurdering, vurdering.periode.fom)
+        repository.lagre(fra.id, vurdering, relevantDato)
         val opprinnelig = requireNotNull(repository.hentHvisEksisterer(fra.id))
         repository.kopier(fra.id, til.id)
-        repository.lagre(til.id, vurdering, vurdering.periode.fom)
+        repository.lagre(til.id, vurdering, relevantDato)
         assertThat(repository.hentHvisEksisterer(til.id)).isEqualTo(opprinnelig)
 
-        repository.lagre(til.id, vurdering.copy(kanBehandlesAutomatisk = false), vurdering.periode.fom)
+        repository.lagre(til.id, vurdering.copy(kanBehandlesAutomatisk = false), relevantDato)
         assertThat(repository.hentHvisEksisterer(fra.id)).isEqualTo(opprinnelig)
         repository.slett(fra.id)
         assertThat(repository.hentBasertPåDelvurderingId(opprinnelig.delvurderingId)).isEqualTo(opprinnelig)
