@@ -135,7 +135,7 @@ class LovvalgInformasjonskrav internal constructor(
 
         val nyData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        return if (erRelevantEndring(eksisterendeData, nyData)) IKKE_ENDRET else ENDRET
+        return if (erRelevantEndring(eksisterendeData, nyData)) ENDRET else IKKE_ENDRET
     }
 
     private fun erRelevantEndring(
