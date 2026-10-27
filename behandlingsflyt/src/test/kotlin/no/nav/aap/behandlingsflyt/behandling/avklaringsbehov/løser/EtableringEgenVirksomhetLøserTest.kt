@@ -60,11 +60,10 @@ class EtableringEgenVirksomhetLøserTest {
             InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(behandling.id)
         ).vurderinger
         val faser = lagret.tilNyttFormat()
-        assertThat(faser.map { it.fase }).containsExactlyInAnyOrder(
-            EtableringFase.UTVIKLING, EtableringFase.UTVIKLING, EtableringFase.OPPSTART,
-        )
-        assertThat(faser.map { Periode(it.fom, requireNotNull(it.tom)) })
-            .containsExactlyInAnyOrderElementsOf(utvikling + oppstart)
+        val forventedePerioder = utvikling.map { EtableringFase.UTVIKLING to it } +
+                oppstart.map { EtableringFase.OPPSTART to it }
+        val lagredePerioder = faser.map { it.fase to Periode(it.fom, requireNotNull(it.tom)) }
+        assertThat(lagredePerioder).usingRecursiveComparison().isEqualTo(forventedePerioder)
     }
 
     private val løser = EtableringEgenVirksomhetLøser(

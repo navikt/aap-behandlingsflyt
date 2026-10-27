@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companio
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -95,6 +96,16 @@ fun EtableringEgenVirksomhetVurdering.tilGammeltFormat(): EtableringEgenVirksomh
         ) else emptyList(),
     )
 }
+
+fun Tidslinje<EtableringEgenVirksomhetVurdering>.antallHverdagerIFase(fase: EtableringFase): Int =
+    segmenter()
+        .filter { it.verdi.fase == fase }
+        .sumOf { it.periode.antallHverdager().asInt }
+
+fun Tidslinje<EtableringEgenVirksomhetVurdering>.perioderForFase(fase: EtableringFase): List<Periode> =
+    segmenter()
+        .filter { it.verdi.fase == fase }
+        .map { it.periode }
 
 fun Collection<EtableringEgenVirksomhetVurdering>.tellDager(
     selector: (EtableringEgenVirksomhetVurdering) -> List<Periode>
