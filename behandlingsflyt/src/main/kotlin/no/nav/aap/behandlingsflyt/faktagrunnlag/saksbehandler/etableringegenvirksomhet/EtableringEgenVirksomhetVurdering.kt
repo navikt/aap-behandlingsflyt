@@ -53,9 +53,9 @@ data class EtableringEgenVirksomhetVurdering(
 fun List<EtableringEgenVirksomhetVurdering>.tilNyttFormat(): List<EtableringEgenVirksomhetVurdering> {
     return this.flatMap { vurdering ->
 
-        if (vurdering.utviklingsPerioder.isEmpty() && vurdering.oppstartsPerioder.isEmpty()) return@flatMap listOf(
-            vurdering
-        )
+        if (vurdering.versjon == EtableringVersjon.V1 ||
+            (vurdering.utviklingsPerioder.isEmpty() && vurdering.oppstartsPerioder.isEmpty())
+        ) return@flatMap listOf(vurdering)
 
         val utviklingsvurderinger = vurdering.utviklingsPerioder.map { utviklingsperiode ->
             vurdering.copy(

@@ -78,7 +78,9 @@ class BackfillEtableringVurderingerTest {
                 repository.lagre(behandlingId, listOf(gammel))
                 repository.lagre(
                     behandlingId,
-                    listOf(gammel.copy(begrunnelse = "Ny vurdering", versjon = EtableringVersjon.V1))
+                    listOf(gammel).tilNyttFormat().map {
+                        it.copy(begrunnelse = "Ny vurdering", versjon = EtableringVersjon.V1)
+                    }
                 )
                 behandlingId
             }
@@ -88,8 +90,8 @@ class BackfillEtableringVurderingerTest {
             assertThat(resultat).usingRecursiveComparison().isEqualTo(
                 BackfillEtableringVurderinger.Resultat(
                     antallBehandlinger = 1,
-                    antallVurderingerSomSplittes = 2,
-                    antallNyeVurderinger = 4,
+                    antallVurderingerSomSplittes = 1,
+                    antallNyeVurderinger = 2,
                 )
             )
             val iderEtter = isolertDataSource.transaction { connection ->
