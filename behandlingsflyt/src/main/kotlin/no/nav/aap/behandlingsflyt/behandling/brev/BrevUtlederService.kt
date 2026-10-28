@@ -23,11 +23,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.UføreInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
@@ -78,9 +80,11 @@ import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.math.RoundingMode
@@ -107,6 +111,7 @@ class BrevUtlederService(
     private val samordningUføreRepository: SamordningUføreRepository,
     private val samordningArbeidsgiverRepository: SamordningArbeidsgiverRepository,
     private val tjenestepensjonRefusjonsKravVurderingRepository: TjenestepensjonRefusjonsKravVurderingRepository,
+    private val tjenestePensjonRepository: TjenestePensjonRepository,
     private val sykestipendRepository: SykestipendRepository,
     private val barnepensjonRepository: BarnepensjonRepository,
     private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
@@ -140,6 +145,7 @@ class BrevUtlederService(
         samordningUføreRepository = repositoryProvider.provide(),
         samordningArbeidsgiverRepository = repositoryProvider.provide(),
         tjenestepensjonRefusjonsKravVurderingRepository = repositoryProvider.provide(),
+        tjenestePensjonRepository = repositoryProvider.provide(),
         sykestipendRepository = repositoryProvider.provide(),
         barnepensjonRepository = repositoryProvider.provide(),
         samordningAndreStatligeYtelserRepository = repositoryProvider.provide(),
@@ -885,32 +891,40 @@ class BrevUtlederService(
         behandlingId: BehandlingId,
         vedtak: Vedtak,
     ): RefusjonskravTjenestepensjon? {
-        val sisteDagMedYtelse = underveisRepository.hentHvisEksisterer(behandlingId)?.sisteDagMedYtelse()
-        checkNotNull(sisteDagMedYtelse) {
+        val underveis = checkNotNull(underveisRepository.hentHvisEksisterer(behandlingId)) {
             "Vedtak mangler siste dag med ytelse"
         }
-        return tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandlingId)?.let { vurdering ->
-            if (!vurdering.harKrav) {
-                RefusjonskravTjenestepensjon(
-                    skalEtterbetalingHoldesIgjen = false,
-                    fraOgMed = null,
-                    tilOgMed = null,
-                )
-            } else {
-                val fraOgMed = checkNotNull(vedtak.virkningstidspunkt) {
-                    "Vedtak mangler virkningstidspunkt"
+        val harOverlappMedInnvilgetAAP = tjenestePensjonRepository.hentHvisEksisterer(behandlingId)
+            .orEmpty()
+            .any { forhold ->
+                forhold.ytelser.any { ytelse ->
+                    val tpPeriode = Periode(ytelse.ytelseIverksattFom, ytelse.ytelseIverksattTom ?: Tid.MAKS)
+                    underveis.perioder.any { it.utfall == Utfall.OPPFYLT && it.periode.overlapper(tpPeriode) }
                 }
-                val tilOgMed =
-                    vedtak.vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(vedtak.virkningstidspunkt)
-                        .coerceAtMost(sisteDagMedYtelse)
-
-                RefusjonskravTjenestepensjon(
-                    skalEtterbetalingHoldesIgjen = true,
-                    fraOgMed = fraOgMed,
-                    tilOgMed = tilOgMed,
-                )
             }
+        if (!harOverlappMedInnvilgetAAP) return null
+
+        val vurdering = tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandlingId)
+        if (vurdering?.harKrav != true) {
+            return RefusjonskravTjenestepensjon(
+                skalEtterbetalingHoldesIgjen = false,
+                fraOgMed = null,
+                tilOgMed = null,
+            )
         }
+
+        val fraOgMed = checkNotNull(vedtak.virkningstidspunkt) {
+            "Vedtak mangler virkningstidspunkt"
+        }
+        val tilOgMed =
+            vedtak.vedtakstidspunkt.toLocalDate().minusDays(1).coerceAtLeast(fraOgMed)
+                .coerceAtMost(underveis.sisteDagMedYtelse())
+
+        return RefusjonskravTjenestepensjon(
+            skalEtterbetalingHoldesIgjen = true,
+            fraOgMed = fraOgMed,
+            tilOgMed = tilOgMed,
+        )
     }
 
     private fun hentRefusjonskravNavKontor(
