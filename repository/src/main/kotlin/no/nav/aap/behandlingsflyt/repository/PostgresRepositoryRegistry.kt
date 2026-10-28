@@ -46,6 +46,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.Lov
 import no.nav.aap.overgangarbeid.OvergangArbeidRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.arena.ArenaMaksdatoRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.dagpenger.DagpengerRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.InntektGrunnlagRepositoryImpl
@@ -189,5 +190,6 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<TestAutomatiskMeldekortSakRepositoryImpl>()
     .register<Avslag11_27RepositoryImpl>()
     .register<StønadsperiodeRepositoryImpl>()
+    .register<ArenaMaksdatoRepositoryImpl>()
     .register<KandidatForPåminnelseRepositoryImpl>()
     .register<LovvalgDelvurderingRepositoryImpl>()

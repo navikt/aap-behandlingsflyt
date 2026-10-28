@@ -5,6 +5,7 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoMedVedtakResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaBeregningstidspunktResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaForutgaaendeMedlemskapResponse
@@ -48,6 +49,10 @@ class FakeArenaOppslagGateway : ArenaOppslagGateway {
                 )
             )
         )
+    }
+
+    override fun hentMaksdato(ident: Ident): MaksdatoMedVedtakResponse {
+        return MaksdatoMedVedtakResponse(sak = null)
     }
 
 

@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.arena
 
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoMedVedtakResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaBeregningstidspunktResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaForutgaaendeMedlemskapResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
@@ -9,6 +10,7 @@ import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVedtaksperiodeResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
 import java.time.LocalDate
 
 data class ArenaKrav(
@@ -157,3 +159,14 @@ fun ArenaBeregningstidspunktResponse.tilDomene(): ArenaBeregningstidspunkt? =
     beregningstidspunkt?.let { ArenaBeregningstidspunkt(beregningstidspunkt = it) }
 
 fun HarHistorikkResponse.tilDomene(): ArenaHistorikk = ArenaHistorikk(harHistorikk = harHistorikk)
+
+// Samme valg av maksdato som MaksdatoSamordningResponse.from, men status STANSET gir ikke null her; status lagres separat.
+fun MaksdatoMedVedtakResponse.tilDomene(): ArenaMaksdato? = sak?.let {
+    ArenaMaksdato(
+        arenaSaksnummer = it.saknummer,
+        status = it.sakStatus,
+        maksdato = it.sisteVedtak.maxdatoUnntak ?: it.sisteVedtak.maxdatoOrdinaer,
+        vedtakTil = it.sisteVedtak.til,
+        vedtakId = it.sisteVedtak.vedtakId,
+    )
+}

@@ -4,6 +4,8 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkRequest
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoMedVedtakResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoRequest
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerRequest
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
@@ -80,6 +82,19 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
             mapper = { body, _ -> DefaultJsonMapper.fromJson<SakerResponse>(body) }
         )
         requireNotNull(response) { "Fikk ikke gyldig svar fra /api/v1/person/saker" }
+        return response
+    }
+
+    override fun hentMaksdato(ident: Ident): MaksdatoMedVedtakResponse {
+        val response: MaksdatoMedVedtakResponse? = restClient.post(
+            uri.resolve("/api/v1/person/maksdato"),
+            PostRequest(
+                body = MaksdatoRequest(ident.identifikator),
+                timeout = Duration.ofSeconds(5)
+            ),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson<MaksdatoMedVedtakResponse>(body) }
+        )
+        requireNotNull(response) { "Fikk ikke gyldig svar fra /api/v1/person/maksdato" }
         return response
     }
 
