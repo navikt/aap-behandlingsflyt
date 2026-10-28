@@ -36,6 +36,28 @@ import java.time.LocalDate
 
 class EtableringEgenVirksomhetLøserTest {
 
+    @Test
+    fun `positiv legacy-vurdering må ha minst én periode`() {
+        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
+        oppfyllSykdomOgBistand(behandling)
+        val fom = sak.rettighetsperiode.fom.plusDays(1)
+        val vurdering = oppfyltVurdering(fom, tom = fom.plusDays(4)).copy(
+            fase = null,
+            utviklingsPerioder = emptyList(),
+            oppstartsPerioder = emptyList(),
+        )
+
+        val feil = assertThrows<UgyldigForespørselException> {
+            løser.løs(
+                avklaringsbehovKontekst { this.behandling = behandling },
+                EtableringEgenVirksomhetLøsning(listOf(vurdering)),
+            )
+        }
+
+        assertThat(feil.message).contains("minst én periode")
+        assertThat(InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(behandling.id)).isNull()
+    }
+
     private val løser = EtableringEgenVirksomhetLøser(
         InMemoryEtableringEgenVirksomRepository,
         InMemoryBehandlingRepository,
