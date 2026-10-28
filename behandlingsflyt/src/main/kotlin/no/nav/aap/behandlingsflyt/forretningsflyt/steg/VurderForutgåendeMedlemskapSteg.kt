@@ -78,7 +78,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             nårVurderingErRelevant = ::nårVurderingErRelevant,
             perioderSomIkkeErTilstrekkeligVurdert = ::perioderSomIkkeErTilstrekkeligVurdert,
             gjeldendeVurderinger = {
-                forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
+                forutgåendeMedlemskapRepository.hentHvisEksisterer(kontekst.behandlingId)
                     ?.gjeldendeVurderinger()
                     .orEmpty()
             },
@@ -257,7 +257,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             fom = kontekst.rettighetsperiode.fom,
         )
 
-        forutgåendeMedlemskapArbeidInntektRepository.lagreVurderinger(kontekst.behandlingId, listOf(vurdering))
+        forutgåendeMedlemskapRepository.lagreVurderinger(kontekst.behandlingId, listOf(vurdering))
     }
 
     override val stegType = type()
