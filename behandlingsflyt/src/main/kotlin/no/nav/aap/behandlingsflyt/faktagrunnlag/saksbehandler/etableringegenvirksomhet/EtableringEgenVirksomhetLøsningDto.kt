@@ -24,6 +24,7 @@ data class EtableringEgenVirksomhetLøsningDto(
     val fase: EtableringFase? = null,
     val erRegistrertINødvendigeOffentligeRegister: Boolean? = null,
     val jobberBrukerAktivMedVirksomheten: Boolean? = null,
+    val versjon: EtableringVersjon = EtableringVersjon.V0,
 ) : LøsningForPeriode {
     fun toEtableringEgenVirksomhetVurdering(avklaringsbehovKontekst: AvklaringsbehovKontekst) =
         toEtableringEgenVirksomhetVurdering(
@@ -50,6 +51,6 @@ data class EtableringEgenVirksomhetLøsningDto(
             fase = fase,
             erRegistrertINødvendigeOffentligeRegister = erRegistrertINødvendigeOffentligeRegister,
             jobberBrukerAktivMedVirksomheten = jobberBrukerAktivMedVirksomheten,
-            versjon = EtableringVersjon.V0,
+            versjon = versjon,
         )
 }
