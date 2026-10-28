@@ -149,5 +149,6 @@ fun MaksdatoMedVedtakResponse.tilDomene(): ArenaMaksdato? = sak?.let {
         status = it.sakStatus,
         maksdato = it.sisteVedtak.maxdatoUnntak ?: it.sisteVedtak.maxdatoOrdinaer,
         vedtakTil = it.sisteVedtak.til,
+        vedtakId = it.sisteVedtak.vedtakId,
     )
 }

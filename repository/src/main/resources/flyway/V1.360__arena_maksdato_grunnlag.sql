@@ -7,6 +7,7 @@ CREATE TABLE arena_maksdato_grunnlag
     status           TEXT,
     maksdato         DATE,
     vedtak_til       DATE,
+    vedtak_id        BIGINT,
     opprettet_tid    TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

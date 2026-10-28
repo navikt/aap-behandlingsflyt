@@ -7,4 +7,5 @@ data class ArenaMaksdato(
     val status: String,
     val maksdato: LocalDate?,
     val vedtakTil: LocalDate?,
+    val vedtakId: Int,
 )

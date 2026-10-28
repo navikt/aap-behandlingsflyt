@@ -38,6 +38,7 @@ class ArenaMaksdatoMappingTest {
                 status = "AKTIV",
                 maksdato = LocalDate.of(2025, 6, 1),
                 vedtakTil = LocalDate.of(2024, 12, 31),
+                vedtakId = 1,
             )
         )
     }

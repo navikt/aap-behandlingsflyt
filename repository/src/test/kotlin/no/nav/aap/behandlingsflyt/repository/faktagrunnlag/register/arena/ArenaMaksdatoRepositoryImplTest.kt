@@ -42,6 +42,7 @@ class ArenaMaksdatoRepositoryImplTest {
             status = "LØPENDE",
             maksdato = LocalDate.of(2026, 12, 31),
             vedtakTil = LocalDate.of(2026, 6, 30),
+            vedtakId = 42,
         )
 
         dataSource.transaction { connection ->
@@ -58,7 +59,7 @@ class ArenaMaksdatoRepositoryImplTest {
     @Test
     fun `ny lagring erstatter gammelt grunnlag`() {
         val behandlingId = opprettBehandlingId()
-        val gammelt = ArenaMaksdato("123", "LØPENDE", LocalDate.of(2026, 12, 31), null)
+        val gammelt = ArenaMaksdato("123", "LØPENDE", LocalDate.of(2026, 12, 31), null, 42)
         val nytt = gammelt.copy(status = "AVSLUTTET")
 
         dataSource.transaction { connection ->
@@ -93,7 +94,7 @@ class ArenaMaksdatoRepositoryImplTest {
     fun `kopier kopierer grunnlag til ny behandling`() {
         val fraBehandlingId = opprettBehandlingId()
         val tilBehandlingId = opprettBehandlingId()
-        val arenaMaksdato = ArenaMaksdato("123", "LØPENDE", null, LocalDate.of(2026, 6, 30))
+        val arenaMaksdato = ArenaMaksdato("123", "LØPENDE", null, LocalDate.of(2026, 6, 30), 42)
 
         dataSource.transaction { connection ->
             ArenaMaksdatoRepositoryImpl(connection).lagre(fraBehandlingId, arenaMaksdato)

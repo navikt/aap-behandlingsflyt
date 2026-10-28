@@ -30,8 +30,8 @@ class ArenaMaksdatoRepositoryImpl(private val connection: DBConnection) : ArenaM
         connection.execute(
             """
                 INSERT INTO arena_maksdato_grunnlag
-                    (behandling_id, arena_saksnummer, status, maksdato, vedtak_til, opprettet_tid)
-                VALUES (?, ?, ?, ?, ?, ?)
+                    (behandling_id, arena_saksnummer, status, maksdato, vedtak_til, vedtak_id, opprettet_tid)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
         ) {
             setParams {
@@ -40,7 +40,8 @@ class ArenaMaksdatoRepositoryImpl(private val connection: DBConnection) : ArenaM
                 setString(3, arenaMaksdato?.status)
                 setLocalDate(4, arenaMaksdato?.maksdato)
                 setLocalDate(5, arenaMaksdato?.vedtakTil)
-                setInstant(6, Instant.now())
+                setLong(6, arenaMaksdato?.vedtakId?.toLong())
+                setInstant(7, Instant.now())
             }
         }
     }
@@ -64,6 +65,7 @@ class ArenaMaksdatoRepositoryImpl(private val connection: DBConnection) : ArenaM
                 status = row.getString("status"),
                 maksdato = row.getLocalDateOrNull("maksdato"),
                 vedtakTil = row.getLocalDateOrNull("vedtak_til"),
+                vedtakId = row.getInt("vedtak_id"),
             )
         }
         return ArenaMaksdatoGrunnlag(arenaMaksdato)
@@ -76,8 +78,8 @@ class ArenaMaksdatoRepositoryImpl(private val connection: DBConnection) : ArenaM
         connection.execute(
             """
                 INSERT INTO arena_maksdato_grunnlag
-                    (behandling_id, arena_saksnummer, status, maksdato, vedtak_til, opprettet_tid)
-                SELECT ?, arena_saksnummer, status, maksdato, vedtak_til, ?
+                    (behandling_id, arena_saksnummer, status, maksdato, vedtak_til, vedtak_id, opprettet_tid)
+                SELECT ?, arena_saksnummer, status, maksdato, vedtak_til, vedtak_id, ?
                 FROM arena_maksdato_grunnlag
                 WHERE aktiv AND behandling_id = ?
             """.trimIndent()
