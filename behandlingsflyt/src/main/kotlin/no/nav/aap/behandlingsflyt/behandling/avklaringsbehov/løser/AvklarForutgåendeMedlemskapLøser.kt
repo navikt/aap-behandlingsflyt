@@ -3,14 +3,14 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertForutgåendeMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.validerGyldigVurderinger
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklarForutgåendeMedlemskapLøser(
-    private val forutgåendeMedlemskapRepository: MedlemskapArbeidInntektForutgåendeRepository,
+    private val forutgåendeMedlemskapRepository: ForutgåendeMedlemskapRepository,
     private val behandlingRepository: BehandlingRepository,
 ) : AvklaringsbehovsLøser<AvklarPeriodisertForutgåendeMedlemskapLøsning> {
 

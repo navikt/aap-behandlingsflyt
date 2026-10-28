@@ -1,9 +1,8 @@
-package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.KanBehandlesAutomatiskVurdering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.TilhørighetVurdering
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.komponenter.type.Periode
 
 internal object LovvalgDelvurderingJson {
 

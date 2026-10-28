@@ -6,7 +6,7 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.LovvalgMedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderLovvalgSteg
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -43,7 +43,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
                         val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                         val lovvalgMedlemskapRepository =
                             repositoryProvider
-                                .provide<MedlemskapArbeidInntektRepository>()
+                                .provide<LovvalgMedlemskapRepository>()
                         val sakRepository = repositoryProvider.provide<SakRepository>()
                         val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                         val sak = sakRepository.hent(behandling.sakId)

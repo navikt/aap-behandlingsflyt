@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.KanBehandlesAutomatiskVurdering
 import org.assertj.core.api.Assertions.assertThat

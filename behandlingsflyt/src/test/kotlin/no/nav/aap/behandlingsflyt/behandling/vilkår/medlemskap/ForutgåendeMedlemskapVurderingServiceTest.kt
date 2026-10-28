@@ -4,8 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidAnsettelsesdetaljGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Fartsomraade
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapFaktaGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipsregister
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
@@ -215,7 +215,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
         godkjentPgaUnntakIMedl: Boolean,
         godkjentPgaInntekt: Boolean,
         inntektHarHull: Boolean
-    ): ForutgåendeMedlemskapGrunnlag {
+    ): ForutgåendeMedlemskapFaktaGrunnlag {
         val inntekterINorgeGrunnlag = if (godkjentPgaInntekt) {
             listOf(
                 InntektINorgeGrunnlag(
@@ -280,8 +280,8 @@ class ForutgåendeMedlemskapVurderingServiceTest {
             )
         } else null
 
-        return ForutgåendeMedlemskapGrunnlag(
-            medlemskapArbeidInntektGrunnlag = ForutgåendeMedlemskapArbeidInntektGrunnlag(
+        return ForutgåendeMedlemskapFaktaGrunnlag(
+            forutgåendeMedlemskapGrunnlag = ForutgåendeMedlemskapGrunnlag(
                 medlemskapGrunnlag = medlUnntak,
                 inntekterINorgeGrunnlag = inntekterINorgeGrunnlag,
                 arbeiderINorgeGrunnlag = emptyList(),
@@ -310,7 +310,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
         godkjentPgaUnntakIMedl: Boolean,
         godkjentPgaInntekt: Boolean,
         inntektHarHull: Boolean
-    ): ForutgåendeMedlemskapGrunnlag {
+    ): ForutgåendeMedlemskapFaktaGrunnlag {
         val inntekterINorgeGrunnlag = if (godkjentPgaInntekt) {
             listOf(
                 InntektINorgeGrunnlag(
@@ -375,8 +375,8 @@ class ForutgåendeMedlemskapVurderingServiceTest {
             )
         } else null
 
-        return ForutgåendeMedlemskapGrunnlag(
-            medlemskapArbeidInntektGrunnlag = ForutgåendeMedlemskapArbeidInntektGrunnlag(
+        return ForutgåendeMedlemskapFaktaGrunnlag(
+            forutgåendeMedlemskapGrunnlag = ForutgåendeMedlemskapGrunnlag(
                 medlemskapGrunnlag = medlUnntak,
                 inntekterINorgeGrunnlag = inntekterINorgeGrunnlag,
                 arbeiderINorgeGrunnlag = emptyList(),
@@ -413,7 +413,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
         inntektHarHull: Boolean,
         harNorskStatsborgerskap: Boolean = true,
         norskStatsborgerskapUtgåttFørPerioden: Boolean = false
-    ): ForutgåendeMedlemskapGrunnlag {
+    ): ForutgåendeMedlemskapFaktaGrunnlag {
         val inntekterINorgeGrunnlag = if (godkjentPgaInntekt) {
             listOf(
                 InntektINorgeGrunnlag(
@@ -478,8 +478,8 @@ class ForutgåendeMedlemskapVurderingServiceTest {
             )
         } else null
 
-        return ForutgåendeMedlemskapGrunnlag(
-            medlemskapArbeidInntektGrunnlag = ForutgåendeMedlemskapArbeidInntektGrunnlag(
+        return ForutgåendeMedlemskapFaktaGrunnlag(
+            forutgåendeMedlemskapGrunnlag = ForutgåendeMedlemskapGrunnlag(
                 medlemskapGrunnlag = medlUnntak,
                 inntekterINorgeGrunnlag = inntekterINorgeGrunnlag,
                 arbeiderINorgeGrunnlag = emptyList(),
@@ -523,15 +523,15 @@ class ForutgåendeMedlemskapVurderingServiceTest {
         )
     }
 
-    private fun lagGrunnlagMedFlereInntekterSammeMåned(): ForutgåendeMedlemskapGrunnlag {
+    private fun lagGrunnlagMedFlereInntekterSammeMåned(): ForutgåendeMedlemskapFaktaGrunnlag {
         val fullCoverage = Periode(LocalDate.now().minusYears(5), LocalDate.now())
         val inntekterINorgeGrunnlag = listOf(
             InntektINorgeGrunnlag("virksomhet-A", 1000.0, "NOR", "NOR", "type", fullCoverage, "Virksomhet A"),
             InntektINorgeGrunnlag("virksomhet-B", 2000.0, "NOR", "NOR", "type", fullCoverage, "Virksomhet B"),
         )
 
-        return ForutgåendeMedlemskapGrunnlag(
-            medlemskapArbeidInntektGrunnlag = ForutgåendeMedlemskapArbeidInntektGrunnlag(
+        return ForutgåendeMedlemskapFaktaGrunnlag(
+            forutgåendeMedlemskapGrunnlag = ForutgåendeMedlemskapGrunnlag(
                 medlemskapGrunnlag = null,
                 inntekterINorgeGrunnlag = inntekterINorgeGrunnlag,
                 arbeiderINorgeGrunnlag = emptyList(),
@@ -559,7 +559,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     private fun lagGrunnlagMedAkkumulerteEnMånedsgap(
         rettighetsFom: LocalDate,
         antallGapMåneder: Int
-    ): ForutgåendeMedlemskapGrunnlag {
+    ): ForutgåendeMedlemskapFaktaGrunnlag {
         val startMåned = YearMonth.from(rettighetsFom.minusYears(5))
         val sluttMåned = YearMonth.from(rettighetsFom)
         val inntekterINorgeGrunnlag = mutableListOf<InntektINorgeGrunnlag>()
@@ -589,8 +589,8 @@ class ForutgåendeMedlemskapVurderingServiceTest {
             månedIndeks++
         }
 
-        return ForutgåendeMedlemskapGrunnlag(
-            medlemskapArbeidInntektGrunnlag = ForutgåendeMedlemskapArbeidInntektGrunnlag(
+        return ForutgåendeMedlemskapFaktaGrunnlag(
+            forutgåendeMedlemskapGrunnlag = ForutgåendeMedlemskapGrunnlag(
                 medlemskapGrunnlag = null,
                 inntekterINorgeGrunnlag = inntekterINorgeGrunnlag,
                 arbeiderINorgeGrunnlag = emptyList(),
@@ -634,9 +634,9 @@ class ForutgåendeMedlemskapVurderingServiceTest {
         skipstype: Skipstype = Skipstype.ANNET,
         fartsomraade: Fartsomraade = Fartsomraade.INNENRIKS,
         yrke: Yrke = Yrke(kode = "6411104", beskrivelse = "FISKER"),
-    ): ForutgåendeMedlemskapGrunnlag =
-        ForutgåendeMedlemskapGrunnlag(
-            medlemskapArbeidInntektGrunnlag = ForutgåendeMedlemskapArbeidInntektGrunnlag(
+    ): ForutgåendeMedlemskapFaktaGrunnlag =
+        ForutgåendeMedlemskapFaktaGrunnlag(
+            forutgåendeMedlemskapGrunnlag = ForutgåendeMedlemskapGrunnlag(
                 medlemskapGrunnlag = null,
                 inntekterINorgeGrunnlag = listOf(
                     InntektINorgeGrunnlag(

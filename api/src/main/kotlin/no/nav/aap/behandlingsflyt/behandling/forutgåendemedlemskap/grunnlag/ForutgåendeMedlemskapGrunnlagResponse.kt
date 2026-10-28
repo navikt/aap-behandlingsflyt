@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag
+package no.nav.aap.behandlingsflyt.behandling.forutgåendemedlemskap.grunnlag
 
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto

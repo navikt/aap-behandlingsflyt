@@ -8,13 +8,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 
-data class ForutgåendeMedlemskapGrunnlag(
-    val medlemskapArbeidInntektGrunnlag: ForutgåendeMedlemskapArbeidInntektGrunnlag?,
+data class ForutgåendeMedlemskapFaktaGrunnlag(
+    val forutgåendeMedlemskapGrunnlag: ForutgåendeMedlemskapGrunnlag?,
     val personopplysningGrunnlag: PersonopplysningMedHistorikkGrunnlag?,
     val nyeSoknadGrunnlag: UtenlandsOppholdData?
 ) : Faktagrunnlag
 
-data class ForutgåendeMedlemskapArbeidInntektGrunnlag(
+data class ForutgåendeMedlemskapGrunnlag(
     val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,
     val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
     val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,

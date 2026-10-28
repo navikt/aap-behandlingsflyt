@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapFaktaGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.behandling.vilkår.VurderingsResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
@@ -17,15 +17,15 @@ import no.nav.aap.komponenter.type.Periode
 class ForutgåendeMedlemskapvilkåret(
     vilkårsresultat: Vilkårsresultat,
     private val rettighetsPeriode: Periode
-) : Vilkårsvurderer<ForutgåendeMedlemskapGrunnlag> {
+) : Vilkårsvurderer<ForutgåendeMedlemskapFaktaGrunnlag> {
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.MEDLEMSKAP)
 
-    override fun vurder(grunnlag: ForutgåendeMedlemskapGrunnlag) {
+    override fun vurder(grunnlag: ForutgåendeMedlemskapFaktaGrunnlag) {
         val brukManuellVurderingForForutgåendeMedlemskap =
-            grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() ?: false
+            grunnlag.forutgåendeMedlemskapGrunnlag?.vurderinger?.isNotEmpty() ?: false
 
         if (brukManuellVurderingForForutgåendeMedlemskap) {
-            val gjeldendeVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag.gjeldendeVurderinger()
+            val gjeldendeVurderinger = grunnlag.forutgåendeMedlemskapGrunnlag.gjeldendeVurderinger()
 
             val vilkårsvurderinger = gjeldendeVurderinger
                 .map { vurdering ->
@@ -86,7 +86,7 @@ class ForutgåendeMedlemskapvilkåret(
     }
 
     private fun leggTilVurdering(
-        grunnlag: ForutgåendeMedlemskapGrunnlag,
+        grunnlag: ForutgåendeMedlemskapFaktaGrunnlag,
         vurderingsResultat: VurderingsResultat,
     ) {
         vilkår.leggTilVurdering(

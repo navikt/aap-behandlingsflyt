@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.Kilde
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.TilhørighetVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettSak
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.LovvalgDelvurderingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap.LovvalgDelvurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection

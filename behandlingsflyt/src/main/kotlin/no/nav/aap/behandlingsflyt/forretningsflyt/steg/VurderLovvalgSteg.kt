@@ -7,12 +7,12 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgFaktagrunn
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingRepository
-import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.MedlemskapLovvalgVurderingService
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgMedlemskapVurderingService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.Medlemskapvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.LovvalgMedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -37,7 +37,7 @@ import kotlin.lazy
 class VurderLovvalgSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val personopplysningRepository: PersonopplysningRepository,
-    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
+    private val lovvalgMedlemskapRepository: LovvalgMedlemskapRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val lovvalgDelvurderingRepository: LovvalgDelvurderingRepository,
@@ -46,7 +46,7 @@ class VurderLovvalgSteg private constructor(
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
         personopplysningRepository = repositoryProvider.provide(),
-        medlemskapArbeidInntektRepository = repositoryProvider.provide(),
+        lovvalgMedlemskapRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         lovvalgDelvurderingRepository = repositoryProvider.provide(),
@@ -109,7 +109,7 @@ class VurderLovvalgSteg private constructor(
             VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.MIGERING_FRA_ARENA,
             VurderingType.REVURDERING -> {
-                val tilhørighetVurdering = MedlemskapLovvalgVurderingService().vurderTilhørighet(
+                val tilhørighetVurdering = LovvalgMedlemskapVurderingService().vurderTilhørighet(
                     registerGrunnlag.value,
                     kontekst.rettighetsperiode,
                     kontekst.vurderingType
@@ -176,12 +176,12 @@ class VurderLovvalgSteg private constructor(
         kontekst: FlytKontekstMedPerioder,
     ) {
         val forrigeVurderinger = kontekst.forrigeBehandlingId?.let { forrigeBehandlingId ->
-            medlemskapArbeidInntektRepository.hentHvisEksisterer(forrigeBehandlingId)
+            lovvalgMedlemskapRepository.hentHvisEksisterer(forrigeBehandlingId)
                 ?.vurderinger
         } ?: emptyList()
 
         if (forrigeVurderinger.toSet() != hentManuelleVurderinger(kontekst.behandlingId).toSet()) {
-            medlemskapArbeidInntektRepository.lagreVurderinger(
+            lovvalgMedlemskapRepository.lagreVurderinger(
                 kontekst.behandlingId,
                 forrigeVurderinger,
             )
@@ -192,15 +192,15 @@ class VurderLovvalgSteg private constructor(
         setOf(Vurderingsbehov.REVURDER_LOVVALG, Vurderingsbehov.LOVVALG_OG_MEDLEMSKAP, Vurderingsbehov.MOTTATT_SØKNAD)
 
     private fun hentManuelleVurderinger(behandlingId: BehandlingId): List<ManuellVurderingForLovvalgMedlemskap> {
-        return medlemskapArbeidInntektRepository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
+        return lovvalgMedlemskapRepository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
     }
 
     private fun hentRegisterGrunnlag(sakId: SakId, behandlingId: BehandlingId): MedlemskapLovvalgRegisterGrunnlag {
         val medlemskapArbeidInntektGrunnlag =
-            medlemskapArbeidInntektRepository.hentHvisEksisterer(behandlingId)
+            lovvalgMedlemskapRepository.hentHvisEksisterer(behandlingId)
         val oppgittUtenlandsOppholdGrunnlag =
-            medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandlingId)
-                ?: medlemskapArbeidInntektRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sakId)
+            lovvalgMedlemskapRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandlingId)
+                ?: lovvalgMedlemskapRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sakId)
 
         val brukerPersonopplysning = personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(behandlingId)
 

@@ -27,14 +27,14 @@ data class MedlemskapLovvalgRegisterGrunnlag(
 ) {
     companion object {
         fun fra(
-            medlemskapArbeidInntektGrunnlag: MedlemskapArbeidInntektGrunnlag?,
+            lovvalgMedlemskapGrunnlag: LovvalgMedlemskapGrunnlag?,
             personopplysning: Personopplysning?,
             nyeSoknadGrunnlag: UtenlandsOppholdData?,
             vurderBosattStatusOgNorskStatsborgerskap: Boolean = false,
         ) = MedlemskapLovvalgRegisterGrunnlag(
-            medlemskapGrunnlag = medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag,
-            inntekterINorgeGrunnlag = medlemskapArbeidInntektGrunnlag?.inntekterINorgeGrunnlag.orEmpty(),
-            arbeiderINorgeGrunnlag = medlemskapArbeidInntektGrunnlag?.arbeiderINorgeGrunnlag.orEmpty(),
+            medlemskapGrunnlag = lovvalgMedlemskapGrunnlag?.medlemskapGrunnlag,
+            inntekterINorgeGrunnlag = lovvalgMedlemskapGrunnlag?.inntekterINorgeGrunnlag.orEmpty(),
+            arbeiderINorgeGrunnlag = lovvalgMedlemskapGrunnlag?.arbeiderINorgeGrunnlag.orEmpty(),
             personopplysning = personopplysning,
             nyeSoknadGrunnlag = nyeSoknadGrunnlag,
             vurderBosattStatusOgNorskStatsborgerskap = vurderBosattStatusOgNorskStatsborgerskap,
@@ -55,7 +55,7 @@ data class MedlemskapLovvalgFaktagrunnlag(
     }
 }
 
-data class MedlemskapArbeidInntektGrunnlag(
+data class LovvalgMedlemskapGrunnlag(
     val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,
     val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
     val inntekterINorgeRegisterGrunnlag: InntekterINorgeRegisterGrunnlag,

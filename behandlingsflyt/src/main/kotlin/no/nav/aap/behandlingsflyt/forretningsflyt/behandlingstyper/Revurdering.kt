@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgInformasjonskrav
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnbeløpInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.DagpengerInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.TiltakspengerInformasjonskrav
@@ -123,7 +123,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = VurderLovvalgSteg,
-                informasjonskrav = listOf(PersonopplysningInformasjonskrav, LovvalgInformasjonskrav),
+                informasjonskrav = listOf(PersonopplysningInformasjonskrav, LovvalgMedlemskapInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.MIGRERING_FRA_ARENA,

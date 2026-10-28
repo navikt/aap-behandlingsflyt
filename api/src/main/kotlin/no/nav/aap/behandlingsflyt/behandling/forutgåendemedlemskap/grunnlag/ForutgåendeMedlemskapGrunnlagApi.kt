@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag
+package no.nav.aap.behandlingsflyt.behandling.forutgåendemedlemskap.grunnlag
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
@@ -6,7 +6,7 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderForutgåendeMedlemskapSteg
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -42,7 +42,7 @@ fun NormalOpenAPIRoute.forutgåendeMedlemskapApi(
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val medlemskapRepository =
                         repositoryProvider
-                            .provide<MedlemskapArbeidInntektForutgåendeRepository>()
+                            .provide<ForutgåendeMedlemskapRepository>()
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val avklaringsbehovRepository = repositoryProvider.provide<AvklaringsbehovRepository>()
                     val vurderForutgåendeMedlemskapSteg = VurderForutgåendeMedlemskapSteg.konstruer(repositoryProvider, gatewayProvider)

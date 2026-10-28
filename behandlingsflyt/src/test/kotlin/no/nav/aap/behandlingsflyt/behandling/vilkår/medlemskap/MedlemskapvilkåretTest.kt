@@ -122,7 +122,7 @@ class MedlemskapvilkåretTest {
         ),
     ) = MedlemskapLovvalgFaktagrunnlag(
         register = MedlemskapLovvalgRegisterGrunnlag.fra(
-            medlemskapArbeidInntektGrunnlag = null,
+            lovvalgMedlemskapGrunnlag = null,
             personopplysning = null,
             nyeSoknadGrunnlag = søknad,
         ),

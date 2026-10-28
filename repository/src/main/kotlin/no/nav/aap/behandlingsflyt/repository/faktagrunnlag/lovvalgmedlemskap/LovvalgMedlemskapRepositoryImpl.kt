@@ -1,11 +1,11 @@
-package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterForKrav
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterINorgeRegisterGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsoppho
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.LovvalgMedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -27,17 +27,17 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
-class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection) : MedlemskapArbeidInntektRepository {
+class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : LovvalgMedlemskapRepository {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    companion object : Factory<MedlemskapArbeidInntektRepositoryImpl> {
-        override fun konstruer(connection: DBConnection): MedlemskapArbeidInntektRepositoryImpl {
-            return MedlemskapArbeidInntektRepositoryImpl(connection)
+    companion object : Factory<LovvalgMedlemskapRepositoryImpl> {
+        override fun konstruer(connection: DBConnection): LovvalgMedlemskapRepositoryImpl {
+            return LovvalgMedlemskapRepositoryImpl(connection)
         }
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapArbeidInntektGrunnlag? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): LovvalgMedlemskapGrunnlag? {
         val query = """
             SELECT * FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG WHERE behandling_id = ? and aktiv = true
         """.trimIndent()
@@ -646,10 +646,10 @@ class MedlemskapArbeidInntektRepositoryImpl(private val connection: DBConnection
         }
     }
 
-    private fun mapGrunnlag(row: Row): MedlemskapArbeidInntektGrunnlag {
+    private fun mapGrunnlag(row: Row): LovvalgMedlemskapGrunnlag {
         val inntekt = hentInntekterINorgeGrunnlag(row.getLongOrNull("inntekter_i_norge_id"))
 
-        return MedlemskapArbeidInntektGrunnlag(
+        return LovvalgMedlemskapGrunnlag(
             medlemskapGrunnlag = hentMedlemskapGrunnlag(row.getLongOrNull("medlemskap_unntak_person_id")),
             inntekterINorgeGrunnlag = inntekt.tilDomene(),
             inntekterINorgeRegisterGrunnlag = InntekterINorgeRegisterGrunnlag(inntekt.perKrav()),

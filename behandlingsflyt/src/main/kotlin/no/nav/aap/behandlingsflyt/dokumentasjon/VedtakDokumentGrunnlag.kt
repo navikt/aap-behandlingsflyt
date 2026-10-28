@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.dokumentasjon
 
 import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Grunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
@@ -93,7 +93,7 @@ data class VedtakDokumentGrunnlag(
     val beregningVurderingGrunnlag: BeregningGrunnlag?,
     val kravGrunnlag: KravGrunnlag?,
     val rettighetsperiodeVurdering: RettighetsperiodeVurdering?,
-    val lovvalgMedlemskapGrunnlag: MedlemskapArbeidInntektGrunnlag?,
-    val forutgåendeMedlemskapGrunnlag: ForutgåendeMedlemskapArbeidInntektGrunnlag?,
+    val lovvalgMedlemskapGrunnlag: LovvalgMedlemskapGrunnlag?,
+    val forutgåendeMedlemskapGrunnlag: ForutgåendeMedlemskapGrunnlag?,
     val oppholdskravGrunnlag: OppholdskravGrunnlag?,
 )

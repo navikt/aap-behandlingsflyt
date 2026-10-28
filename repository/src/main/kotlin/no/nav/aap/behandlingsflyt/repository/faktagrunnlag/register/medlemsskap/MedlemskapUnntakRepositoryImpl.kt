@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -15,7 +15,7 @@ import no.nav.aap.komponenter.type.Periode
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
-class MedlemskapRepositoryImpl(private val connection: DBConnection) : MedlemskapRepository {
+class MedlemskapUnntakRepositoryImpl(private val connection: DBConnection) : MedlemskapUnntakRepository {
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapDataIntern>): Long {
@@ -180,9 +180,9 @@ class MedlemskapRepositoryImpl(private val connection: DBConnection) : Medlemska
         }
     }
 
-    companion object : RepositoryFactory<MedlemskapRepository> {
-        override fun konstruer(connection: DBConnection): MedlemskapRepository {
-            return MedlemskapRepositoryImpl(connection)
+    companion object : RepositoryFactory<MedlemskapUnntakRepository> {
+        override fun konstruer(connection: DBConnection): MedlemskapUnntakRepository {
+            return MedlemskapUnntakRepositoryImpl(connection)
 
         }
     }
