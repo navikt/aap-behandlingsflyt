@@ -278,8 +278,8 @@ class BrevUtlederService(
                 }
 
                 if (
-                    resultat == Resultat.AVSLAG &&
-                    behandlingService.utledFaktiskBehandlingstype(behandling) == TypeBehandling.Førstegangsbehandling
+                    behandlingService.utledFaktiskBehandlingstype(behandling) == TypeBehandling.Førstegangsbehandling &&
+                    resultatUtleder.erRentAvslag(behandling)
                 ) {
                     val avslagsbrev = brevBehovAvslag(behandling)
                     if (avslagsbrev is AvslagBrev.AvslagSykdomsvilkåret) {
