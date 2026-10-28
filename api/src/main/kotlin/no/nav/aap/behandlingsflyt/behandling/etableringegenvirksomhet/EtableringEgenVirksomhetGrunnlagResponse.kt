@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
 
 data class EtableringEgenVirksomhetGrunnlagResponse(
@@ -50,17 +51,13 @@ data class EtableringEgenVirksomhetVurderingResponse(
             tidslinje: Tidslinje<EtableringEgenVirksomhetVurdering>,
             vurdertAvService: VurdertAvService,
         ): List<EtableringEgenVirksomhetVurderingResponse> {
-            val segmenter = tidslinje.segmenter().toList()
-            return segmenter
-                .mapIndexed { index, segment ->
+            return tidslinje.segmenter()
+                .map { segment ->
                     fraDomene(
                         etableringEgenVirksomhetVurdering = segment.verdi,
                         vurdertAvService = vurdertAvService,
-                        fom = segment.verdi.fom,
-                        tom = if (index == segmenter.size - 1)
-                            segment.verdi.tom
-                        else
-                            segment.tom(),
+                        fom = segment.fom(),
+                        tom = segment.tom().takeUnless { it == Tid.MAKS && segment.verdi.tom == null },
                     )
                 }
         }
@@ -71,7 +68,7 @@ data class EtableringEgenVirksomhetVurderingResponse(
             fom: LocalDate = etableringEgenVirksomhetVurdering.fom,
             tom: LocalDate? = etableringEgenVirksomhetVurdering.tom
         ): EtableringEgenVirksomhetVurderingResponse {
-            val legacyVisning = etableringEgenVirksomhetVurdering.somLegacyVisning()
+            val legacyVisning = etableringEgenVirksomhetVurdering.copy(fom = fom, tom = tom).somLegacyVisning()
             return EtableringEgenVirksomhetVurderingResponse(
                 begrunnelse = etableringEgenVirksomhetVurdering.begrunnelse,
                 virksomhetNavn = etableringEgenVirksomhetVurdering.virksomhetNavn,
