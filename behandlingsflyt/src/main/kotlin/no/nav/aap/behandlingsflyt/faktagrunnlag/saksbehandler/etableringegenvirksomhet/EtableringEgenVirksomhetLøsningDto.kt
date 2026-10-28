@@ -27,12 +27,11 @@ data class EtableringEgenVirksomhetLøsningDto(
     val erRegistrertINødvendigeOffentligeRegister: Boolean? = null,
     val jobberBrukerAktivMedVirksomheten: Boolean? = null,
     val versjon: EtableringVersjon = EtableringVersjon.V0,
-
     //midlertid legacy, bare for overgang
     @Deprecated("Bruk fase + fom. Fjernes etter frontend mignering")
     val utviklingsPerioder: List<Periode>? = null,
     @Deprecated("Bruk fase + fom. Fjernes etter frontend mignering")
-    val oppstartsPerioder: List<Periode>? = null
+    val oppstartsPerioder: List<Periode>? = null,
 ) : LøsningForPeriode {
     fun toEtableringEgenVirksomhetVurdering(avklaringsbehovKontekst: AvklaringsbehovKontekst) =
         toEtableringEgenVirksomhetVurdering(

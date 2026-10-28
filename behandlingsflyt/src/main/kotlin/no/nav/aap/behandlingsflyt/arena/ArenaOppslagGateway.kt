@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.arena
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaBeregningstidspunktResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaForutgaaendeMedlemskapResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
@@ -18,6 +19,7 @@ interface ArenaOppslagGateway : Gateway {
     fun hentKravDataForSak(arenasaksnummer: String): KravResponse
     fun hentSykdomsvurdering(saksnummerArena: String): ArenaSykdomsvurderingResponse
     fun hentOppholdskrav(saksnummerArena: String): ArenaOppholdskravResponse
+    fun hentForutgaaendeMedlemskap(saksnummerArena: String): ArenaForutgaaendeMedlemskapResponse
     fun hentRefusjonskrav(saksnummerArena: String): ArenaRefusjonskravResponse
     fun hentVedtaksperiode(saksnummerArena: String): ArenaVedtaksperiodeResponse
     fun hentBeregningstidspunkt(saksnummerArena: String): ArenaBeregningstidspunktResponse

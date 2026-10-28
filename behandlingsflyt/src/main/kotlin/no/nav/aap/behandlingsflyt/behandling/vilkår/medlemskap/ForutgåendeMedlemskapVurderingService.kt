@@ -57,7 +57,7 @@ class ForutgåendeMedlemskapVurderingService {
 
         return KanBehandlesAutomatiskVurdering(
             originalResultat,
-            førsteDelVurderinger + andreDelVurdering
+            førsteDelVurderinger + andreDelVurdering,
         )
     }
 
