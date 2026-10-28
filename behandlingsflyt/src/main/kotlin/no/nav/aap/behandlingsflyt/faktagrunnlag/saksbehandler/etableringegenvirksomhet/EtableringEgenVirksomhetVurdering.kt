@@ -151,6 +151,8 @@ fun List<EtableringEgenVirksomhetVurdering>.erFunksjoneltLik(other: List<Etabler
                 a.virksomhetErNy == b.virksomhetErNy &&
                 a.brukerEierVirksomheten == b.brukerEierVirksomheten &&
                 a.kanFøreTilSelvforsørget == b.kanFøreTilSelvforsørget &&
+                a.utviklingsPerioder == b.utviklingsPerioder &&
+                a.oppstartsPerioder == b.oppstartsPerioder &&
                 a.fom == b.fom &&
                 a.tom == b.tom &&
                 a.fase == b.fase &&
