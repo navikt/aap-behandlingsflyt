@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.Arbeidsfor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.tilDomene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.EnhetsregisteretGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.Organisasjonsnummer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
@@ -34,6 +35,7 @@ import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import java.time.YearMonth
 import java.util.concurrent.*
 
@@ -126,13 +128,24 @@ class LovvalgInformasjonskrav internal constructor(
             behandlingId = kontekst.behandlingId,
             medlemskapGrunnlag = medlemskapPerioder,
             arbeidGrunnlag = arbeidGrunnlag,
+            relevantDato = input.sak.rettighetsperiode.fom,
             inntektGrunnlag = inntektGrunnlag,
             enhetGrunnlag = enhetGrunnlag
         )
 
         val nyData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        return if (nyData == eksisterendeData) IKKE_ENDRET else ENDRET
+        return if (erRelevantEndring(eksisterendeData, nyData)) ENDRET else IKKE_ENDRET
+    }
+
+    private fun erRelevantEndring(
+        grunnlag1: MedlemskapArbeidInntektGrunnlag?,
+        grunnlag2: MedlemskapArbeidInntektGrunnlag?
+    ): Boolean {
+        return grunnlag1?.medlemskapGrunnlag != grunnlag2?.medlemskapGrunnlag
+                || grunnlag1?.inntekterINorgeGrunnlag != grunnlag2?.inntekterINorgeGrunnlag // Ignorerer inntekterINorgePerRelevanteKrav
+                || grunnlag1?.arbeiderINorgeGrunnlag != grunnlag2?.arbeiderINorgeGrunnlag
+                || grunnlag1?.vurderinger != grunnlag2?.vurderinger
     }
 
     private fun innhentAARegisterGrunnlag(sak: Sak): List<ArbeidINorgeGrunnlag> {
@@ -177,6 +190,7 @@ class LovvalgInformasjonskrav internal constructor(
 
     private fun lagre(
         behandlingId: BehandlingId,
+        relevantDato: LocalDate, // TODO: Denne vil etterhvert være på registergrunnlagnivå
         medlemskapGrunnlag: List<MedlemskapDataIntern>,
         arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
         inntektGrunnlag: List<ArbeidsInntektMåned>,
@@ -192,10 +206,10 @@ class LovvalgInformasjonskrav internal constructor(
 
         medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
             behandlingId,
+            relevantDato,
             arbeidGrunnlag,
-            inntektGrunnlag,
+            inntektGrunnlag.tilDomene(enhetGrunnlag),
             medlId,
-            enhetGrunnlag
         )
     }
 
