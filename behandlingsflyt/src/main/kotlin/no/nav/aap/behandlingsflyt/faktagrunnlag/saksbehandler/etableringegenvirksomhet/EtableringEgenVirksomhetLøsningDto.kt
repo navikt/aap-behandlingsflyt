@@ -40,15 +40,14 @@ data class EtableringEgenVirksomhetLøsningDto(
         )
 
     fun toEtableringEgenVirksomhetVurdering(bruker: Bruker, vurdertIBehandling: BehandlingId): EtableringEgenVirksomhetVurdering {
-
         return EtableringEgenVirksomhetVurdering(
             begrunnelse = begrunnelse,
             foreliggerFagligVurdering = foreliggerFagligVurdering,
             virksomhetErNy = virksomhetErNy,
             brukerEierVirksomheten = brukerEierVirksomheten,
             kanFøreTilSelvforsørget = kanFøreTilSelvforsørget,
-            utviklingsPerioder = utviklingsPerioder.orEmpty(),
-            oppstartsPerioder = oppstartsPerioder.orEmpty(),
+            utviklingsPerioder = if (fase == null) utviklingsPerioder.orEmpty() else emptyList(),
+            oppstartsPerioder = if (fase == null) oppstartsPerioder.orEmpty() else emptyList(),
             fase = fase,
             erRegistrertINødvendigeOffentligeRegister = erRegistrertINødvendigeOffentligeRegister,
             jobberBrukerAktivMedVirksomheten = jobberBrukerAktivMedVirksomheten,

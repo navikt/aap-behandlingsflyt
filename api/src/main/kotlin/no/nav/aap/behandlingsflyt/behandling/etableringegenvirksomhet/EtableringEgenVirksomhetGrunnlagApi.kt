@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.antallHverdagerIFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somFasetidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -63,10 +64,13 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                     val alleVurderinger =
                         etableringEgenVirksomhetGrunnlag?.vurderinger ?:  forrigeGrunnlag.vurderinger
 
-                    val gjeldendeTidslinje = alleVurderinger.gjeldendeVurderinger()
-                    gjeldendeTidslinje.segmenter().filter { it.verdi.fase != null }.forEach { segment ->
-                        requireNotNull(segment.verdi.tom) {
-                            "Vedtatt vurdering med fase=${segment.verdi.fase} mangler tom (vurdertIBehandling=${segment.verdi.vurdertIBehandling})"
+                    val gjeldendeTidslinje = alleVurderinger.somFasetidslinje()
+                    gjeldendeTidslinje.segmenter().forEach { segment ->
+                        val fase = segment.verdi.fase
+                        if (fase != null) {
+                            requireNotNull(segment.verdi.tom) {
+                                "Vedtatt vurdering med fase=$fase mangler tom (vurdertIBehandling=${segment.verdi.vurdertIBehandling})"
+                            }
                         }
                     }
 

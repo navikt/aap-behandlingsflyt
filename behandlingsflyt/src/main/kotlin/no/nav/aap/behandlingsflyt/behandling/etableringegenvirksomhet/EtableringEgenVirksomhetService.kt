@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.TilOgMedBeregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.antallHverdagerIFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.beregnTomForSistePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.gjeldendeFasevurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.perioderForFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somFasetidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
@@ -108,6 +109,7 @@ class EtableringEgenVirksomhetService(
     ): VirksomhetEtableringResultat.Ugyldig? {
         val perioderMedSykdomOgBistand = utledPerioderMedSykdomOgBistand(behandlingId)
         val gjeldendeVurderinger = vurderinger.somFasetidslinje()
+        validerSvar(gjeldendeVurderinger.verdier().toList())?.let { return it }
 
         val alleUtviklingsPerioder = gjeldendeVurderinger.perioderForFase(EtableringFase.UTVIKLING)
         val alleOppstartsPerioder = gjeldendeVurderinger.perioderForFase(EtableringFase.OPPSTART)
@@ -137,6 +139,23 @@ class EtableringEgenVirksomhetService(
         return validerOppstartRegistrering(fase, vurdering)
             ?: validerGyldigPeriode(vurdering)
     }
+
+    private fun validerSvar(
+        vurderinger: List<EtableringEgenVirksomhetVurdering>
+    ): VirksomhetEtableringResultat.Ugyldig? =
+        vurderinger.firstNotNullOfOrNull { vurdering ->
+            val fase = vurdering.fase
+            when {
+                vurdering.versjon == EtableringVersjon.V0 && fase == null &&
+                        vurdering.evaluerVirksomhetVurdering() && vurdering.utviklingsPerioder.isEmpty() &&
+                        vurdering.oppstartsPerioder.isEmpty() ->
+                    VirksomhetEtableringResultat.Ugyldig.KreverPeriodeHvisVilkårOppfylt
+                vurdering.versjon == EtableringVersjon.V0 || fase == null -> null
+                vurdering.jobberBrukerAktivMedVirksomheten == null ->
+                    VirksomhetEtableringResultat.Ugyldig.MåOppgiOmBrukerJobberAktivt
+                else -> validerOppstartRegistrering(fase, vurdering)
+            }
+        }
 
     private fun validerOppstartRegistrering(
         fase: EtableringFase,
@@ -276,6 +295,14 @@ sealed interface VirksomhetEtableringResultat {
 
         data object MåHaTilOgMedDato : Ugyldig {
             override val melding: String = "Må ha gyldig periode."
+        }
+
+        data object MåOppgiOmBrukerJobberAktivt : Ugyldig {
+            override val melding = "Må oppgi om brukeren jobber aktivt med virksomheten."
+        }
+
+        data object KreverPeriodeHvisVilkårOppfylt : Ugyldig {
+            override val melding = "Må ha definert minst én periode når vilkåret er oppfylt."
         }
     }
 }

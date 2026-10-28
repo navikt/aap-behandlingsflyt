@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt
 
 import net.logstash.logback.marker.Markers.appendEntries
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
-import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
@@ -272,7 +271,7 @@ class BackfillEtableringVurderinger(
             }
             val varighetFør = varighet(før)
             val valideringsfeilFør =
-                service.beregnOgValider(behandlingId, før) as? VirksomhetEtableringResultat.Ugyldig
+                service.validerVurdering(behandlingId, før)
             val forventetUtfall = før.vurderingsutfall()
             migreringsplan.filter { it.skalErstattes }.forEach { steg ->
                 val vurderingerGruppeId = connection.hentVurderingerGruppeId(steg.vurderingId)
@@ -289,7 +288,7 @@ class BackfillEtableringVurderinger(
                 "Varighet endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }
             val valideringsfeilEtter =
-                service.beregnOgValider(behandlingId, etter) as? VirksomhetEtableringResultat.Ugyldig
+                service.validerVurdering(behandlingId, etter)
             check(valideringsfeilFør == valideringsfeilEtter) {
                 "Valideringsresultat endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }

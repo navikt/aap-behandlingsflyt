@@ -54,15 +54,10 @@ class EtableringEgenVirksomhetLøserTest {
         erRegistrertINødvendigeOffentligeRegister: Boolean? = null,
         tom: LocalDate? = null,
     ): EtableringEgenVirksomhetLøsningDto {
-        val beregnetTom = tom ?: when (fase) {
-            EtableringFase.UTVIKLING -> fom.plusDays(EtableringFase.UTVIKLING.maksHverdager.toLong())
-            EtableringFase.OPPSTART -> fom.plusDays(EtableringFase.OPPSTART.maksHverdager.toLong())
-        }
-
         return EtableringEgenVirksomhetLøsningDto(
             begrunnelse = "meee",
             fom = fom,
-            tom = beregnetTom,
+            tom = tom,
             virksomhetNavn = "peppas peppers",
             orgNr = null,
             foreliggerFagligVurdering = true,
@@ -132,7 +127,7 @@ class EtableringEgenVirksomhetLøserTest {
                     erRegistrertINødvendigeOffentligeRegister = true,
                     fase = EtableringFase.UTVIKLING,
                     jobberBrukerAktivMedVirksomheten = true,
-                    versjon = EtableringVersjon.V1
+                    versjon = EtableringVersjon.V1,
                 )
             )
         )
@@ -299,7 +294,7 @@ class EtableringEgenVirksomhetLøserTest {
                     erRegistrertINødvendigeOffentligeRegister = true,
                     fase = EtableringFase.OPPSTART,
                     jobberBrukerAktivMedVirksomheten = true,
-                    versjon = EtableringVersjon.V1
+                    versjon = EtableringVersjon.V1,
                 )
             )
         )
@@ -344,7 +339,7 @@ class EtableringEgenVirksomhetLøserTest {
                     erRegistrertINødvendigeOffentligeRegister = true,
                     fase = EtableringFase.UTVIKLING,
                     jobberBrukerAktivMedVirksomheten = true,
-                    versjon = EtableringVersjon.V1
+                    versjon = EtableringVersjon.V1,
                 )
             )
         )
@@ -465,7 +460,8 @@ class EtableringEgenVirksomhetLøserTest {
         val segmenter = vurderinger.gjeldendeVurderinger().segmenter().toList()
         val forventetTom = Hverdager(EtableringFase.UTVIKLING.maksHverdager).fraOgMed(førsteFom)
 
-        assertThat(vurderinger).allSatisfy { assertThat(it.tom).isEqualTo(forventetTom) }
+        assertThat(vurderinger.single { it.fom == førsteFom }.tom).isEqualTo(andreFom.minusDays(1))
+        assertThat(vurderinger.single { it.fom == andreFom }.tom).isEqualTo(forventetTom)
         assertThat(segmenter.map { it.periode }).containsExactly(
             Periode(førsteFom, andreFom.minusDays(1)),
             Periode(andreFom, forventetTom),
