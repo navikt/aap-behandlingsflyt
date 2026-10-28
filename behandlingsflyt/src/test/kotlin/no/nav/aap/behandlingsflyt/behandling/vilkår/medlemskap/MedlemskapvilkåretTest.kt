@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgRegisterGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgVurderingsgrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgFaktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -87,7 +87,7 @@ class MedlemskapvilkåretTest {
         assertEquals(true, json.has("register"))
     }
 
-    private fun vurder(grunnlag: MedlemskapLovvalgVurderingsgrunnlag): Utfall {
+    private fun vurder(grunnlag: MedlemskapLovvalgFaktagrunnlag): Utfall {
         val vilkårsresultat = Vilkårsresultat()
         Medlemskapvilkåret(vilkårsresultat, rettighetsperiode).vurder(grunnlag)
 
@@ -120,7 +120,7 @@ class MedlemskapvilkåretTest {
             iTilleggArbeidUtenforNorge = false,
             utenlandsOpphold = null,
         ),
-    ) = MedlemskapLovvalgVurderingsgrunnlag(
+    ) = MedlemskapLovvalgFaktagrunnlag(
         register = MedlemskapLovvalgRegisterGrunnlag.fra(
             medlemskapArbeidInntektGrunnlag = null,
             personopplysning = null,

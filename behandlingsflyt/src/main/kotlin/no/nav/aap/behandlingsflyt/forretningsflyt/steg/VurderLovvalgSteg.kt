@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgRegisterGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgVurderingsgrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingRepository
@@ -74,13 +74,13 @@ class VurderLovvalgSteg private constructor(
             VurderingType.REVURDERING -> {
                 val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
                 // Manuelle vurderinger hentes på nytt da de kan ha blitt tilbakestilt
-                val vurderingsgrunnlag = MedlemskapLovvalgVurderingsgrunnlag(
+                val faktagrunnlag = MedlemskapLovvalgFaktagrunnlag(
                     register = registerGrunnlag.value,
                     delvurdering = lovvalgDelvurderingRepository.hentHvisEksisterer(kontekst.behandlingId),
                     manuelleVurderinger = hentManuelleVurderinger(kontekst.behandlingId),
                 )
                 Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)
-                    .vurder(vurderingsgrunnlag)
+                    .vurder(faktagrunnlag)
                 vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
             }
 

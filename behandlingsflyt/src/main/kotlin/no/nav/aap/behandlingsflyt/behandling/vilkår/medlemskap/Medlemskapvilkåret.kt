@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgVurderingsgrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.behandling.vilkår.VurderingsResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
@@ -14,10 +14,10 @@ import no.nav.aap.komponenter.type.Periode
 class Medlemskapvilkåret(
     vilkårsresultat: Vilkårsresultat,
     private val rettighetsPeriode: Periode,
-) : Vilkårsvurderer<MedlemskapLovvalgVurderingsgrunnlag> {
+) : Vilkårsvurderer<MedlemskapLovvalgFaktagrunnlag> {
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.LOVVALG)
 
-    override fun vurder(grunnlag: MedlemskapLovvalgVurderingsgrunnlag) {
+    override fun vurder(grunnlag: MedlemskapLovvalgFaktagrunnlag) {
         if (grunnlag.manuelleVurderinger.isNotEmpty()) {
             val gjeldendeVurderinger = grunnlag.gjeldendeManuelleVurderinger()
 
@@ -66,7 +66,7 @@ class Medlemskapvilkåret(
 
     private fun leggTilVurdering(
         periode: Periode,
-        grunnlag: MedlemskapLovvalgVurderingsgrunnlag,
+        grunnlag: MedlemskapLovvalgFaktagrunnlag,
         vurderingsResultat: VurderingsResultat,
         vurdertManuelt: Boolean
     ) {

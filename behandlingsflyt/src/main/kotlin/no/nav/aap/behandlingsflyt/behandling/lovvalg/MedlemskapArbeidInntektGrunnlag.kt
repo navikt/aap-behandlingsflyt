@@ -45,7 +45,7 @@ data class MedlemskapLovvalgRegisterGrunnlag(
 /**
  * Grunnlaget for Medlemskapvilkåret: registerdata, lagret delvurdering og manuelle vurderinger.
  */
-data class MedlemskapLovvalgVurderingsgrunnlag(
+data class MedlemskapLovvalgFaktagrunnlag(
     val register: MedlemskapLovvalgRegisterGrunnlag,
     val delvurdering: LovvalgDelvurderingerGrunnlag?,
     val manuelleVurderinger: List<ManuellVurderingForLovvalgMedlemskap>,
