@@ -104,6 +104,33 @@ class EtableringEgenVirksomhetLøserTest {
             .isEqualTo(EtableringFase.OPPSTART.maksHverdager)
     }
 
+    @Test
+    fun `helt overstyrt historikk før gyldighetsperioden blokkerer ikke en korrigering`() {
+        val (_, forrige, behandling) = opprettInMemorySakOgRevurdering(LocalDate.now())
+        oppfyllSykdomOgBistand(behandling)
+        val nyFom = LocalDate.now().plusDays(1)
+        val historisk = oppfyltVurdering(nyFom.minusDays(14)).copy(
+            fase = null,
+            tom = null,
+            utviklingsPerioder = listOf(Periode(nyFom, nyFom.plusDays(4))),
+        ).toEtableringEgenVirksomhetVurdering(Bruker("saks"), forrige.id)
+            .copy(versjon = EtableringVersjon.V0)
+        InMemoryEtableringEgenVirksomRepository.lagre(forrige.id, listOf(historisk))
+
+        assertDoesNotThrow {
+            løser.løs(
+                avklaringsbehovKontekst { this.behandling = behandling },
+                EtableringEgenVirksomhetLøsning(listOf(oppfyltVurdering(nyFom))),
+            )
+        }
+
+        val lagret = requireNotNull(
+            InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(behandling.id)
+        ).vurderinger
+        assertThat(lagret).hasSize(2)
+        assertThat(lagret.first()).usingRecursiveComparison().isEqualTo(historisk)
+    }
+
     private val løser = EtableringEgenVirksomhetLøser(
         InMemoryEtableringEgenVirksomRepository,
         InMemoryBehandlingRepository,
