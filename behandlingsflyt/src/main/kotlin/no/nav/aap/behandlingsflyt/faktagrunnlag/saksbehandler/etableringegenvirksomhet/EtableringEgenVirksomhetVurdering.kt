@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvir
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -98,7 +97,7 @@ fun Collection<EtableringEgenVirksomhetVurdering>.tellDager(
 }
 
 fun List<EtableringEgenVirksomhetVurdering>.brukteDager(): Pair<Int, Int> {
-    val gjeldendeVurderinger = gjeldendeVurderinger().verdier().toSet()
+    val gjeldendeVurderinger = gjeldendeFasevurderinger()
     return gjeldendeVurderinger.tellDager { it.utviklingsPerioder } to
         gjeldendeVurderinger.tellDager { it.oppstartsPerioder }
 }

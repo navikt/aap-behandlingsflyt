@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.gjeldendeFasevurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somLegacyVisning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
@@ -71,8 +72,9 @@ class EtableringEgenVirksomhetService(
             return VirksomhetEtableringResultat.Ugyldig.FørFørsteMuligeStartdato
         }
 
-        val alleUtviklingsPerioder = gjeldendeVurderinger.flatMap { it.utviklingsPerioder }
-        val alleOppstartsPerioder = gjeldendeVurderinger.flatMap { it.oppstartsPerioder }
+        val fasevurderinger = (gamleVurderinger + vurderinger).gjeldendeFasevurderinger().map { it.somLegacyVisning() }
+        val alleUtviklingsPerioder = fasevurderinger.flatMap { it.utviklingsPerioder }
+        val alleOppstartsPerioder = fasevurderinger.flatMap { it.oppstartsPerioder }
 
         val sisteUtviklingsPeriodeTom = alleUtviklingsPerioder.maxOfOrNull { it.tom }
         if (sisteUtviklingsPeriodeTom != null && alleOppstartsPerioder.any { it.fom.isBefore(sisteUtviklingsPeriodeTom) }) {
