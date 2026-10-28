@@ -16,10 +16,11 @@ import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostLis
 import no.nav.aap.dokumentinnhenting.kontrakt.HentLegeerklæringForespørslerForSakParams
 import no.nav.aap.dokumentinnhenting.kontrakt.MeldingStatusDto
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
+import no.nav.aap.komponenter.miljo.Miljø
 import java.util.*
 
 
-const val DAGER_TIL_PÅMINNELSE = 22L
+val DAGER_TIL_PÅMINNELSE = if (Miljø.erProd()) 22L else 1L
 
 class HentBehandlerDialogService(
     private val dokumentinnhentingGateway: DokumentinnhentingGateway,
