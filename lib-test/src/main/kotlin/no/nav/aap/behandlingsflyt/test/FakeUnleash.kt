@@ -104,7 +104,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.NySoknadTilApiIntern to true,
         BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true,
         BehandlingsflytFeature.DatadelingBehandlingVisning to true,
-        BehandlingsflytFeature.Helseinstitusjon1Manedsregel to true
+        BehandlingsflytFeature.Helseinstitusjon1Manedsregel to true,
+        BehandlingsflytFeature.OvergangUfoereBrevbygger to true,
     )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
