@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.TilOgMedBeregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.beregnTomForSistePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.erFunksjoneltLik
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
@@ -149,6 +150,71 @@ class EtableringEgenVirksomhetLøserTest {
 
         val feil = assertThrows<UgyldigForespørselException> { løser.løs(kontekst, løsning) }
         assertThat(feil.message).contains("Oppstartsperiode kan ikke ligge før en utviklingsperiode.")
+    }
+
+    @Test
+    fun `revurdering uten nye vurderinger viderefører historikken nøyaktig én gang`() {
+        val (_, forrige, revurdering) = opprettInMemorySakOgRevurdering(LocalDate.now())
+        oppfyllSykdomOgBistand(revurdering)
+        val fom = LocalDate.now().plusDays(1)
+        val tidligere = oppfyltVurdering(fom, tom = fom.plusDays(4))
+            .toEtableringEgenVirksomhetVurdering(Bruker("saks"), forrige.id)
+        InMemoryEtableringEgenVirksomRepository.lagre(forrige.id, listOf(tidligere))
+
+        løser.løs(
+            avklaringsbehovKontekst { this.behandling = revurdering },
+            EtableringEgenVirksomhetLøsning(emptyList()),
+        )
+
+        val lagret = requireNotNull(
+            InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(revurdering.id)
+        ).vurderinger
+        assertThat(lagret).usingRecursiveComparison().isEqualTo(listOf(tidligere))
+    }
+
+    @Test
+    fun `endring i legacy-perioder er en funksjonell endring`() {
+        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
+        val fom = sak.rettighetsperiode.fom.plusDays(1)
+        val før = oppfyltVurdering(fom, tom = fom.plusDays(30)).copy(
+            fase = null,
+            utviklingsPerioder = listOf(Periode(fom, fom.plusDays(4))),
+            oppstartsPerioder = listOf(Periode(fom.plusDays(7), fom.plusDays(11))),
+        ).toEtableringEgenVirksomhetVurdering(Bruker("saks"), behandling.id)
+        val endringer = listOf(
+            før.copy(utviklingsPerioder = listOf(Periode(fom, fom.plusDays(5)))),
+            før.copy(oppstartsPerioder = listOf(Periode(fom.plusDays(7), fom.plusDays(12)))),
+        )
+
+        assertThat(listOf(før).erFunksjoneltLik(listOf(før.copy()))).isTrue()
+        assertThat(endringer.map { endret -> listOf(før).erFunksjoneltLik(listOf(endret)) })
+            .describedAs("Endring av henholdsvis utviklings- og oppstartsperiode")
+            .containsExactly(false, false)
+    }
+
+    @Test
+    fun `oppstart endrer ikke lagrede datoer i arvet utviklingsvurdering`() {
+        val (_, forrige, revurdering) = opprettInMemorySakOgRevurdering(LocalDate.now())
+        oppfyllSykdomOgBistand(revurdering)
+        val fom = LocalDate.now().plusDays(1)
+        val tidligere = oppfyltVurdering(fom, tom = fom.plusDays(25))
+            .toEtableringEgenVirksomhetVurdering(Bruker("saks"), forrige.id)
+        InMemoryEtableringEgenVirksomRepository.lagre(forrige.id, listOf(tidligere))
+        val oppstart = oppfyltVurdering(
+            fom.plusDays(14),
+            fase = EtableringFase.OPPSTART,
+            erRegistrertINødvendigeOffentligeRegister = true,
+        ).copy(tom = null)
+
+        løser.løs(
+            avklaringsbehovKontekst { this.behandling = revurdering },
+            EtableringEgenVirksomhetLøsning(listOf(oppstart)),
+        )
+
+        val arvetHistorikk = requireNotNull(
+            InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(revurdering.id)
+        ).vurderinger.filter { it.vurdertIBehandling == forrige.id }
+        assertThat(arvetHistorikk).usingRecursiveComparison().isEqualTo(listOf(tidligere))
     }
 
     @Test
@@ -399,7 +465,8 @@ class EtableringEgenVirksomhetLøserTest {
         val segmenter = vurderinger.gjeldendeVurderinger().segmenter().toList()
         val forventetTom = Hverdager(EtableringFase.UTVIKLING.maksHverdager).fraOgMed(førsteFom)
 
-        assertThat(vurderinger).allSatisfy { assertThat(it.tom).isEqualTo(forventetTom) }
+        assertThat(vurderinger.single { it.fom == førsteFom }.tom).isEqualTo(andreFom.minusDays(1))
+        assertThat(vurderinger.single { it.fom == andreFom }.tom).isEqualTo(forventetTom)
         assertThat(segmenter.map { it.periode }).containsExactly(
             Periode(førsteFom, andreFom.minusDays(1)),
             Periode(andreFom, forventetTom),
