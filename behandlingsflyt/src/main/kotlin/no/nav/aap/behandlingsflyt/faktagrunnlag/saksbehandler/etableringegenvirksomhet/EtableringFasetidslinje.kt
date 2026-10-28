@@ -21,12 +21,3 @@ fun List<EtableringEgenVirksomhetVurdering>.somFasetidslinje(): Tidslinje<Etable
         listOf(vurdering).tilNyttFormat().flatMap { it.utenPerioder(overstyrendePerioder) }
     }.gjeldendeVurderinger()
 }
-
-fun EtableringEgenVirksomhetVurdering.utenPerioder(
-    overstyrendePerioder: List<Periode>
-): List<EtableringEgenVirksomhetVurdering> =
-    overstyrendePerioder.fold(listOf(Periode(fom, tom ?: Tid.MAKS))) { perioder, overstyrende ->
-        perioder.flatMap { it.minus(overstyrende).toList() }
-    }.map { periode ->
-        copy(fom = periode.fom, tom = periode.tom.takeUnless { it == Tid.MAKS && tom == null })
-    }
