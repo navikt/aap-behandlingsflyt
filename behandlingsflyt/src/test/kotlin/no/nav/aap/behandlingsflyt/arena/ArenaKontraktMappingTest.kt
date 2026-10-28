@@ -4,6 +4,7 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaForutgaaendeMedlemskapResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVedtaksperiodeResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVilkar
@@ -92,7 +93,7 @@ class ArenaKontraktMappingTest {
         assertThat(respons.tilDomene()).isEqualTo(
             ArenaOppholdskrav(
                 vedtakId = 7,
-                vilkar = no.nav.aap.behandlingsflyt.arena.ArenaVilkar(
+                vilkår = no.nav.aap.behandlingsflyt.arena.ArenaVilkår(
                     id = 8,
                     kode = "OPPHOLD",
                     status = "V",
@@ -104,6 +105,31 @@ class ArenaKontraktMappingTest {
 
     @Test
     fun `ArenaOppholdskravResponse uten vilkår beholder null`() {
-        assertThat(ArenaOppholdskravResponse(vedtakId = 7, vilkar = null).tilDomene().vilkar).isNull()
+        assertThat(ArenaOppholdskravResponse(vedtakId = 7, vilkar = null).tilDomene().vilkår).isNull()
+    }
+
+    @Test
+    fun `ArenaForutgaaendeMedlemskapResponse mappes til forutgående medlemskap`() {
+        val respons = ArenaForutgaaendeMedlemskapResponse(
+            vedtakId = 7,
+            vilkar = ArenaVilkar(id = 8, kode = "MEDLSKAP5", status = "J", begrunnelse = "fritekst"),
+        )
+
+        assertThat(respons.tilDomene()).isEqualTo(
+            ArenaForutgåendeMedlemskap(
+                vedtakId = 7,
+                vilkår = no.nav.aap.behandlingsflyt.arena.ArenaVilkår(
+                    id = 8,
+                    kode = "MEDLSKAP5",
+                    status = "J",
+                    begrunnelse = "fritekst",
+                ),
+            )
+        )
+    }
+
+    @Test
+    fun `ArenaForutgaaendeMedlemskapResponse uten vilkår beholder null`() {
+        assertThat(ArenaForutgaaendeMedlemskapResponse(vedtakId = 7, vilkar = null).tilDomene().vilkår).isNull()
     }
 }

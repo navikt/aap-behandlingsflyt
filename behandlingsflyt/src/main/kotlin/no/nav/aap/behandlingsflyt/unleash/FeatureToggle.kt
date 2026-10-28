@@ -33,6 +33,7 @@ enum class BehandlingsflytFeature(
     MigrerRefusjonskravFraArenaAutomatisk,
     MigrererKravFraArenaAutomatisk,
     MigrererOppholdskravFraArenaAutomatisk,
+    MigrererForutgaaendeMedlemskapFraArenaAutomatisk,
     MigrererVedtakslengdeFraArenaAutomatisk,
     MigrererBeregningstidspunktFraArenaAutomatisk,
 
