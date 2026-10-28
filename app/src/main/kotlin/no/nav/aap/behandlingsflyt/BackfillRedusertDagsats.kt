@@ -183,7 +183,6 @@ class BackfillRedusertDagsats(
             val backfillService = BackfillRedusertDagsatsService(postgresRepositoryRegistry.provider(connection))
 
             try {
-                log.info("Backfiller redusertDagsats for sak ${sak.id} - ${sak.saksnummer}")
                 var sakenErFerdigBackfilled = false
                 for (behandlingId in behandlinger) {
                     if (sakenErFerdigBackfilled) break
@@ -202,6 +201,9 @@ class BackfillRedusertDagsats(
                 )
             }
 
+            if (antallBackfillUtførtISak > 0) {
+                log.info("Backfill av redusertDagsats utført for ${antallBackfillUtførtISak} rader i tilkjent_periode for sak id=${sak.id.toLong()} - saksnummer=${sak.saksnummer}")
+            }
             antallBackfillUtførtISak
     }
 }
