@@ -58,6 +58,7 @@ data class MedlemskapLovvalgVurderingsgrunnlag(
 data class MedlemskapArbeidInntektGrunnlag(
     val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,
     val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
+    val inntekterINorgeRegisterGrunnlag: InntekterINorgeRegisterGrunnlag,
     val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
     val vurderinger: List<ManuellVurderingForLovvalgMedlemskap> = emptyList()
 ) {
@@ -66,6 +67,11 @@ data class MedlemskapArbeidInntektGrunnlag(
     }
 }
 
+data class InntekterINorgeRegisterGrunnlag(
+    val inntekterForKrav: Set<InntekterForKrav>
+)
+
+// TODO: Rename denne
 data class InntektINorgeGrunnlag(
     val identifikator: String,
     val beloep: Double,
