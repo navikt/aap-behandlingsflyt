@@ -26,6 +26,7 @@ data class EtableringEgenVirksomhetLøsningDto(
     val fase: EtableringFase? = null,
     val erRegistrertINødvendigeOffentligeRegister: Boolean? = null,
     val jobberBrukerAktivMedVirksomheten: Boolean? = null,
+    val versjon: EtableringVersjon = EtableringVersjon.V0,
 
     //midlertid legacy, bare for overgang
     @Deprecated("Bruk fase + fom. Fjernes etter frontend mignering")
@@ -58,8 +59,7 @@ data class EtableringEgenVirksomhetLøsningDto(
             tom = tom,
             virksomhetNavn = virksomhetNavn,
             orgNr = orgNr,
-            versjon = if (fase == null && (utviklingsPerioder != null || oppstartsPerioder != null))
-                EtableringVersjon.V0 else EtableringVersjon.V1,
+            versjon = versjon,
         )
     }
 
