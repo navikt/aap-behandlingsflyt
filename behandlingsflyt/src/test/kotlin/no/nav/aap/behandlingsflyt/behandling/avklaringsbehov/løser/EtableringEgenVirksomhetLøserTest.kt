@@ -36,6 +36,25 @@ import java.time.LocalDate
 
 class EtableringEgenVirksomhetLøserTest {
 
+    @Test
+    fun `V1 krever svar om aktivt arbeid også når sluttdato er satt`() {
+        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
+        oppfyllSykdomOgBistand(behandling)
+        val fom = sak.rettighetsperiode.fom.plusDays(1)
+        val vurdering = oppfyltVurdering(fom, tom = fom.plusDays(4))
+            .copy(jobberBrukerAktivMedVirksomheten = null)
+
+        val feil = assertThrows<UgyldigForespørselException> {
+            løser.løs(
+                avklaringsbehovKontekst { this.behandling = behandling },
+                EtableringEgenVirksomhetLøsning(listOf(vurdering)),
+            )
+        }
+
+        assertThat(feil.message).contains("Må oppgi om brukeren jobber aktivt")
+        assertThat(InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(behandling.id)).isNull()
+    }
+
     private val løser = EtableringEgenVirksomhetLøser(
         InMemoryEtableringEgenVirksomRepository,
         InMemoryBehandlingRepository,
