@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt
 
+import net.logstash.logback.marker.Markers.appendEntries
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.gjeldendeFasevurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilGammeltFormat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -21,11 +23,26 @@ import javax.sql.DataSource
 private val log = LoggerFactory.getLogger("no.nav.aap.behandlingsflyt.BackfillEtableringVurderinger")
 private val teamLogs = LoggerFactory.getLogger("team-logs")
 
-private fun List<Migreringssteg>.vurderingsutfall() =
-    flatMap { it.vurderingerEtterMigrering }
+private fun List<EtableringEgenVirksomhetVurdering>.vurderingsutfall() =
+    gjeldendeFasevurderinger()
+        .filter { it.fase != null }
         .gjeldendeVurderinger()
-        .mapValue { Triple(it.fase, it.evaluerVirksomhetVurdering(), it.versjon) }
-        .komprimer().segmenter().map { it.periode to it.verdi }
+        .segmenter().map { it.periode to it.verdi.copy(fom = it.fom(), tom = it.tom()) }
+
+private fun EtableringEgenVirksomhetVurdering.tilDiagnostikk(): Map<String, Any?> = mapOf(
+    "vurdertIBehandling" to vurdertIBehandling.toLong(),
+    "opprettet" to opprettet.toString(),
+    "fom" to fom.toString(),
+    "tom" to tom?.toString(),
+    "fase" to fase?.name,
+    "versjon" to versjon.name,
+    "utviklingsPerioder" to utviklingsPerioder.map {
+        mapOf("fom" to it.fom.toString(), "tom" to it.tom.toString())
+    },
+    "oppstartsPerioder" to oppstartsPerioder.map {
+        mapOf("fom" to it.fom.toString(), "tom" to it.tom.toString())
+    },
+)
 
 /** Deler historiske etableringsvurderinger opp i én vurdering per periode. */
 class BackfillEtableringVurderinger(
@@ -114,10 +131,35 @@ class BackfillEtableringVurderinger(
                 val splittede = migreringsplan.filter { it.skalErstattes }
                 val før = vurderinger.map { it.second }
                 val etter = migreringsplan.flatMap { it.vurderingerEtterMigrering }
+                val varighetFør = varighet(før)
+                val varighetEtter = varighet(etter)
+                val harAvvik = varighetFør != varighetEtter
+                if (harAvvik) {
+                    val diagnose = mapOf(
+                        "dryRun" to dryRun,
+                        "behandlingId" to behandlingId.toLong(),
+                        "grunnlagId" to grunnlagId,
+                        "vurderingerId" to connection.hentVurderingerGruppeId(vurderinger.first().first),
+                        "varighetFør" to mapOf("utvikling" to varighetFør.first, "oppstart" to varighetFør.second),
+                        "varighetEtter" to mapOf("utvikling" to varighetEtter.first, "oppstart" to varighetEtter.second),
+                        "migreringsplan" to migreringsplan.map { steg ->
+                            mapOf(
+                                "vurderingId" to steg.vurderingId,
+                                "skalErstattes" to steg.skalErstattes,
+                                "opprinneligVurdering" to steg.opprinneligVurdering.tilDiagnostikk(),
+                                "oppdaterteVurderinger" to steg.oppdaterteVurderinger.map { it.tilDiagnostikk() },
+                            )
+                        },
+                    )
+                    teamLogs.warn(
+                        appendEntries(diagnose),
+                        "Avvik i varighet ved backfill av etableringsvurderinger",
+                    )
+                }
                 Resultat(
                     antallVurderingerSomSplittes = splittede.size,
                     antallNyeVurderinger = splittede.sumOf { it.oppdaterteVurderinger.size },
-                    antallMedAvvikIVarighet = if (varighet(før) != varighet(etter)) 1 else 0,
+                    antallMedAvvikIVarighet = if (harAvvik) 1 else 0,
                 )
             }
             .fold(Resultat(antallBehandlinger = 1), Resultat::plus)
@@ -229,7 +271,7 @@ class BackfillEtableringVurderinger(
             }
             val varighetFør = varighet(før)
             val valideringsfeilFør = service.validerVurdering(behandlingId, før)
-            val forventetUtfall = migreringsplan.vurderingsutfall()
+            val forventetUtfall = før.vurderingsutfall()
             migreringsplan.filter { it.skalErstattes }.forEach { steg ->
                 val vurderingerGruppeId = connection.hentVurderingerGruppeId(steg.vurderingId)
                 steg.oppdaterteVurderinger.forEach { oppdatertVurdering ->
@@ -248,7 +290,7 @@ class BackfillEtableringVurderinger(
             check(valideringsfeilFør == valideringsfeilEtter) {
                 "Valideringsresultat endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }
-            check(forventetUtfall == lagMigreringsplan(vurderingerEtter).vurderingsutfall()) {
+            check(forventetUtfall == etter.vurderingsutfall()) {
                 "Vurderingsutfall endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }
         }

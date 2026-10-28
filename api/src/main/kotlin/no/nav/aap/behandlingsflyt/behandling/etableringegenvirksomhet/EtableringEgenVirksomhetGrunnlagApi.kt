@@ -72,6 +72,7 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                             }
                         }
                     }
+
                     val bruktUtviklingsDager = gjeldendeTidslinje.antallHverdagerIFase(EtableringFase.UTVIKLING)
                     val bruktOppstartsdager = gjeldendeTidslinje.antallHverdagerIFase(EtableringFase.OPPSTART)
 
