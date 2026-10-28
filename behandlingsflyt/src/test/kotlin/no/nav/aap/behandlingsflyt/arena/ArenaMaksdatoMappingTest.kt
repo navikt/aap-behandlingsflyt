@@ -14,9 +14,15 @@ class ArenaMaksdatoMappingTest {
             """
                 {
                   "sak": {
+                    "sakId": 1,
                     "saknummer": "123-456",
                     "sakStatus": "AKTIV",
+                    "sakRegistrert": "2024-01-01",
                     "sisteVedtak": {
+                      "vedtakId": 1,
+                      "aktfaseKode": "AKTIV",
+                      "vedtaktypeKode": "O",
+                      "vedtakstatuskode": "IVERK",
                       "maxdatoUnntak": "2025-06-01",
                       "maxdatoOrdinaer": "2025-01-01",
                       "til": "2024-12-31"
@@ -42,9 +48,15 @@ class ArenaMaksdatoMappingTest {
             """
                 {
                   "sak": {
+                    "sakId": 1,
                     "saknummer": "123-456",
                     "sakStatus": "AKTIV",
+                    "sakRegistrert": "2024-01-01",
                     "sisteVedtak": {
+                      "vedtakId": 1,
+                      "aktfaseKode": "AKTIV",
+                      "vedtaktypeKode": "O",
+                      "vedtakstatuskode": "IVERK",
                       "maxdatoUnntak": null,
                       "maxdatoOrdinaer": "2025-01-01",
                       "til": "2024-12-31"
