@@ -22,7 +22,6 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 
 class VedtakslengdeSteg(
     private val vedtakslengdeService: VedtakslengdeService,
@@ -135,7 +134,7 @@ class VedtakslengdeSteg(
         val vedtaksperiode = arenaMigreringService.hentVedtaksperiode(kontekst.sakId)
         arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, type(), vedtaksperiode)
 
-        val vurdering = ArenaMigreringMapper.mapVedtakslengdeVurdering(
+        val vurdering = ArenaMigreringMapper.tilVedtakslengdeVurdering(
             fraArena = vedtaksperiode,
             behandlingId = kontekst.behandlingId,
         )

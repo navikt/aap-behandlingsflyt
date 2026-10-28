@@ -13,6 +13,7 @@ import no.nav.aap.behandlingsflyt.test.FakeEnhetGateway
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -51,6 +52,8 @@ class EtableringEgenVirksomhetVurderingResponseTest {
             )
             val migrert = listOf(gammel).tilNyttFormat().single()
             val forventet = EtableringEgenVirksomhetVurderingResponse.fraDomene(gammel, vurdertAvService)
+            val json = DefaultJsonMapper.fromJson<Map<String, Any?>>(DefaultJsonMapper.toJson(forventet))
+            assertThat(json["versjon"]).isEqualTo(gammel.versjon.name)
             assertThat(forventet.utviklingsPeriode).isEqualTo(gammel.utviklingsPerioder)
             assertThat(forventet.oppstartsPeriode).isEqualTo(gammel.oppstartsPerioder)
 

@@ -291,7 +291,7 @@ class KravSteg(
             arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, StegType.KRAV, kravdataFraArena)
             kravRepository.lagre(
                 kontekst.behandlingId,
-                setOf(ArenaMigreringMapper.mapMigrertKrav(kravdataFraArena, kontekst.behandlingId))
+                setOf(ArenaMigreringMapper.tilMigrertKrav(kravdataFraArena, kontekst.behandlingId))
             )
 
             sakService.overstyrRettighetsperioden(
