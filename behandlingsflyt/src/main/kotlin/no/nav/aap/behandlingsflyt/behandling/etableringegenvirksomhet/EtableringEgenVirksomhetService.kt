@@ -4,11 +4,13 @@ package no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.TilOgMedBeregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.antallHverdagerIFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.beregnTomForSistePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.perioderForFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somLegacyVisning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somFasetidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -50,7 +52,7 @@ class EtableringEgenVirksomhetService(
         fase: EtableringFase,
         vurdering: EtableringEgenVirksomhetVurdering
     ): VirksomhetEtableringResultat.Ugyldig.MåOppgiRegistrertIOffentligeRegister? {
-        if (fase != EtableringFase.OPPSTART) return null
+        if (fase != EtableringFase.OPPSTART || vurdering.versjon == EtableringVersjon.V0) return null
         return if (vurdering.erRegistrertINødvendigeOffentligeRegister != true) {
             VirksomhetEtableringResultat.Ugyldig.MåOppgiRegistrertIOffentligeRegister
         } else null
@@ -147,7 +149,7 @@ class EtableringEgenVirksomhetService(
         vurderinger: List<EtableringEgenVirksomhetVurdering>
     ): VirksomhetEtableringResultat.Ugyldig? {
         val perioderMedSykdomOgBistand = utledPerioderMedSykdomOgBistand(behandlingId)
-        val gjeldendeVurderinger = vurderinger.gjeldendeVurderinger()
+        val gjeldendeVurderinger = vurderinger.somFasetidslinje()
 
         val alleUtviklingsPerioder = gjeldendeVurderinger.perioderForFase(EtableringFase.UTVIKLING)
         val alleOppstartsPerioder = gjeldendeVurderinger.perioderForFase(EtableringFase.OPPSTART)
