@@ -33,6 +33,7 @@ enum class BehandlingsflytFeature(
     MigrerRefusjonskravFraArenaAutomatisk,
     MigrererKravFraArenaAutomatisk,
     MigrererOppholdskravFraArenaAutomatisk,
+    MigrererForutgaaendeMedlemskapFraArenaAutomatisk,
     MigrererVedtakslengdeFraArenaAutomatisk,
     MigrererBeregningstidspunktFraArenaAutomatisk,
 
@@ -50,7 +51,8 @@ enum class BehandlingsflytFeature(
     NySoknadTilApiIntern,
     SammenhengendeInstitusjonsopphold,
     DatadelingBehandlingVisning,
-    Helseinstitusjon1Manedsregel
+    Helseinstitusjon1Manedsregel,
+    BackfillRedusertDagsats,
     ;
 
     override fun key(): String = name

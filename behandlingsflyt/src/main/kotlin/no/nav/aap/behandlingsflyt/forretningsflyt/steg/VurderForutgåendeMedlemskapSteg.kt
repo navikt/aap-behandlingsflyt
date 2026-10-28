@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringMapper
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
@@ -18,6 +20,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepos
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.flyt.steg.MigrerVurderingFraArena
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -26,6 +29,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -39,8 +44,10 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     private val personopplysningForutgåendeRepository: PersonopplysningForutgåendeRepository,
     private val sykdomRepository: SykdomRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val avklaringsbehovService: AvklaringsbehovService
-) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val arenaMigreringService: ArenaMigreringService,
+    private val unleashGateway: UnleashGateway,
+) : BehandlingSteg, AvklaringsbehovMetadataUtleder, MigrerVurderingFraArena {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
@@ -49,10 +56,20 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         personopplysningForutgåendeRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
+        arenaMigreringService = ArenaMigreringService(repositoryProvider, gatewayProvider),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (kontekst.erMigreringFraArena()
+            && unleashGateway.isEnabled(BehandlingsflytFeature.MigrererForutgaaendeMedlemskapFraArenaAutomatisk)
+            && !harYrkesskadeSammenheng(kontekst)
+            && nårVurderingErRelevant(kontekst).any { it }
+        ) {
+            migrerVurderingFraArena(kontekst)
+        }
+
         val grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
@@ -60,6 +77,11 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             tvingerAvklaringsbehov = setOf(Vurderingsbehov.REVURDER_MEDLEMSKAP, Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP),
             nårVurderingErRelevant = ::nårVurderingErRelevant,
             perioderSomIkkeErTilstrekkeligVurdert = ::perioderSomIkkeErTilstrekkeligVurdert,
+            gjeldendeVurderinger = {
+                forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
+                    ?.gjeldendeVurderinger()
+                    .orEmpty()
+            },
             kontekst = kontekst,
             tilbakestillGrunnlag = { tilbakestillGrunnlagNy(kontekst, grunnlag.value.medlemskapArbeidInntektGrunnlag) },
         )
@@ -220,6 +242,23 @@ class VurderForutgåendeMedlemskapSteg private constructor(
 
     private fun vurderingsbehovSomTvingerAvklaringsbehov(): Set<Vurderingsbehov> =
         setOf(Vurderingsbehov.REVURDER_MEDLEMSKAP, Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP)
+
+    override fun migrerVurderingFraArena(kontekst: FlytKontekstMedPerioder) {
+        require(kontekst.erMigreringFraArena()) {
+            "Kan ikke migrere vurdering fra Arena for sak ${kontekst.sakId} fordi vurderingstype ikke er migrering"
+        }
+
+        val forutgåendeMedlemskap = arenaMigreringService.hentForutgåendeMedlemskap(kontekst.sakId)
+        arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, stegType, forutgåendeMedlemskap)
+
+        val vurdering = ArenaMigreringMapper.tilOppfyltForutgåendeMedlemskapVurdering(
+            fraArena = forutgåendeMedlemskap,
+            behandlingId = kontekst.behandlingId,
+            fom = kontekst.rettighetsperiode.fom,
+        )
+
+        forutgåendeMedlemskapArbeidInntektRepository.lagreVurderinger(kontekst.behandlingId, listOf(vurdering))
+    }
 
     override val stegType = type()
 

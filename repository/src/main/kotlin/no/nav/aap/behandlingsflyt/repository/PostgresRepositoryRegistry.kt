@@ -42,6 +42,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.PåklagetBehand
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.TrekkKlageRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.LovvalgDelvurderingRepositoryImpl
 import no.nav.aap.overgangarbeid.OvergangArbeidRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
@@ -189,3 +190,4 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<Avslag11_27RepositoryImpl>()
     .register<StønadsperiodeRepositoryImpl>()
     .register<KandidatForPåminnelseRepositoryImpl>()
+    .register<LovvalgDelvurderingRepositoryImpl>()
