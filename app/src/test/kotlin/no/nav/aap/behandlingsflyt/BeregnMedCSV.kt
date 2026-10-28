@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.beregning.Beregning
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelse
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
@@ -112,7 +112,7 @@ fun tilInput(csvLine: CSVLine): Pair<Beregning, Fødselsdato> {
 fun beregnForInput(beregning: Beregning, fødselsdato: Fødselsdato): Triple<Year, GUnit, Double> {
     val beregnet = beregning.beregnBeregningsgrunnlag()
 
-    val tilkjent = BeregnTilkjentYtelseService(
+    val tilkjent = BeregnTilkjentYtelse.beregnTilkjentYtelse(
         TilkjentYtelseGrunnlag(
             fødselsdato = fødselsdato,
             beregningsgrunnlag = beregnet.grunnlaget(),
@@ -153,7 +153,7 @@ fun beregnForInput(beregning: Beregning, fødselsdato: Fødselsdato): Triple<Yea
         )
     )
 
-    val dagsats = tilkjent.beregnTilkjentYtelse().mapValue { it.dagsats }.komprimer().segmenter().first().verdi.verdi
+    val dagsats = tilkjent.mapValue { it.dagsats }.komprimer().segmenter().first().verdi.verdi
 
     return Triple(Year.of(beregning.nedsettelsesDato.year), beregnet.grunnlaget(), dagsats.toDouble())
 }

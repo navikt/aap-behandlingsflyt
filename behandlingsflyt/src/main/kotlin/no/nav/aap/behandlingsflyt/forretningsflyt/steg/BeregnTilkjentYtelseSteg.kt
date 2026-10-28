@@ -1,11 +1,11 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseService
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelse
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelseSporingRepo
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9Repository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.Samordni
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -28,8 +27,11 @@ import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.behandlingsflyt.utils.tilTidslinje
+import no.nav.aap.etterlevelse.sporing.SporingService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Beløp
@@ -51,8 +53,9 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val aktivitetsplikt11_9repository: Aktivitetsplikt11_9Repository,
     private val barnepensjonRepository: BarnepensjonRepository,
     private val unleashGateway: UnleashGateway,
-
-    ) : BehandlingSteg {
+    private val behandlingRepository: BehandlingRepository,
+    private val sporingService: SporingService,
+) : BehandlingSteg {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         underveisRepository = repositoryProvider.provide(),
@@ -67,7 +70,9 @@ class BeregnTilkjentYtelseSteg private constructor(
         reduksjon11_9Repository = repositoryProvider.provide(),
         aktivitetsplikt11_9repository = repositoryProvider.provide(),
         barnepensjonRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
+        sporingService = SporingService(repositoryProvider, gatewayProvider),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -76,44 +81,41 @@ class BeregnTilkjentYtelseSteg private constructor(
         if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
             return Fullført
         }
+        val behandling = behandlingRepository.hent(kontekst.behandlingId)
 
         val beregningsgrunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
         val underveisgrunnlag = underveisRepository.hent(kontekst.behandlingId)
         val fødselsdato =
             requireNotNull(personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(kontekst.behandlingId)?.fødselsdato) { "Finner ikke fødselsdato. BehandlingId: ${kontekst.behandlingId}" }
         val barnetilleggGrunnlag =
-            barnetilleggRepository.hentHvisEksisterer(kontekst.behandlingId) ?: BarnetilleggGrunnlag(
-                perioder = emptyList()
-            )
-        val samordningGrunnlag = samordningRepository.hentHvisEksisterer(kontekst.behandlingId) ?: SamordningGrunnlag(
-            samordningPerioder = emptySet()
-        )
+            barnetilleggRepository.hentHvisEksisterer(kontekst.behandlingId)
+                ?: BarnetilleggGrunnlag(perioder = emptyList())
+        val samordningGrunnlag = samordningRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?: SamordningGrunnlag(samordningPerioder = emptySet())
         val samordningUføre = samordningUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
         val samordningArbeidsgiver = samordningArbeidsgiverRepository.hentHvisEksisterer(kontekst.behandlingId)
         val barnepensjonGrunnlag = barnepensjonRepository.hentHvisEksisterer(kontekst.behandlingId)
-        
+
         val grunnlag = TilkjentYtelseGrunnlag(
-            fødselsdato,
-            beregningsgrunnlag?.grunnlaget(),
-            underveisgrunnlag,
-            barnetilleggGrunnlag,
-            samordningGrunnlag,
-            samordningUføre,
-            samordningArbeidsgiver,
-            barnepensjonGrunnlag,
+            fødselsdato = fødselsdato,
+            beregningsgrunnlag = beregningsgrunnlag?.grunnlaget(),
+            underveisgrunnlag = underveisgrunnlag,
+            barnetilleggGrunnlag = barnetilleggGrunnlag,
+            samordningGrunnlag = samordningGrunnlag,
+            samordningUføre = samordningUføre,
+            samordningArbeidsgiver = samordningArbeidsgiver,
+            barnepensjonGrunnlag = barnepensjonGrunnlag,
         )
-        val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(grunnlag).beregnTilkjentYtelse()
+        val beregnetTilkjentYtelse = sporingService.kjørMedSporing(
+            behandling = behandling,
+            sporbar = BeregnTilkjentYtelse,
+            sporbarRepo = BeregnTilkjentYtelseSporingRepo(tilkjentYtelseRepository),
+            input = grunnlag,
+        ).tilTidslinje()
 
         val aktivitetsplikt11_9Grunnlag = aktivitetsplikt11_9repository.hentHvisEksisterer(kontekst.behandlingId)
-        val reduksjoner11_9 = (aktivitetsplikt11_9Grunnlag?.gjeldendeVurderinger() ?: emptyList())
+        val reduksjoner11_9 = aktivitetsplikt11_9Grunnlag?.gjeldendeVurderinger().orEmpty()
             .map { vurdering -> tilReduksjon11_9(vurdering, beregnetTilkjentYtelse) }
-
-        tilkjentYtelseRepository.lagre(
-            behandlingId = kontekst.behandlingId,
-            tilkjent = beregnetTilkjentYtelse.segmenter().map { TilkjentYtelsePeriode(it.periode, it.verdi) },
-            faktagrunnlag = grunnlag,
-            versjon = ApplikasjonsVersjon.versjon,
-        )
 
         log.info("Lagrer ned reduksjoner pga aktivitetsplikt 11-9: [${reduksjoner11_9.size}]")
         reduksjon11_9Repository.lagre(

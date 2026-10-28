@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -79,10 +78,8 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
     override fun lagre(
         behandlingId: BehandlingId,
         tilkjent: List<TilkjentYtelsePeriode>,
-        faktagrunnlag: TilkjentYtelseGrunnlag,
-        versjon: String,
     ) {
-        return lagre(behandlingId, tilkjent, faktagrunnlag.hent(), versjon)
+        return lagre(behandlingId, tilkjent, null, null)
     }
 
     private fun lagre(
