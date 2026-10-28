@@ -132,7 +132,7 @@ enum class EierVirksomhet {
 enum class EtableringVersjon {
     /** Grunnvilkårene alene avgjør utfallet, også etter oppdeling i faser. */
     V0,
-    V1,
+    V1
 }
 
 enum class EtableringFase(val maksHverdager: Int) {

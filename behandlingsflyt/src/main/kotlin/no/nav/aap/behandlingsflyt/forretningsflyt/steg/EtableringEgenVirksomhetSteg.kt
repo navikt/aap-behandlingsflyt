@@ -81,9 +81,8 @@ class EtableringEgenVirksomhetSteg(
         }
 
         val feil = etableringEgenVirksomhetService.validerVurdering(
-            behandlingId = kontekst.behandlingId,
-            vurderinger = grunnlag.vurderinger,
-        )
+                behandlingId = kontekst.behandlingId,
+                vurderinger = grunnlag.vurderinger,)
 
         return Tidslinje(kontekst.rettighetsperiode, feil == null)
     }
