@@ -465,7 +465,8 @@ class EtableringEgenVirksomhetLøserTest {
         val segmenter = vurderinger.gjeldendeVurderinger().segmenter().toList()
         val forventetTom = Hverdager(EtableringFase.UTVIKLING.maksHverdager).fraOgMed(førsteFom)
 
-        assertThat(vurderinger).allSatisfy { assertThat(it.tom).isEqualTo(forventetTom) }
+        assertThat(vurderinger.single { it.fom == førsteFom }.tom).isEqualTo(andreFom.minusDays(1))
+        assertThat(vurderinger.single { it.fom == andreFom }.tom).isEqualTo(forventetTom)
         assertThat(segmenter.map { it.periode }).containsExactly(
             Periode(førsteFom, andreFom.minusDays(1)),
             Periode(andreFom, forventetTom),
