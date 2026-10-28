@@ -69,6 +69,7 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                             "Vedtatt vurdering med fase=${segment.verdi.fase} mangler tom (vurdertIBehandling=${segment.verdi.vurdertIBehandling})"
                         }
                     }
+
                     val bruktUtviklingsDager = gjeldendeTidslinje.antallHverdagerIFase(EtableringFase.UTVIKLING)
                     val bruktOppstartsdager = gjeldendeTidslinje.antallHverdagerIFase(EtableringFase.OPPSTART)
 

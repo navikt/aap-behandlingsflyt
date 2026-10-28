@@ -115,11 +115,6 @@ class EtableringEgenVirksomhetService(
             beregnedeVurderinger[index] = vurdering.copy(tom = tom)
         }
 
-        beregnedeVurderinger.addAll(
-            0,
-            gamleVurderinger.filterNot { it in beregnedeVurderinger }
-        )
-
         val førsteOppstartsfom = beregnedeVurderinger.gjeldendeVurderinger().segmenter().filter { it.verdi.fase == EtableringFase.OPPSTART }.minOfOrNull { it.periode.fom }
 
         if (førsteOppstartsfom != null) {
@@ -139,7 +134,7 @@ class EtableringEgenVirksomhetService(
 
         return VirksomhetEtableringResultat.Gyldig(
             Beregning(
-                beregnedeVurderinger.toList(),
+                gamleVurderinger + beregnedeVurderinger.filter { it.vurdertIBehandling == behandlingId }
             )
         )
     }
