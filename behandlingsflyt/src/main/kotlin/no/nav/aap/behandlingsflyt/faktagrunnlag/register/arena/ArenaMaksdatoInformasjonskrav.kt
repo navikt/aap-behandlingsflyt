@@ -35,7 +35,7 @@ class ArenaMaksdatoInformasjonskrav(
         kontekst: FlytKontekstMedPerioder,
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?,
-    ): Boolean = unleashGateway.isEnabled(BehandlingsflytFeature.HentArenaMaksdato)
+    ): Boolean = unleashGateway.isEnabled(BehandlingsflytFeature.HandtereMaksdatoForKantTilKant)
             && kontekst.erFørstegangsbehandlingEllerRevurdering()
             && oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId)
 

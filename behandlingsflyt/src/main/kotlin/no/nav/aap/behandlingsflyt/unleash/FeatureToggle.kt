@@ -21,7 +21,7 @@ enum class BehandlingsflytFeature(
     VentStatusForTilbakekrevingIBehandlingsflyt,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
     SynkroniserArenaMeldeperiodesyklus,
-    HentArenaMaksdato,
+    HandtereMaksdatoForKantTilKant,
     DynamiskFrivilligSykestipend,
 
     // --- Krav ---
