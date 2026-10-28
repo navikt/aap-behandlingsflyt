@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.TilOgMedBeregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.beregnTomForSistePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.erFunksjoneltLik
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
@@ -35,6 +36,26 @@ import java.time.Instant
 import java.time.LocalDate
 
 class EtableringEgenVirksomhetLøserTest {
+
+    @Test
+    fun `endring i legacy-perioder er en funksjonell endring`() {
+        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
+        val fom = sak.rettighetsperiode.fom.plusDays(1)
+        val før = oppfyltVurdering(fom, tom = fom.plusDays(30)).copy(
+            fase = null,
+            utviklingsPerioder = listOf(Periode(fom, fom.plusDays(4))),
+            oppstartsPerioder = listOf(Periode(fom.plusDays(7), fom.plusDays(11))),
+        ).toEtableringEgenVirksomhetVurdering(Bruker("saks"), behandling.id)
+        val endringer = listOf(
+            før.copy(utviklingsPerioder = listOf(Periode(fom, fom.plusDays(5)))),
+            før.copy(oppstartsPerioder = listOf(Periode(fom.plusDays(7), fom.plusDays(12)))),
+        )
+
+        assertThat(listOf(før).erFunksjoneltLik(listOf(før.copy()))).isTrue()
+        assertThat(endringer.map { endret -> listOf(før).erFunksjoneltLik(listOf(endret)) })
+            .describedAs("Endring av henholdsvis utviklings- og oppstartsperiode")
+            .containsExactly(false, false)
+    }
 
     private val løser = EtableringEgenVirksomhetLøser(
         InMemoryEtableringEgenVirksomRepository,
