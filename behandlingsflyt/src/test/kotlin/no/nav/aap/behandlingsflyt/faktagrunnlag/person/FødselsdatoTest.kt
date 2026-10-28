@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.person
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.behandlingsflyt.test.mars
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -18,10 +19,13 @@ class FødselsdatoTest {
 
     @Test
     fun `tester dagen før man har bursdag`() {
-        val fødselsdato = Fødselsdato(LocalDate.now().minusYears(25))
-        val dagenFør25årsdagen = LocalDate.now().minusDays(1)
+        val fødselsdato = Fødselsdato(15 mars 2000)
+        val dagenFør25årsdagen = fødselsdato.toLocalDate()
+            .plusYears(25)
+            .minusDays(1)
 
         assertThat(fødselsdato.alderPåDato(dagenFør25årsdagen)).isEqualTo(24)
+
     }
 
     @Test

@@ -159,7 +159,7 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
 
     override fun hentArenaMeldekortsyklus(ident: Ident): ArenaMeldeperiodesyklusInformasjonskrav.Registerdata {
         val response = restClient.post<ArenaMeldekortsyklusRequest, ArenaMeldekortsyklusResponse>(
-            uri.resolve("/api/person/meldekort/startuke"),
+            uri.resolve("/api/v1/samordning/meldekort/startuke"),
             PostRequest(ArenaMeldekortsyklusRequest(ident.identifikator)),
         )
 
@@ -175,6 +175,6 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
     @Suppress("unused")
     private class ArenaMeldekortsyklusRequest(val personidentifikator: String)
 
-    private class ArenaMeldekortsyklusResponse( val aar: Int?, val ukenummer: Int?)
+    private class ArenaMeldekortsyklusResponse(val aar: Int?, val ukenummer: Int?)
 
 }

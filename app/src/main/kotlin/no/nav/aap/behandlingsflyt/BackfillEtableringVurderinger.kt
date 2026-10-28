@@ -1,9 +1,13 @@
 package no.nav.aap.behandlingsflyt
 
+import net.logstash.logback.marker.Markers.appendEntries
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.gjeldendeFasevurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilGammeltFormat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -12,11 +16,33 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.time.LocalDate
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger("no.nav.aap.behandlingsflyt.BackfillEtableringVurderinger")
 private val teamLogs = LoggerFactory.getLogger("team-logs")
+
+private fun List<EtableringEgenVirksomhetVurdering>.vurderingsutfall() =
+    gjeldendeFasevurderinger()
+        .filter { it.fase != null }
+        .gjeldendeVurderinger()
+        .segmenter().map { it.periode to it.verdi.copy(fom = it.fom(), tom = it.tom()) }
+
+private fun EtableringEgenVirksomhetVurdering.tilDiagnostikk(): Map<String, Any?> = mapOf(
+    "vurdertIBehandling" to vurdertIBehandling.toLong(),
+    "opprettet" to opprettet.toString(),
+    "fom" to fom.toString(),
+    "tom" to tom?.toString(),
+    "fase" to fase?.name,
+    "versjon" to versjon.name,
+    "utviklingsPerioder" to utviklingsPerioder.map {
+        mapOf("fom" to it.fom.toString(), "tom" to it.tom.toString())
+    },
+    "oppstartsPerioder" to oppstartsPerioder.map {
+        mapOf("fom" to it.fom.toString(), "tom" to it.tom.toString())
+    },
+)
 
 /** Deler historiske etableringsvurderinger opp i én vurdering per periode. */
 class BackfillEtableringVurderinger(
@@ -43,25 +69,28 @@ class BackfillEtableringVurderinger(
         Thread.ofVirtual()
             .name("backfillEtableringVurderinger")
             .start {
-                if (isLeader(log)) {
-                    log.info("Begynner backfill av etableringsvurderinger, dryRun=$dryRun")
-                    try {
-                        val resultat = dataSource.transaction { connection ->
-                            migrer(connection)
+                while (true) {
+                    if (isLeader(log)) {
+                        log.info("Begynner backfill av etableringsvurderinger, dryRun=$dryRun")
+                        try {
+                            val resultat = dataSource.transaction { connection ->
+                                migrer(connection)
+                            }
+                            log.info("Backfill av etableringsvurderinger fullført, dryRun=$dryRun, $resultat")
+                        } catch (e: Exception) {
+                            log.warn(
+                                "BackfillEtableringVurderinger: uncaughtException {}, se secure / team log",
+                                e.javaClass.name
+                            )
+                            teamLogs.warn(
+                                "BackfillEtableringVurderinger: uncaughtException {}: {}",
+                                e.javaClass.name,
+                                e.message,
+                                e
+                            )
                         }
-                        log.info("Backfill av etableringsvurderinger fullført, dryRun=$dryRun, $resultat")
-                    } catch (e: Exception) {
-                        log.warn(
-                            "BackfillEtableringVurderinger: uncaughtException {}, se secure / team log",
-                            e.javaClass.name
-                        )
-                        teamLogs.warn(
-                            "BackfillEtableringVurderinger: uncaughtException {}: {}",
-                            e.javaClass.name,
-                            e.message,
-                            e
-                        )
                     }
+                    Thread.sleep(Duration.ofMinutes(5))
                 }
             }
     }
@@ -102,10 +131,35 @@ class BackfillEtableringVurderinger(
                 val splittede = migreringsplan.filter { it.skalErstattes }
                 val før = vurderinger.map { it.second }
                 val etter = migreringsplan.flatMap { it.vurderingerEtterMigrering }
+                val varighetFør = varighet(før)
+                val varighetEtter = varighet(etter)
+                val harAvvik = varighetFør != varighetEtter
+                if (harAvvik) {
+                    val diagnose = mapOf(
+                        "dryRun" to dryRun,
+                        "behandlingId" to behandlingId.toLong(),
+                        "grunnlagId" to grunnlagId,
+                        "vurderingerId" to connection.hentVurderingerGruppeId(vurderinger.first().first),
+                        "varighetFør" to mapOf("utvikling" to varighetFør.first, "oppstart" to varighetFør.second),
+                        "varighetEtter" to mapOf("utvikling" to varighetEtter.first, "oppstart" to varighetEtter.second),
+                        "migreringsplan" to migreringsplan.map { steg ->
+                            mapOf(
+                                "vurderingId" to steg.vurderingId,
+                                "skalErstattes" to steg.skalErstattes,
+                                "opprinneligVurdering" to steg.opprinneligVurdering.tilDiagnostikk(),
+                                "oppdaterteVurderinger" to steg.oppdaterteVurderinger.map { it.tilDiagnostikk() },
+                            )
+                        },
+                    )
+                    teamLogs.warn(
+                        appendEntries(diagnose),
+                        "Avvik i varighet ved backfill av etableringsvurderinger",
+                    )
+                }
                 Resultat(
                     antallVurderingerSomSplittes = splittede.size,
                     antallNyeVurderinger = splittede.sumOf { it.oppdaterteVurderinger.size },
-                    antallMedAvvikIVarighet = if (varighet(før) != varighet(etter)) 1 else 0,
+                    antallMedAvvikIVarighet = if (harAvvik) 1 else 0,
                 )
             }
             .fold(Resultat(antallBehandlinger = 1), Resultat::plus)
@@ -196,7 +250,8 @@ class BackfillEtableringVurderinger(
                     tom = row.getLocalDateOrNull("GJELDER_TIL"),
                     fase = row.getEnumOrNull("FASE"),
                     erRegistrertINødvendigeOffentligeRegister = row.getBooleanOrNull("ER_REGISTRERT_I_NODVENDIGE_OFFENTLIGE_REGISTER"),
-                    jobberBrukerAktivMedVirksomheten = row.getBooleanOrNull("JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET")
+                    jobberBrukerAktivMedVirksomheten = row.getBooleanOrNull("JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET"),
+                    versjon = row.getEnum("VERSJON"),
                 )
             }
         }
@@ -215,7 +270,9 @@ class BackfillEtableringVurderinger(
                 if (vurdering.fase != null) vurdering.tilGammeltFormat() else vurdering
             }
             val varighetFør = varighet(før)
-            val valideringsresultatFør = service.erVurderingerGyldig(behandlingId, før)
+            val valideringsfeilFør =
+                service.erVurderingerGyldig(behandlingId, før) as? VirksomhetEtableringResultat.Ugyldig
+            val forventetUtfall = før.vurderingsutfall()
             migreringsplan.filter { it.skalErstattes }.forEach { steg ->
                 val vurderingerGruppeId = connection.hentVurderingerGruppeId(steg.vurderingId)
                 steg.oppdaterteVurderinger.forEach { oppdatertVurdering ->
@@ -223,14 +280,20 @@ class BackfillEtableringVurderinger(
                 }
                 slettVurdering(connection, steg.vurderingId)
             }
-            val etter = this.vurderinger(connection, grunnlagId).map { (_, vurdering) ->
+            val vurderingerEtter = this.vurderinger(connection, grunnlagId)
+            val etter = vurderingerEtter.map { (_, vurdering) ->
                 if (vurdering.fase != null) vurdering.tilGammeltFormat() else vurdering
             }
             check(varighetFør == varighet(etter)) {
                 "Varighet endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }
-            check(valideringsresultatFør == service.erVurderingerGyldig(behandlingId, etter)) {
+            val valideringsfeilEtter =
+                service.erVurderingerGyldig(behandlingId, etter) as? VirksomhetEtableringResultat.Ugyldig
+            check(valideringsfeilFør == valideringsfeilEtter) {
                 "Valideringsresultat endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
+            }
+            check(forventetUtfall == etter.vurderingsutfall()) {
+                "Vurderingsutfall endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }
         }
     }
@@ -250,8 +313,8 @@ class BackfillEtableringVurderinger(
                     KAN_BLI_SELVFORSORGET, VIRKSOMHET_NAVN, ORG_NR, EGEN_VIRKSOMHET_UTVIKLING_PERIODER_ID,
                     EGEN_VIRKSOMHET_OPPSTART_PERIODER_ID, VURDERINGER_ID, VURDERT_I_BEHANDLING, VURDERT_AV,
                     GJELDER_FRA, GJELDER_TIL, OPPRETTET_TID, FASE, ER_REGISTRERT_I_NODVENDIGE_OFFENTLIGE_REGISTER,
-                    JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET, VERSJON
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
         ) {
             setParams {
@@ -273,6 +336,7 @@ class BackfillEtableringVurderinger(
                 setEnumName(16, vurdering.fase)
                 setBoolean(17, vurdering.erRegistrertINødvendigeOffentligeRegister)
                 setBoolean(18, vurdering.jobberBrukerAktivMedVirksomheten)
+                setEnumName(19, vurdering.versjon)
             }
         }
     }

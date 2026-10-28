@@ -2,9 +2,9 @@ package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.utenPerioder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.komponenter.dbconnect.DBConnection
-import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.komponenter.verdityper.Tid
 
 internal data class Migreringssteg(
     val vurderingId: Long,
@@ -28,13 +28,14 @@ internal fun EtableringEgenVirksomhetVurdering.tilMigrerteVurderinger():
 internal fun lagMigreringsplan(
     vurderinger: List<Pair<Long, EtableringEgenVirksomhetVurdering>>
 ): List<Migreringssteg> {
+    val gjeldende = vurderinger.map { it.second }.gjeldendeVurderinger().segmenter().toList()
     val prioriterteVurderinger = vurderinger
         .groupBy { (_, vurdering) -> vurdering.vurdertIBehandling }
         .values
         .sortedBy { gruppe -> gruppe.first().second.opprettet }
         .flatMap { gruppe -> gruppe.sortedBy { (_, vurdering) -> vurdering.fom } }
 
-    return prioriterteVurderinger.mapIndexed { index, (vurderingId, vurdering) ->
+    return prioriterteVurderinger.map { (vurderingId, vurdering) ->
         val oppdaterteVurderinger = vurdering.tilMigrerteVurderinger()
         if (oppdaterteVurderinger.isEmpty()) {
             Migreringssteg(
@@ -44,39 +45,16 @@ internal fun lagMigreringsplan(
                 skalErstattes = false,
             )
         } else {
-            // En nyere vurdering overstyrer hele gyldighetsperioden, også der den ikke har en fase.
-            val overstyrendePerioder = prioriterteVurderinger
-                .drop(index + 1)
-                .map { (_, overstyrendeVurdering) ->
-                    Periode(overstyrendeVurdering.fom, overstyrendeVurdering.tom ?: Tid.MAKS)
-                }
+            val andreVurderinger = gjeldende.filter { it.verdi != vurdering }.map { it.periode }
             Migreringssteg(
                 vurderingId = vurderingId,
                 opprinneligVurdering = vurdering,
-                oppdaterteVurderinger = oppdaterteVurderinger.flatMap { oppdatertVurdering ->
-                    oppdatertVurdering.uten(overstyrendePerioder)
-                },
+                oppdaterteVurderinger = if (gjeldende.none { it.verdi == vurdering }) emptyList()
+                else oppdaterteVurderinger.flatMap { it.utenPerioder(andreVurderinger) },
                 skalErstattes = true,
             )
         }
     }
-}
-
-private fun EtableringEgenVirksomhetVurdering.uten(
-    overstyrendePerioder: List<Periode>
-): List<EtableringEgenVirksomhetVurdering> {
-    val periode = Periode(fom, requireNotNull(tom))
-    return overstyrendePerioder
-        .fold(listOf(periode)) { perioder, overstyrendePeriode ->
-            perioder.flatMap { it.uten(overstyrendePeriode) }
-        }
-        .map { gjenværendePeriode ->
-            copy(fom = gjenværendePeriode.fom, tom = gjenværendePeriode.tom)
-        }
-}
-
-private fun Periode.uten(overstyrendePeriode: Periode): List<Periode> {
-    return this.minus(overstyrendePeriode).toList()
 }
 
 internal fun DBConnection.hentVurderingerGruppeId(vurderingId: Long): Long =

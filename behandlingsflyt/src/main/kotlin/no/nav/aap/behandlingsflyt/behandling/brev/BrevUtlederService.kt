@@ -478,11 +478,16 @@ class BrevUtlederService(
 
     private fun brevBehovAvslag(behandling: Behandling): AvslagBrev {
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
+        val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
         val vedtaksdato = checkNotNull(vedtakRepository.hent(behandling.id)?.vedtakstidspunkt) {
             "Mangler vedtakstidspunkt for behandling ${behandling.id}"
         }.toLocalDate()
         val alleAvslagsårsaker = hentAvslagsårsaker(behandling.id, vedtaksdato)
         val avslagsårsak = prioriterAvslagsårsakAvslagsBrevType(alleAvslagsårsaker)
+        val yrkesSkadeISøknadIkkeIRegister =
+            yrkesskader != null &&
+                    yrkesskader.oppgittYrkesskadeISøknad == true &&
+                    !yrkesskader.yrkesskader.harYrkesskade()
         log.info(
             "Brevvalg avslagsårsak: alleAvslagsårsaker={}, prioritertAvslagsårsak={}",
             alleAvslagsårsaker,
@@ -497,7 +502,7 @@ class BrevUtlederService(
                 avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL ||
                 avslagsårsak == Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
             ) {
-                return AvslagBrev.AvslagSykdomsvilkåret(sykdomsvurdering = sykdomsvurdering)
+                return AvslagBrev.AvslagSykdomsvilkåret(sykdomsvurdering = sykdomsvurdering, yrkesSkadeISøknadIkkeIRegister = yrkesSkadeISøknadIkkeIRegister)
             }
         }
         return AvslagBrev.Avslag(

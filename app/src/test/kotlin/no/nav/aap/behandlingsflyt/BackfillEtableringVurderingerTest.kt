@@ -1,5 +1,12 @@
 package no.nav.aap.behandlingsflyt
 
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Logger
+import ch.qos.logback.classic.LoggerContext
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.read.ListAppender
+import com.fasterxml.jackson.databind.JsonNode
+import net.logstash.logback.encoder.LogstashEncoder
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringGyldig
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
@@ -17,6 +24,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilGammeltFormat
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
@@ -32,6 +40,7 @@ import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
@@ -39,6 +48,9 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
+import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -56,6 +68,59 @@ class BackfillEtableringVurderingerTest {
         @AfterAll
         @JvmStatic
         fun tearDown() = dataSource.close()
+    }
+
+    @Test
+    fun `full migrering konverterer aktive og historiske grunnlag og kan kjøres på nytt`() {
+        TestDataSource().use { isolertDataSource ->
+            val behandlingId = isolertDataSource.transaction { connection ->
+                val behandlingId = finnEllerOpprettBehandling(connection, sak(connection)).id
+                val repository = postgresRepositoryRegistry.provider(connection)
+                    .provide<EtableringEgenVirksomhetRepository>()
+                val gammel = vurdering(
+                    behandlingId,
+                    fom = 1 januar 2025,
+                    utviklingsPerioder = listOf(Periode(6 januar 2025, 10 januar 2025)),
+                    oppstartsPerioder = listOf(Periode(13 januar 2025, 17 januar 2025)),
+                )
+                repository.lagre(behandlingId, listOf(gammel))
+                repository.lagre(behandlingId, listOf(gammel.copy(begrunnelse = "Ny vurdering")))
+                behandlingId
+            }
+            val backfill = BackfillEtableringVurderinger(isolertDataSource, dryRun = false)
+            val resultat = isolertDataSource.transaction { backfill.migrer(it) }
+
+            assertThat(resultat).usingRecursiveComparison().isEqualTo(
+                BackfillEtableringVurderinger.Resultat(
+                    antallBehandlinger = 1,
+                    antallVurderingerSomSplittes = 2,
+                    antallNyeVurderinger = 4,
+                )
+            )
+            val iderEtter = isolertDataSource.transaction { connection ->
+                val grunnlag = backfill.hentAlleGrunnlag(connection, behandlingId)
+                assertThat(grunnlag).hasSize(2)
+                grunnlag.flatMap { grunnlagId ->
+                    val vurderinger = backfill.vurderinger(connection, grunnlagId)
+                    assertThat(vurderinger).hasSize(2)
+                    assertThat(vurderinger.map { it.second }.brukteDager()).isEqualTo(5 to 5)
+                    assertThat(vurderinger.map { it.second }).allSatisfy {
+                        assertThat(it.fase).isNotNull()
+                        assertThat(it.utviklingsPerioder).isEmpty()
+                        assertThat(it.oppstartsPerioder).isEmpty()
+                    }
+                    vurderinger.map { it.first }
+                }
+            }
+            val andreKjøring = isolertDataSource.transaction { backfill.migrer(it) }
+            assertThat(andreKjøring).usingRecursiveComparison()
+                .isEqualTo(BackfillEtableringVurderinger.Resultat(antallBehandlinger = 1))
+            isolertDataSource.transaction { connection ->
+                val ider = backfill.hentAlleGrunnlag(connection, behandlingId)
+                    .flatMap { backfill.vurderinger(connection, it) }.map { it.first }
+                assertThat(ider).containsExactlyInAnyOrderElementsOf(iderEtter)
+            }
+        }
     }
 
     @Test
@@ -81,6 +146,7 @@ class BackfillEtableringVurderingerTest {
             fom = 1 desember 2024,
             utviklingsPerioder = listOf(utvikling1, utvikling2),
             oppstartsPerioder = listOf(oppstart),
+            virksomhetErNy = true,
         )
         lagre(behandlingId, legacy)
 
@@ -125,6 +191,147 @@ class BackfillEtableringVurderingerTest {
     }
 
     @Test
+    fun `varighetsavvik logger bare nødvendige diagnosedata til teamloggen uten å endre grunnlaget`() {
+        val første = opprettBehandling()
+        val andre = opprettBehandling()
+        val behandling = opprettBehandling()
+        val eldst = vurdering(
+            første,
+            fom = 6 januar 2025,
+            utviklingsPerioder = listOf(Periode(6 januar 2025, 10 januar 2025)),
+        ).copy(
+            begrunnelse = "hemmelig begrunnelse",
+            virksomhetNavn = "hemmelig virksomhet",
+            orgNr = "hemmelig organisasjonsnummer",
+            vurdertAv = Bruker("hemmelig saksbehandler"),
+        )
+        val eldre = eldst.copy(
+            vurdertIBehandling = andre,
+            opprettet = Instant.parse("2025-01-02T00:00:00Z"),
+            utviklingsPerioder = listOf(Periode(6 januar 2025, 31 januar 2025)),
+            oppstartsPerioder = listOf(Periode(20 januar 2025, 24 januar 2025)),
+        )
+        val nyere = eldre.copy(
+            vurdertIBehandling = behandling,
+            opprettet = Instant.parse("2025-01-03T00:00:00Z"),
+            fom = 3 februar 2025,
+            utviklingsPerioder = emptyList(),
+            oppstartsPerioder = emptyList(),
+        )
+        val før = listOf(eldst, eldre, nyere)
+        lagre(behandling, *før.toTypedArray())
+        val backfill = BackfillEtableringVurderinger(dataSource, dryRun = true)
+        val (grunnlagId, vurderingerId, vurderingIder) = dataSource.transaction { connection ->
+            val grunnlagId = backfill.hentAlleGrunnlag(connection, behandling).single()
+            val ider = backfill.vurderinger(connection, grunnlagId).map { it.first }
+            Triple(grunnlagId, connection.hentVurderingerGruppeId(ider.first()), ider)
+        }
+
+        medLoggfangst { teamLogg, vanligLogg ->
+            val resultat = dataSource.transaction { backfill.analyserBehandling(it, behandling) }
+
+            assertThat(resultat).usingRecursiveComparison().isEqualTo(
+                BackfillEtableringVurderinger.Resultat(
+                    antallBehandlinger = 1,
+                    antallVurderingerSomSplittes = 2,
+                    antallNyeVurderinger = 2,
+                    antallMedAvvikIVarighet = 1,
+                )
+            )
+            assertThat(teamLogg).hasSize(1)
+            val hendelse = teamLogg.single()
+            assertThat(hendelse.level).isEqualTo(Level.WARN)
+            assertThat(hendelse.formattedMessage)
+                .startsWith("Avvik i varighet ved backfill av etableringsvurderinger")
+            val encoder = LogstashEncoder().apply {
+                context = LoggerFactory.getILoggerFactory() as LoggerContext
+                start()
+            }
+            val json = try {
+                encoder.encode(hendelse).toString(Charsets.UTF_8)
+            } finally {
+                encoder.stop()
+            }
+            assertThat(json).doesNotContain("hemmelig", "begrunnelse", "virksomhetNavn", "orgNr", "vurdertAv")
+            val diagnose = DefaultJsonMapper.fromJson<JsonNode>(json)
+            assertThat(diagnose.path("dryRun").asBoolean()).isTrue()
+            assertThat(diagnose.path("behandlingId").asLong()).isEqualTo(behandling.id)
+            assertThat(diagnose.path("grunnlagId").asLong()).isEqualTo(grunnlagId)
+            assertThat(diagnose.path("vurderingerId").asLong()).isEqualTo(vurderingerId)
+            assertThat(diagnose.path("varighetFør")).isEqualTo(
+                DefaultJsonMapper.fromJson<JsonNode>("""{"utvikling":20,"oppstart":5}""")
+            )
+            assertThat(diagnose.path("varighetEtter")).isEqualTo(
+                DefaultJsonMapper.fromJson<JsonNode>("""{"utvikling":15,"oppstart":5}""")
+            )
+            val steg = diagnose.path("migreringsplan")
+            assertThat(steg.size()).isEqualTo(3)
+            assertThat(steg.map { it.path("vurderingId").asLong() }).isEqualTo(vurderingIder)
+            assertThat(steg.map { it.path("skalErstattes").asBoolean() }).containsExactly(true, true, false)
+            assertThat(steg[0].path("oppdaterteVurderinger").size()).isZero()
+            assertThat(steg[0].path("opprinneligVurdering")).isEqualTo(
+                DefaultJsonMapper.fromJson<JsonNode>(
+                    """
+                    {
+                      "vurdertIBehandling":${første.id},
+                      "opprettet":"2025-01-01T00:00:00Z",
+                      "fom":"2025-01-06","tom":null,"fase":null,"versjon":"V0",
+                      "utviklingsPerioder":[{"fom":"2025-01-06","tom":"2025-01-10"}],
+                      "oppstartsPerioder":[]
+                    }
+                    """.trimIndent()
+                )
+            )
+            val oppdaterte = steg[1].path("oppdaterteVurderinger")
+            assertThat(oppdaterte.size()).isEqualTo(2)
+            val klippet = oppdaterte.first { it.path("fase").asText() == "UTVIKLING" }
+            assertThat(klippet.path("vurdertIBehandling").asLong()).isEqualTo(andre.id)
+            assertThat(klippet.path("fase").asText()).isEqualTo("UTVIKLING")
+            assertThat(klippet.path("fom").asText()).isEqualTo("2025-01-06")
+            assertThat(klippet.path("tom").asText()).isEqualTo("2025-01-31")
+            val oppstart = oppdaterte.first { it.path("fase").asText() == "OPPSTART" }
+            assertThat(oppstart.path("fom").asText()).isEqualTo("2025-01-20")
+            assertThat(oppstart.path("tom").asText()).isEqualTo("2025-01-24")
+            assertThat(steg[2].path("oppdaterteVurderinger").size()).isZero()
+            assertThat(diagnose.path("message").asText())
+                .isEqualTo("Avvik i varighet ved backfill av etableringsvurderinger")
+            assertThat(vanligLogg.map { it.formattedMessage }).noneSatisfy {
+                assertThat(it).doesNotContain("migreringsplan", "utviklingsPerioder", "hemmelig")
+            }
+        }
+
+        assertThat(hentVurderinger(behandling)).usingRecursiveComparison().isEqualTo(før)
+        assertThat(dataSource.transaction { backfill.vurderinger(it, grunnlagId).map { it.first } })
+            .isEqualTo(vurderingIder)
+    }
+
+    @Test
+    fun `analyse uten varighetsavvik logger ikke diagnosedata for aktive eller historiske grunnlag`() {
+        val behandling = opprettBehandling()
+        val legacy = vurdering(
+            behandling,
+            fom = 6 januar 2025,
+            utviklingsPerioder = listOf(Periode(6 januar 2025, 10 januar 2025)),
+        )
+        lagre(behandling, legacy)
+        lagre(behandling, legacy.copy(begrunnelse = "Oppdatert vurdering"))
+        val backfill = BackfillEtableringVurderinger(dataSource, dryRun = true)
+
+        medLoggfangst { teamLogg, _ ->
+            val resultat = dataSource.transaction { backfill.analyserBehandling(it, behandling) }
+
+            assertThat(resultat).usingRecursiveComparison().isEqualTo(
+                BackfillEtableringVurderinger.Resultat(
+                    antallBehandlinger = 1,
+                    antallVurderingerSomSplittes = 2,
+                    antallNyeVurderinger = 2,
+                )
+            )
+            assertThat(teamLogg).isEmpty()
+        }
+    }
+
+    @Test
     fun `avvik i lagret varighet avbryter og ruller tilbake migreringen`() {
         val behandlingId = opprettBehandling()
         val legacy = vurdering(
@@ -162,6 +369,55 @@ class BackfillEtableringVurderingerTest {
         }.isInstanceOf(IllegalStateException::class.java)
             .hasMessageContaining("Varighet")
             .hasMessageContaining(behandlingId.id.toString())
+
+        assertThat(hentVurderinger(behandlingId)).containsExactly(legacy)
+        assertThat(hentVurderingIder(behandlingId)).isEqualTo(iderFør)
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "NEW.virksomhet_er_ny = false;",
+            "NEW.gjelder_fra = NEW.gjelder_fra + 7; NEW.gjelder_til = NEW.gjelder_til + 7;",
+            "NEW.begrunnelse = ''Endret av migrering'';",
+        ]
+    )
+    fun `endret utfall eller periode ruller tilbake med samme varighet og valideringsstatus`(endring: String) {
+        val behandlingId = opprettBehandling()
+        val legacy = vurdering(
+            behandlingId,
+            fom = 1 januar 2025,
+            utviklingsPerioder = listOf(Periode(6 januar 2025, 10 januar 2025)),
+            virksomhetErNy = true,
+        )
+        lagre(behandlingId, legacy)
+        val iderFør = hentVurderingIder(behandlingId)
+
+        assertThatThrownBy {
+            dataSource.transaction { connection ->
+                connection.execute(
+                    """
+                    CREATE FUNCTION endre_etableringsutfall() RETURNS trigger AS
+                    'BEGIN
+                        $endring
+                        RETURN NEW;
+                    END;' LANGUAGE plpgsql
+                    """.trimIndent()
+                )
+                connection.execute(
+                    """
+                    CREATE TRIGGER endre_etableringsutfall
+                    BEFORE INSERT ON etablering_egen_virksomhet_vurdering
+                    FOR EACH ROW EXECUTE FUNCTION endre_etableringsutfall()
+                    """.trimIndent()
+                )
+                BackfillEtableringVurderinger(dataSource, dryRun = false)
+                    .migrerBehandling(connection, behandlingId)
+                connection.execute("DROP TRIGGER endre_etableringsutfall ON etablering_egen_virksomhet_vurdering")
+                connection.execute("DROP FUNCTION endre_etableringsutfall()")
+            }
+        }.isInstanceOf(IllegalStateException::class.java)
+            .hasMessageContaining("Vurderingsutfall")
 
         assertThat(hentVurderinger(behandlingId)).containsExactly(legacy)
         assertThat(hentVurderingIder(behandlingId)).isEqualTo(iderFør)
@@ -641,6 +897,120 @@ class BackfillEtableringVurderingerTest {
 
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `forkortet utviklingsperiode migreres uten å flytte den nye vurderingen bakover`(nyttUtfall: Boolean) {
+        val første = opprettBehandling()
+        val andre = opprettBehandling()
+        val tredje = opprettBehandling()
+        val behandling = opprettBehandling()
+        val før = listOf(
+            vurdering(
+                første,
+                fom = 4 mars 2026,
+                opprettet = Instant.parse("2026-05-26T09:04:01.985Z"),
+            ),
+            vurdering(
+                andre,
+                fom = 17 juni 2026,
+                utviklingsPerioder = listOf(Periode(17 juni 2026, 16 desember 2026)),
+                opprettet = Instant.parse("2026-06-24T09:22:24.733Z"),
+                virksomhetErNy = true,
+            ),
+            vurdering(
+                tredje,
+                fom = 10 august 2026,
+                utviklingsPerioder = listOf(Periode(17 juni 2026, 10 august 2026)),
+                opprettet = Instant.parse("2026-08-13T07:45:12.679Z"),
+                virksomhetErNy = nyttUtfall,
+            ),
+        )
+        lagre(behandling, *før.toTypedArray())
+        val backfill = BackfillEtableringVurderinger(dataSource, dryRun = true)
+        val (grunnlagId, vurderingerFør) = dataSource.transaction { connection ->
+            val grunnlagId = backfill.hentAlleGrunnlag(connection, behandling).single()
+            grunnlagId to backfill.vurderinger(connection, grunnlagId)
+        }
+        val etter = lagMigreringsplan(vurderingerFør).flatMap { it.vurderingerEtterMigrering }
+
+        assertThat(varighet(før)).isEqualTo(39 to 0)
+        assertThat(varighet(etter)).isEqualTo(39 to 0)
+        assertThat(etter.single { it.vurdertIBehandling == andre }.tom).isEqualTo(9 august 2026)
+        assertThat(etter.single { it.vurdertIBehandling == tredje }.fom).isEqualTo(10 august 2026)
+        val analyse = dataSource.transaction { backfill.analyserBehandling(it, behandling) }
+        assertThat(analyse.antallMedAvvikIVarighet).isZero()
+
+        migrer(behandling)
+        val forventet = listOf(
+            før[0],
+            før[1].somUtvikling(Periode(17 juni 2026, 9 august 2026)),
+            før[2].somUtvikling(Periode(10 august 2026, 10 august 2026)),
+        )
+        assertThat(hentVurderinger(behandling)).usingRecursiveComparison().isEqualTo(forventet)
+        val iderEtter = dataSource.transaction { backfill.vurderinger(it, grunnlagId).map { it.first } }
+
+        migrer(behandling)
+        assertThat(hentVurderinger(behandling)).usingRecursiveComparison().isEqualTo(forventet)
+        assertThat(dataSource.transaction { backfill.vurderinger(it, grunnlagId).map { it.first } })
+            .isEqualTo(iderEtter)
+    }
+
+    @Test
+    fun `helt overstyrt vurdering gjenoppstår ikke utenfor sin opprinnelige gyldighet`() {
+        val forrige = opprettBehandling()
+        val behandling = opprettBehandling()
+        val eldre = vurdering(
+            forrige,
+            fom = 20 januar 2025,
+            tom = 24 januar 2025,
+            utviklingsPerioder = listOf(Periode(6 januar 2025, 31 januar 2025)),
+            virksomhetErNy = true,
+        )
+        val nyere = vurdering(
+            behandling,
+            fom = 20 januar 2025,
+            utviklingsPerioder = listOf(Periode(20 januar 2025, 24 januar 2025)),
+            opprettet = Instant.parse("2025-01-02T00:00:00Z"),
+            virksomhetErNy = true,
+        )
+        lagre(behandling, eldre, nyere)
+        val backfill = BackfillEtableringVurderinger(dataSource, dryRun = true)
+        val analyse = dataSource.transaction { backfill.analyserBehandling(it, behandling) }
+        assertThat(analyse.antallMedAvvikIVarighet).isZero()
+        assertThat(varighet(listOf(eldre, nyere))).isEqualTo(5 to 0)
+
+        migrer(behandling)
+
+        assertThat(hentVurderinger(behandling)).usingRecursiveComparison().isEqualTo(
+            listOf(nyere.somUtvikling(Periode(20 januar 2025, 24 januar 2025)))
+        )
+        assertThat(varighet(hentVurderinger(behandling))).isEqualTo(5 to 0)
+    }
+
+    @Test
+    fun `validering av oppstart bruker bare den gjeldende delen av eldre utviklingsperioder`() {
+        val forrige = opprettBehandling()
+        val behandling = opprettBehandling()
+        val eldre = vurdering(
+            forrige,
+            fom = 6 januar 2025,
+            utviklingsPerioder = listOf(Periode(6 januar 2025, 31 januar 2025)),
+            virksomhetErNy = true,
+        )
+        val nyere = vurdering(
+            behandling,
+            fom = 20 januar 2025,
+            oppstartsPerioder = listOf(Periode(20 januar 2025, 24 januar 2025)),
+            opprettet = Instant.parse("2025-01-02T00:00:00Z"),
+            virksomhetErNy = true,
+        )
+        val før = listOf(eldre, nyere)
+        val etter = lagMigreringsplan(før.mapIndexed { index, vurdering -> index.toLong() to vurdering })
+            .flatMap { it.vurderingerEtterMigrering }
+
+        assertValideringUendret(før, etter)
+    }
+
     private val service = EtableringEgenVirksomhetService(
         InMemoryEtableringEgenVirksomRepository,
         InMemoryBehandlingRepository,
@@ -692,10 +1062,27 @@ class BackfillEtableringVurderingerTest {
         )
 
         val gyldigFør = service.erVurderingerGyldig(behandling.id, før)
-        val gyldigEtter = service.erVurderingerGyldig(behandling.id, etter.map { it.tilGammeltFormat() })
+        val gyldigEtter = service.erVurderingerGyldig(behandling.id, etter)
 
         assertThat(gyldigFør).isEqualTo(VirksomhetEtableringGyldig)
         assertThat(gyldigEtter).isEqualTo(gyldigFør)
+    }
+
+    private fun medLoggfangst(test: (List<ILoggingEvent>, List<ILoggingEvent>) -> Unit) {
+        val teamLogger = LoggerFactory.getLogger("team-logs") as Logger
+        val vanligLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
+        val teamAppender = ListAppender<ILoggingEvent>().apply { start() }
+        val vanligAppender = ListAppender<ILoggingEvent>().apply { start() }
+        teamLogger.addAppender(teamAppender)
+        vanligLogger.addAppender(vanligAppender)
+        try {
+            test(teamAppender.list, vanligAppender.list)
+        } finally {
+            teamLogger.detachAppender(teamAppender)
+            vanligLogger.detachAppender(vanligAppender)
+            teamAppender.stop()
+            vanligAppender.stop()
+        }
     }
 
     private fun evalueringer(vurderinger: List<EtableringEgenVirksomhetVurdering>) =
@@ -754,6 +1141,7 @@ class BackfillEtableringVurderingerTest {
         fase = fase,
         erRegistrertINødvendigeOffentligeRegister = null,
         jobberBrukerAktivMedVirksomheten = null,
+        versjon = EtableringVersjon.V0,
     )
 
     private fun opprettBehandling(): BehandlingId = dataSource.transaction { connection ->

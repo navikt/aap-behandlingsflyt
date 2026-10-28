@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvir
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -29,6 +28,7 @@ data class EtableringEgenVirksomhetVurdering(
     val fase: EtableringFase?,
     val erRegistrertINødvendigeOffentligeRegister: Boolean?,
     val jobberBrukerAktivMedVirksomheten: Boolean?,
+    val versjon: EtableringVersjon,
 ) : PeriodisertVurdering {
     fun evaluerVirksomhetVurdering(): Boolean {
         return this.virksomhetErNy == true && this.kanFøreTilSelvforsørget == true && this.foreliggerFagligVurdering && this.brukerEierVirksomheten in listOf(
@@ -69,6 +69,9 @@ fun List<EtableringEgenVirksomhetVurdering>.tilNyttFormat(): List<EtableringEgen
     }
 }
 
+fun EtableringEgenVirksomhetVurdering.somLegacyVisning(): EtableringEgenVirksomhetVurdering =
+    if (fase != null) tilGammeltFormat() else this
+
 fun EtableringEgenVirksomhetVurdering.tilGammeltFormat(): EtableringEgenVirksomhetVurdering {
     return this.copy(
         oppstartsPerioder = if (this.fase == EtableringFase.OPPSTART) listOf(
@@ -89,12 +92,12 @@ fun EtableringEgenVirksomhetVurdering.tilGammeltFormat(): EtableringEgenVirksomh
 fun Collection<EtableringEgenVirksomhetVurdering>.tellDager(
     selector: (EtableringEgenVirksomhetVurdering) -> List<Periode>
 ): Int {
-    return this.flatMap(selector).somTidslinje { it }.komprimer().segmenter()
+    return this.map { it.somLegacyVisning() }.flatMap(selector).somTidslinje { it }.komprimer().segmenter()
         .sumOf { it.periode.antallHverdager().asInt }
 }
 
 fun List<EtableringEgenVirksomhetVurdering>.brukteDager(): Pair<Int, Int> {
-    val gjeldendeVurderinger = gjeldendeVurderinger().verdier().toSet()
+    val gjeldendeVurderinger = gjeldendeFasevurderinger()
     return gjeldendeVurderinger.tellDager { it.utviklingsPerioder } to
         gjeldendeVurderinger.tellDager { it.oppstartsPerioder }
 }
@@ -103,6 +106,11 @@ enum class EierVirksomhet {
     EIER_MINST_50_PROSENT,
     EIER_MINST_50_PROSENT_MED_FLER,
     NEI
+}
+
+enum class EtableringVersjon {
+    /** Grunnvilkårene alene avgjør utfallet, også etter oppdeling i faser. */
+    V0,
 }
 
 enum class EtableringFase(val maksHverdager: Int) {
@@ -127,6 +135,7 @@ fun List<EtableringEgenVirksomhetVurdering>.erFunksjoneltLik(other: List<Etabler
                 a.tom == b.tom &&
                 a.fase == b.fase &&
                 a.erRegistrertINødvendigeOffentligeRegister == b.erRegistrertINødvendigeOffentligeRegister &&
-                a.jobberBrukerAktivMedVirksomheten == b.jobberBrukerAktivMedVirksomheten
+                a.jobberBrukerAktivMedVirksomheten == b.jobberBrukerAktivMedVirksomheten &&
+                a.versjon == b.versjon
     }
 }
