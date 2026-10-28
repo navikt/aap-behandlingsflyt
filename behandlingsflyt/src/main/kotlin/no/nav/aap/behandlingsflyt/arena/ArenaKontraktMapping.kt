@@ -30,18 +30,18 @@ data class ArenaHistorikk(
 data class ArenaSykdomsvurdering(
     val vedtakId: Int,
     val begrunnelse: String?,
-    val vilkar: List<ArenaVilkar>,
+    val vilkår: List<ArenaVilkår>,
     val diagnoser: List<ArenaDiagnose>,
 )
 
 data class ArenaOppholdskrav(
     val vedtakId: Int,
-    val vilkar: ArenaVilkar?,
+    val vilkår: ArenaVilkår?,
 )
 
 data class ArenaForutgåendeMedlemskap(
     val vedtakId: Int,
-    val vilkar: ArenaVilkar?,
+    val vilkår: ArenaVilkår?,
 )
 
 data class ArenaVedtaksperiode(
@@ -50,7 +50,7 @@ data class ArenaVedtaksperiode(
     val tilDato: LocalDate?,
 )
 
-data class ArenaVilkar(
+data class ArenaVilkår(
     val id: Long,
     val kode: String,
     val status: String,
@@ -96,8 +96,8 @@ fun ArenaSakOppsummeringKontrakt.tilDomene(): ArenaSak = ArenaSak(
 fun ArenaSykdomsvurderingResponse.tilDomene(): ArenaSykdomsvurdering = ArenaSykdomsvurdering(
     vedtakId = vedtakId,
     begrunnelse = begrunnelse,
-    vilkar = vilkar.map { vilkar ->
-        ArenaVilkar(
+    vilkår = vilkar.map { vilkar ->
+        ArenaVilkår(
             id = vilkar.id,
             kode = vilkar.kode,
             status = vilkar.status,
@@ -116,8 +116,8 @@ fun ArenaSykdomsvurderingResponse.tilDomene(): ArenaSykdomsvurdering = ArenaSykd
 
 fun ArenaOppholdskravResponse.tilDomene(): ArenaOppholdskrav = ArenaOppholdskrav(
     vedtakId = vedtakId,
-    vilkar = vilkar?.let {
-        ArenaVilkar(
+    vilkår = vilkar?.let {
+        ArenaVilkår(
             id = it.id,
             kode = it.kode,
             status = it.status,
@@ -128,8 +128,8 @@ fun ArenaOppholdskravResponse.tilDomene(): ArenaOppholdskrav = ArenaOppholdskrav
 
 fun ArenaForutgaaendeMedlemskapResponse.tilDomene(): ArenaForutgåendeMedlemskap = ArenaForutgåendeMedlemskap(
     vedtakId = vedtakId,
-    vilkar = vilkar?.let {
-        ArenaVilkar(
+    vilkår = vilkar?.let {
+        ArenaVilkår(
             id = it.id,
             kode = it.kode,
             status = it.status,

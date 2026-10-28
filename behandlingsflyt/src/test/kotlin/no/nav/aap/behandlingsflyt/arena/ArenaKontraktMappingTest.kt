@@ -93,7 +93,7 @@ class ArenaKontraktMappingTest {
         assertThat(respons.tilDomene()).isEqualTo(
             ArenaOppholdskrav(
                 vedtakId = 7,
-                vilkar = no.nav.aap.behandlingsflyt.arena.ArenaVilkar(
+                vilkår = no.nav.aap.behandlingsflyt.arena.ArenaVilkår(
                     id = 8,
                     kode = "OPPHOLD",
                     status = "V",
@@ -105,7 +105,7 @@ class ArenaKontraktMappingTest {
 
     @Test
     fun `ArenaOppholdskravResponse uten vilkår beholder null`() {
-        assertThat(ArenaOppholdskravResponse(vedtakId = 7, vilkar = null).tilDomene().vilkar).isNull()
+        assertThat(ArenaOppholdskravResponse(vedtakId = 7, vilkar = null).tilDomene().vilkår).isNull()
     }
 
     @Test
@@ -118,7 +118,7 @@ class ArenaKontraktMappingTest {
         assertThat(respons.tilDomene()).isEqualTo(
             ArenaForutgåendeMedlemskap(
                 vedtakId = 7,
-                vilkar = no.nav.aap.behandlingsflyt.arena.ArenaVilkar(
+                vilkår = no.nav.aap.behandlingsflyt.arena.ArenaVilkår(
                     id = 8,
                     kode = "MEDLSKAP5",
                     status = "J",
@@ -130,6 +130,6 @@ class ArenaKontraktMappingTest {
 
     @Test
     fun `ArenaForutgaaendeMedlemskapResponse uten vilkår beholder null`() {
-        assertThat(ArenaForutgaaendeMedlemskapResponse(vedtakId = 7, vilkar = null).tilDomene().vilkar).isNull()
+        assertThat(ArenaForutgaaendeMedlemskapResponse(vedtakId = 7, vilkar = null).tilDomene().vilkår).isNull()
     }
 }

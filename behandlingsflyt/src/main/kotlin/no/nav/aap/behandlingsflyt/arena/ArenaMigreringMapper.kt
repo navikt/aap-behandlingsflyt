@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.Vedt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.bistandsbehov.Bistandsvurdering
-import no.nav.aap.komponenter.type.Periode
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -43,16 +42,16 @@ private val PÅKREVDE_VILKÅR_FOR_ORDINÆR_AAP = setOf(
  */
 fun ArenaSykdomsvurdering.erOrdinærAap(): Boolean {
     return PÅKREVDE_VILKÅR_FOR_ORDINÆR_AAP.all { påkrevdKode ->
-        vilkar.any { it.kode == påkrevdKode && it.status == "J" }
+        vilkår.any { it.kode == påkrevdKode && it.status == "J" }
     }
 }
 
 fun ArenaOppholdskrav.erOppfyltEllerIkkeVurdert(): Boolean {
-    return vilkar?.kode == VILKÅRKODE_OPPHOLD_I_NORGE && vilkar.status in setOf("J", "V")
+    return vilkår?.kode == VILKÅRKODE_OPPHOLD_I_NORGE && vilkår.status in setOf("J", "V")
 }
 
 fun ArenaForutgåendeMedlemskap.erOppfylt(): Boolean {
-    return vilkar?.kode == VILKÅRKODE_FORUTGÅENDE_MEDLEMSKAP && vilkar.status == "J"
+    return vilkår?.kode == VILKÅRKODE_FORUTGÅENDE_MEDLEMSKAP && vilkår.status == "J"
 }
 
 /**
@@ -63,7 +62,7 @@ object ArenaMigreringMapper {
     /**
      * Kun ordinær AAP støttes for migreringsgruppe 1.
      */
-    fun mapMigrertKrav(
+    fun tilMigrertKrav(
         fraArena: ArenaKrav,
         behandlingId: BehandlingId,
     ): MigrertKrav {
@@ -85,7 +84,7 @@ object ArenaMigreringMapper {
      * Vurderingen antas alltid å gjelde ordinær AAP. Kalleren må ha sjekket
      * [erOrdinærAap] først (migreringsgruppe 1).
      */
-    fun mapOppfyltOrdinærSykdomsvurdering(
+    fun tilOppfyltOrdinærSykdomsvurdering(
         fraArena: ArenaSykdomsvurdering,
         behandlingId: BehandlingId,
         vurderingenGjelderFra: LocalDate,
@@ -135,15 +134,15 @@ object ArenaMigreringMapper {
      * Oppholdskravet er enten oppfylt eller ikke vurdert i Arena. I migrering gjør vi antagelse om at det oppfylles da
      * det er et krav for å få innvilget AAP i Arena.
      */
-    fun mapOppfyltOppholdskravVurdering(
+    fun tilOppfyltOppholdskravVurdering(
         fraArena: ArenaOppholdskrav,
         behandlingId: BehandlingId,
         fom: LocalDate,
     ): OppholdskravVurdering {
         require(fraArena.erOppfyltEllerIkkeVurdert()) {
-            "Kan ikke mappe oppholdskrav med vilkårkode ${fraArena.vilkar?.kode} og status ${fraArena.vilkar?.status}"
+            "Kan ikke mappe oppholdskrav med vilkårkode ${fraArena.vilkår?.kode} og status ${fraArena.vilkår?.status}"
         }
-        val status = fraArena.vilkar?.status
+        val status = fraArena.vilkår?.status
         val begrunnelse = when (status) {
             "J" -> "Oppholdskravet er oppfylt i Arena"
             "V" -> "Oppholdskravet er ikke vurdert i Arena, " +
@@ -170,13 +169,13 @@ object ArenaMigreringMapper {
      * Kun oppfylt forutgående medlemskap (status J) kan migreres. Status V (ikke vurdert) betyr at vilkåret ikke er
      * oppfylt, i motsetning til oppholdskrav.
      */
-    fun mapOppfyltForutgåendeMedlemskapVurdering(
+    fun tilOppfyltForutgåendeMedlemskapVurdering(
         fraArena: ArenaForutgåendeMedlemskap,
         behandlingId: BehandlingId,
         fom: LocalDate,
     ): ManuellVurderingForForutgåendeMedlemskap {
         require(fraArena.erOppfylt()) {
-            "Kan ikke mappe forutgående medlemskap med vilkårkode ${fraArena.vilkar?.kode} og status ${fraArena.vilkar?.status}"
+            "Kan ikke mappe forutgående medlemskap med vilkårkode ${fraArena.vilkår?.kode} og status ${fraArena.vilkår?.status}"
         }
         return ManuellVurderingForForutgåendeMedlemskap(
             begrunnelse = "Forutgående medlemskap er oppfylt i Arena",
@@ -196,7 +195,7 @@ object ArenaMigreringMapper {
      * vilkåret være oppfylt. I migrering gjør vi antagelse om at det oppfylles ved
      * bokstav a (behov for aktiv behandling) og b (behov for arbeidsrettet tiltak).
      */
-    fun mapOppfyltBistandsvurdering(
+    fun tilOppfyltBistandsvurdering(
         behandlingId: BehandlingId,
         fom: LocalDate,
     ): Bistandsvurdering {
@@ -221,7 +220,7 @@ object ArenaMigreringMapper {
      * Refusjonskrav av typen REFKRAVSOS støttes ikke i migreringsgruppe 1 og gir feil. Hvis det ikke finnes
      * refusjonskrav, eller kravet har en annen årsak, svares "nei" på om det finnes refusjonskrav.
      */
-    fun mapRefusjonskravVurdering(arenaRefusjonskrav: ArenaRefusjonskrav?): RefusjonkravVurdering {
+    fun tilRefusjonskravVurdering(arenaRefusjonskrav: ArenaRefusjonskrav?): RefusjonkravVurdering {
         require(arenaRefusjonskrav?.aarsak != VILKÅRKODE_REFUSJONSKRAV_SOSIALHJELP) {
             "Kan ikke migrere refusjonskrav fra Arena fordi det finnes refusjonskrav av typen $VILKÅRKODE_REFUSJONSKRAV_SOSIALHJELP"
         }
@@ -233,7 +232,7 @@ object ArenaMigreringMapper {
         )
     }
 
-    fun mapBeregningstidspunktVurdering(fraArena: ArenaBeregningstidspunkt): BeregningstidspunktVurdering {
+    fun tilBeregningstidspunktVurdering(fraArena: ArenaBeregningstidspunkt): BeregningstidspunktVurdering {
         return BeregningstidspunktVurdering(
             begrunnelse = "Migrert fra Arena",
             nedsattArbeidsevneEllerStudieevneDato = fraArena.beregningstidspunkt,
@@ -246,7 +245,7 @@ object ArenaMigreringMapper {
         )
     }
 
-    fun mapVedtakslengdeVurdering(
+    fun tilVedtakslengdeVurdering(
         fraArena: ArenaVedtaksperiode,
         behandlingId: BehandlingId,
     ): VedtakslengdeVurdering {

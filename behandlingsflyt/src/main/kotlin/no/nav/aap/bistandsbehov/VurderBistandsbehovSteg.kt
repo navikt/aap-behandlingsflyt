@@ -179,7 +179,7 @@ class VurderBistandsbehovSteg(
          */
         arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, stegType, sykdomsvurderingFraArena)
 
-        val vurdering = ArenaMigreringMapper.mapOppfyltBistandsvurdering(
+        val vurdering = ArenaMigreringMapper.tilOppfyltBistandsvurdering(
             behandlingId = kontekst.behandlingId,
             fom = kontekst.rettighetsperiode.fom,
         )

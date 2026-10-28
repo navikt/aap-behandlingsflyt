@@ -251,7 +251,7 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
                 assertThat(migreringsdata).isNotNull
                 val lagretOppholdskrav =
                     DefaultJsonMapper.fromJson<ArenaOppholdskrav>(migreringsdata!!.data!!)
-                assertThat(lagretOppholdskrav.vilkar?.status).isEqualTo("V")
+                assertThat(lagretOppholdskrav.vilkår?.status).isEqualTo("V")
             }
     }
 
@@ -302,8 +302,8 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
                 )
                 assertThat(migreringsdata).isNotNull
                 val lagret = DefaultJsonMapper.fromJson<ArenaForutgåendeMedlemskap>(migreringsdata!!.data!!)
-                assertThat(lagret.vilkar?.kode).isEqualTo("MEDLSKAP5")
-                assertThat(lagret.vilkar?.status).isEqualTo("J")
+                assertThat(lagret.vilkår?.kode).isEqualTo("MEDLSKAP5")
+                assertThat(lagret.vilkår?.status).isEqualTo("J")
             }
     }
 

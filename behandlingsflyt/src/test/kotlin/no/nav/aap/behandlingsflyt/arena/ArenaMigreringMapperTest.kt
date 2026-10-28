@@ -20,10 +20,10 @@ class ArenaMigreringMapperTest {
     private val fraArena = ArenaSykdomsvurdering(
         vedtakId = 1,
         begrunnelse = "Bruker oppfyller vilkåret for 11-5",
-        vilkar = listOf(
-            ArenaVilkar(id = 1, kode = "INNTNEDS", status = "J", begrunnelse = null),
-            ArenaVilkar(id = 2, kode = "SYKSKADLYT", status = "J", begrunnelse = null),
-            ArenaVilkar(id = 3, kode = "AAARBEVNE", status = "J", begrunnelse = null),
+        vilkår = listOf(
+            ArenaVilkår(id = 1, kode = "INNTNEDS", status = "J", begrunnelse = null),
+            ArenaVilkår(id = 2, kode = "SYKSKADLYT", status = "J", begrunnelse = null),
+            ArenaVilkår(id = 3, kode = "AAARBEVNE", status = "J", begrunnelse = null),
         ),
         diagnoser = listOf(
             ArenaDiagnose(
@@ -56,7 +56,7 @@ class ArenaMigreringMapperTest {
         listOf("N", "U").forEach { status ->
             assertThat(oppholdskrav(status).erOppfyltEllerIkkeVurdert()).isFalse()
         }
-        assertThat(ArenaOppholdskrav(vedtakId = 1, vilkar = null).erOppfyltEllerIkkeVurdert()).isFalse()
+        assertThat(ArenaOppholdskrav(vedtakId = 1, vilkår = null).erOppfyltEllerIkkeVurdert()).isFalse()
     }
 
     @Test
@@ -66,13 +66,13 @@ class ArenaMigreringMapperTest {
     }
 
     @Test
-    fun `mapOppfyltOppholdskravVurdering skiller mellom oppfylt og ikke vurdert`() {
-        val oppfylt = ArenaMigreringMapper.mapOppfyltOppholdskravVurdering(
+    fun `tilOppfyltOppholdskravVurdering skiller mellom oppfylt og ikke vurdert`() {
+        val oppfylt = ArenaMigreringMapper.tilOppfyltOppholdskravVurdering(
             fraArena = oppholdskrav("J"),
             behandlingId = behandlingId,
             fom = fom,
         )
-        val ikkeVurdert = ArenaMigreringMapper.mapOppfyltOppholdskravVurdering(
+        val ikkeVurdert = ArenaMigreringMapper.tilOppfyltOppholdskravVurdering(
             fraArena = oppholdskrav("V"),
             behandlingId = behandlingId,
             fom = fom,
@@ -97,12 +97,12 @@ class ArenaMigreringMapperTest {
             assertThat(forutgåendeMedlemskap(status).erOppfylt()).isFalse()
         }
         assertThat(forutgåendeMedlemskap("J", kode = "ANNET").erOppfylt()).isFalse()
-        assertThat(ArenaForutgåendeMedlemskap(vedtakId = 1, vilkar = null).erOppfylt()).isFalse()
+        assertThat(ArenaForutgåendeMedlemskap(vedtakId = 1, vilkår = null).erOppfylt()).isFalse()
     }
 
     @Test
-    fun `mapOppfyltForutgåendeMedlemskapVurdering mapper oppfylt vilkår`() {
-        val vurdering = ArenaMigreringMapper.mapOppfyltForutgåendeMedlemskapVurdering(
+    fun `tilOppfyltForutgåendeMedlemskapVurdering mapper oppfylt vilkår`() {
+        val vurdering = ArenaMigreringMapper.tilOppfyltForutgåendeMedlemskapVurdering(
             fraArena = forutgåendeMedlemskap("J"),
             behandlingId = behandlingId,
             fom = fom,
@@ -120,10 +120,10 @@ class ArenaMigreringMapperTest {
     }
 
     @Test
-    fun `mapOppfyltForutgåendeMedlemskapVurdering feiler når vilkåret ikke er oppfylt`() {
+    fun `tilOppfyltForutgåendeMedlemskapVurdering feiler når vilkåret ikke er oppfylt`() {
         listOf("V", "N").forEach { status ->
             assertThatThrownBy {
-                ArenaMigreringMapper.mapOppfyltForutgåendeMedlemskapVurdering(
+                ArenaMigreringMapper.tilOppfyltForutgåendeMedlemskapVurdering(
                     fraArena = forutgåendeMedlemskap(status),
                     behandlingId = behandlingId,
                     fom = fom,
@@ -138,7 +138,7 @@ class ArenaMigreringMapperTest {
         kode: String = "MEDLSKAP5",
     ) = ArenaForutgåendeMedlemskap(
         vedtakId = 1,
-        vilkar = ArenaVilkar(
+        vilkår = ArenaVilkår(
             id = 1,
             kode = kode,
             status = status,
@@ -151,7 +151,7 @@ class ArenaMigreringMapperTest {
         kode: String = "AOINORGE3",
     ) = ArenaOppholdskrav(
         vedtakId = 1,
-        vilkar = ArenaVilkar(
+        vilkår = ArenaVilkår(
             id = 1,
             kode = kode,
             status = status,
@@ -161,7 +161,7 @@ class ArenaMigreringMapperTest {
 
     @Test
     fun `ArenaMigreringMapper mapper alle felter korrekt til Sykdomsvurdering fra Arena-respons`() {
-        val vurdering = ArenaMigreringMapper.mapOppfyltOrdinærSykdomsvurdering(
+        val vurdering = ArenaMigreringMapper.tilOppfyltOrdinærSykdomsvurdering(
             fraArena = fraArena,
             behandlingId = behandlingId,
             vurderingenGjelderFra = fom,
@@ -192,7 +192,7 @@ class ArenaMigreringMapperTest {
         )
 
         assertThatThrownBy {
-            ArenaMigreringMapper.mapOppfyltOrdinærSykdomsvurdering(utenHoveddiagnose, behandlingId, fom)
+            ArenaMigreringMapper.tilOppfyltOrdinærSykdomsvurdering(utenHoveddiagnose, behandlingId, fom)
         }
             .isInstanceOf(IllegalArgumentException::class.java)
             .hasMessageContaining("hoveddiagnose")
@@ -210,7 +210,7 @@ class ArenaMigreringMapperTest {
         )
 
         assertThatThrownBy {
-            ArenaMigreringMapper.mapOppfyltOrdinærSykdomsvurdering(medAvvikendeBidiagnose, behandlingId, fom)
+            ArenaMigreringMapper.tilOppfyltOrdinærSykdomsvurdering(medAvvikendeBidiagnose, behandlingId, fom)
         }
             .isInstanceOf(IllegalArgumentException::class.java)
             .hasMessageContaining("Bidiagnoser har ikke samme kodeverk")
@@ -228,7 +228,7 @@ class ArenaMigreringMapperTest {
         )
 
         assertThatThrownBy {
-            ArenaMigreringMapper.mapOppfyltOrdinærSykdomsvurdering(medAvvikendeBidiagnose, behandlingId, fom)
+            ArenaMigreringMapper.tilOppfyltOrdinærSykdomsvurdering(medAvvikendeBidiagnose, behandlingId, fom)
         }
             .isInstanceOf(IllegalArgumentException::class.java)
             .hasMessageContaining("Hoveddiagnose har ikke støttet kodeverk i sykdomsvurdering fra Arena, støtter kun ICPC-2 og ICD-10")
@@ -236,7 +236,7 @@ class ArenaMigreringMapperTest {
 
     @Test
     fun `ArenaMigreringMapper mapper alle felter korrekt til Bistandsvurdering fra Arena-respons`() {
-        val vurdering = ArenaMigreringMapper.mapOppfyltBistandsvurdering(
+        val vurdering = ArenaMigreringMapper.tilOppfyltBistandsvurdering(
             behandlingId = behandlingId,
             fom = fom,
         )
@@ -264,7 +264,7 @@ class ArenaMigreringMapperTest {
             gjenståendeKvoteOrdinær = 150,
         )
 
-        val krav = ArenaMigreringMapper.mapMigrertKrav(fraArena, behandlingId)
+        val krav = ArenaMigreringMapper.tilMigrertKrav(fraArena, behandlingId)
 
         assertThat(krav.virkningstidspunktArena).isEqualTo(LocalDate.of(2025, 1, 15))
         assertThat(krav.muligRettFra).isEqualTo(LocalDate.of(2025, 12, 1))
@@ -278,15 +278,15 @@ class ArenaMigreringMapperTest {
 
     @Test
     fun `mapRefusjonskravVurdering gir automatisk vurdering uten krav når Arena ikke har refusjonskrav`() {
-        val vurdering = ArenaMigreringMapper.mapRefusjonskravVurdering(null)
+        val vurdering = ArenaMigreringMapper.tilRefusjonskravVurdering(null)
 
         assertThat(vurdering.harKrav).isFalse
         assertThat(vurdering.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
     }
 
     @Test
-    fun `mapRefusjonskravVurdering gir automatisk vurdering ved annen årsak enn REFKRAVSOS`() {
-        val vurdering = ArenaMigreringMapper.mapRefusjonskravVurdering(
+    fun `tilRefusjonskravVurdering gir automatisk vurdering ved annen årsak enn REFKRAVSOS`() {
+        val vurdering = ArenaMigreringMapper.tilRefusjonskravVurdering(
             ArenaRefusjonskrav("ANNET", LocalDate.of(2025, 1, 1), null)
         )
 
@@ -305,9 +305,9 @@ class ArenaMigreringMapperTest {
     }
 
     @Test
-    fun `mapRefusjonskravVurdering feiler ved refusjonskrav av typen REFKRAVSOS`() {
+    fun `tilRefusjonskravVurdering feiler ved refusjonskrav av typen REFKRAVSOS`() {
         assertThatThrownBy {
-            ArenaMigreringMapper.mapRefusjonskravVurdering(
+            ArenaMigreringMapper.tilRefusjonskravVurdering(
                 ArenaRefusjonskrav("REFKRAVSOS", LocalDate.of(2025, 1, 1), null)
             )
         }.isInstanceOf(IllegalArgumentException::class.java).hasMessageContaining("REFKRAVSOS")
@@ -322,12 +322,12 @@ class ArenaMigreringMapperTest {
             gjenståendeKvoteOrdinær = null,
         )
 
-        assertThat(ArenaMigreringMapper.mapMigrertKrav(fraArena, BehandlingId(1)).resterendeKvoteOrdinær).isEqualTo(0)
+        assertThat(ArenaMigreringMapper.tilMigrertKrav(fraArena, BehandlingId(1)).resterendeKvoteOrdinær).isEqualTo(0)
     }
 
     @Test
-    fun `mapVedtakslengdeVurdering lager automatisk vurdering med sluttdato fra Arena`() {
-        val vurdering = ArenaMigreringMapper.mapVedtakslengdeVurdering(
+    fun `tilVedtakslengdeVurdering lager automatisk vurdering med sluttdato fra Arena`() {
+        val vurdering = ArenaMigreringMapper.tilVedtakslengdeVurdering(
             fraArena = vedtaksperiode(fraDato = 1 januar 2023, tilDato = 1 januar 2025),
             behandlingId = behandlingId,
         )
@@ -341,15 +341,15 @@ class ArenaMigreringMapperTest {
     }
 
     @Test
-    fun `mapVedtakslengdeVurdering feiler uten tilDato`() {
+    fun `tilVedtakslengdeVurdering feiler uten tilDato`() {
         assertThatThrownBy {
             mapVedtakslengde(vedtaksperiode(fraDato = 1 januar 2023, tilDato = null))
         }.isInstanceOf(IllegalArgumentException::class.java).hasMessageContaining("tilDato")
     }
 
     @Test
-    fun `mapBeregningstidspunktVurdering mapper dato, årsak ANNET og begrunnelse`() {
-        val vurdering = ArenaMigreringMapper.mapBeregningstidspunktVurdering(
+    fun `tilBeregningstidspunktVurdering mapper dato, årsak ANNET og begrunnelse`() {
+        val vurdering = ArenaMigreringMapper.tilBeregningstidspunktVurdering(
             ArenaBeregningstidspunkt(beregningstidspunkt = 1 januar 2023)
         )
 
@@ -365,7 +365,7 @@ class ArenaMigreringMapperTest {
         ArenaVedtaksperiode(vedtakId = 1, fraDato = fraDato, tilDato = tilDato)
 
     private fun mapVedtakslengde(vedtaksperiode: ArenaVedtaksperiode) =
-        ArenaMigreringMapper.mapVedtakslengdeVurdering(
+        ArenaMigreringMapper.tilVedtakslengdeVurdering(
             fraArena = vedtaksperiode,
             behandlingId = behandlingId,
         )

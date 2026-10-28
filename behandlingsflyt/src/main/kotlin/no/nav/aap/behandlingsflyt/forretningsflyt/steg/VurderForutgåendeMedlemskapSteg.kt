@@ -251,7 +251,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         val forutgåendeMedlemskap = arenaMigreringService.hentForutgåendeMedlemskap(kontekst.sakId)
         arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, stegType, forutgåendeMedlemskap)
 
-        val vurdering = ArenaMigreringMapper.mapOppfyltForutgåendeMedlemskapVurdering(
+        val vurdering = ArenaMigreringMapper.tilOppfyltForutgåendeMedlemskapVurdering(
             fraArena = forutgåendeMedlemskap,
             behandlingId = kontekst.behandlingId,
             fom = kontekst.rettighetsperiode.fom,
