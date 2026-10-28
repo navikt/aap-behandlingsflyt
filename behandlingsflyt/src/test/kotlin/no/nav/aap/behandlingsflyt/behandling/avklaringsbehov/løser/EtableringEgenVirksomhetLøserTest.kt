@@ -71,6 +71,86 @@ class EtableringEgenVirksomhetLøserTest {
     }
 
     @Test
+    fun `nytt format uten fase krever svar om aktivt arbeid når grunnvilkårene er oppfylt`() {
+        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
+        oppfyllSykdomOgBistand(behandling)
+        val vurdering = oppfyltVurdering(sak.rettighetsperiode.fom.plusDays(1)).copy(
+            fase = null,
+            jobberBrukerAktivMedVirksomheten = null,
+        )
+
+        val feil = assertThrows<UgyldigForespørselException> {
+            løser.løs(
+                avklaringsbehovKontekst { this.behandling = behandling },
+                EtableringEgenVirksomhetLøsning(listOf(vurdering)),
+            )
+        }
+
+        assertThat(feil.message).contains("Må oppgi om brukeren jobber aktivt med virksomheten.")
+        assertThat(InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(behandling.id)).isNull()
+    }
+
+    @Test
+    fun `nytt format krever fase når grunnvilkårene og aktivt arbeid er oppfylt`() {
+        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
+        oppfyllSykdomOgBistand(behandling)
+        val vurdering = oppfyltVurdering(sak.rettighetsperiode.fom.plusDays(1)).copy(fase = null)
+
+        val feil = assertThrows<UgyldigForespørselException> {
+            løser.løs(
+                avklaringsbehovKontekst { this.behandling = behandling },
+                EtableringEgenVirksomhetLøsning(listOf(vurdering)),
+            )
+        }
+
+        assertThat(feil.message).contains("Må ha definert minst én periode når vilkåret er oppfylt.")
+        assertThat(InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(behandling.id)).isNull()
+    }
+
+    @Test
+    fun `nytt format uten fase tillater avslag på aktivt arbeid`() {
+        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
+        oppfyllSykdomOgBistand(behandling)
+        val vurdering = oppfyltVurdering(sak.rettighetsperiode.fom.plusDays(1)).copy(
+            fase = null,
+            jobberBrukerAktivMedVirksomheten = false,
+        )
+
+        løser.løs(
+            avklaringsbehovKontekst { this.behandling = behandling },
+            EtableringEgenVirksomhetLøsning(listOf(vurdering)),
+        )
+
+        val lagret = requireNotNull(
+            InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(behandling.id)
+        ).vurderinger.single()
+        assertThat(lagret.versjon).isEqualTo(EtableringVersjon.V1)
+        assertThat(lagret.evaluerVirksomhetVurdering()).isFalse()
+    }
+
+    @Test
+    fun `nytt format uten oppfylte grunnvilkår krever ikke svar om aktivt arbeid eller fase`() {
+        val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
+        oppfyllSykdomOgBistand(behandling)
+        val vurdering = oppfyltVurdering(sak.rettighetsperiode.fom.plusDays(1)).copy(
+            fase = null,
+            virksomhetErNy = false,
+            jobberBrukerAktivMedVirksomheten = null,
+        )
+
+        løser.løs(
+            avklaringsbehovKontekst { this.behandling = behandling },
+            EtableringEgenVirksomhetLøsning(listOf(vurdering)),
+        )
+
+        val lagret = requireNotNull(
+            InMemoryEtableringEgenVirksomRepository.hentHvisEksisterer(behandling.id)
+        ).vurderinger.single()
+        assertThat(lagret.versjon).isEqualTo(EtableringVersjon.V1)
+        assertThat(lagret.evaluerVirksomhetVurdering()).isFalse()
+    }
+
+    @Test
     fun `Må ha definert minst én periode i tidsplanen dersom vilkåret er oppfylt for en periode`() {
         val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)

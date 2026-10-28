@@ -150,9 +150,13 @@ class EtableringEgenVirksomhetService(
                         vurdering.evaluerVirksomhetVurdering() && vurdering.utviklingsPerioder.isEmpty() &&
                         vurdering.oppstartsPerioder.isEmpty() ->
                     VirksomhetEtableringResultat.Ugyldig.KreverPeriodeHvisVilkårOppfylt
-                vurdering.versjon == EtableringVersjon.V0 || fase == null -> null
+                vurdering.versjon == EtableringVersjon.V0 -> null
+                fase == null && !vurdering.erGrunnvilkårOppfylt() -> null
                 vurdering.jobberBrukerAktivMedVirksomheten == null ->
                     VirksomhetEtableringResultat.Ugyldig.MåOppgiOmBrukerJobberAktivt
+                fase == null && vurdering.jobberBrukerAktivMedVirksomheten == true ->
+                    VirksomhetEtableringResultat.Ugyldig.KreverPeriodeHvisVilkårOppfylt
+                fase == null -> null
                 else -> validerOppstartRegistrering(fase, vurdering)
             }
         }
