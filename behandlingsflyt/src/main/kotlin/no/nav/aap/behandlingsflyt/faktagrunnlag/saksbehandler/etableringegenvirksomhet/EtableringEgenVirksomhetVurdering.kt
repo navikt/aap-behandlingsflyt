@@ -33,29 +33,29 @@ data class EtableringEgenVirksomhetVurdering(
     val versjon: EtableringVersjon,
 ) : PeriodisertVurdering {
     fun evaluerVirksomhetVurdering(): Boolean {
-        return when (fase) {
-            EtableringFase.UTVIKLING -> jobberBrukerAktivMedVirksomheten == true && virksomhetErNy == true && kanFøreTilSelvforsørget == true && foreliggerFagligVurdering && brukerEierVirksomheten in listOf(
-                EierVirksomhet.EIER_MINST_50_PROSENT,
-                EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
-            )
-
-            EtableringFase.OPPSTART -> jobberBrukerAktivMedVirksomheten == true && erRegistrertINødvendigeOffentligeRegister == true && virksomhetErNy == true && kanFøreTilSelvforsørget == true && foreliggerFagligVurdering && brukerEierVirksomheten in listOf(
-                EierVirksomhet.EIER_MINST_50_PROSENT,
-                EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
-            )
-
-            null -> false
+        val grunnvilkårOppfylt = virksomhetErNy == true && kanFøreTilSelvforsørget == true &&
+                foreliggerFagligVurdering && brukerEierVirksomheten in listOf(
+            EierVirksomhet.EIER_MINST_50_PROSENT,
+            EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
+        )
+        return when (versjon) {
+            EtableringVersjon.V0 -> grunnvilkårOppfylt
+            EtableringVersjon.V1 -> grunnvilkårOppfylt &&
+                    jobberBrukerAktivMedVirksomheten == true && when (fase) {
+                EtableringFase.UTVIKLING -> true
+                EtableringFase.OPPSTART -> erRegistrertINødvendigeOffentligeRegister == true
+                null -> false
+            }
         }
-
     }
 }
 
 fun List<EtableringEgenVirksomhetVurdering>.tilNyttFormat(): List<EtableringEgenVirksomhetVurdering> {
     return this.flatMap { vurdering ->
 
-        if (vurdering.utviklingsPerioder.isEmpty() && vurdering.oppstartsPerioder.isEmpty()) return@flatMap listOf(
-            vurdering
-        )
+        if (vurdering.versjon == EtableringVersjon.V1 ||
+            (vurdering.utviklingsPerioder.isEmpty() && vurdering.oppstartsPerioder.isEmpty())
+        ) return@flatMap listOf(vurdering)
 
         val utviklingsvurderinger = vurdering.utviklingsPerioder.map { utviklingsperiode ->
             vurdering.copy(
