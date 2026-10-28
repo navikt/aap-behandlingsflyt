@@ -9,9 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.antallHverdagerIFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.beregnTomForSistePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.perioderForFase
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somLegacyVisning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somFasetidslinje
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -39,28 +37,6 @@ class EtableringEgenVirksomhetService(
         sykdomRepository = repositoryProvider.provide()
     )
 
-    fun validerFaseOgPeriode(
-        vurdering: EtableringEgenVirksomhetVurdering,
-    ): VirksomhetEtableringResultat.Ugyldig? {
-        val fase = vurdering.fase ?: return null
-
-        return validerOppstartRegistrering(fase, vurdering)
-            ?: validerGyldigPeriode(vurdering)
-    }
-
-    private fun validerOppstartRegistrering(
-        fase: EtableringFase,
-        vurdering: EtableringEgenVirksomhetVurdering
-    ): VirksomhetEtableringResultat.Ugyldig.MåOppgiRegistrertIOffentligeRegister? {
-        if (fase != EtableringFase.OPPSTART || vurdering.versjon == EtableringVersjon.V0) return null
-        return if (vurdering.erRegistrertINødvendigeOffentligeRegister != true) {
-            VirksomhetEtableringResultat.Ugyldig.MåOppgiRegistrertIOffentligeRegister
-        } else null
-    }
-
-    private fun validerGyldigPeriode(vurdering: EtableringEgenVirksomhetVurdering): VirksomhetEtableringResultat.Ugyldig.MåHaTilOgMedDato? =
-        if (vurdering.tom == null) VirksomhetEtableringResultat.Ugyldig.MåHaTilOgMedDato else null
-
     fun beregnOgValider(
         behandlingId: BehandlingId,
         nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
@@ -84,12 +60,10 @@ class EtableringEgenVirksomhetService(
     ): VirksomhetEtableringResultat {
         val behandling = behandlingRepository.hent(behandlingId)
 
-        val gamleVurderinger =
-            behandling.forrigeBehandlingId?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
-                .map { it.somLegacyVisning() }
-        val gjeldendeVurderinger = (gamleVurderinger + nyeVurderinger)
-            .gjeldendeVurderinger()
-            .verdier().toSet()
+        val gamleVurderinger = behandling.forrigeBehandlingId
+            ?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }
+            ?.vurderinger
+            .orEmpty()
 
         val gamleVurderingerUtenOverstyrte = gamleVurderinger.filterNot { gammel ->
             nyeVurderinger.any { ny -> ny.fase == gammel.fase && ny.fom == gammel.fom }
@@ -100,6 +74,7 @@ class EtableringEgenVirksomhetService(
             .filter { index ->
                 val vurdering = beregnedeVurderinger[index]
                 vurdering.vurdertIBehandling == behandlingId && vurdering.fase != null
+                        && vurdering.evaluerVirksomhetVurdering()
             }
             .sortedBy { beregnedeVurderinger[it].fom }
 
@@ -112,29 +87,17 @@ class EtableringEgenVirksomhetService(
                 is TilOgMedBeregning.Beregnet -> resultat.tom
                 is TilOgMedBeregning.Feil -> return resultat.feilObjekt
             }
-            beregnedeVurderinger[index] = vurdering.copy(tom = tom)
-        }
-
-        val førsteOppstartsfom = beregnedeVurderinger.gjeldendeVurderinger().segmenter().filter { it.verdi.fase == EtableringFase.OPPSTART }.minOfOrNull { it.periode.fom }
-
-        if (førsteOppstartsfom != null) {
-            for (index in beregnedeVurderinger.indices) {
-                val vurdering = beregnedeVurderinger[index]
-                if (
-                    vurdering.fase == EtableringFase.UTVIKLING &&
-                    vurdering.fom.isBefore(førsteOppstartsfom) &&
-                    vurdering.tom != null
-                ) {
-                    beregnedeVurderinger[index] = vurdering.copy(
-                        tom = minOf(vurdering.tom, førsteOppstartsfom.minusDays(1))
-                    )
-                }
-            }
+            val nesteVurderingFom = nyeVurderinger
+                .filter { it.fom.isAfter(vurdering.fom) }
+                .minOfOrNull { it.fom }
+            beregnedeVurderinger[index] = vurdering.copy(
+                tom = nesteVurderingFom?.let { minOf(tom, it.minusDays(1)) } ?: tom
+            )
         }
 
         return VirksomhetEtableringResultat.Gyldig(
             Beregning(
-                gamleVurderinger + beregnedeVurderinger.filter { it.vurdertIBehandling == behandlingId }
+                gamleVurderinger + beregnedeVurderinger.filter { it.vurdertIBehandling == behandlingId },
             )
         )
     }
@@ -165,6 +128,28 @@ class EtableringEgenVirksomhetService(
         }
         return null
     }
+
+    fun validerFaseOgPeriode(
+        vurdering: EtableringEgenVirksomhetVurdering,
+    ): VirksomhetEtableringResultat.Ugyldig? {
+        val fase = vurdering.fase ?: return null
+
+        return validerOppstartRegistrering(fase, vurdering)
+            ?: validerGyldigPeriode(vurdering)
+    }
+
+    private fun validerOppstartRegistrering(
+        fase: EtableringFase,
+        vurdering: EtableringEgenVirksomhetVurdering
+    ): VirksomhetEtableringResultat.Ugyldig.MåOppgiRegistrertIOffentligeRegister? {
+        if (fase != EtableringFase.OPPSTART || vurdering.versjon == EtableringVersjon.V0) return null
+        return if (vurdering.erRegistrertINødvendigeOffentligeRegister != true) {
+            VirksomhetEtableringResultat.Ugyldig.MåOppgiRegistrertIOffentligeRegister
+        } else null
+    }
+
+    private fun validerGyldigPeriode(vurdering: EtableringEgenVirksomhetVurdering): VirksomhetEtableringResultat.Ugyldig.MåHaTilOgMedDato? =
+        if (vurdering.tom == null) VirksomhetEtableringResultat.Ugyldig.MåHaTilOgMedDato else null
 
     private fun validerInnenforGyldighetsperiode(
         gyldighetPeriode: List<Periode>,
@@ -211,8 +196,6 @@ class EtableringEgenVirksomhetService(
         }
         return null
     }
-
-
 
     fun utledPerioderMedSykdomOgBistand(
         behandlingId: BehandlingId
