@@ -7,6 +7,6 @@ data class EtableringEgenVirksomhetGrunnlag(
     val vurderinger: List<EtableringEgenVirksomhetVurdering>
 ) {
     fun gjeldendeVurderingerSomTidslinje(): Tidslinje<EtableringEgenVirksomhetVurdering> {
-        return vurderinger.gjeldendeVurderinger()
+        return vurderinger.somFasetidslinje()
     }
 }
