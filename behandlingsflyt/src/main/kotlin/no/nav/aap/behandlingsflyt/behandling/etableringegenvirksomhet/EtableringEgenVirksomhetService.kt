@@ -117,15 +117,9 @@ class EtableringEgenVirksomhetService(
         validerGyldighetsperiodeFinnes(perioderMedSykdomOgBistand)?.let { return it }
         val førsteMuligeDato = perioderMedSykdomOgBistand.first().fom
 
-        val vurderingerTilValidering = gjeldendeVurderinger.segmenter()
-            .filter { it.verdi.fase != null }
-            .map { it.verdi.copy(fom = it.fom(), tom = it.tom()) } +
-                vurderinger.filter { it.vurdertIBehandling == behandlingId }
-        return validerEtterFørsteMuligeDato(førsteMuligeDato, vurderingerTilValidering)
-            ?: validerInnenforGyldighetsperiode(perioderMedSykdomOgBistand, vurderingerTilValidering)
-            ?: gjeldendeVurderinger.segmenter().firstNotNullOfOrNull {
-                validerFaseOgPeriode(it.verdi.copy(fom = it.fom(), tom = it.tom()))
-            }
+        return validerEtterFørsteMuligeDato(førsteMuligeDato, vurderinger)
+            ?: validerInnenforGyldighetsperiode(perioderMedSykdomOgBistand, vurderinger)
+            ?: vurderinger.firstNotNullOfOrNull { validerFaseOgPeriode(it) }
             ?: validerOppstartEtterUtvikling(alleUtviklingsPerioder, alleOppstartsPerioder)
             ?: validerDagkvoter(gjeldendeVurderinger)
     }
