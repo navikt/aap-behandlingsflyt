@@ -72,6 +72,77 @@ class BackfillEtableringVurderingerTest {
     }
 
     @Test
+    fun `migrering bevarer samme kvoteavvik uten å beregne historisk sluttdato på nytt`() {
+        val behandlingId = opprettBehandling()
+        val utviklingsperioder = listOf(
+            Periode(7 januar 2025, 31 august 2025),
+            Periode(14 oktober 2025, 18 oktober 2025),
+        )
+        val legacy = vurdering(
+            behandlingId,
+            fom = utviklingsperioder.first().fom,
+            tom = utviklingsperioder.last().tom,
+            utviklingsPerioder = utviklingsperioder,
+            virksomhetErNy = true,
+        )
+        lagre(behandlingId, legacy)
+        val forventet = listOf(legacy).tilNyttFormat()
+        val forventetFeil = VirksomhetEtableringResultat.Ugyldig.OverstigerKvoter(
+            EtableringFase.UTVIKLING, varighet(listOf(legacy)).first,
+        )
+        assertThat(forventetFeil.brukteDager).isGreaterThan(EtableringFase.UTVIKLING.maksHverdager)
+        dataSource.transaction { connection ->
+            val provider = postgresRepositoryRegistry.provider(connection)
+            provider.provide<SykdomRepository>().lagre(
+                behandlingId, listOf(
+                    Sykdomsvurdering(
+                        begrunnelse = "Oppfylt før etableringen",
+                        vurderingenGjelderFra = 6 januar 2025,
+                        vurderingenGjelderTil = null,
+                        harSkadeSykdomEllerLyte = true,
+                        harNedsattArbeidsevne = ArbeidsevneNedsattValg.JA,
+                        erSkadeSykdomEllerLyteVesentligdel = true,
+                        erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+                        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
+                        yrkesskadeBegrunnelse = null,
+                        diagnose = null,
+                        vurdertIBehandling = behandlingId,
+                        opprettet = Instant.now(),
+                        vurdertAv = Bruker("saks"),
+                    )
+                )
+            )
+            provider.provide<BistandRepository>().lagre(
+                behandlingId, listOf(
+                    Bistandsvurdering(
+                        begrunnelse = "Oppfylt før etableringen",
+                        erBehovForAktivBehandling = true,
+                        erBehovForArbeidsrettetTiltak = true,
+                        erBehovForAnnenOppfølging = false,
+                        overgangBegrunnelse = null,
+                        skalVurdereAapIOvergangTilArbeid = false,
+                        vurdertAv = Bruker("saks"),
+                        fom = 6 januar 2025,
+                        tom = null,
+                        opprettet = Instant.now(),
+                        vurdertIBehandling = behandlingId,
+                    )
+                )
+            )
+            val service = EtableringEgenVirksomhetService(provider)
+            assertThat(service.validerVurdering(behandlingId, listOf(legacy))).isEqualTo(forventetFeil)
+            assertThat(service.validerVurdering(behandlingId, forventet)).isEqualTo(forventetFeil)
+        }
+
+        repeat(2) {
+            migrer(behandlingId)
+
+            assertThat(hentVurderinger(behandlingId)).usingRecursiveComparison().isEqualTo(forventet)
+            assertThat(varighet(hentVurderinger(behandlingId))).isEqualTo(varighet(listOf(legacy)))
+        }
+    }
+
+    @Test
     fun `full migrering konverterer aktive og historiske grunnlag og kan kjøres på nytt`() {
         TestDataSource().use { isolertDataSource ->
             val behandlingId = isolertDataSource.transaction { connection ->
