@@ -150,10 +150,8 @@ class HåndterUførevedtakService(
     ): Boolean {
         if (uførevedtak.resultat != UførevedtakResultat.INNV) return false
 
-        val vedtatteVurderinger = behandling.forrigeBehandlingId
-            ?.let { overgangUføreRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
         val aktiveVurderinger = overgangUføreRepository.hentHvisEksisterer(behandling.id)?.vurderinger.orEmpty()
-        val vurderinger = OvergangUføreGrunnlag((vedtatteVurderinger + aktiveVurderinger).distinct())
+        val vurderinger = OvergangUføreGrunnlag(aktiveVurderinger)
             .somOvergangUforevurderingstidslinje()
             .filter {
                 val vurdering = it.verdi
