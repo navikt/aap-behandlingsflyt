@@ -29,6 +29,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingVurdering
@@ -1341,6 +1346,67 @@ class BrevUtlederServiceTest {
     @Nested
     inner class TestGruppe_AvslagBrev {
 
+        @RestoreSystemProperties
+        @ParameterizedTest
+        @MethodSource("no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederServiceTest#revurderingAvslagsbrev")
+        fun `velger sykdomsavslagsbrev etter tidligere avslag uavhengig av ny søknad`(
+            vurderingsbehov: Vurderingsbehov,
+            haddeRettTilAAP: Boolean,
+            vilkårtype: Vilkårtype,
+            avslagsårsak: Avslagsårsak,
+            forventetBrevtype: TypeBrev,
+        ) {
+            System.setProperty("NAIS_CLUSTER_NAME", "dev-gcp")
+            val førstegangsbehandling = gittBehandling()
+            gittUnderveisGrunnlag(
+                førstegangsbehandling.id,
+                underveisperiode(
+                    periode = Periode(1 januar 2025, 31 desember 2025),
+                    rettighetsType = if (haddeRettTilAAP) RettighetsType.BISTANDSBEHOV else null,
+                    utfall = if (haddeRettTilAAP) Utfall.OPPFYLT else Utfall.IKKE_OPPFYLT,
+                ),
+            )
+            val revurdering = gittBehandling(
+                forrigeBehandlingId = førstegangsbehandling.id,
+                sakId = førstegangsbehandling.sakId,
+                årsakTilOpprettelse = if (vurderingsbehov == Vurderingsbehov.MOTTATT_SØKNAD) {
+                    ÅrsakTilOpprettelse.SØKNAD
+                } else {
+                    ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+                },
+                vurderingsbehov = listOf(vurderingsbehov),
+            )
+            gittUnderveisgrunnlagAvslag(revurdering.id)
+            sykdomsvurderingForBrevRepository.lagre(revurdering.id, sykdomsvurderingForBrevGrunnlag())
+            repositoryProvider.provide<VilkårsresultatRepository>().lagre(
+                revurdering.id,
+                Vilkårsresultat(
+                    vilkår = listOf(
+                        Vilkår(
+                            type = vilkårtype,
+                            vilkårsperioder = setOf(
+                                Vilkårsperiode(
+                                    periode = Periode(1 januar 2025, 31 desember 2025),
+                                    utfall = Utfall.IKKE_OPPFYLT,
+                                    begrunnelse = "Vilkåret er ikke oppfylt",
+                                    avslagsårsak = avslagsårsak,
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
+
+            assertNotNull(resultat)
+            assertEquals(forventetBrevtype, resultat.typeBrev)
+            if (forventetBrevtype == TypeBrev.VEDTAK_AVSLAG_11_5) {
+                assertIs<AvslagBrev.AvslagSykdomsvilkåret>(resultat)
+                assertEquals("Vurdering av sykdom", resultat.sykdomsvurdering)
+            }
+        }
+
         @Test
         fun `skal hente ut sykdomsvurdering ved avslag`() {
             val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
@@ -1728,6 +1794,26 @@ class BrevUtlederServiceTest {
     }
 
     companion object {
+        @JvmStatic
+        fun revurderingAvslagsbrev(): Stream<Arguments> = Stream.of(
+            Arguments.of(
+                Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, false, Vilkårtype.SYKDOMSVILKÅRET,
+                Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE, TypeBrev.VEDTAK_AVSLAG_11_5,
+            ),
+            Arguments.of(
+                Vurderingsbehov.MOTTATT_SØKNAD, false, Vilkårtype.SYKDOMSVILKÅRET,
+                Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE, TypeBrev.VEDTAK_AVSLAG_11_5,
+            ),
+            Arguments.of(
+                Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, true, Vilkårtype.SYKDOMSVILKÅRET,
+                Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE, TypeBrev.VEDTAK_ENDRING,
+            ),
+            Arguments.of(
+                Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, false, Vilkårtype.MEDLEMSKAP,
+                Avslagsårsak.IKKE_MEDLEM, TypeBrev.VEDTAK_ENDRING,
+            ),
+        )
+
         @JvmStatic
         fun avslagsårsakTilBrevBehov(): Stream<Arguments> = Stream.of(
             Arguments.of(Avslagsårsak.BRUKER_OVER_67, TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_4),

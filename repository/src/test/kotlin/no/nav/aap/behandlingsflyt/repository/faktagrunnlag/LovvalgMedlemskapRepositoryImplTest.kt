@@ -76,10 +76,10 @@ internal class LovvalgMedlemskapRepositoryImplTest {
             val inntekt1 = lagretInntekt.inntekterINorgeGrunnlag.first { it.identifikator == "1234" }
             val inntekt2 = lagretInntekt.inntekterINorgeGrunnlag.first { it.identifikator == "4321" }
 
-            assertEquals(inntekt1.organisasjonsNavn, "Bepis AS")
-            assertEquals(inntekt1.identifikator, "1234")
-            assertEquals(inntekt2.organisasjonsNavn, "Rotte AS")
-            assertEquals(inntekt2.identifikator, "4321")
+            assertEquals("Bepis AS", inntekt1.organisasjonsNavn)
+            assertEquals("1234", inntekt1.identifikator)
+            assertEquals("Rotte AS", inntekt2.organisasjonsNavn)
+            assertEquals("4321", inntekt2.identifikator)
         }
     }
 
@@ -261,7 +261,7 @@ internal class LovvalgMedlemskapRepositoryImplTest {
             val grunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
             assertThat(grunnlag?.inntekterINorgeRegisterGrunnlag?.inntekterForKrav).hasSize(1)
             assertThat(grunnlag?.inntekterINorgeRegisterGrunnlag!!.inntekterForKrav.first().relevantDato).isEqualTo(forventetStartdato)
-            assertThat(grunnlag?.inntekterINorgeRegisterGrunnlag!!.inntekterForKrav.first().inntekter).isEqualTo(forventetInntektGrunnlag.toSet())
+            assertThat(grunnlag.inntekterINorgeRegisterGrunnlag.inntekterForKrav.first().inntekter).isEqualTo(forventetInntektGrunnlag.toSet())
 
         }
     }
