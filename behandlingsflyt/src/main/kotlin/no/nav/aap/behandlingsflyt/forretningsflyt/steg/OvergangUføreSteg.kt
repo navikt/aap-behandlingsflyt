@@ -126,10 +126,6 @@ class OvergangUføreSteg private constructor(
             virkningsdato = uførevedtak.virkningsdato,
         )
 
-        val vedtatteVurderinger = kontekst.forrigeBehandlingId
-            ?.let { overgangUføreRepository.hentHvisEksisterer(it) }
-            ?.vurderinger
-            .orEmpty()
         val eksisterendeVurderinger = overgangUføreRepository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
         val harAutomatiskVurderingAllerede = eksisterendeVurderinger.any {
             it.erAutomatiskVurdert() && it.fom == opphørsdato
@@ -150,7 +146,7 @@ class OvergangUføreSteg private constructor(
 
         overgangUføreRepository.lagre(
             behandlingId = behandlingId,
-            overgangUføreVurderinger = (eksisterendeVurderinger + vedtatteVurderinger) + automatiskVurdering,
+            overgangUføreVurderinger = eksisterendeVurderinger + automatiskVurdering,
         )
     }
 
