@@ -8,7 +8,9 @@ import io.ktor.server.routing.*
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoMedVedtakResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakMedSisteVedtakOgMaksdato
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.VedtakMedMaksdato
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaBeregningstidspunktResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaDiagnose
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaForutgaaendeMedlemskapResponse
@@ -54,7 +56,31 @@ class ArenaoppslagFake : FakeServer() {
                 )
             }
             post("/api/v1/person/maksdato") {
-                call.respond(MaksdatoMedVedtakResponse(sak = null))
+                val maksdato = LocalDate.now().minusDays(50)
+                call.respond(
+                    MaksdatoMedVedtakResponse(
+                        sak = SakMedSisteVedtakOgMaksdato(
+                            sakId = 123456,
+                            saknummer = "2016-123456",
+                            sakStatus = "AVSLU",
+                            sakRegistrert = LocalDate.of(2016, 1, 1),
+                            sakAvsluttet = maksdato,
+                            unntaksvilkaarInnvilget = false,
+                            unntaksvilkaarGjelderFra = null,
+                            sisteVedtak = VedtakMedMaksdato(
+                                vedtakId = 1,
+                                aktfaseKode = "AVSLU",
+                                vedtaktypeKode = "O",
+                                vedtakstatuskode = "IVERK",
+                                fra = maksdato.minusYears(3),
+                                til = maksdato,
+                                maxdatoOrdinaer = maksdato,
+                                maxdatoUnntak = null,
+                                maxdatoAap = maksdato,
+                            ),
+                        )
+                    )
+                )
             }
             get("/api/migrering/{saksnummerArena}/sykdom") {
                 call.respond(
