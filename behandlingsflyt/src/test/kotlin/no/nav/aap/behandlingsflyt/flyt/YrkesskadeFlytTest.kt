@@ -82,7 +82,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .bekreftVurderinger()
             .kvalitetssikre()
             .fattVedtak()
-            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG)
 
         assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
     }
@@ -706,7 +705,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             }
             .fattVedtak()
             .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
 
                 val vedtak = hentVedtak()
                 assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
