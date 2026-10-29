@@ -493,7 +493,7 @@ class BrevUtlederService(
             alleAvslagsårsaker,
             avslagsårsak
         )
-        if (Miljø.erDev() && avslagsårsak != null && !sykdomsvurdering.isNullOrBlank()) {
+        if (avslagsårsak != null && !sykdomsvurdering.isNullOrBlank()) {
             /*if (avslagsårsak == Avslagsårsak.BRUKER_UNDER_18) {
                 return AvslagBrev.AvslagUnder17År9Måneder(sykdomsvurdering = sykdomsvurdering)
             }*/
