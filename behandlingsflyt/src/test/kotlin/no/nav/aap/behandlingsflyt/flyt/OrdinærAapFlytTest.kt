@@ -104,8 +104,7 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             .medKontekst {
                 if (toggleForHoppOverBeslutter()) {
                     assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
-                        .containsOnly(Definisjon.SKRIV_VEDTAKSBREV)
-                    assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+                    assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
                 } else {
                     assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
                     assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
