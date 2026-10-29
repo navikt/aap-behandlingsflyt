@@ -65,12 +65,9 @@ class OvergangUføreSteg private constructor(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        val automatiskVurdert = if (kontekst.vurderingType == VurderingType.OVERGANG_UFORE_STANS) {
+        if (kontekst.vurderingType == VurderingType.OVERGANG_UFORE_STANS) {
             automatiskVurderingOvergangUføre(kontekst)
         } else {
-            false
-        }
-        if (!automatiskVurdert) {
             avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
                 kontekst = kontekst,
                 definisjon = Definisjon.AVKLAR_OVERGANG_UFORE,
@@ -111,10 +108,14 @@ class OvergangUføreSteg private constructor(
         return Fullført
     }
 
-    private fun automatiskVurderingOvergangUføre(kontekst: FlytKontekstMedPerioder): Boolean {
-        val mottattUførevedtak = hentUførevedtak(kontekst.sakId) ?: return false
+    private fun automatiskVurderingOvergangUføre(kontekst: FlytKontekstMedPerioder) {
+        val mottattUførevedtak = checkNotNull(hentUførevedtak(kontekst.sakId)) {
+            "Mangler innvilget uførevedtak for automatisk stans i sak ${kontekst.sakId}"
+        }
         val uførevedtak = mottattUførevedtak.vedtak
-        if (uførevedtak.resultat != UførevedtakResultat.INNV) return false
+        check(uførevedtak.resultat == UførevedtakResultat.INNV) {
+            "Automatisk stans krever innvilget uførevedtak i sak ${kontekst.sakId}"
+        }
 
         val opphørsdato = uførevedtak.opphørsdato(mottattUførevedtak.mottattDato)
         val sakId = kontekst.sakId
@@ -133,7 +134,7 @@ class OvergangUføreSteg private constructor(
         val harAutomatiskVurderingAllerede = eksisterendeVurderinger.any {
             it.erAutomatiskVurdert() && it.fom == opphørsdato
         }
-        if (harAutomatiskVurderingAllerede) return true
+        if (harAutomatiskVurderingAllerede) return
 
         val automatiskVurdering = OvergangUføreVurdering(
             begrunnelse = "Automatisk opphør på grunn av vedtak om uføre",
@@ -151,7 +152,6 @@ class OvergangUføreSteg private constructor(
             behandlingId = behandlingId,
             overgangUføreVurderinger = (eksisterendeVurderinger + vedtatteVurderinger) + automatiskVurdering,
         )
-        return true
     }
 
     private fun hentUførevedtak(sakId: SakId): MottattUførevedtak? {
