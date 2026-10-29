@@ -14,8 +14,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.flyt.ArenaStatusDTO
 import no.nav.aap.behandlingsflyt.flyt.VilkårDTO
@@ -60,6 +61,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenPr
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureOBOTokenProvider
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -189,20 +192,21 @@ class ApiTest {
             val medlRepo = postgresRepositoryRegistry.provider(connection).provide<MedlemskapUnntakRepository>()
             medlRepo.lagreUnntakMedlemskap(
                 behandlingId = behandling.id,
-                listOf(
-                    MedlemskapDataIntern(
-                        unntakId = 123,
-                        fraOgMed = "2017-02-13",
-                        tilOgMed = "2018-02-13",
-                        grunnlag = "grunnlag",
-                        helsedel = true,
-                        ident = "02429118789",
-                        lovvalg = "lovvalg",
-                        medlem = true,
-                        status = "GYLD",
-                        statusaarsak = null,
-                        lovvalgsland = "NORGE",
-                        kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+                MedlemskapUnntakGrunnlag(
+                    listOf(
+                        Segment(
+                            periode = Periode(LocalDate.of(2017, 2, 13), LocalDate.of(2018, 2, 13)),
+                            Unntak(
+                                grunnlag = "grunnlag",
+                                helsedel = true,
+                                lovvalg = "lovvalg",
+                                medlem = true,
+                                status = "GYLD",
+                                statusaarsak = null,
+                                lovvalgsland = "NORGE",
+                                kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+                            )
+                        )
                     )
                 )
             )
