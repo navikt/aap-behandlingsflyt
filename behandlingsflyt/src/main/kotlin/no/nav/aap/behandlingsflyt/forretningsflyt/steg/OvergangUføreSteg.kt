@@ -128,7 +128,7 @@ class OvergangUføreSteg private constructor(
 
         val eksisterendeVurderinger = overgangUføreRepository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
         val harAutomatiskVurderingAllerede = eksisterendeVurderinger.any {
-            it.erAutomatiskVurdert() && it.fom == opphørsdato
+            it.erAutomatiskVurdert() && it.vurdertIBehandling == behandlingId && it.fom == opphørsdato
         }
         if (harAutomatiskVurderingAllerede) return
 
