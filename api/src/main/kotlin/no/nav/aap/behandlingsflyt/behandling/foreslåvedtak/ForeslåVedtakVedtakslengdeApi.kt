@@ -82,7 +82,8 @@ fun NormalOpenAPIRoute.foreslaaVedtakVedtakslengdeApi(
                                         },
                                         behandlingReferanse = requireNotNull(referanseOppslag[vurdering.vurdertIBehandling]) {
                                             "Finner ikke ytelsesbehandling i sak med behandlingsid"
-                                        }.referanse
+                                        }.referanse,
+                                        erNy = vurdering.vurdertIBehandling == behandling.id
                                     )
                                 }
                             )

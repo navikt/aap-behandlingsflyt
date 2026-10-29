@@ -15,6 +15,7 @@ data class StansOpphørVurderingDto(
     val type: StansOpphørVurderingTypeDto,
     val årsaker: List<Avslagsårsak>,
     val behandlingReferanse: UUID,
+    val erNy: Boolean,
 )
 
 enum class StansOpphørVurderingTypeDto {
