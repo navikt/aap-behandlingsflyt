@@ -892,7 +892,7 @@ class BrevUtlederService(
         vedtak: Vedtak,
     ): RefusjonskravTjenestepensjon? {
         val underveis = checkNotNull(underveisRepository.hentHvisEksisterer(behandlingId)) {
-            "Vedtak mangler siste dag med ytelse"
+            "Vedtak mangler underveis"
         }
         val harOverlappMedInnvilgetAAP = tjenestePensjonRepository.hentHvisEksisterer(behandlingId)
             .orEmpty()
