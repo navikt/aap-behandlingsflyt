@@ -75,6 +75,7 @@ class EtableringEgenVirksomhetLøserTest {
         val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
         val vurdering = oppfyltVurdering(sak.rettighetsperiode.fom.plusDays(1)).copy(
+            versjon = EtableringVersjon.V1,
             fase = null,
             jobberBrukerAktivMedVirksomheten = null,
         )
@@ -94,7 +95,10 @@ class EtableringEgenVirksomhetLøserTest {
     fun `nytt format krever fase når grunnvilkårene og aktivt arbeid er oppfylt`() {
         val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
-        val vurdering = oppfyltVurdering(sak.rettighetsperiode.fom.plusDays(1)).copy(fase = null)
+        val vurdering = oppfyltVurdering(sak.rettighetsperiode.fom.plusDays(1)).copy(
+            versjon = EtableringVersjon.V1,
+            fase = null,
+        )
 
         val feil = assertThrows<UgyldigForespørselException> {
             løser.løs(
@@ -112,6 +116,7 @@ class EtableringEgenVirksomhetLøserTest {
         val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
         val vurdering = oppfyltVurdering(sak.rettighetsperiode.fom.plusDays(1)).copy(
+            versjon = EtableringVersjon.V1,
             fase = null,
             jobberBrukerAktivMedVirksomheten = false,
         )
@@ -133,6 +138,7 @@ class EtableringEgenVirksomhetLøserTest {
         val (sak, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
         oppfyllSykdomOgBistand(behandling)
         val vurdering = oppfyltVurdering(sak.rettighetsperiode.fom.plusDays(1)).copy(
+            versjon = EtableringVersjon.V1,
             fase = null,
             virksomhetErNy = false,
             jobberBrukerAktivMedVirksomheten = null,

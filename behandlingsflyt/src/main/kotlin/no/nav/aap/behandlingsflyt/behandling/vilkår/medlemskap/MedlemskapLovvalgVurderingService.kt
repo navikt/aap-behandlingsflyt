@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektTyper
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
@@ -22,7 +22,7 @@ import kotlin.enums.enumEntries
 
 class MedlemskapLovvalgVurderingService {
     fun vurderTilhørighet(
-        grunnlag: MedlemskapLovvalgGrunnlag,
+        grunnlag: MedlemskapLovvalgRegisterGrunnlag,
         rettighetsPeriode: Periode,
         type: VurderingType? = null
     ): KanBehandlesAutomatiskVurdering {
@@ -69,7 +69,7 @@ class MedlemskapLovvalgVurderingService {
 
         return KanBehandlesAutomatiskVurdering(
             kanBehandlesAutomatisk,
-            førsteDelVurderinger + andreDelVurdering
+            førsteDelVurderinger + andreDelVurdering,
         )
     }
 
@@ -84,12 +84,12 @@ class MedlemskapLovvalgVurderingService {
 
     // Minst én må oppfylles
     private fun vurderFørsteDelKriterier(
-        grunnlag: MedlemskapLovvalgGrunnlag,
+        grunnlag: MedlemskapLovvalgRegisterGrunnlag,
         rettighetsPeriode: Periode,
     ): List<TilhørighetVurdering> {
-        val mottarSykepengerVurdering = mottarSykepenger(grunnlag.medlemskapArbeidInntektGrunnlag)
-        val arbeidInntektINorgeVurdering = harArbeidInntektINorge(grunnlag.medlemskapArbeidInntektGrunnlag)
-        val vedtakIMedl = harVedtakIMEDL(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag)
+        val mottarSykepengerVurdering = mottarSykepenger(grunnlag.inntekterINorgeGrunnlag)
+        val arbeidInntektINorgeVurdering = harArbeidInntektINorge(grunnlag.inntekterINorgeGrunnlag)
+        val vedtakIMedl = harVedtakIMEDL(grunnlag.medlemskapGrunnlag)
 
         return if (grunnlag.vurderBosattStatusOgNorskStatsborgerskap) {
             val bosattOgNorskStatsborger =
@@ -102,13 +102,13 @@ class MedlemskapLovvalgVurderingService {
 
     // Ingen kan inntreffe
     private fun vurderAndreDelKriterier(
-        grunnlag: MedlemskapLovvalgGrunnlag,
+        grunnlag: MedlemskapLovvalgRegisterGrunnlag,
         rettighetsPeriode: Periode
     ): List<TilhørighetVurdering> {
         val harJobbetIUtland = oppgittJobbetIUtland(grunnlag.nyeSoknadGrunnlag, rettighetsPeriode)
         val harHattUtenlandsOpphold = oppgittUtenlandsOpphold(grunnlag.nyeSoknadGrunnlag, rettighetsPeriode)
         val harUtenlandsAdresse = utenlandskAdresse(grunnlag.personopplysning, rettighetsPeriode)
-        val annetLovvalgsland = lovvalgslandIkkeErNorge(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag)
+        val annetLovvalgsland = lovvalgslandIkkeErNorge(grunnlag.medlemskapGrunnlag)
         val utenforEØS = manglerStatsborgerskapIEØS(grunnlag.personopplysning, rettighetsPeriode)
 
         return listOf(harJobbetIUtland, harHattUtenlandsOpphold, harUtenlandsAdresse, annetLovvalgsland, utenforEØS)
@@ -299,12 +299,12 @@ class MedlemskapLovvalgVurderingService {
         )
     }
 
-    private fun mottarSykepenger(grunnlag: MedlemskapArbeidInntektGrunnlag?): TilhørighetVurdering {
-        val sykepengerInntektGrunnlag = grunnlag?.inntekterINorgeGrunnlag?.filter { inntekt ->
+    private fun mottarSykepenger(inntekter: List<InntektINorgeGrunnlag>): TilhørighetVurdering {
+        val sykepengerInntektGrunnlag = inntekter.filter { inntekt ->
             inntekt.inntektType?.uppercase() in enumEntries<InntektTyper>().map { it.name } && inntekt.beloep != 0.0
         }
 
-        val mottarSykepengerGrunnlag = sykepengerInntektGrunnlag?.map {
+        val mottarSykepengerGrunnlag = sykepengerInntektGrunnlag.map {
             MottarSykepengerGrunnlag(
                 identifikator = it.identifikator,
                 inntektType = it.inntektType,
@@ -316,15 +316,15 @@ class MedlemskapLovvalgVurderingService {
             kilde = listOf(Kilde.A_INNTEKT),
             indikasjon = Indikasjon.I_NORGE,
             opplysning = "Mottar sykepenger",
-            resultat = !sykepengerInntektGrunnlag.isNullOrEmpty(),
+            resultat = sykepengerInntektGrunnlag.isNotEmpty(),
             mottarSykepengerGrunnlag = mottarSykepengerGrunnlag,
             vurdertPeriode = VurdertPeriode.INNEVÆRENDE_OG_FORRIGE_MND.beskrivelse
         )
     }
 
-    private fun harArbeidInntektINorge(grunnlag: MedlemskapArbeidInntektGrunnlag?): TilhørighetVurdering {
+    private fun harArbeidInntektINorge(inntekter: List<InntektINorgeGrunnlag>): TilhørighetVurdering {
         val arbeidInntektINorgeGrunnlag =
-            grunnlag?.inntekterINorgeGrunnlag?.filter { it.beloep != 0.0 }?.map {
+            inntekter.filter { it.beloep != 0.0 }.map {
                 ArbeidInntektINorgeGrunnlag(
                     virksomhetId = it.identifikator,
                     virksomhetNavn = it.organisasjonsNavn,
@@ -337,7 +337,7 @@ class MedlemskapLovvalgVurderingService {
             kilde = listOf(Kilde.A_INNTEKT, Kilde.AA_REGISTERET, Kilde.EREG),
             indikasjon = Indikasjon.I_NORGE,
             opplysning = "Arbeid og inntekt i Norge",
-            resultat = !arbeidInntektINorgeGrunnlag.isNullOrEmpty(),
+            resultat = arbeidInntektINorgeGrunnlag.isNotEmpty(),
             arbeidInntektINorgeGrunnlag = arbeidInntektINorgeGrunnlag,
             vurdertPeriode = VurdertPeriode.INNEVÆRENDE_OG_FORRIGE_MND.beskrivelse
         )
