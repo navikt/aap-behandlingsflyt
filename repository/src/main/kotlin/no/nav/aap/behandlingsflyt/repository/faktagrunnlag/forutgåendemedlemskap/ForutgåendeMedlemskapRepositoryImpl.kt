@@ -47,7 +47,7 @@ class ForutgåendeMedlemskapRepositoryImpl(private val connection: DBConnection)
             }
             setRowMapper {
                 ForutgåendeMedlemskapGrunnlag(
-                    medlemskapGrunnlag = hentMedlemskapGrunnlag(it.getLongOrNull("medlemskap_unntak_person_id")),
+                    medlemskapUnntakGrunnlag = hentMedlemskapGrunnlag(it.getLongOrNull("medlemskap_unntak_person_id")),
                     inntekterINorgeGrunnlag = hentInntekterINorgeGrunnlag(it.getLongOrNull("inntekter_i_norge_id")),
                     arbeiderINorgeGrunnlag = hentArbeiderINorgeGrunnlag(it.getLongOrNull("arbeider_id")),
                     vurderinger = hentVurderinger(it.getLongOrNull("vurderinger_id"))

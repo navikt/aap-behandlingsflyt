@@ -129,7 +129,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         val nyRegisterdata = LovvalgMedlemskapRegisterGrunnlag(
             inntekterINorgeGrunnlag = inntektGrunnlag.tilDomene(enhetGrunnlag),
             arbeiderINorgeGrunnlag = arbeidGrunnlag,
-            medlemskapGrunnlag = medlemskapPerioder
+            medlemskapUnntakGrunnlag = medlemskapPerioder
                 .takeIf { it.isNotEmpty() }
                 ?.let { MedlemskapUnntakGrunnlag(it.tilDomene()) }
         )
@@ -192,10 +192,10 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         relevantDato: LocalDate, // TODO: Denne vil etterhvert være på registergrunnlagnivå
         registerGrunnlag: LovvalgMedlemskapRegisterGrunnlag
     ) {
-        val medlemskapGrunnlag = registerGrunnlag.medlemskapGrunnlag
-        val medlId = if (medlemskapGrunnlag != null) medlemskapUnntakRepository.lagreUnntakMedlemskap(
+        val medlemskapUnntakGrunnlag = registerGrunnlag.medlemskapUnntakGrunnlag
+        val medlId = if (medlemskapUnntakGrunnlag != null) medlemskapUnntakRepository.lagreUnntakMedlemskap(
             behandlingId,
-            medlemskapGrunnlag
+            medlemskapUnntakGrunnlag
         ) else null
 
         lovvalgMedlemskapRepository.lagreRegisterGrunnlag(

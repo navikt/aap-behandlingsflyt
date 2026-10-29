@@ -651,7 +651,7 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
 
         return LovvalgMedlemskapGrunnlag(
             LovvalgMedlemskapRegisterGrunnlag(
-                medlemskapGrunnlag = hentMedlemskapGrunnlag(row.getLongOrNull("medlemskap_unntak_person_id")),
+                medlemskapUnntakGrunnlag = hentMedlemskapGrunnlag(row.getLongOrNull("medlemskap_unntak_person_id")),
                 arbeiderINorgeGrunnlag = hentArbeiderINorgeGrunnlag(row.getLongOrNull("arbeider_id")),
                 inntekterINorgeGrunnlag = inntekt.tilDomene(),
             ),
