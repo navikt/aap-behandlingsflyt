@@ -32,9 +32,9 @@ data class MedlemskapLovvalgRegisterGrunnlag(
             nyeSoknadGrunnlag: UtenlandsOppholdData?,
             vurderBosattStatusOgNorskStatsborgerskap: Boolean = false,
         ) = MedlemskapLovvalgRegisterGrunnlag(
-            medlemskapGrunnlag = lovvalgMedlemskapGrunnlag?.medlemskapGrunnlag,
-            inntekterINorgeGrunnlag = lovvalgMedlemskapGrunnlag?.inntekterINorgeGrunnlag.orEmpty(),
-            arbeiderINorgeGrunnlag = lovvalgMedlemskapGrunnlag?.arbeiderINorgeGrunnlag.orEmpty(),
+            medlemskapGrunnlag = lovvalgMedlemskapGrunnlag?.registerGrunnlag?.medlemskapGrunnlag,
+            inntekterINorgeGrunnlag = lovvalgMedlemskapGrunnlag?.registerGrunnlag?.inntekterINorgeGrunnlag.orEmpty(),
+            arbeiderINorgeGrunnlag = lovvalgMedlemskapGrunnlag?.registerGrunnlag?.arbeiderINorgeGrunnlag.orEmpty(),
             personopplysning = personopplysning,
             nyeSoknadGrunnlag = nyeSoknadGrunnlag,
             vurderBosattStatusOgNorskStatsborgerskap = vurderBosattStatusOgNorskStatsborgerskap,
@@ -56,16 +56,20 @@ data class MedlemskapLovvalgFaktagrunnlag(
 }
 
 data class LovvalgMedlemskapGrunnlag(
-    val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,
-    val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
+    val registerGrunnlag: LovvalgMedlemskapRegisterGrunnlag,
     val inntekterINorgeRegisterGrunnlag: InntekterINorgeRegisterGrunnlag,
-    val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
     val vurderinger: List<ManuellVurderingForLovvalgMedlemskap> = emptyList()
 ) {
     fun gjeldendeVurderinger(): Tidslinje<ManuellVurderingForLovvalgMedlemskap> {
         return vurderinger.gjeldendeVurderinger()
     }
 }
+
+data class LovvalgMedlemskapRegisterGrunnlag(
+    val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,
+    val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
+    val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
+)
 
 data class InntekterINorgeRegisterGrunnlag(
     val inntekterForKrav: Set<InntekterForKrav>

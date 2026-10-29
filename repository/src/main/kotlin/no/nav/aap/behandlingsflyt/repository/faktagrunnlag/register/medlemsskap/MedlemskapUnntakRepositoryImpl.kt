@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
@@ -11,16 +10,16 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.repository.RepositoryFactory
 import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.type.Periode
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 
 class MedlemskapUnntakRepositoryImpl(private val connection: DBConnection) : MedlemskapUnntakRepository {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    override fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapDataIntern>): Long {
+    override fun lagreUnntakMedlemskap(
+        behandlingId: BehandlingId,
+        medlemskapUnntakGrunnlag: MedlemskapUnntakGrunnlag
+    ): Long {
         if (hentHvisEksisterer(behandlingId) != null) {
-            log.info("Medlemsskapsgrunnlag for behandling $behandlingId eksisterer allerede. Deaktiverer forrige lagrede.")
             deaktiverEksisterendeGrunnlag(behandlingId)
         }
 
@@ -41,23 +40,28 @@ class MedlemskapUnntakRepositoryImpl(private val connection: DBConnection) : Med
             }
         }
 
-        connection.executeBatch("""
+        val unntakSegmenter = medlemskapUnntakGrunnlag.unntak
+
+        connection.executeBatch(
+            """
             INSERT INTO MEDLEMSKAP_UNNTAK (
                 STATUS, STATUS_ARSAK, MEDLEM, PERIODE, GRUNNLAG, LOVVALG, HELSEDEL, MEDLEMSKAP_UNNTAK_PERSON_ID, LOVVALGSLAND, KILDESYSTEM, KILDENAVN
                 ) VALUES (?, ?, ?, ?::daterange ,?, ?, ?, ?, ?, ?, ?)
-        """.trimIndent(), unntak) {
+        """.trimIndent(), unntakSegmenter
+        ) {
             setParams {
-                setString(1, it.status)
-                setString(2, it.statusaarsak)
-                setBoolean(3, it.medlem)
-                setPeriode(4, Periode(LocalDate.parse(it.fraOgMed), LocalDate.parse(it.tilOgMed)))
-                setString(5, it.grunnlag)
-                setString(6, it.lovvalg)
-                setBoolean(7, it.helsedel)
+                val (periode, unntak) = it
+                setString(1, unntak.status)
+                setString(2, unntak.statusaarsak)
+                setBoolean(3, unntak.medlem)
+                setPeriode(4, periode)
+                setString(5, unntak.grunnlag)
+                setString(6, unntak.lovvalg)
+                setBoolean(7, unntak.helsedel)
                 setLong(8, medlemskapUnntakPersonId)
-                setString(9, it.lovvalgsland)
-                setEnumName(10, it.kilde?.kildesystemKode)
-                setString(11, it.kilde?.kildeNavn)
+                setString(9, unntak.lovvalgsland)
+                setEnumName(10, unntak.kilde?.kildesystemKode)
+                setString(11, unntak.kilde?.kildeNavn)
             }
         }
         return medlemskapUnntakPersonId

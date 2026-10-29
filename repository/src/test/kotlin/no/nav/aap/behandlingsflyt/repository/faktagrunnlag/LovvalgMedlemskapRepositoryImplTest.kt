@@ -147,7 +147,7 @@ internal class LovvalgMedlemskapRepositoryImplTest {
                 unntak = listOf(medlemskapData())
             )
 
-            medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
+            medlemskapArbeidInntektRepository.lagreRegisterGrunnlag(
                 behandlingId = behandling.id,
                 relevantDato = sak.rettighetsperiode.fom,
                 arbeidGrunnlag = arbeidGrunnlag(),
@@ -188,7 +188,7 @@ internal class LovvalgMedlemskapRepositoryImplTest {
                 unntak = listOf(medlemskapData())
             )
 
-            medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
+            medlemskapArbeidInntektRepository.lagreRegisterGrunnlag(
                 behandlingId = behandling.id,
                 relevantDato = sak.rettighetsperiode.fom,
                 arbeidGrunnlag = arbeidGrunnlag(),
@@ -258,7 +258,7 @@ internal class LovvalgMedlemskapRepositoryImplTest {
             val forventetInntektGrunnlag = inntektGrunnlag().tilDomene(enhetsGrunnlag())
             val forventetStartdato = sak.rettighetsperiode.fom
 
-            medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
+            medlemskapArbeidInntektRepository.lagreRegisterGrunnlag(
                 behandlingId = behandling.id,
                 relevantDato = forventetStartdato,
                 arbeidGrunnlag = emptyList(),
@@ -307,7 +307,7 @@ internal class LovvalgMedlemskapRepositoryImplTest {
                 unntak = listOf(medlemskapData())
             )
 
-            medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
+            medlemskapArbeidInntektRepository.lagreRegisterGrunnlag(
                 behandlingId = behandling.id,
                 relevantDato = sak.rettighetsperiode.fom,
                 arbeidGrunnlag = arbeidGrunnlag(),
@@ -331,7 +331,7 @@ internal class LovvalgMedlemskapRepositoryImplTest {
         repo: LovvalgMedlemskapRepositoryImpl,
         begrunnelse: String
     ) {
-        repo.lagreArbeidsforholdOgInntektINorge(
+        repo.lagreRegisterGrunnlag(
             behandlingId = behandlingId,
             relevantDato = sak.rettighetsperiode.fom,
             arbeidGrunnlag = emptyList(),
