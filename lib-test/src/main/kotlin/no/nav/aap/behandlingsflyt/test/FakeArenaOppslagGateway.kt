@@ -22,7 +22,7 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
 
-class FakeArenaOppslagGateway : ArenaOppslagGateway {
+open class FakeArenaOppslagGateway : ArenaOppslagGateway {
     companion object : Factory<ArenaOppslagGateway> {
         override fun konstruer(): ArenaOppslagGateway {
             return FakeArenaOppslagGateway()
