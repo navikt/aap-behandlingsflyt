@@ -469,7 +469,63 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
     }
 
     @Test
-    fun `innvilget uførevedtak fram i tid bruker uføregateway for å utlede full innvilgelse`() {
+    fun `tilbakevirkende uførevedtak gir automatisk opphør dagen etter mottak`() {
+        val mottattDato = LocalDate.now().minusDays(3)
+        val vurderingsdato = mottattDato.minusDays(20)
+        val uføreVirkningsdato = mottattDato.minusDays(10)
+        val opphørsdato = mottattDato.plusDays(1)
+        val (sak, sisteBehandling) = sendInnFørsteSøknad(mottattTidspunkt = vurderingsdato.atStartOfDay())
+
+        sisteBehandling
+            .løsSykdom(vurderingsdato, erOppfylt = true)
+            .løsBistand(vurderingsdato, erOppfylt = false)
+            .løsOvergangUføre(
+                fom = vurderingsdato,
+                brukerHarSøktOmUføretrygd = true,
+                brukerHarFåttVedtakOmUføretrygd = UføreSøknadVedtakResultat.NEI,
+                brukerHarRettPåAap = true
+            )
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(vurderingsdato)
+            .løsAndreStatligeYtelser()
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+
+        val (_, revurdering) = opprettUførevedtakshendelse(
+            sak = sak,
+            behandling = sisteBehandling,
+            virkningsdato = uføreVirkningsdato,
+            resultat = UførevedtakResultat.INNV,
+            avslag12_5 = false,
+            mottattTidspunkt = mottattDato.atTime(12, 0),
+        )
+
+        dataSource.transaction { connection ->
+            val automatiskVurdering = OvergangUføreRepositoryImpl(connection)
+                .hentHvisEksisterer(revurdering.id)
+                ?.vurderinger
+                ?.singleOrNull { it.erAutomatiskVurdert() }
+
+            assertThat(automatiskVurdering).isNotNull
+            assertThat(automatiskVurdering!!.fom).isEqualTo(opphørsdato)
+
+            val vilkår = VilkårsresultatRepositoryImpl(connection)
+                .hent(revurdering.id)
+                .finnVilkår(Vilkårtype.OVERGANGUFØREVILKÅRET)
+                .tidslinje()
+
+            assertThat(vilkår.segment(opphørsdato.minusDays(1))!!.verdi.utfall)
+                .isNotEqualTo(Utfall.IKKE_OPPFYLT)
+            assertThat(vilkår.segment(opphørsdato)!!.verdi.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+        }
+    }
+
+    @Test
+    fun `uførevedtak oppretter ikke automatisk opphør når full samordning allerede har fjernet retten til AAP`() {
         val overgangUførDato = LocalDate.now().plusMonths(1)
         val virkningsdato = LocalDate.now()
         val person = TestPersoner.STANDARD_PERSON().medUføre(
@@ -524,8 +580,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
                 .hentHvisEksisterer(revurdering.id)
                 ?.vurderinger
                 ?.singleOrNull { it.erAutomatiskVurdert() && it.fom == overgangUførDato }
-            assertThat(vurdering).isNotNull
-            assertThat(vurdering!!.brukerHarFåttVedtakOmUføretrygd).isEqualTo(UføreSøknadVedtakResultat.JA_INNVILGET_FULL)
+            assertThat(vurdering).isNull()
         }
     }
 
@@ -637,6 +692,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
         virkningsdato: LocalDate = LocalDate.now(),
         resultat: UførevedtakResultat = UførevedtakResultat.AVSL,
         avslag12_5: Boolean = true,
+        mottattTidspunkt: LocalDateTime = LocalDateTime.now(),
     ): Pair<UførevedtakV0, Behandling> {
         val dokumentReferanse = UUID.randomUUID().toString()
         val melding = UførevedtakKafkaMelding(
@@ -656,7 +712,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
                     ),
                     brevkategori = InnsendingType.UFØRE_VEDTAK_HENDELSE,
                     kanal = Kanal.DIGITAL,
-                    mottattTidspunkt = LocalDateTime.now(),
+                    mottattTidspunkt = mottattTidspunkt,
                     melding = melding
                 )
             )
@@ -796,6 +852,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
 
 object OvergangUføreFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
-        BehandlingsflytFeature.IngenValidering
+        BehandlingsflytFeature.IngenValidering,
+        BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende,
     )
 )
