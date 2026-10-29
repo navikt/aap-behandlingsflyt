@@ -31,12 +31,15 @@ data class EtableringEgenVirksomhetVurdering(
     val jobberBrukerAktivMedVirksomheten: Boolean?,
     val versjon: EtableringVersjon,
 ) : PeriodisertVurdering {
-    fun evaluerVirksomhetVurdering(): Boolean {
-        val grunnvilkårOppfylt = virksomhetErNy == true && kanFøreTilSelvforsørget == true &&
+    fun erGrunnvilkårOppfylt(): Boolean =
+        virksomhetErNy == true && kanFøreTilSelvforsørget == true &&
                 foreliggerFagligVurdering && brukerEierVirksomheten in listOf(
             EierVirksomhet.EIER_MINST_50_PROSENT,
             EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
         )
+
+    fun evaluerVirksomhetVurdering(): Boolean {
+        val grunnvilkårOppfylt = erGrunnvilkårOppfylt()
         return when (versjon) {
             EtableringVersjon.V0 -> grunnvilkårOppfylt
             EtableringVersjon.V1 -> grunnvilkårOppfylt &&
