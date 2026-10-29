@@ -156,21 +156,21 @@ class HåndterUførevedtakServiceTest {
 
     @Test
     fun `rettighet på virkningstidspunkt gir automatisk opphør`() {
-        rettighetPå(vedtak.virkningsdato)
+        rettighet(RettighetsType.VURDERES_FOR_UFØRETRYGD, vedtak.virkningsdato, vedtak.virkningsdato)
         håndter()
         forventAutomatiskOpphør()
     }
 
     @Test
     fun `rettighet på mottakstidspunkt gir automatisk opphør`() {
-        rettighetPå(dato)
+        rettighet(RettighetsType.VURDERES_FOR_UFØRETRYGD, dato, dato)
         håndter()
         forventAutomatiskOpphør()
     }
 
     @Test
     fun `rettighet dagen etter mottak gir automatisk opphør`() {
-        rettighetPå(dato.plusDays(1))
+        rettighet(RettighetsType.VURDERES_FOR_UFØRETRYGD, dato.plusDays(1), dato.plusDays(1))
         håndter()
         forventAutomatiskOpphør()
     }
@@ -219,14 +219,13 @@ class HåndterUførevedtakServiceTest {
         }
     }
 
-    private fun rettighet(type: RettighetsType, tom: LocalDate = Tid.MAKS) {
+    private fun rettighet(
+        type: RettighetsType,
+        fom: LocalDate = dato.minusDays(30),
+        tom: LocalDate = Tid.MAKS,
+    ) {
         every { rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandlingId) } returns
-                listOf(type).somTidslinje { Periode(dato.minusDays(30), tom) }
-    }
-
-    private fun rettighetPå(dato: LocalDate) {
-        every { rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandlingId) } returns
-                listOf(RettighetsType.VURDERES_FOR_UFØRETRYGD).somTidslinje { Periode(dato, dato) }
+                listOf(type).somTidslinje { Periode(fom, tom) }
     }
 
     private fun vurderinger(vararg vurderinger: OvergangUføreVurdering) {
