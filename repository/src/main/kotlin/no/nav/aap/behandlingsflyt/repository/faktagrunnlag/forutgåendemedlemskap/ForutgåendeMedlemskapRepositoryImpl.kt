@@ -1,11 +1,11 @@
-package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.forutgåendemedlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidAnsettelsesdetaljGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Fartsomraade
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipsregister
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -25,18 +25,18 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.Factory
 import org.slf4j.LoggerFactory
 
-class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: DBConnection) :
-    MedlemskapArbeidInntektForutgåendeRepository {
+class ForutgåendeMedlemskapRepositoryImpl(private val connection: DBConnection) :
+    ForutgåendeMedlemskapRepository {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    companion object : Factory<MedlemskapArbeidInntektForutgåendeRepositoryImpl> {
-        override fun konstruer(connection: DBConnection): MedlemskapArbeidInntektForutgåendeRepositoryImpl {
-            return MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
+    companion object : Factory<ForutgåendeMedlemskapRepositoryImpl> {
+        override fun konstruer(connection: DBConnection): ForutgåendeMedlemskapRepositoryImpl {
+            return ForutgåendeMedlemskapRepositoryImpl(connection)
         }
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): ForutgåendeMedlemskapArbeidInntektGrunnlag? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): ForutgåendeMedlemskapGrunnlag? {
         val query = """
             SELECT * FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG WHERE behandling_id = ? and aktiv = true
         """.trimIndent()
@@ -46,7 +46,7 @@ class MedlemskapArbeidInntektForutgåendeRepositoryImpl(private val connection: 
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper {
-                ForutgåendeMedlemskapArbeidInntektGrunnlag(
+                ForutgåendeMedlemskapGrunnlag(
                     medlemskapGrunnlag = hentMedlemskapGrunnlag(it.getLongOrNull("medlemskap_unntak_person_id")),
                     inntekterINorgeGrunnlag = hentInntekterINorgeGrunnlag(it.getLongOrNull("inntekter_i_norge_id")),
                     arbeiderINorgeGrunnlag = hentArbeiderINorgeGrunnlag(it.getLongOrNull("arbeider_id")),

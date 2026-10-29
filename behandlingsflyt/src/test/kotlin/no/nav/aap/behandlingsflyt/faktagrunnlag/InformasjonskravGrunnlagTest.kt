@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgInformasjonskrav
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapInformasjonskrav
 import no.nav.aap.meldeplikt.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -29,7 +29,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.yrkesskade.YrkesskadeRegisterGatew
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.InformasjonskravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap.LovvalgMedlemskapRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -221,7 +221,7 @@ class InformasjonskravGrunnlagTest {
             )
         }
         val lagretData = dataSource.transaction {
-            MedlemskapArbeidInntektRepositoryImpl(it).hentHvisEksisterer(kontekst.behandlingId)
+            LovvalgMedlemskapRepositoryImpl(it).hentHvisEksisterer(kontekst.behandlingId)
         }
 
         assertThat(lagretData?.inntekterINorgeGrunnlag!!).hasSizeGreaterThan(0)
@@ -488,16 +488,16 @@ class InformasjonskravGrunnlagTest {
     private fun genererLovvalgKonstruktørMedFake() =
         object : Informasjonskravkonstruktør {
             override val navn: InformasjonskravNavn
-                get() = LovvalgInformasjonskrav.navn
+                get() = LovvalgMedlemskapInformasjonskrav.navn
 
             override fun konstruer(
                 repositoryProvider: RepositoryProvider,
                 gatewayProvider: GatewayProvider
-            ): LovvalgInformasjonskrav {
-                return LovvalgInformasjonskrav(
+            ): LovvalgMedlemskapInformasjonskrav {
+                return LovvalgMedlemskapInformasjonskrav(
                     sakService = SakService(repositoryProvider, gatewayProvider),
-                    medlemskapArbeidInntektRepository = repositoryProvider.provide(),
-                    medlemskapRepository = repositoryProvider.provide(),
+                    lovvalgMedlemskapRepository = repositoryProvider.provide(),
+                    medlemskapUnntakRepository = repositoryProvider.provide(),
                     tidligereVurderinger = FakeTidligereVurderinger(),
                     medlemskapGateway = gatewayProvider.provide(),
                     arbeidsForholdGateway = gatewayProvider.provide(),

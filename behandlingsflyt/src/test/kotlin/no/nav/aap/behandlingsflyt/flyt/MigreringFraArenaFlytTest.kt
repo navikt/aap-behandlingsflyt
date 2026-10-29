@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import no.nav.aap.behandlingsflyt.arena.ArenaBeregningstidspunkt
 import no.nav.aap.behandlingsflyt.arena.ArenaForutgåendeMedlemskap
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
 import no.nav.aap.behandlingsflyt.arena.ArenaMigreringsdataRepository
 import no.nav.aap.behandlingsflyt.arena.ArenaOppholdskrav
 import no.nav.aap.behandlingsflyt.arena.ArenaVedtaksperiode
@@ -12,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.Vedt
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKravLøsning
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
@@ -134,8 +134,8 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
             )
             .løsLovvalg(startDato, medlem = true)
             .medKontekst {
-                val medlemskapArbeidInntektRepository: SykdomRepository = repositoryProvider.provide()
-                val vurderinger = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger
+                val sykdomRepository: SykdomRepository = repositoryProvider.provide()
+                val vurderinger = sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger
 
                 assertThat(behandling.aktivtSteg()).isEqualTo(StegType.REFUSJON_KRAV)
 
@@ -161,8 +161,8 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
         migreringsbehandling
             .løsLovvalg(startDato, medlem = true)
             .medKontekst {
-                val medlemskapArbeidInntektRepository: SykdomRepository = repositoryProvider.provide()
-                val vurderinger = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger
+                val sykdomRepository: SykdomRepository = repositoryProvider.provide()
+                val vurderinger = sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger
 
                 assertThat(behandling.aktivtSteg()).isEqualTo(StegType.FASTSETT_BEREGNINGSTIDSPUNKT)
 
@@ -286,7 +286,7 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
             .løsBeregningstidspunkt(startDato)
             .løsFastsettManuellInntekt()
             .medKontekst {
-                val repository: MedlemskapArbeidInntektForutgåendeRepository = repositoryProvider.provide()
+                val repository: ForutgåendeMedlemskapRepository = repositoryProvider.provide()
                 val vurdering = repository.hentHvisEksisterer(behandling.id)!!.vurderinger.single()
                 assertThat(vurdering.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
                 assertThat(vurdering.harForutgåendeMedlemskap).isTrue()

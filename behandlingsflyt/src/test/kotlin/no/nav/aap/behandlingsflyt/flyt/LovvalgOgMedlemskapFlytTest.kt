@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertMan
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
@@ -25,7 +24,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadMedlemskap
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UtenlandsPeriodeDto
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap.LovvalgMedlemskapRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -203,7 +202,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
         // automatisk oppfylt, eller fordi grunnlaget den bygde på har blitt fjernet). Behandlingen
         // var fortsatt relevant for lovvalg, men mangler nå en reell/gyldig vurdering.
         dataSource.transaction {
-            MedlemskapArbeidInntektRepositoryImpl(it).slett(fullførtFørstegangsbehandling.id)
+            LovvalgMedlemskapRepositoryImpl(it).slett(fullførtFørstegangsbehandling.id)
         }
 
         val revurdering = sak.opprettManuellRevurdering(
@@ -624,7 +623,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
         // Validér riktig resultat
         val vilkårsResultat = hentVilkårsresultat(behandling.id).finnVilkår(Vilkårtype.LOVVALG).vilkårsperioder()
         val overstyrtManuellVurdering = dataSource.transaction {
-            MedlemskapArbeidInntektRepositoryImpl(it).hentHvisEksisterer(behandling.id)?.vurderinger?.firstOrNull()?.overstyrt
+            LovvalgMedlemskapRepositoryImpl(it).hentHvisEksisterer(behandling.id)?.vurderinger?.firstOrNull()?.overstyrt
         }
         assertTrue(vilkårsResultat.all { it.erOppfylt() })
         assertTrue(overstyrtManuellVurdering == true)
@@ -788,10 +787,10 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
         assertThat(lovvalgRevurdering).allMatch { it.erOppfylt() && it.manuellVurdering }
 
         val manuelleVurderingerFørstegangsbehandling = dataSource.transaction {
-            MedlemskapArbeidInntektRepositoryImpl(it).hentHvisEksisterer(førstegangsbehandling.id)?.vurderinger
+            LovvalgMedlemskapRepositoryImpl(it).hentHvisEksisterer(førstegangsbehandling.id)?.vurderinger
         }
         val manuelleVurderingerRevurdering = dataSource.transaction {
-            MedlemskapArbeidInntektRepositoryImpl(it).hentHvisEksisterer(revurdering.id)?.vurderinger
+            LovvalgMedlemskapRepositoryImpl(it).hentHvisEksisterer(revurdering.id)?.vurderinger
         }
         assertThat(manuelleVurderingerRevurdering).isEqualTo(manuelleVurderingerFørstegangsbehandling)
     }

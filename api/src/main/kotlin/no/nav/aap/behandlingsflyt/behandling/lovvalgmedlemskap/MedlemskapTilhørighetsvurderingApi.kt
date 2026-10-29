@@ -5,14 +5,14 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.behandlingsflyt.Tags
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapFaktaGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.ForutgåendeMedlemskapVurderingService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.KanBehandlesAutomatiskVurdering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingRepository
-import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.MedlemskapLovvalgVurderingService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgMedlemskapVurderingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.LovvalgMedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningForutgåendeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -31,13 +31,13 @@ import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.authorizedGet
 import javax.sql.DataSource
 
-fun NormalOpenAPIRoute.lovvalgMedlemskapApi(
+fun NormalOpenAPIRoute.medlemskapTilhørighetsvurderingApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider
 ) {
     val unleashGateway = gatewayProvider.provide<UnleashGateway>()
-
+    // TODO: Flytte dette inn i grunnlag-apiene
     route("/api/lovvalgmedlemskap/") {
         route("/vurdering/{referanse}") {
             authorizedGet<BehandlingReferanse, KanBehandlesAutomatiskVurdering>(
@@ -69,10 +69,10 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapApi(
             ) { req ->
                 val vurdering = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
-                    val medlemskapArbeidInntektForutgåendeRepository =
-                        repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
-                    val medlemskapArbeidInntektRepository =
-                        repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
+                    val forutgåendeMedlemskapRepository =
+                        repositoryProvider.provide<ForutgåendeMedlemskapRepository>()
+                    val lovvalgMedlemskapRepository =
+                        repositoryProvider.provide<LovvalgMedlemskapRepository>()
                     val behandling =
                         repositoryProvider.provide<BehandlingRepository>().hent(BehandlingReferanse(req.referanse))
                     val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
@@ -85,16 +85,16 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapApi(
                     }
 
                     val medlemskapArbeidInntektGrunnlag =
-                        medlemskapArbeidInntektForutgåendeRepository.hentHvisEksisterer(behandling.id)
+                        forutgåendeMedlemskapRepository.hentHvisEksisterer(behandling.id)
 
                     val oppgittUtenlandsOppholdGrunnlag =
-                        medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
-                            ?: medlemskapArbeidInntektRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(
+                        lovvalgMedlemskapRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
+                            ?: lovvalgMedlemskapRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(
                                 sak.id
                             )
 
                     ForutgåendeMedlemskapVurderingService().vurderTilhørighet(
-                        ForutgåendeMedlemskapGrunnlag(
+                        ForutgåendeMedlemskapFaktaGrunnlag(
                             medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag
                         ),
                         sak.rettighetsperiode
@@ -111,8 +111,8 @@ private fun utledFallbackKanBehandlesAutomatiskVurdering(
     behandling: Behandling,
     unleashGateway: UnleashGateway
 ): KanBehandlesAutomatiskVurdering {
-    val medlemskapArbeidInntektRepository =
-        repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
+    val lovvalgMedlemskapRepository =
+        repositoryProvider.provide<LovvalgMedlemskapRepository>()
     val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
 
     val brukerPersonopplysning =
@@ -123,16 +123,16 @@ private fun utledFallbackKanBehandlesAutomatiskVurdering(
         return KanBehandlesAutomatiskVurdering(false, emptyList())
     }
     val medlemskapArbeidInntektGrunnlag =
-        repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
+        repositoryProvider.provide<LovvalgMedlemskapRepository>()
             .hentHvisEksisterer(behandling.id)
 
     val oppgittUtenlandsOppholdGrunnlag =
-        medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
-            ?: medlemskapArbeidInntektRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(
+        lovvalgMedlemskapRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
+            ?: lovvalgMedlemskapRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(
                 sak.id
             )
 
-    return MedlemskapLovvalgVurderingService().vurderTilhørighet(
+    return LovvalgMedlemskapVurderingService().vurderTilhørighet(
         MedlemskapLovvalgRegisterGrunnlag.fra(
             medlemskapArbeidInntektGrunnlag,
             brukerPersonopplysning,

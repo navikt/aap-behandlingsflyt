@@ -20,7 +20,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.type.Periode
 import kotlin.enums.enumEntries
 
-class MedlemskapLovvalgVurderingService {
+class LovvalgMedlemskapVurderingService {
     fun vurderTilhørighet(
         grunnlag: MedlemskapLovvalgRegisterGrunnlag,
         rettighetsPeriode: Periode,

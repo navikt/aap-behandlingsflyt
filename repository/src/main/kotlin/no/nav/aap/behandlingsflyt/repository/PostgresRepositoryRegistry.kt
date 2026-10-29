@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.KandidatForPåminnelseRepositoryImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapForutgåendeRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.forretningsflyt.gjenopptak.GjenopptakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -40,9 +40,9 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.Klagebehandling
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.KlagebehandlingNayRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.PåklagetBehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.TrekkKlageRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.LovvalgDelvurderingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.forutgåendemedlemskap.ForutgåendeMedlemskapRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap.LovvalgMedlemskapRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap.LovvalgDelvurderingRepositoryImpl
 import no.nav.aap.overgangarbeid.OvergangArbeidRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
@@ -52,7 +52,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.dagpenger.Da
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.InntektGrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.MedlemskapRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.MedlemskapUnntakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.opphold.OppholdskravGrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.tiltakspenger.TiltakspengerRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre.UføreRepositoryImpl
@@ -126,7 +126,7 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<SykepengerOgFerieOppgittISøknadRepositoryImpl>()
     .register<UføreRepositoryImpl>()
     .register<UføreSøknadRepositoryImpl>()
-    .register<MedlemskapArbeidInntektRepositoryImpl>()
+    .register<LovvalgMedlemskapRepositoryImpl>()
     .register<SykepengerErstatningRepositoryImpl>()
     .register<SamordningVurderingRepositoryImpl>()
     .register<SamordningYtelseRepositoryImpl>()
@@ -135,7 +135,7 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<SamordningArbeidsgiverRepositoryImpl>()
     .register<StudentRepositoryImpl>()
     .register<MeldepliktRepositoryImpl>()
-    .register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()
+    .register<ForutgåendeMedlemskapRepositoryImpl>()
     .register<PersonopplysningForutgåendeRepositoryImpl>()
     .register<BarnRepositoryImpl>()
     .register<InstitusjonsoppholdRepositoryImpl>()
@@ -151,8 +151,8 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<FormkravRepositoryImpl>()
     .register<PåklagetBehandlingRepositoryImpl>()
     .register<BehandlendeEnhetRepositoryImpl>()
-    .register<MedlemskapRepositoryImpl>()
-    .register<MedlemskapForutgåendeRepositoryImpl>()
+    .register<MedlemskapUnntakRepositoryImpl>()
+    .register<MedlemskapUnntakForutgåendeRepositoryImpl>()
     .register<TjenestepensjonRefusjonskravVurderingRepositoryImpl>()
     .register<BehandlingRepositoryImpl>()
     .register<KlagebehandlingKontorRepositoryImpl>()

@@ -10,13 +10,13 @@ import no.nav.aap.lookup.repository.Repository
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
-interface MedlemskapForutgåendeRepository : Repository {
+interface MedlemskapUnntakForutgåendeRepository : Repository {
     fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapDataIntern>): Long
     fun hentHvisEksisterer(behandlingId: BehandlingId): MedlemskapUnntakGrunnlag?
     override fun slett(behandlingId: BehandlingId)
 }
 
-class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection) : MedlemskapForutgåendeRepository {
+class MedlemskapUnntakForutgåendeRepositoryImpl(private val connection: DBConnection) : MedlemskapUnntakForutgåendeRepository {
     private val log = LoggerFactory.getLogger(javaClass)
     override fun lagreUnntakMedlemskap(behandlingId: BehandlingId, unntak: List<MedlemskapDataIntern>): Long {
         if (hentHvisEksisterer(behandlingId) != null) {
@@ -180,9 +180,9 @@ class MedlemskapForutgåendeRepositoryImpl(private val connection: DBConnection)
         }
     }
 
-    companion object : RepositoryFactory<MedlemskapForutgåendeRepository> {
-        override fun konstruer(connection: DBConnection): MedlemskapForutgåendeRepository {
-            return MedlemskapForutgåendeRepositoryImpl(connection)
+    companion object : RepositoryFactory<MedlemskapUnntakForutgåendeRepository> {
+        override fun konstruer(connection: DBConnection): MedlemskapUnntakForutgåendeRepository {
+            return MedlemskapUnntakForutgåendeRepositoryImpl(connection)
         }
 
     }

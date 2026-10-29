@@ -20,10 +20,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntektkompone
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.tilDomene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.EnhetsregisteretGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.Organisasjonsnummer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.LovvalgMedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -40,22 +40,22 @@ import java.time.YearMonth
 import java.util.concurrent.*
 
 
-class LovvalgInformasjonskrav internal constructor(
+class LovvalgMedlemskapInformasjonskrav internal constructor(
     private val sakService: SakService,
-    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
-    private val medlemskapRepository: MedlemskapRepository,
+    private val lovvalgMedlemskapRepository: LovvalgMedlemskapRepository,
+    private val medlemskapUnntakRepository: MedlemskapUnntakRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val medlemskapGateway: MedlemskapGateway,
     private val arbeidsForholdGateway: ArbeidsforholdGateway,
     private val enhetsregisteretGateway: EnhetsregisteretGateway,
     private val inntektskomponentenGateway: InntektkomponentenGateway,
     private val unleashGateway: UnleashGateway,
-) : Informasjonskrav<LovvalgInformasjonskrav.LovvalgInput, LovvalgInformasjonskrav.LovvalgRegisterData> {
+) : Informasjonskrav<LovvalgMedlemskapInformasjonskrav.LovvalgInput, LovvalgMedlemskapInformasjonskrav.LovvalgRegisterData> {
     private val log = LoggerFactory.getLogger(javaClass)
 
     data class LovvalgInput(
         val sak: Sak,
-        val eksisterendeData: MedlemskapArbeidInntektGrunnlag?
+        val eksisterendeData: LovvalgMedlemskapGrunnlag?
     ) : InformasjonskravInput
 
     data class LovvalgRegisterData(
@@ -85,7 +85,7 @@ class LovvalgInformasjonskrav internal constructor(
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): LovvalgInput {
         val sak = sakService.hent(kontekst.sakId)
-        val eksisterendeData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val eksisterendeData = lovvalgMedlemskapRepository.hentHvisEksisterer(kontekst.behandlingId)
         return LovvalgInput(
             sak = sak,
             eksisterendeData = eksisterendeData
@@ -133,14 +133,14 @@ class LovvalgInformasjonskrav internal constructor(
             enhetGrunnlag = enhetGrunnlag
         )
 
-        val nyData = medlemskapArbeidInntektRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val nyData = lovvalgMedlemskapRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         return if (erRelevantEndring(eksisterendeData, nyData)) ENDRET else IKKE_ENDRET
     }
 
     private fun erRelevantEndring(
-        grunnlag1: MedlemskapArbeidInntektGrunnlag?,
-        grunnlag2: MedlemskapArbeidInntektGrunnlag?
+        grunnlag1: LovvalgMedlemskapGrunnlag?,
+        grunnlag2: LovvalgMedlemskapGrunnlag?
     ): Boolean {
         return grunnlag1?.medlemskapGrunnlag != grunnlag2?.medlemskapGrunnlag
                 || grunnlag1?.inntekterINorgeGrunnlag != grunnlag2?.inntekterINorgeGrunnlag // Ignorerer inntekterINorgePerRelevanteKrav
@@ -199,12 +199,12 @@ class LovvalgInformasjonskrav internal constructor(
         val perioder = medlemskapGrunnlag.map { Pair(it.fraOgMed, it.tilOgMed) }
 
         log.info("Lagrer medlemskap, arbeidsforhold og inntekt for behandling $behandlingId. Perioder: $perioder")
-        val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapRepository.lagreUnntakMedlemskap(
+        val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapUnntakRepository.lagreUnntakMedlemskap(
             behandlingId,
             medlemskapGrunnlag
         ) else null
 
-        medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
+        lovvalgMedlemskapRepository.lagreArbeidsforholdOgInntektINorge(
             behandlingId,
             relevantDato,
             arbeidGrunnlag,
@@ -220,12 +220,12 @@ class LovvalgInformasjonskrav internal constructor(
         override fun konstruer(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
-        ): LovvalgInformasjonskrav {
-            val medlemskapArbeidInntektRepository = repositoryProvider.provide<MedlemskapArbeidInntektRepository>()
-            return LovvalgInformasjonskrav(
+        ): LovvalgMedlemskapInformasjonskrav {
+            val lovvalgMedlemskapRepository = repositoryProvider.provide<LovvalgMedlemskapRepository>()
+            return LovvalgMedlemskapInformasjonskrav(
                 sakService = SakService(repositoryProvider, gatewayProvider),
-                medlemskapArbeidInntektRepository = medlemskapArbeidInntektRepository,
-                medlemskapRepository = repositoryProvider.provide<MedlemskapRepository>(),
+                lovvalgMedlemskapRepository = lovvalgMedlemskapRepository,
+                medlemskapUnntakRepository = repositoryProvider.provide<MedlemskapUnntakRepository>(),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 medlemskapGateway = gatewayProvider.provide(),
                 arbeidsForholdGateway = gatewayProvider.provide(),

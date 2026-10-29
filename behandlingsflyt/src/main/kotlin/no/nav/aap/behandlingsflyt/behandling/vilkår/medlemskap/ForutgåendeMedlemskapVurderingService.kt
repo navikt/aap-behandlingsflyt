@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapFaktaGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipsregister
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
@@ -23,7 +23,7 @@ import java.time.YearMonth
 
 class ForutgåendeMedlemskapVurderingService {
     fun vurderTilhørighet(
-        grunnlag: ForutgåendeMedlemskapGrunnlag,
+        grunnlag: ForutgåendeMedlemskapFaktaGrunnlag,
         rettighetsPeriode: Periode
     ): KanBehandlesAutomatiskVurdering {
         val forutgåendePeriode = Periode(rettighetsPeriode.fom.minusYears(5), rettighetsPeriode.tom)
@@ -41,7 +41,7 @@ class ForutgåendeMedlemskapVurderingService {
         // No-op: sjekk om 1 måneds gap-toleranse i inntekt ville gitt annet utfall i inntektsvurderingen
         val utfallInntektMed1MndGap = oppfyllerSammenhengendePerioderMedEttMånedsgap(grunnlag, forutgåendePeriode)
         val harIkkeSammenhengendePerioder =
-            !harArbeidInntektINorge(grunnlag.medlemskapArbeidInntektGrunnlag, forutgåendePeriode).resultat
+            !harArbeidInntektINorge(grunnlag.forutgåendeMedlemskapGrunnlag, forutgåendePeriode).resultat
         prometheus.forutgåendeMedlemskapMedGapInntektsvurdering(harIkkeSammenhengendePerioder && utfallInntektMed1MndGap)
             .increment()
 
@@ -63,30 +63,30 @@ class ForutgåendeMedlemskapVurderingService {
 
     // Minst én må oppfylles
     private fun vurderFørsteDelKriteier(
-        grunnlag: ForutgåendeMedlemskapGrunnlag,
+        grunnlag: ForutgåendeMedlemskapFaktaGrunnlag,
         forutgåendePeriode: Periode
     ): List<TilhørighetVurdering> {
         val arbeidInntektINorgeVurdering =
-            harArbeidInntektINorge(grunnlag.medlemskapArbeidInntektGrunnlag, forutgåendePeriode)
+            harArbeidInntektINorge(grunnlag.forutgåendeMedlemskapGrunnlag, forutgåendePeriode)
         val vedtakIMedl =
-            harVedtakIMEDL(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag, forutgåendePeriode)
+            harVedtakIMEDL(grunnlag.forutgåendeMedlemskapGrunnlag?.medlemskapGrunnlag, forutgåendePeriode)
 
         return listOf(arbeidInntektINorgeVurdering, vedtakIMedl)
     }
 
     // Ingen kan inntreffe
     private fun vurderAndreDelKriterier(
-        grunnlag: ForutgåendeMedlemskapGrunnlag,
+        grunnlag: ForutgåendeMedlemskapFaktaGrunnlag,
         forutgåendePeriode: Periode
     ): List<TilhørighetVurdering> {
         val harJobbetIUtland = oppgittJobbetIUtland(grunnlag.nyeSoknadGrunnlag, forutgåendePeriode)
         val harHattUtenlandsOpphold = oppgittUtenlandsOpphold(grunnlag.nyeSoknadGrunnlag, forutgåendePeriode)
         val harUtenlandsAdresse = utenlandskAdresse(grunnlag.personopplysningGrunnlag, forutgåendePeriode)
-        val annetLovvalgsland = lovvalgslandIkkeErNorge(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag)
+        val annetLovvalgsland = lovvalgslandIkkeErNorge(grunnlag.forutgåendeMedlemskapGrunnlag?.medlemskapGrunnlag)
         val utenforEØS = manglerStatsborgerskapIEØSiPerioden(grunnlag.personopplysningGrunnlag, forutgåendePeriode)
         val bestemtArbeidsgruppe =
             bestemtArbeidsgruppe(
-                grunnlag.medlemskapArbeidInntektGrunnlag?.arbeiderINorgeGrunnlag ?: emptyList(),
+                grunnlag.forutgåendeMedlemskapGrunnlag?.arbeiderINorgeGrunnlag ?: emptyList(),
                 forutgåendePeriode
             )
 
@@ -343,7 +343,7 @@ class ForutgåendeMedlemskapVurderingService {
     }
 
     private fun harArbeidInntektINorge(
-        grunnlag: ForutgåendeMedlemskapArbeidInntektGrunnlag?,
+        grunnlag: ForutgåendeMedlemskapGrunnlag?,
         forutgåendePeriode: Periode
     ): TilhørighetVurdering {
         val inntektINorgeGrunnlag = grunnlag?.inntekterINorgeGrunnlag?.filter { it.beloep != 0.0 }
@@ -422,17 +422,17 @@ class ForutgåendeMedlemskapVurderingService {
 
     // For analyse-formål
     private fun vurderTilhørighetMedGapToleranse(
-        grunnlag: ForutgåendeMedlemskapGrunnlag,
+        grunnlag: ForutgåendeMedlemskapFaktaGrunnlag,
         forutgåendePeriode: Periode,
         andreDelVurdering: List<TilhørighetVurdering>
     ): Boolean {
         val inntektINorgeGrunnlag =
-            grunnlag.medlemskapArbeidInntektGrunnlag?.inntekterINorgeGrunnlag?.filter { it.beloep != 0.0 }
+            grunnlag.forutgåendeMedlemskapGrunnlag?.inntekterINorgeGrunnlag?.filter { it.beloep != 0.0 }
         val inntekterINorgePerioder = inntektINorgeGrunnlag?.map { it.periode }
         val arbeidInntektMedGap = sammenhengendePerioderMedEttMånedsgap(inntekterINorgePerioder, forutgåendePeriode)
 
         val vedtakIMedl =
-            harVedtakIMEDL(grunnlag.medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag, forutgåendePeriode)
+            harVedtakIMEDL(grunnlag.forutgåendeMedlemskapGrunnlag?.medlemskapGrunnlag, forutgåendePeriode)
         val oppfyltMinstEttKrav = arbeidInntektMedGap || vedtakIMedl.resultat
         val ingenInntruffet = andreDelVurdering.all { !it.resultat }
 
@@ -440,11 +440,11 @@ class ForutgåendeMedlemskapVurderingService {
     }
 
     private fun oppfyllerSammenhengendePerioderMedEttMånedsgap(
-        grunnlag: ForutgåendeMedlemskapGrunnlag,
+        grunnlag: ForutgåendeMedlemskapFaktaGrunnlag,
         forutgåendePeriode: Periode
     ): Boolean {
         val inntektINorgeGrunnlag =
-            grunnlag.medlemskapArbeidInntektGrunnlag?.inntekterINorgeGrunnlag?.filter { it.beloep != 0.0 }
+            grunnlag.forutgåendeMedlemskapGrunnlag?.inntekterINorgeGrunnlag?.filter { it.beloep != 0.0 }
         val inntekterINorgePerioder = inntektINorgeGrunnlag?.map { it.periode }
 
         return sammenhengendePerioderMedEttMånedsgap(inntekterINorgePerioder, forutgåendePeriode)

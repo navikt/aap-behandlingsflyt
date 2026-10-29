@@ -17,13 +17,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Virksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapForutgåendeRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.forutgåendemedlemskap.ForutgåendeMedlemskapRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap.LovvalgMedlemskapRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -50,7 +50,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 
-internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
+internal class ForutgåendeMedlemskapRepositoryImplTest {
     companion object {
         private lateinit var dataSource: TestDataSource
 
@@ -69,7 +69,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     fun mapperOrgnavnKorrektTilForutgåendeInntekt() {
         dataSource.transaction { connection ->
             val behandlingRepo = BehandlingRepositoryImpl(connection)
-            val medlemskapArbeidInntektForutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
+            val medlemskapArbeidInntektForutgåendeRepo = ForutgåendeMedlemskapRepositoryImpl(connection)
 
             val sak = opprettSak(connection,LocalDate.now())
 
@@ -100,7 +100,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     @Test
     fun `lagrer maritime felter og yrke paa arbeid forutgaaende`() {
         dataSource.transaction { connection ->
-            val repo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
+            val repo = ForutgåendeMedlemskapRepositoryImpl(connection)
             val sak = opprettSak(connection, LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -149,7 +149,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
 
         dataSource.transaction { connection ->
             val behandlingRepo = BehandlingRepositoryImpl(connection)
-            val arbeidInntektRepo = MedlemskapArbeidInntektRepositoryImpl(connection)
+            val arbeidInntektRepo = LovvalgMedlemskapRepositoryImpl(connection)
 
             val førstegangsBehandling =
                 opprettBehandlingMedVurdering(TypeBehandling.Førstegangsbehandling, sak.id, null, emptyList(), null)
@@ -194,7 +194,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     @Test
     fun `skal kunne lagre og hente manuelle vurderinger over flere perioder`() {
         dataSource.transaction { connection ->
-            val medlemskapArbeidInntektForutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
+            val medlemskapArbeidInntektForutgåendeRepo = ForutgåendeMedlemskapRepositoryImpl(connection)
             val sak = opprettSak(connection,LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -223,10 +223,10 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     @Test
     fun `skal ta med manuelle vurderinger i grunnlag når arbeid og inntekt oppdateres`() {
         dataSource.transaction { connection ->
-            val medlemskapArbeidInntektForutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
+            val medlemskapArbeidInntektForutgåendeRepo = ForutgåendeMedlemskapRepositoryImpl(connection)
             val sak = opprettSak(connection,LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
-            val medlemskapRepository = MedlemskapForutgåendeRepositoryImpl(connection)
+            val medlemskapRepository = MedlemskapUnntakForutgåendeRepositoryImpl(connection)
 
             medlemskapArbeidInntektForutgåendeRepo.lagreVurderinger(
                 behandling.id,
@@ -270,8 +270,8 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     @Test
     fun `skal kopiere grunnlag fra forrige behandling ved revurdering og ta med tidligere vurderinger når nye opprettes`() {
         val behandling = dataSource.transaction { connection ->
-            val medlemskapArbeidInntektForutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
-            val medlemskapRepository = MedlemskapForutgåendeRepositoryImpl(connection)
+            val medlemskapArbeidInntektForutgåendeRepo = ForutgåendeMedlemskapRepositoryImpl(connection)
+            val medlemskapRepository = MedlemskapUnntakForutgåendeRepositoryImpl(connection)
 
             val sak = opprettSak(connection,LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
@@ -312,7 +312,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
         // Revurdering
         dataSource.transaction { connection ->
             val behandlingRepo = BehandlingRepositoryImpl(connection)
-            val medlemskapArbeidInntektForutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
+            val medlemskapArbeidInntektForutgåendeRepo = ForutgåendeMedlemskapRepositoryImpl(connection)
 
             val revurdering =
                 behandlingRepo.opprettBehandling(
@@ -350,10 +350,10 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
     @Test
     fun `test sletting`() {
         dataSource.transaction { connection ->
-            val medlemskapArbeidInntektForutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
+            val medlemskapArbeidInntektForutgåendeRepo = ForutgåendeMedlemskapRepositoryImpl(connection)
             val sak = opprettSak(connection,LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
-            val medlemskapRepository = MedlemskapForutgåendeRepositoryImpl(connection)
+            val medlemskapRepository = MedlemskapUnntakForutgåendeRepositoryImpl(connection)
 
             medlemskapArbeidInntektForutgåendeRepo.lagreVurderinger(
                 behandling.id,
@@ -481,7 +481,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             : Behandling {
         return dataSource.transaction { connection ->
             val behandlingRepo = BehandlingRepositoryImpl(connection)
-            val forutgåendeRepo = MedlemskapArbeidInntektForutgåendeRepositoryImpl(connection)
+            val forutgåendeRepo = ForutgåendeMedlemskapRepositoryImpl(connection)
             val behandling = behandlingRepo.opprettBehandling(
                 sakId,
                 typeBehandling,
@@ -495,7 +495,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
 
     private fun lagNyFullVurdering(
         behandlingId: BehandlingId,
-        forutgåendeRepository: MedlemskapArbeidInntektForutgåendeRepositoryImpl,
+        forutgåendeRepository: ForutgåendeMedlemskapRepositoryImpl,
         begrunnelse: String,
         connection: DBConnection,
         utenlandsOppholdData: UtenlandsOppholdData? = UtenlandsOppholdData(
@@ -506,7 +506,7 @@ internal class MedlemskapArbeidInntektForutgåendeRepositoryImplTest {
             utenlandsOpphold = null
         )
     ) {
-        val lovvalgRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
+        val lovvalgRepository = LovvalgMedlemskapRepositoryImpl(connection)
         if (utenlandsOppholdData != null) lovvalgRepository.lagreOppgittUtenlandsOppplysninger(
             behandlingId,
             JournalpostId("1"),

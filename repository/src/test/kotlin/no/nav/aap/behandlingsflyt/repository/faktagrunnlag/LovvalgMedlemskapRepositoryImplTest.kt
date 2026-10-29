@@ -20,8 +20,8 @@ import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.MedlemskapRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap.LovvalgMedlemskapRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.MedlemskapUnntakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
@@ -47,7 +47,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 
-internal class MedlemskapArbeidInntektRepositoryImplTest {
+internal class LovvalgMedlemskapRepositoryImplTest {
     companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
@@ -67,7 +67,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
     @Test
     fun mapperOrgnavnKorrektTilInntekt() {
         dataSource.transaction { connection ->
-            val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
+            val medlemskapArbeidInntektRepository = LovvalgMedlemskapRepositoryImpl(connection)
             val sak = opprettSak(connection, LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -88,7 +88,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
     @Test
     fun `skal kunne lagre og hente manuelle vurderinger over flere perioder`() {
         dataSource.transaction { connection ->
-            val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
+            val medlemskapArbeidInntektRepository = LovvalgMedlemskapRepositoryImpl(connection)
             val sak = opprettSak(connection, LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -117,10 +117,10 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
     @Test
     fun `skal ta med manuelle vurderinger i grunnlag når arbeid og inntekt oppdateres`() {
         dataSource.transaction { connection ->
-            val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
+            val medlemskapArbeidInntektRepository = LovvalgMedlemskapRepositoryImpl(connection)
             val sak = opprettSak(connection, LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
-            val medlemskapRepository = MedlemskapRepositoryImpl(connection)
+            val medlemskapRepository = MedlemskapUnntakRepositoryImpl(connection)
 
             medlemskapArbeidInntektRepository.lagreVurderinger(
                 behandling.id,
@@ -165,8 +165,8 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
     @Test
     fun `skal kopiere grunnlag fra forrige behandling ved revurdering og ta med tidligere vurderinger når nye opprettes`() {
         val behandling = dataSource.transaction { connection ->
-            val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
-            val medlemskapRepository = MedlemskapRepositoryImpl(connection)
+            val medlemskapArbeidInntektRepository = LovvalgMedlemskapRepositoryImpl(connection)
+            val medlemskapRepository = MedlemskapUnntakRepositoryImpl(connection)
 
             val sak = opprettSak(connection, LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
@@ -213,7 +213,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         // Revurdering
         dataSource.transaction { connection ->
             val behandlingRepo = BehandlingRepositoryImpl(connection)
-            val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
+            val medlemskapArbeidInntektRepository = LovvalgMedlemskapRepositoryImpl(connection)
 
             val revurdering =
                 behandlingRepo.opprettBehandling(
@@ -251,7 +251,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
     @Test
     fun `Skal kunne hente ut inntekter per krav`() {
         dataSource.transaction { connection ->
-            val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
+            val medlemskapArbeidInntektRepository = LovvalgMedlemskapRepositoryImpl(connection)
             val sak = opprettSak(connection, LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
@@ -277,10 +277,10 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
     @Test
     fun `test sletting`() {
         dataSource.transaction { connection ->
-            val medlemskapArbeidInntektRepository = MedlemskapArbeidInntektRepositoryImpl(connection)
+            val medlemskapArbeidInntektRepository = LovvalgMedlemskapRepositoryImpl(connection)
             val sak = opprettSak(connection, LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
-            val medlemskapRepository = MedlemskapRepositoryImpl(connection)
+            val medlemskapRepository = MedlemskapUnntakRepositoryImpl(connection)
 
             medlemskapArbeidInntektRepository.lagreVurderinger(
                 behandling.id,
@@ -328,7 +328,7 @@ internal class MedlemskapArbeidInntektRepositoryImplTest {
         behandlingId: BehandlingId,
         sak: Sak,
         periode: Periode,
-        repo: MedlemskapArbeidInntektRepositoryImpl,
+        repo: LovvalgMedlemskapRepositoryImpl,
         begrunnelse: String
     ) {
         repo.lagreArbeidsforholdOgInntektINorge(

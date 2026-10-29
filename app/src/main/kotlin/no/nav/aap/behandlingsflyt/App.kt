@@ -59,9 +59,9 @@ import no.nav.aap.behandlingsflyt.behandling.klage.trekk.trekkKlageGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.krav.kravGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringApi
 import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringTilgangApi
-import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.forutgåendeMedlemskapApi
+import no.nav.aap.behandlingsflyt.behandling.forutgåendemedlemskap.grunnlag.forutgåendeMedlemskapApi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgMedlemskapGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.lovvalgMedlemskapApi
+import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.medlemskapTilhørighetsvurderingApi
 import no.nav.aap.behandlingsflyt.behandling.meldekort.meldekortApi
 import no.nav.aap.behandlingsflyt.behandling.mellomlagring.mellomlagretVurderingApi
 import no.nav.aap.behandlingsflyt.behandling.oppfolgingsbehandling.avklarOppfolgingsoppgaveGrunnlag
@@ -354,7 +354,7 @@ internal fun Application.server(
                 påminnelseApi(fellesDataSource, repositoryRegistry)
                 mottattHendelseApi(fellesDataSource, repositoryRegistry)
                 underveisVurderingerApi(fellesDataSource, repositoryRegistry)
-                lovvalgMedlemskapApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                medlemskapTilhørighetsvurderingApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 lovvalgMedlemskapGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 samordningGrunnlag(fellesDataSource, repositoryRegistry, gatewayProvider)
                 forutgåendeMedlemskapApi(fellesDataSource, repositoryRegistry, gatewayProvider)

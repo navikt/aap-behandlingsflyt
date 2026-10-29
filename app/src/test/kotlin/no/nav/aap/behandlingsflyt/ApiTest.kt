@@ -15,7 +15,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagI
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.flyt.ArenaStatusDTO
 import no.nav.aap.behandlingsflyt.flyt.VilkårDTO
@@ -186,7 +186,7 @@ class ApiTest {
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null
             )
-            val medlRepo = postgresRepositoryRegistry.provider(connection).provide<MedlemskapRepository>()
+            val medlRepo = postgresRepositoryRegistry.provider(connection).provide<MedlemskapUnntakRepository>()
             medlRepo.lagreUnntakMedlemskap(
                 behandlingId = behandling.id,
                 listOf(

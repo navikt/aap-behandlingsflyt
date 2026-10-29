@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.MedlemskapRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.MedlemskapUnntakRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -17,7 +17,7 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
 
-internal class MedlemskapRepositoryImplTest {
+internal class MedlemskapUnntakRepositoryImplTest {
 
     companion object {
         private lateinit var dataSource: TestDataSource
@@ -47,7 +47,7 @@ internal class MedlemskapRepositoryImplTest {
 
         // ACT
         val behandlingId = dataSource.transaction { connection ->
-            val medlemskapRepo = MedlemskapRepositoryImpl(connection)
+            val medlemskapRepo = MedlemskapUnntakRepositoryImpl(connection)
             medlemskapRepo.lagreUnntakMedlemskap(
                 behandlingId = behandling.id,
                 listOf(
@@ -71,7 +71,7 @@ internal class MedlemskapRepositoryImplTest {
         }
 
         val uthentet = dataSource.transaction { connection ->
-            val medlemskapRepo = MedlemskapRepositoryImpl(connection)
+            val medlemskapRepo = MedlemskapUnntakRepositoryImpl(connection)
 
             medlemskapRepo.hentHvisEksisterer(behandlingId = behandlingId)
         }
@@ -107,7 +107,7 @@ internal class MedlemskapRepositoryImplTest {
 
         // Hent ut kopi
         val res = dataSource.transaction {
-            MedlemskapRepositoryImpl(it).hentHvisEksisterer(nyBehandlingId)
+            MedlemskapUnntakRepositoryImpl(it).hentHvisEksisterer(nyBehandlingId)
         }
 
         assertThat(res).isNotNull
@@ -119,7 +119,7 @@ internal class MedlemskapRepositoryImplTest {
             dataSource.transaction { connection ->
                 val sak = sak(connection)
                 val behandling = finnEllerOpprettBehandling(connection, sak)
-                val medlemsskapRepository = MedlemskapRepositoryImpl(connection)
+                val medlemsskapRepository = MedlemskapUnntakRepositoryImpl(connection)
                 medlemsskapRepository.lagreUnntakMedlemskap(
                     behandling.id, listOf(
                         MedlemskapDataIntern(

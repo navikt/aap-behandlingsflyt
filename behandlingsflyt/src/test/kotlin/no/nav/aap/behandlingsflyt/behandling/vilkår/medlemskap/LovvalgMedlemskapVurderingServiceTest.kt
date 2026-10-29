@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterINorgeRegisterGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
@@ -19,13 +19,13 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import kotlin.collections.emptySet
 
-class MedlemskapLovvalgVurderingServiceTest {
-    private val service = MedlemskapLovvalgVurderingService()
+class LovvalgMedlemskapVurderingServiceTest {
+    private val service = LovvalgMedlemskapVurderingService()
 
     @Test
     fun `automatisk om alle krav er oppfylt`() {
         val grunnlag = MedlemskapLovvalgRegisterGrunnlag.fra(
-            medlemskapArbeidInntektGrunnlag = MedlemskapArbeidInntektGrunnlag(
+            lovvalgMedlemskapGrunnlag = LovvalgMedlemskapGrunnlag(
                 medlemskapGrunnlag = MedlemskapUnntakGrunnlag(
                     unntak = listOf(
                         Segment(
@@ -72,7 +72,7 @@ class MedlemskapLovvalgVurderingServiceTest {
     @Test
     fun `kan håndtere flere statsborgerskap`() {
         val grunnlag = MedlemskapLovvalgRegisterGrunnlag.fra(
-            medlemskapArbeidInntektGrunnlag = MedlemskapArbeidInntektGrunnlag(
+            lovvalgMedlemskapGrunnlag = LovvalgMedlemskapGrunnlag(
                 medlemskapGrunnlag = MedlemskapUnntakGrunnlag(
                     unntak = listOf(
                         Segment(
@@ -120,7 +120,7 @@ class MedlemskapLovvalgVurderingServiceTest {
     @Test
     fun `manuell om lovvalgsland ikke er Norge`() {
         val grunnlag = MedlemskapLovvalgRegisterGrunnlag.fra(
-            medlemskapArbeidInntektGrunnlag = MedlemskapArbeidInntektGrunnlag(
+            lovvalgMedlemskapGrunnlag = LovvalgMedlemskapGrunnlag(
                 medlemskapGrunnlag = MedlemskapUnntakGrunnlag(
                     unntak = listOf(
                         Segment(
@@ -260,7 +260,7 @@ class MedlemskapLovvalgVurderingServiceTest {
         personStatus: PersonStatus = PersonStatus.bosatt,
         statsborgerskap: List<Statsborgerskap>,
     ) = MedlemskapLovvalgRegisterGrunnlag.fra(
-        medlemskapArbeidInntektGrunnlag = MedlemskapArbeidInntektGrunnlag(
+        lovvalgMedlemskapGrunnlag = LovvalgMedlemskapGrunnlag(
             medlemskapGrunnlag = MedlemskapUnntakGrunnlag(emptyList()),
             inntekterINorgeGrunnlag = emptyList(),
             arbeiderINorgeGrunnlag = emptyList(),
