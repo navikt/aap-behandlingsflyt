@@ -761,7 +761,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             }
             .fattVedtak()
             .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
 
         val revurderingVedtak = hentVedtak(revurdering.id)
