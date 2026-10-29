@@ -119,7 +119,7 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             }
         behandlingMedFattetVedtak
             .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
 
                 val vedtak = hentVedtak()
                 assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
@@ -132,7 +132,6 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
 
                 assertThat(resultat).isEqualTo(Resultat.AVSLAG)
             }
-            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG)
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
 
