@@ -155,15 +155,24 @@ class HåndterUførevedtakServiceTest {
     }
 
     @Test
-    fun `bare historisk rett etter 11-18 gir ikke automatisk opphør`() {
-        rettighet(RettighetsType.VURDERES_FOR_UFØRETRYGD, tom = dato)
+    fun `rettighet på virkningstidspunkt gir automatisk opphør`() {
+        rettighetPå(vedtak.virkningsdato)
         håndter()
-        verify(exactly = 0) {
-            behandlingService.finnEllerOpprettBehandling(sakId, match {
-                it.vurderingsbehov.any { behov -> behov.type == Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS }
-            })
-        }
+        forventAutomatiskOpphør()
+    }
 
+    @Test
+    fun `rettighet på mottakstidspunkt gir automatisk opphør`() {
+        rettighetPå(dato)
+        håndter()
+        forventAutomatiskOpphør()
+    }
+
+    @Test
+    fun `rettighet dagen etter mottak gir automatisk opphør`() {
+        rettighetPå(dato.plusDays(1))
+        håndter()
+        forventAutomatiskOpphør()
     }
 
     @Test
@@ -213,6 +222,11 @@ class HåndterUførevedtakServiceTest {
     private fun rettighet(type: RettighetsType, tom: LocalDate = Tid.MAKS) {
         every { rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandlingId) } returns
                 listOf(type).somTidslinje { Periode(dato.minusDays(30), tom) }
+    }
+
+    private fun rettighetPå(dato: LocalDate) {
+        every { rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandlingId) } returns
+                listOf(RettighetsType.VURDERES_FOR_UFØRETRYGD).somTidslinje { Periode(dato, dato) }
     }
 
     private fun vurderinger(vararg vurderinger: OvergangUføreVurdering) {
