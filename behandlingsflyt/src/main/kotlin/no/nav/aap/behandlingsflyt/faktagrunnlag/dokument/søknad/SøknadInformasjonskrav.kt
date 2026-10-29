@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.IngenRegisterData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.mapOppgitteYtelser
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.LovvalgMedlemskapRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.OppgittUtenlandsopplysningerRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.andreYtelserOppgittISøknad.AndreYtelserOppgittISøknadRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStudent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
@@ -26,7 +26,7 @@ class SøknadInformasjonskrav private constructor(
     private val mottaDokumentService: MottaDokumentService,
     private val studentRepository: StudentRepository,
     private val barnRepository: BarnRepository,
-    private val lovvalgMedlemskapRepository: LovvalgMedlemskapRepository,
+    private val oppgittUtenlandsopplysningerRepository: OppgittUtenlandsopplysningerRepository,
     private val andreYtelserRepository: AndreYtelserOppgittISøknadRepository,
     private val sykepengerOgFerieRepository: SykepengerOgFerieOppgittISøknadRepository
 ) : Informasjonskrav<IngenInput, IngenRegisterData> {
@@ -38,12 +38,11 @@ class SøknadInformasjonskrav private constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): SøknadInformasjonskrav {
-            val lovvalgMedlemskapRepository = repositoryProvider.provide<LovvalgMedlemskapRepository>()
             return SøknadInformasjonskrav(
                 MottaDokumentService(repositoryProvider),
                 repositoryProvider.provide<StudentRepository>(),
                 repositoryProvider.provide(),
-                lovvalgMedlemskapRepository,
+                repositoryProvider.provide<OppgittUtenlandsopplysningerRepository>(),
                 repositoryProvider.provide<AndreYtelserOppgittISøknadRepository>(),
                 repositoryProvider.provide<SykepengerOgFerieOppgittISøknadRepository>()
             )
@@ -98,7 +97,7 @@ class SøknadInformasjonskrav private constructor(
             }
 
             if (ubehandletSøknad.utenlandsOppholdData != null) {
-                lovvalgMedlemskapRepository.lagreOppgittUtenlandsOppplysninger(
+                oppgittUtenlandsopplysningerRepository.lagreOppgittUtenlandsOppplysninger(
                     kontekst.behandlingId,
                     ubehandletSøknad.journalpostId,
                     ubehandletSøknad.utenlandsOppholdData

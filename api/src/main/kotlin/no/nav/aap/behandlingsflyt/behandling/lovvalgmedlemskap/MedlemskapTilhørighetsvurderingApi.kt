@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.ForutgåendeMedl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.KanBehandlesAutomatiskVurdering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingRepository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgMedlemskapVurderingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.OppgittUtenlandsopplysningerRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.LovvalgMedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningForutgåendeRepository
@@ -71,8 +72,8 @@ fun NormalOpenAPIRoute.medlemskapTilhørighetsvurderingApi(
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val forutgåendeMedlemskapRepository =
                         repositoryProvider.provide<ForutgåendeMedlemskapRepository>()
-                    val lovvalgMedlemskapRepository =
-                        repositoryProvider.provide<LovvalgMedlemskapRepository>()
+                    val oppgittUtenlandsopplysningerRepository =
+                        repositoryProvider.provide<OppgittUtenlandsopplysningerRepository>()
                     val behandling =
                         repositoryProvider.provide<BehandlingRepository>().hent(BehandlingReferanse(req.referanse))
                     val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
@@ -88,8 +89,8 @@ fun NormalOpenAPIRoute.medlemskapTilhørighetsvurderingApi(
                         forutgåendeMedlemskapRepository.hentHvisEksisterer(behandling.id)
 
                     val oppgittUtenlandsOppholdGrunnlag =
-                        lovvalgMedlemskapRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
-                            ?: lovvalgMedlemskapRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(
+                        oppgittUtenlandsopplysningerRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
+                            ?: oppgittUtenlandsopplysningerRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(
                                 sak.id
                             )
 
@@ -111,8 +112,8 @@ private fun utledFallbackKanBehandlesAutomatiskVurdering(
     behandling: Behandling,
     unleashGateway: UnleashGateway
 ): KanBehandlesAutomatiskVurdering {
-    val lovvalgMedlemskapRepository =
-        repositoryProvider.provide<LovvalgMedlemskapRepository>()
+    val oppgittUtenlandsopplysningerRepository =
+        repositoryProvider.provide<OppgittUtenlandsopplysningerRepository>()
     val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
 
     val brukerPersonopplysning =
@@ -127,8 +128,8 @@ private fun utledFallbackKanBehandlesAutomatiskVurdering(
             .hentHvisEksisterer(behandling.id)
 
     val oppgittUtenlandsOppholdGrunnlag =
-        lovvalgMedlemskapRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
-            ?: lovvalgMedlemskapRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(
+        oppgittUtenlandsopplysningerRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandling.id)
+            ?: oppgittUtenlandsopplysningerRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(
                 sak.id
             )
 
