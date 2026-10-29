@@ -22,7 +22,6 @@ import no.nav.aap.behandlingsflyt.utils.tilNorskFormat
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Instant
-import java.time.LocalDate
 
 class AvklarStønadsperiodeSteg(
     private val unleashGateway: UnleashGateway,
@@ -49,30 +48,19 @@ class AvklarStønadsperiodeSteg(
     private fun vurderAutomatisk(kontekst: FlytKontekstMedPerioder) {
         val gjeldendeRelevanteKrav =
             kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.gjeldendeRelevanteKrav().orEmpty()
-        val vedtatteStønadsperiodeGrunnlag = kontekst.forrigeBehandlingId?.let {
-            stønadsperiodeRepository.hentHvisEksisterer(it)
-        }
-
+        val vedtattGrunnlag = kontekst.forrigeBehandlingId?.let(stønadsperiodeRepository::hentHvisEksisterer)
+        val vedtatteVurderinger = vedtattGrunnlag?.gjeldendeVurderinger().orEmpty().associateBy { it.referanse }
         val arenaMaksdato = hentArenaMaksdato(kontekst)
 
-        val kravSomManglerVurdering =
-            gjeldendeRelevanteKrav.filter { krav ->
-                val vedtatteStønadsperiodeForVurdering = vedtatteStønadsperiodeGrunnlag?.gjeldendeVurderinger()
-                    ?.firstOrNull { it.referanse == krav.referanse }
-                val forventetStartdato = forventetStartdato(krav, gjeldendeRelevanteKrav, arenaMaksdato)
+        val nyeVurderinger = gjeldendeRelevanteKrav
+            .map { krav -> vurderStønadsperiode(krav, gjeldendeRelevanteKrav, arenaMaksdato, kontekst) }
+            .filter { trengerNyVurdering(vedtatteVurderinger[it.referanse], it) }
 
-                vedtatteStønadsperiodeForVurdering == null || (
-                        vedtatteStønadsperiodeForVurdering.vurdertAv.erSystembruker() &&
-                                vedtatteStønadsperiodeForVurdering.startDato != forventetStartdato
-                        )
-            }
-
-        val nyeVurderinger = kravSomManglerVurdering.map {
-            vurderStønadsperiode(it, gjeldendeRelevanteKrav, arenaMaksdato, kontekst)
-        }
-
-        stønadsperiodeRepository.lagre(kontekst.behandlingId, vedtatteStønadsperiodeGrunnlag?.vurderinger.orEmpty() + nyeVurderinger)
+        stønadsperiodeRepository.lagre(kontekst.behandlingId, vedtattGrunnlag?.vurderinger.orEmpty() + nyeVurderinger)
     }
+
+    private fun trengerNyVurdering(vedtatt: StønadsperiodeVurdering?, forslag: StønadsperiodeVurdering) =
+        vedtatt == null || (vedtatt.vurdertAv.erSystembruker() && vedtatt.startDato != forslag.startDato)
 
     private fun hentArenaMaksdato(kontekst: FlytKontekstMedPerioder): ArenaMaksdato? {
         if (!unleashGateway.isEnabled(BehandlingsflytFeature.HandtereMaksdatoForKantTilKant)) return null
@@ -101,12 +89,13 @@ class AvklarStønadsperiodeSteg(
         arenaMaksdato: ArenaMaksdato?,
         kontekst: FlytKontekstMedPerioder,
     ): StønadsperiodeVurdering {
-        if (arenaMaksdato?.maksdato != null && erKantIKantMedArena(krav, gjeldendeRelevanteKrav, arenaMaksdato)) {
+        if (arenaMaksdato?.maksdato != null && kantIKantMedArena(krav, gjeldendeRelevanteKrav, arenaMaksdato)) {
             return StønadsperiodeVurdering(
                 referanse = krav.referanse,
                 opprettet = Instant.now(),
                 vurdertIBehandling = kontekst.behandlingId,
                 vurdertAv = SYSTEMBRUKER,
+                // TODO Få inn en korrekt tekst her
                 begrunnelse = "Tilstøtende avsluttet Arena-sak ${arenaMaksdato.arenaSaksnummer}, " +
                         "stønadsperiode starter dagen etter maksdato ${arenaMaksdato.maksdato.tilNorskFormat()}",
                 harHattOrdinærSiste52Uker = true,
@@ -130,24 +119,11 @@ class AvklarStønadsperiodeSteg(
         )
     }
 
-    private fun forventetStartdato(
-        krav: RelevantKrav,
-        gjeldendeRelevanteKrav: Set<RelevantKrav>,
-        arenaMaksdato: ArenaMaksdato?,
-    ): LocalDate {
-        val maksdato = arenaMaksdato?.maksdato
-        return if (maksdato != null && erKantIKantMedArena(krav, gjeldendeRelevanteKrav, arenaMaksdato)) {
-            maksdato.plusDays(1)
-        } else {
-            krav.muligRettFra
-        }
-    }
-
     /**
      * Første krav i saken er kant i kant med Arena når det har mulig rett fra senest dagen etter Arena-maksdato,
      * og dagen etter maksdato ligger innenfor kravets periode.
      */
-    private fun erKantIKantMedArena(
+    private fun kantIKantMedArena(
         krav: RelevantKrav,
         gjeldendeRelevanteKrav: Set<RelevantKrav>,
         arenaMaksdato: ArenaMaksdato?,
@@ -162,7 +138,6 @@ class AvklarStønadsperiodeSteg(
         val nesteKravStart = kravSortert.getOrNull(1)?.muligRettFra
         return nesteKravStart == null || dagenEtterMaksdato.isBefore(nesteKravStart)
     }
-
 
     companion object : FlytSteg {
         override fun konstruer(
