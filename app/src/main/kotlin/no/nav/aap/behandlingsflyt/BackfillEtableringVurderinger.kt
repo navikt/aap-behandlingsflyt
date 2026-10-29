@@ -2,8 +2,8 @@ package no.nav.aap.behandlingsflyt
 
 import net.logstash.logback.marker.Markers.appendEntries
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
-import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.gjeldendeFasevurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilGammeltFormat
@@ -251,7 +251,7 @@ class BackfillEtableringVurderinger(
                     fase = row.getEnumOrNull("FASE"),
                     erRegistrertINødvendigeOffentligeRegister = row.getBooleanOrNull("ER_REGISTRERT_I_NODVENDIGE_OFFENTLIGE_REGISTER"),
                     jobberBrukerAktivMedVirksomheten = row.getBooleanOrNull("JOBBER_BRUKER_AKTIVT_MED_VIRKSOMHET"),
-                    versjon = row.getEnum("VERSJON"),
+                    versjon = row.getEnum<EtableringVersjon>("VERSJON"),
                 )
             }
         }
@@ -271,7 +271,7 @@ class BackfillEtableringVurderinger(
             }
             val varighetFør = varighet(før)
             val valideringsfeilFør =
-                service.erVurderingerGyldig(behandlingId, før) as? VirksomhetEtableringResultat.Ugyldig
+                service.validerVurdering(behandlingId, før)
             val forventetUtfall = før.vurderingsutfall()
             migreringsplan.filter { it.skalErstattes }.forEach { steg ->
                 val vurderingerGruppeId = connection.hentVurderingerGruppeId(steg.vurderingId)
@@ -288,7 +288,7 @@ class BackfillEtableringVurderinger(
                 "Varighet endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }
             val valideringsfeilEtter =
-                service.erVurderingerGyldig(behandlingId, etter) as? VirksomhetEtableringResultat.Ugyldig
+                service.validerVurdering(behandlingId, etter)
             check(valideringsfeilFør == valideringsfeilEtter) {
                 "Valideringsresultat endret ved migrering av behandling ${behandlingId.id}, grunnlag $grunnlagId"
             }

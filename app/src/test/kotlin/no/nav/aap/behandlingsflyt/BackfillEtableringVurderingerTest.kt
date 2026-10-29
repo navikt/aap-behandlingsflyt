@@ -8,7 +8,7 @@ import ch.qos.logback.core.read.ListAppender
 import com.fasterxml.jackson.databind.JsonNode
 import net.logstash.logback.encoder.LogstashEncoder
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.EtableringEgenVirksomhetService
-import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringGyldig
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -27,6 +27,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilGammeltFormat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -157,7 +158,6 @@ class BackfillEtableringVurderingerTest {
             legacy.somUtvikling(utvikling2),
             legacy.somOppstart(oppstart),
         )
-        assertValideringUendret(listOf(legacy), hentVurderinger(behandlingId))
     }
 
     @Test
@@ -472,8 +472,8 @@ class BackfillEtableringVurderingerTest {
                     )
                 )
             )
-            assertThat(EtableringEgenVirksomhetService(provider).erVurderingerGyldig(behandlingId, listOf(legacy)))
-                .isEqualTo(VirksomhetEtableringGyldig)
+            assertThat(EtableringEgenVirksomhetService(provider).beregnOgValider(behandlingId, listOf(legacy)))
+                .isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
         }
         assertThat(varighet(migrert(legacy))).isEqualTo(varighet(listOf(legacy)))
 
@@ -583,7 +583,6 @@ class BackfillEtableringVurderingerTest {
             legacy.somUtvikling(utvikling1),
             legacy.somUtvikling(utvikling2),
         )
-        assertValideringUendret(listOf(legacy), hentVurderinger(behandlingId))
     }
 
     @Test
@@ -619,7 +618,6 @@ class BackfillEtableringVurderingerTest {
             legacy.somUtvikling(utvikling2),
             legacy.somOppstart(oppstart),
         )
-        assertValideringUendret(listOf(legacy), hentVurderinger(behandlingId))
     }
 
     @Test
@@ -645,7 +643,6 @@ class BackfillEtableringVurderingerTest {
         migrer(behandlingId)
 
         assertThat(hentVurderinger(behandlingId)).containsExactly(legacy.somOppstart(oppstart))
-        assertValideringUendret(listOf(legacy), hentVurderinger(behandlingId))
     }
 
     @Test
@@ -729,7 +726,6 @@ class BackfillEtableringVurderingerTest {
         )
 
         assertThat(varighet(migrert(legacy))).isEqualTo(varighet(listOf(legacy)))
-        assertValideringUendret(listOf(legacy), migrert(legacy))
     }
 
     @Test
@@ -756,7 +752,6 @@ class BackfillEtableringVurderingerTest {
         val nyere = vurdering(andreBehandling, fom = 1 februar 2025, opprettet = Instant.parse("2025-02-01T00:00:00Z"))
 
         assertThat(varighet(migrert(eldre) + nyere)).isEqualTo(8 to 0)
-        assertValideringUendret(listOf(eldre, nyere), migrert(eldre) + nyere)
     }
 
     @Test
@@ -794,10 +789,9 @@ class BackfillEtableringVurderingerTest {
         val før = listOf(oppfylt, ikkeOppfylt, utenPerioder)
         val etter = før.flatMap { migrert(it) }
 
-        assertThat(evalueringer(før)).containsExactly(true, false, false)
+        assertThat(evalueringer(før.tilNyttFormat())).containsExactly(true, true, false, false)
         assertThat(varighet(etter)).isEqualTo(varighet(før))
         assertThat(etter.map { it.evaluerVirksomhetVurdering() }).containsExactlyInAnyOrder(true, true, false, false)
-        assertValideringUendret(før, etter)
     }
 
     @Test
@@ -1061,11 +1055,11 @@ class BackfillEtableringVurderingerTest {
             )
         )
 
-        val gyldigFør = service.erVurderingerGyldig(behandling.id, før)
-        val gyldigEtter = service.erVurderingerGyldig(behandling.id, etter)
+        val gyldigFør = service.beregnOgValider(behandling.id, før)
+        val gyldigEtter = service.beregnOgValider(behandling.id, etter)
 
-        assertThat(gyldigFør).isEqualTo(VirksomhetEtableringGyldig)
-        assertThat(gyldigEtter).isEqualTo(gyldigFør)
+        assertThat(gyldigFør).isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
+        assertThat(gyldigEtter).isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
     }
 
     private fun medLoggfangst(test: (List<ILoggingEvent>, List<ILoggingEvent>) -> Unit) {

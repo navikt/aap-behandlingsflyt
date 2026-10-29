@@ -61,7 +61,7 @@ class EtableringEgenVirksomhetServiceTest {
 
         listOf(listOf(gammel), listOf(gammel).tilNyttFormat()).forEach { vurderinger ->
             InMemoryEtableringEgenVirksomRepository.lagre(forrige.id, vurderinger)
-            assertThat(service.erVurderingerGyldig(behandling.id, emptyList())).isEqualTo(forventet)
+            assertThat(service.beregnOgValider(behandling.id, emptyList())).isEqualTo(forventet)
         }
     }
 
@@ -77,9 +77,9 @@ class EtableringEgenVirksomhetServiceTest {
             InMemorySykdomRepository
         )
 
-        val res = service.erVurderingerGyldig(behandling.id, emptyList())
+        val res = service.beregnOgValider(behandling.id, emptyList())
 
-        assertThat(res).isInstanceOf(VirksomhetEtableringGyldig::class.java)
+        assertThat(res).isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
     }
 
     @Test

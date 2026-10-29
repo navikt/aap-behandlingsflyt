@@ -7,7 +7,10 @@ import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tellDager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.antallHverdagerIFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somFasetidslinje
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -59,10 +62,22 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                         etableringEgenVirksomhetService.utledIkkeVurderbarePerioder(behandling.id)
 
                     val alleVurderinger =
-                        etableringEgenVirksomhetGrunnlag?.vurderinger.orEmpty() + forrigeGrunnlag.vurderinger
+                        etableringEgenVirksomhetGrunnlag?.vurderinger ?:  forrigeGrunnlag.vurderinger
 
-                    val bruktUtviklingsDager = alleVurderinger.tellDager { it.utviklingsPerioder }
-                    val bruktOppstartsdager = alleVurderinger.tellDager { it.oppstartsPerioder }
+                    val gjeldendeTidslinje = alleVurderinger.somFasetidslinje()
+                    gjeldendeTidslinje.segmenter().forEach { segment ->
+                        val fase = segment.verdi.fase
+                        if (fase != null) {
+                            requireNotNull(segment.verdi.tom) {
+                                "Vedtatt vurdering med fase=$fase mangler tom (vurdertIBehandling=${segment.verdi.vurdertIBehandling})"
+                            }
+                        }
+                    }
+
+                    val bruktUtviklingsDager = gjeldendeTidslinje.antallHverdagerIFase(EtableringFase.UTVIKLING)
+                    val bruktOppstartsdager = gjeldendeTidslinje.antallHverdagerIFase(EtableringFase.OPPSTART)
+
+                    val tom = alleVurderinger.maxByOrNull { it.fom }?.tom
 
                     EtableringEgenVirksomhetGrunnlagResponse(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle() && kanLøseBehovSomSkalVæreLåstEtterKvalitetssikring(
@@ -92,7 +107,8 @@ fun NormalOpenAPIRoute.etableringEgenVirksomhetApi(
                         ),
                         ikkeRelevantePerioder = ikkeVurderbarePerioder,
                         bruktUtviklingsDager = bruktUtviklingsDager,
-                        bruktOppstartsdager = bruktOppstartsdager
+                        bruktOppstartsdager = bruktOppstartsdager,
+                        tom = tom
                     )
                 }
             respond(response)

@@ -1,29 +1,35 @@
 package no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet
 
-import no.nav.aap.bistandsbehov.BistandRepository
-import no.nav.aap.bistandsbehov.Bistandsvurdering
+
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.brukteDager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.TilOgMedBeregning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.antallHverdagerIFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.beregnTomForSistePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.gjeldendeFasevurderinger
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somLegacyVisning
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.perioderForFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somFasetidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.bistandsbehov.BistandRepository
+import no.nav.aap.bistandsbehov.Bistandsvurdering
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
+import java.time.LocalDate
+
 
 class EtableringEgenVirksomhetService(
     private val etableringEgenVirksomhetRepository: EtableringEgenVirksomhetRepository,
     private val behandlingRepository: BehandlingRepository,
     private val bistandRepository: BistandRepository,
-    private val sykdomRepository: SykdomRepository,
+    private val sykdomRepository: SykdomRepository
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         etableringEgenVirksomhetRepository = repositoryProvider.provide(),
@@ -32,76 +38,200 @@ class EtableringEgenVirksomhetService(
         sykdomRepository = repositoryProvider.provide()
     )
 
-    private val maksUtviklingsdager = 131
-    private val maksOppstartsdager = 66
+    fun beregnOgValider(
+        behandlingId: BehandlingId,
+        nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
+    ): VirksomhetEtableringResultat {
+        val beregning = when (val resultat = beregnVurderinger(behandlingId, nyeVurderinger)) {
+            is VirksomhetEtableringResultat.Ugyldig -> return resultat
+            is VirksomhetEtableringResultat.Gyldig -> resultat.beregning
+        }
 
-    fun erVurderingerGyldig(
+        val feilmelding = validerVurdering(behandlingId, beregning.beregnedeVurderinger)
+        return feilmelding ?: VirksomhetEtableringResultat.Gyldig(beregning)
+    }
+
+    data class Beregning(
+        val beregnedeVurderinger: List<EtableringEgenVirksomhetVurdering>,
+    )
+
+    private fun beregnVurderinger(
         behandlingId: BehandlingId,
         nyeVurderinger: List<EtableringEgenVirksomhetVurdering>
     ): VirksomhetEtableringResultat {
         val behandling = behandlingRepository.hent(behandlingId)
-        val vurderinger = nyeVurderinger.map { it.somLegacyVisning() }
 
-        val gamleVurderinger =
-            behandling.forrigeBehandlingId?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
-                .map { it.somLegacyVisning() }
-        val gjeldendeVurderinger = (gamleVurderinger + vurderinger)
-            .gjeldendeVurderinger()
-            .verdier().toSet()
+        val gamleVurderinger = behandling.forrigeBehandlingId
+            ?.let { etableringEgenVirksomhetRepository.hentHvisEksisterer(it) }
+            ?.vurderinger
+            .orEmpty()
 
-        val gyldighetPeriode = utledGyldighetsPeriode(behandlingId)
+        val gamleVurderingerUtenOverstyrte = gamleVurderinger.filterNot { gammel ->
+            nyeVurderinger.any { ny -> ny.fase == gammel.fase && ny.fom == gammel.fom }
+        }
+
+        val beregnedeVurderinger = (gamleVurderingerUtenOverstyrte + nyeVurderinger).toMutableList()
+        val vurderingerSomSkalBeregnes = beregnedeVurderinger.indices
+            .filter { index ->
+                val vurdering = beregnedeVurderinger[index]
+                vurdering.vurdertIBehandling == behandlingId && vurdering.fase != null
+                        && vurdering.evaluerVirksomhetVurdering()
+            }
+            .sortedBy { beregnedeVurderinger[it].fom }
+
+        for (index in vurderingerSomSkalBeregnes) {
+            val vurdering = beregnedeVurderinger[index]
+            val tom = when (val resultat = beregnTomForSistePeriode(
+                vurderinger = beregnedeVurderinger,
+                sisteVurdering = vurdering
+            )) {
+                is TilOgMedBeregning.Beregnet -> resultat.tom
+                is TilOgMedBeregning.Feil -> return resultat.feilObjekt
+            }
+            val nesteVurderingFom = nyeVurderinger
+                .filter { it.fom.isAfter(vurdering.fom) }
+                .minOfOrNull { it.fom }
+            beregnedeVurderinger[index] = vurdering.copy(
+                tom = nesteVurderingFom?.let { minOf(tom, it.minusDays(1)) } ?: tom
+            )
+        }
+
+        return VirksomhetEtableringResultat.Gyldig(
+            Beregning(
+                gamleVurderinger + beregnedeVurderinger.filter { it.vurdertIBehandling == behandlingId },
+            )
+        )
+    }
+
+    fun validerVurdering(
+        behandlingId: BehandlingId,
+        vurderinger: List<EtableringEgenVirksomhetVurdering>
+    ): VirksomhetEtableringResultat.Ugyldig? {
+        val perioderMedSykdomOgBistand = utledPerioderMedSykdomOgBistand(behandlingId)
+        val gjeldendeVurderinger = vurderinger.somFasetidslinje()
+        validerSvar(gjeldendeVurderinger.verdier().toList())?.let { return it }
+
+        val alleUtviklingsPerioder = gjeldendeVurderinger.perioderForFase(EtableringFase.UTVIKLING)
+        val alleOppstartsPerioder = gjeldendeVurderinger.perioderForFase(EtableringFase.OPPSTART)
+
+        validerGyldighetsperiodeFinnes(perioderMedSykdomOgBistand)?.let { return it }
+        val førsteMuligeDato = perioderMedSykdomOgBistand.first().fom
+
+        return validerEtterFørsteMuligeDato(førsteMuligeDato, vurderinger)
+            ?: validerInnenforGyldighetsperiode(perioderMedSykdomOgBistand, vurderinger)
+            ?: vurderinger.firstNotNullOfOrNull { validerFaseOgPeriode(it) }
+            ?: validerOppstartEtterUtvikling(alleUtviklingsPerioder, alleOppstartsPerioder)
+            ?: validerDagkvoter(gjeldendeVurderinger)
+    }
+
+    private fun validerGyldighetsperiodeFinnes(gyldighetPeriode: List<Periode>): VirksomhetEtableringResultat.Ugyldig.SykdomOgBistandMåVæreOppfylt? {
         if (gyldighetPeriode.isEmpty()) {
             return VirksomhetEtableringResultat.Ugyldig.SykdomOgBistandMåVæreOppfylt
         }
-
-        val perioderMedSykdomBistandOppfylt = tidslinjeSykdomOgBistandOppfylt(behandlingId).perioder().toList()
-        if (vurderinger.any { vurdering ->
-                perioderMedSykdomBistandOppfylt.none { oppfyltPeriode -> oppfyltPeriode.inneholder(vurdering.fom) }
-            }
-        ) {
-            return VirksomhetEtableringResultat.Ugyldig.SykdomOgBistandMåVæreOppfyltOverlapp
-        }
-
-        val førsteMuligeDato = gyldighetPeriode.first().fom
-
-        if (vurderinger.any { it.evaluerVirksomhetVurdering() && it.utviklingsPerioder.isEmpty() && it.oppstartsPerioder.isEmpty() }) {
-            return VirksomhetEtableringResultat.Ugyldig.KreverPeriodeHvisVilkårOppfylt
-        }
-
-        if (gjeldendeVurderinger.isNotEmpty() && gjeldendeVurderinger.any { it.fom.isBefore(førsteMuligeDato) }) {
-            return VirksomhetEtableringResultat.Ugyldig.FørFørsteMuligeStartdato
-        }
-
-        val fasevurderinger = (gamleVurderinger + vurderinger).gjeldendeFasevurderinger().map { it.somLegacyVisning() }
-        val alleUtviklingsPerioder = fasevurderinger.flatMap { it.utviklingsPerioder }
-        val alleOppstartsPerioder = fasevurderinger.flatMap { it.oppstartsPerioder }
-
-        val sisteUtviklingsPeriodeTom = alleUtviklingsPerioder.maxOfOrNull { it.tom }
-        if (sisteUtviklingsPeriodeTom != null && alleOppstartsPerioder.any { it.fom.isBefore(sisteUtviklingsPeriodeTom) }) {
-            return VirksomhetEtableringResultat.Ugyldig.OppstartFørUtvikling
-        }
-
-        val (bruktUtviklingsDager, bruktOppstartsdager) = (gamleVurderinger + vurderinger).brukteDager()
-
-        if (bruktUtviklingsDager > maksUtviklingsdager) {
-            return VirksomhetEtableringResultat.Ugyldig.OverstigerKvoter(EtableringFase.UTVIKLING, bruktUtviklingsDager)
-        }
-        if (bruktOppstartsdager > maksOppstartsdager)
-            return VirksomhetEtableringResultat.Ugyldig.OverstigerKvoter(EtableringFase.OPPSTART, bruktOppstartsdager)
-        return VirksomhetEtableringGyldig
+        return null
     }
 
-    fun utledGyldighetsPeriode(
+    fun validerFaseOgPeriode(
+        vurdering: EtableringEgenVirksomhetVurdering,
+    ): VirksomhetEtableringResultat.Ugyldig? {
+        val fase = vurdering.fase ?: return null
+
+        return validerOppstartRegistrering(fase, vurdering)
+            ?: validerGyldigPeriode(vurdering)
+    }
+
+    private fun validerSvar(
+        vurderinger: List<EtableringEgenVirksomhetVurdering>
+    ): VirksomhetEtableringResultat.Ugyldig? =
+        vurderinger.firstNotNullOfOrNull { vurdering ->
+            val fase = vurdering.fase
+            when {
+                vurdering.versjon == EtableringVersjon.V0 && fase == null &&
+                        vurdering.evaluerVirksomhetVurdering() && vurdering.utviklingsPerioder.isEmpty() &&
+                        vurdering.oppstartsPerioder.isEmpty() ->
+                    VirksomhetEtableringResultat.Ugyldig.KreverPeriodeHvisVilkårOppfylt
+                vurdering.versjon == EtableringVersjon.V0 -> null
+                fase == null && !vurdering.erGrunnvilkårOppfylt() -> null
+                vurdering.jobberBrukerAktivMedVirksomheten == null ->
+                    VirksomhetEtableringResultat.Ugyldig.MåOppgiOmBrukerJobberAktivt
+                fase == null && vurdering.jobberBrukerAktivMedVirksomheten == true ->
+                    VirksomhetEtableringResultat.Ugyldig.KreverPeriodeHvisVilkårOppfylt
+                fase == null -> null
+                else -> validerOppstartRegistrering(fase, vurdering)
+            }
+        }
+
+    private fun validerOppstartRegistrering(
+        fase: EtableringFase,
+        vurdering: EtableringEgenVirksomhetVurdering
+    ): VirksomhetEtableringResultat.Ugyldig.MåOppgiRegistrertIOffentligeRegister? {
+        if (fase != EtableringFase.OPPSTART || vurdering.versjon == EtableringVersjon.V0) return null
+        return if (vurdering.erRegistrertINødvendigeOffentligeRegister != true) {
+            VirksomhetEtableringResultat.Ugyldig.MåOppgiRegistrertIOffentligeRegister
+        } else null
+    }
+
+    private fun validerGyldigPeriode(vurdering: EtableringEgenVirksomhetVurdering): VirksomhetEtableringResultat.Ugyldig.MåHaTilOgMedDato? =
+        if (vurdering.tom == null) VirksomhetEtableringResultat.Ugyldig.MåHaTilOgMedDato else null
+
+    private fun validerInnenforGyldighetsperiode(
+        gyldighetPeriode: List<Periode>,
+        vurderinger: List<EtableringEgenVirksomhetVurdering>
+    ): VirksomhetEtableringResultat.Ugyldig.SykdomOgBistandMåVæreOppfyltOverlapp? {
+        if (!vurderinger.all { vurdering -> gyldighetPeriode.any { it.inneholder(vurdering.fom) } }) {
+            return VirksomhetEtableringResultat.Ugyldig.SykdomOgBistandMåVæreOppfyltOverlapp
+        }
+        return null
+    }
+
+    private fun validerEtterFørsteMuligeDato(
+        førsteMuligeDato: LocalDate,
+        vurderinger: List<EtableringEgenVirksomhetVurdering>
+    ): VirksomhetEtableringResultat.Ugyldig.FørFørsteMuligeStartdato? {
+        if (vurderinger.any { it.fom.isBefore(førsteMuligeDato) }) {
+            return VirksomhetEtableringResultat.Ugyldig.FørFørsteMuligeStartdato
+        }
+        return null
+    }
+
+    private fun validerOppstartEtterUtvikling(
+        alleUtviklingsPerioder: List<Periode>,
+        alleOppstartsPerioder: List<Periode>
+    ): VirksomhetEtableringResultat.Ugyldig.OppstartFørUtvikling? {
+        val sisteUtviklingsPeriodeTom = alleUtviklingsPerioder.maxOfOrNull { it.tom } ?: return null
+        if (alleOppstartsPerioder.any { !it.fom.isAfter(sisteUtviklingsPeriodeTom) }) {
+            return VirksomhetEtableringResultat.Ugyldig.OppstartFørUtvikling
+        }
+        return null
+    }
+
+    private fun validerDagkvoter(
+        alleVurderinger: Tidslinje<EtableringEgenVirksomhetVurdering>
+    ): VirksomhetEtableringResultat.Ugyldig.OverstigerKvoter? {
+        val bruktUtviklingsDager = alleVurderinger.antallHverdagerIFase(EtableringFase.UTVIKLING)
+        val bruktOppstartsdager = alleVurderinger.antallHverdagerIFase(EtableringFase.OPPSTART)
+
+        if (bruktUtviklingsDager > EtableringFase.UTVIKLING.maksHverdager) {
+            return VirksomhetEtableringResultat.Ugyldig.OverstigerKvoter(EtableringFase.UTVIKLING, bruktUtviklingsDager)
+        }
+        if (bruktOppstartsdager > EtableringFase.OPPSTART.maksHverdager) {
+            return VirksomhetEtableringResultat.Ugyldig.OverstigerKvoter(EtableringFase.OPPSTART, bruktOppstartsdager)
+        }
+        return null
+    }
+
+    fun utledPerioderMedSykdomOgBistand(
         behandlingId: BehandlingId
     ): List<Periode> {
-        val førsteDagIOppfyltPeriode =
-            tidslinjeSykdomOgBistandOppfylt(behandlingId).perioder().toList().firstOrNull()?.fom ?: return emptyList()
-        return tidslinjeSykdomOgBistandOppfylt(behandlingId).begrensetTil(
-            Periode(
-                førsteDagIOppfyltPeriode.plusDays(1),
-                Tid.MAKS
-            )
-        ).perioder().toList()
+        val tidslinjeSykdomOgBistandOppfylt = tidslinjeSykdomOgBistandOppfylt(behandlingId)
+
+        if (tidslinjeSykdomOgBistandOppfylt.isEmpty()) return emptyList()
+
+        val førsteDagIOppfyltPeriode = tidslinjeSykdomOgBistandOppfylt.helePerioden().fom
+
+        return tidslinjeSykdomOgBistandOppfylt
+            .begrensetTil(Periode(førsteDagIOppfyltPeriode.plusDays(1), Tid.MAKS))
+            .perioder().toList()
     }
 
     private fun tidslinjeSykdomOgBistandOppfylt(behandlingId: BehandlingId) = sykdomOgBistandTidslinje(behandlingId)
@@ -131,9 +261,9 @@ class EtableringEgenVirksomhetService(
     }
 }
 
-data object VirksomhetEtableringGyldig : VirksomhetEtableringResultat
-
 sealed interface VirksomhetEtableringResultat {
+    data class Gyldig(val beregning: EtableringEgenVirksomhetService.Beregning) : VirksomhetEtableringResultat
+
     sealed interface Ugyldig : VirksomhetEtableringResultat {
         val melding: String
 
@@ -162,9 +292,21 @@ sealed interface VirksomhetEtableringResultat {
             override val melding: String = "Vurderte perioder må falle innen en periode med oppfylt 11-5 & 11-6b."
         }
 
-        data object KreverPeriodeHvisVilkårOppfylt : Ugyldig {
+        data object MåOppgiRegistrertIOffentligeRegister : Ugyldig {
             override val melding: String =
-                "Må ha definert minst én periode i tidsplanen dersom vilkåret er oppfylt for en periode"
+                "Må ha satt om virksomheten er registrert i nødvendige offentlige register for oppstartsfasen."
+        }
+
+        data object MåHaTilOgMedDato : Ugyldig {
+            override val melding: String = "Må ha gyldig periode."
+        }
+
+        data object MåOppgiOmBrukerJobberAktivt : Ugyldig {
+            override val melding = "Må oppgi om brukeren jobber aktivt med virksomheten."
+        }
+
+        data object KreverPeriodeHvisVilkårOppfylt : Ugyldig {
+            override val melding = "Må ha definert minst én periode når vilkåret er oppfylt."
         }
     }
 }

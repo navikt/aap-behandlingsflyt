@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvir
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.antallHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -18,32 +19,45 @@ data class EtableringEgenVirksomhetVurdering(
     val virksomhetErNy: Boolean?,
     val brukerEierVirksomheten: EierVirksomhet?,
     val kanFøreTilSelvforsørget: Boolean?,
-    val utviklingsPerioder: List<Periode>,
-    val oppstartsPerioder: List<Periode>,
     override val vurdertAv: Bruker,
     override val opprettet: Instant,
     override val vurdertIBehandling: BehandlingId,
     override val fom: LocalDate,
     override val tom: LocalDate?,
+    val utviklingsPerioder: List<Periode> = emptyList(),
+    val oppstartsPerioder: List<Periode> = emptyList(),
     val fase: EtableringFase?,
     val erRegistrertINødvendigeOffentligeRegister: Boolean?,
     val jobberBrukerAktivMedVirksomheten: Boolean?,
     val versjon: EtableringVersjon,
 ) : PeriodisertVurdering {
-    fun evaluerVirksomhetVurdering(): Boolean {
-        return this.virksomhetErNy == true && this.kanFøreTilSelvforsørget == true && this.foreliggerFagligVurdering && this.brukerEierVirksomheten in listOf(
+    fun erGrunnvilkårOppfylt(): Boolean =
+        virksomhetErNy == true && kanFøreTilSelvforsørget == true &&
+                foreliggerFagligVurdering && brukerEierVirksomheten in listOf(
             EierVirksomhet.EIER_MINST_50_PROSENT,
             EierVirksomhet.EIER_MINST_50_PROSENT_MED_FLER
         )
+
+    fun evaluerVirksomhetVurdering(): Boolean {
+        val grunnvilkårOppfylt = erGrunnvilkårOppfylt()
+        return when (versjon) {
+            EtableringVersjon.V0 -> grunnvilkårOppfylt
+            EtableringVersjon.V1 -> grunnvilkårOppfylt &&
+                    jobberBrukerAktivMedVirksomheten == true && when (fase) {
+                EtableringFase.UTVIKLING -> true
+                EtableringFase.OPPSTART -> erRegistrertINødvendigeOffentligeRegister == true
+                null -> false
+            }
+        }
     }
 }
 
 fun List<EtableringEgenVirksomhetVurdering>.tilNyttFormat(): List<EtableringEgenVirksomhetVurdering> {
     return this.flatMap { vurdering ->
 
-        if (vurdering.utviklingsPerioder.isEmpty() && vurdering.oppstartsPerioder.isEmpty()) return@flatMap listOf(
-            vurdering
-        )
+        if (vurdering.versjon == EtableringVersjon.V1 ||
+            (vurdering.utviklingsPerioder.isEmpty() && vurdering.oppstartsPerioder.isEmpty())
+        ) return@flatMap listOf(vurdering)
 
         val utviklingsvurderinger = vurdering.utviklingsPerioder.map { utviklingsperiode ->
             vurdering.copy(
@@ -89,6 +103,16 @@ fun EtableringEgenVirksomhetVurdering.tilGammeltFormat(): EtableringEgenVirksomh
     )
 }
 
+fun Tidslinje<EtableringEgenVirksomhetVurdering>.antallHverdagerIFase(fase: EtableringFase): Int =
+    segmenter()
+        .filter { it.verdi.fase == fase }
+        .sumOf { it.periode.antallHverdager().asInt }
+
+fun Tidslinje<EtableringEgenVirksomhetVurdering>.perioderForFase(fase: EtableringFase): List<Periode> =
+    segmenter()
+        .filter { it.verdi.fase == fase }
+        .map { it.periode }
+
 fun Collection<EtableringEgenVirksomhetVurdering>.tellDager(
     selector: (EtableringEgenVirksomhetVurdering) -> List<Periode>
 ): Int {
@@ -111,6 +135,7 @@ enum class EierVirksomhet {
 enum class EtableringVersjon {
     /** Grunnvilkårene alene avgjør utfallet, også etter oppdeling i faser. */
     V0,
+    V1
 }
 
 enum class EtableringFase(val maksHverdager: Int) {

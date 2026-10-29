@@ -9,6 +9,9 @@ import java.time.Instant
 import java.time.LocalDate
 import kotlin.String
 
+/**
+ * @property fase Kan være null om vilkåret ikke er oppfylt.
+ */
 data class EtableringEgenVirksomhetLøsningDto(
     override val begrunnelse: String,
     override val fom: LocalDate,
@@ -19,12 +22,16 @@ data class EtableringEgenVirksomhetLøsningDto(
     val virksomhetErNy: Boolean? = null,
     val brukerEierVirksomheten: EierVirksomhet? = null,
     val kanFøreTilSelvforsørget: Boolean? = null,
-    val utviklingsPerioder: List<Periode>,
-    val oppstartsPerioder: List<Periode>,
+
     val fase: EtableringFase? = null,
     val erRegistrertINødvendigeOffentligeRegister: Boolean? = null,
     val jobberBrukerAktivMedVirksomheten: Boolean? = null,
     val versjon: EtableringVersjon = EtableringVersjon.V0,
+    //midlertid legacy, bare for overgang
+    @Deprecated("Bruk fase + fom. Fjernes etter frontend mignering")
+    val utviklingsPerioder: List<Periode>? = null,
+    @Deprecated("Bruk fase + fom. Fjernes etter frontend mignering")
+    val oppstartsPerioder: List<Periode>? = null,
 ) : LøsningForPeriode {
     fun toEtableringEgenVirksomhetVurdering(avklaringsbehovKontekst: AvklaringsbehovKontekst) =
         toEtableringEgenVirksomhetVurdering(
@@ -32,15 +39,18 @@ data class EtableringEgenVirksomhetLøsningDto(
             vurdertIBehandling = avklaringsbehovKontekst.behandlingId(),
         )
 
-    fun toEtableringEgenVirksomhetVurdering(bruker: Bruker, vurdertIBehandling: BehandlingId) =
-        EtableringEgenVirksomhetVurdering(
+    fun toEtableringEgenVirksomhetVurdering(bruker: Bruker, vurdertIBehandling: BehandlingId): EtableringEgenVirksomhetVurdering {
+        return EtableringEgenVirksomhetVurdering(
             begrunnelse = begrunnelse,
             foreliggerFagligVurdering = foreliggerFagligVurdering,
             virksomhetErNy = virksomhetErNy,
             brukerEierVirksomheten = brukerEierVirksomheten,
             kanFøreTilSelvforsørget = kanFøreTilSelvforsørget,
-            utviklingsPerioder = utviklingsPerioder,
-            oppstartsPerioder = oppstartsPerioder,
+            utviklingsPerioder = if (fase == null) utviklingsPerioder.orEmpty() else emptyList(),
+            oppstartsPerioder = if (fase == null) oppstartsPerioder.orEmpty() else emptyList(),
+            fase = fase,
+            erRegistrertINødvendigeOffentligeRegister = erRegistrertINødvendigeOffentligeRegister,
+            jobberBrukerAktivMedVirksomheten = jobberBrukerAktivMedVirksomheten,
             vurdertAv = bruker,
             opprettet = Instant.now(),
             vurdertIBehandling = vurdertIBehandling,
@@ -48,9 +58,8 @@ data class EtableringEgenVirksomhetLøsningDto(
             tom = tom,
             virksomhetNavn = virksomhetNavn,
             orgNr = orgNr,
-            fase = fase,
-            erRegistrertINødvendigeOffentligeRegister = erRegistrertINødvendigeOffentligeRegister,
-            jobberBrukerAktivMedVirksomheten = jobberBrukerAktivMedVirksomheten,
             versjon = versjon,
         )
+    }
+
 }
