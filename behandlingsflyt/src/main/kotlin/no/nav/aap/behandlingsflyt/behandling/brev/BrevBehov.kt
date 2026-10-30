@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
+import no.nav.aap.barnetillegg.VurderingAvForeldreAnsvar
 import no.nav.aap.meldeplikt.MeldepliktGrunnlag
 import java.time.LocalDate
 
