@@ -83,7 +83,7 @@ class HåndterUførevedtakService(
             if (opphørErAlleredeVurdert(uførevedtak, opphørsdato, sisteYtelsesBehandling)) {
                 log.info("Gjeldende vurderinger dekker allerede uførevedtaket for sak $sakId, oppretter ikke ny behandling")
             } else if (skalOppretteAutomatiskOpphør11_18(
-                    uførevedtak, rettighetstypeTidslinje, mottattTidspunkt.toLocalDate()
+                    uførevedtak, rettighetstypeTidslinje, opphørsdato, mottattTidspunkt.toLocalDate()
                 )) {
                 log.info("Oppretter atomær 11_18 behandling for mottatt uførevedtak for sak $sakId")
                 val vurderingsbehov = Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS
@@ -133,10 +133,11 @@ class HåndterUførevedtakService(
     private fun skalOppretteAutomatiskOpphør11_18(
         uførevedtak: UførevedtakV0,
         rettighetstypeTidslinje: Tidslinje<RettighetsType>,
+        opphørsdato: LocalDate,
         mottattDato: LocalDate,
     ): Boolean {
         val harRettighetstypeForUføretrygd = rettighetstypeTidslinje
-            .begrensetTil(Periode(mottattDato, Tid.MAKS))
+            .begrensetTil(Periode(opphørsdato, Tid.MAKS))
             .any { it == RettighetsType.VURDERES_FOR_UFØRETRYGD }
         return harRettighetstypeForUføretrygd &&
                 uførevedtak.resultat == UførevedtakResultat.INNV &&

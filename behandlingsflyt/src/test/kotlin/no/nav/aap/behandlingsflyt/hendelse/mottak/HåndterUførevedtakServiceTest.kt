@@ -155,11 +155,11 @@ class HåndterUførevedtakServiceTest {
     }
 
     @Test
-    fun `rettighet som slutter før mottak gir ikke automatisk opphør`() {
+    fun `rettighet som slutter på mottaksdato gir ikke automatisk opphør`() {
         rettighet(
             RettighetsType.VURDERES_FOR_UFØRETRYGD,
             vedtak.virkningsdato,
-            dato.minusDays(1),
+            dato,
         )
         håndter()
         verify(exactly = 1) {
