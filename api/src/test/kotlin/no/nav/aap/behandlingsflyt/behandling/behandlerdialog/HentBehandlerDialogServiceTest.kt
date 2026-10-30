@@ -25,7 +25,6 @@ import no.nav.aap.dokumentinnhenting.kontrakt.BegrensetJournalpostDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DokumentasjonType
 import no.nav.aap.dokumentinnhenting.kontrakt.FellesDialogmeldingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDialogmeldingerForSakParams
-import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostListeParams
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostListeResponse
 import no.nav.aap.dokumentinnhenting.kontrakt.InnkommendeUtgående
 import no.nav.aap.dokumentinnhenting.kontrakt.MeldingStatusDto
@@ -40,7 +39,10 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
 
     private val dokumentinnhentingGateway = mockk<DokumentinnhentingGateway>()
     private val service = HentBehandlerDialogService(
-        dokumentinnhentingGateway, InMemorySakRepository, InMemoryMottattDokumentRepository, InMemoryBehandlingRepository
+        dokumentinnhentingGateway,
+        InMemorySakRepository,
+        InMemoryMottattDokumentRepository,
+        InMemoryBehandlingRepository
     )
 
     @Test
@@ -101,11 +103,10 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
         } returns dialogmeldingerForSakResponse
         every {
             dokumentinnhentingGateway.hentDokumentoversiktForJournalpostListe(
-                request = HentDokumentoversiktJournalpostListeParams(
+                journalpostIDer =
                     listOf(
                         journalpostIdSendtMelding1, journalpostIdSendtMelding2, journalpostIdMottattMelding
-                    )
-                ),
+                    ),
                 currentToken = token
             )
         } returns hentDokumentlisteResponse
