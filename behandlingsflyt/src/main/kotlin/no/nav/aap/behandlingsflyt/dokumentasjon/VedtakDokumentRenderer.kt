@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.dokumentasjon
 
 import no.nav.aap.behandlingsflyt.behandling.vilkår.innsikt.PdfDokument
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
+import no.nav.aap.barnetillegg.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagUføre
