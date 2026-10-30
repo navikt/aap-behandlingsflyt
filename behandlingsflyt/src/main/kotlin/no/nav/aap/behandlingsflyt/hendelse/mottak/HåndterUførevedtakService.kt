@@ -136,14 +136,9 @@ class HåndterUførevedtakService(
         rettighetstypeTidslinje: Tidslinje<RettighetsType>,
         mottattDato: LocalDate,
     ): Boolean {
-        val relevanteDatoer = listOf(
-            uførevedtak.virkningsdato,
-            mottattDato,
-            mottattDato.plusDays(1),
-        )
-        val harRettighetstypeForUføretrygd = relevanteDatoer.any {
-            rettighetstypeTidslinje.segment(it)?.verdi == RettighetsType.VURDERES_FOR_UFØRETRYGD
-        }
+        val harRettighetstypeForUføretrygd = rettighetstypeTidslinje
+            .begrensetTil(Periode(uførevedtak.virkningsdato, Tid.MAKS))
+            .any { it == RettighetsType.VURDERES_FOR_UFØRETRYGD }
         return harRettighetstypeForUføretrygd &&
                 uførevedtak.resultat == UførevedtakResultat.INNV &&
                 (uførevedtak.virkningsdato.isAfter(mottattDato) ||

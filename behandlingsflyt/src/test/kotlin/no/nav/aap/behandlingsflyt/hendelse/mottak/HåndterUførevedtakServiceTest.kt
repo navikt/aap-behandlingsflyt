@@ -155,22 +155,12 @@ class HåndterUførevedtakServiceTest {
     }
 
     @Test
-    fun `rettighet på virkningstidspunkt gir automatisk opphør`() {
-        rettighet(RettighetsType.VURDERES_FOR_UFØRETRYGD, vedtak.virkningsdato, vedtak.virkningsdato)
-        håndter()
-        forventAutomatiskOpphør()
-    }
-
-    @Test
-    fun `rettighet på mottakstidspunkt gir automatisk opphør`() {
-        rettighet(RettighetsType.VURDERES_FOR_UFØRETRYGD, dato, dato)
-        håndter()
-        forventAutomatiskOpphør()
-    }
-
-    @Test
-    fun `rettighet dagen etter mottak gir automatisk opphør`() {
-        rettighet(RettighetsType.VURDERES_FOR_UFØRETRYGD, dato.plusDays(1), dato.plusDays(1))
+    fun `rettighet etter virkningstidspunkt gir automatisk opphør`() {
+        rettighet(
+            RettighetsType.VURDERES_FOR_UFØRETRYGD,
+            vedtak.virkningsdato.plusDays(1),
+            dato.minusDays(1),
+        )
         håndter()
         forventAutomatiskOpphør()
     }
