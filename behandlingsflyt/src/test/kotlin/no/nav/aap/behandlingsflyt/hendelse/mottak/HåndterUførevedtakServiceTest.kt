@@ -155,14 +155,18 @@ class HåndterUførevedtakServiceTest {
     }
 
     @Test
-    fun `rettighet etter virkningstidspunkt gir automatisk opphør`() {
+    fun `rettighet som slutter før mottak gir ikke automatisk opphør`() {
         rettighet(
             RettighetsType.VURDERES_FOR_UFØRETRYGD,
-            vedtak.virkningsdato.plusDays(1),
+            vedtak.virkningsdato,
             dato.minusDays(1),
         )
         håndter()
-        forventAutomatiskOpphør()
+        verify(exactly = 1) {
+            behandlingService.finnEllerOpprettBehandling(sakId, match {
+                it.vurderingsbehov.single().type == Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+            })
+        }
     }
 
     @Test
