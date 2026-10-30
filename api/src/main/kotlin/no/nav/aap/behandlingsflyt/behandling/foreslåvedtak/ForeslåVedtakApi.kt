@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphø
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -73,8 +74,8 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                                     årsaker = vurdering.vurdering.årsaker.toList(),
                                     behandlingReferanse = requireNotNull(referanseOppslag[vurdering.vurdertIBehandling]) {
                                         "Finner ikke ytelsesbehandling i sak med behandlingsid"
-                                    }
-                                        .referanse
+                                    }.referanse,
+                                    erNy = vurdering.vurdertIBehandling == behandling.id
                                 )
                             }
                         )
@@ -114,19 +115,48 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                                 }
                                 .komprimer()
 
+                        val tidligereTidslinjer: List<Tidslinje<ForeslåVedtakData>> =
+                            generateSequence(behandling.forrigeBehandlingId) { behandlingRepository.hent(it).forrigeBehandlingId }
+                                .toList()
+                                .reversed()
+                                .mapNotNull { underveisRepository.hentHvisEksisterer(it)?.tilForeslåVedtakDataTidslinje() }
+
+                        val forrigeTidslinje = tidligereTidslinjer.lastOrNull()
+
                         val foreslåVedtakPerioder =
                             foreslåVedtakData
                                 .segmenter()
-                                .map {
-                                    val (data, vilkårsavslag) = it.verdi
+                                .map { segment ->
+                                    val (data, vilkårsavslag) = segment.verdi
+                                    val tidligereTilOgMed = if (data.utfall == Utfall.OPPFYLT) {
+                                        tidligereTidslinjer
+                                            .mapNotNull { tidslinje ->
+                                                tidslinje.segmenter()
+                                                    .firstOrNull { it.verdi.utfall == Utfall.OPPFYLT && it.periode.fom == segment.periode.fom }
+                                                    ?.periode?.tom
+                                            }
+                                            .filter { it != segment.periode.tom }
+                                            .distinct()
+                                    } else {
+                                        emptyList()
+                                    }
+
+                                    val erNy = data.utfall == Utfall.OPPFYLT
+                                            && forrigeTidslinje != null
+                                            && forrigeTidslinje.segmenter().none {
+                                        it.verdi.utfall == Utfall.OPPFYLT && it.periode == segment.periode
+                                    }
+
                                     ForeslåVedtakDto(
-                                        periode = it.periode,
+                                        periode = segment.periode,
                                         utfall = data.utfall,
                                         rettighetsType = data.rettighetsType,
                                         avslagsårsak = AvslagsårsakDto(
                                             vilkårsavslag = vilkårsavslag,
                                             underveisavslag = data.underveisÅrsak
-                                        )
+                                        ),
+                                        tidligereTilOgMed = tidligereTilOgMed,
+                                        erNy = erNy
                                     )
                                 }
                         ForeslåVedtakResponse(

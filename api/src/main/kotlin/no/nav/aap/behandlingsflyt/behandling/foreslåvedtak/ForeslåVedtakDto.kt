@@ -5,12 +5,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Av
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
 
 data class ForeslåVedtakDto(
     val periode: Periode,
     val utfall: Utfall,
     val rettighetsType: RettighetsType?,
-    val avslagsårsak: AvslagsårsakDto
+    val avslagsårsak: AvslagsårsakDto,
+    val tidligereTilOgMed: List<LocalDate> = emptyList(),
+    val erNy: Boolean = false,
 )
 
 data class AvslagsårsakDto(
