@@ -73,12 +73,11 @@ class HåndterUførevedtakService(
                 JobbInput(jobb = OppdagEndretInformasjonskravJobbUtfører).forSak(sakId.toLong()).medCallId().medPrioritet(Prioritet.LAV)
             )
         } else {
-            val aktuellPeriode = Periode(uførevedtak.virkningsdato, Tid.MAKS)
             val rettighetstypeTidslinje =
                 rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(sisteYtelsesBehandling.id)
-                    .begrensetTil(aktuellPeriode)
             val kanHaRettPåAapEtterVirkningsdato =
-                rettighetstypeTidslinje.isNotEmpty() || sisteYtelsesBehandling.status().erÅpen()
+                rettighetstypeTidslinje.begrensetTil(Periode(uførevedtak.virkningsdato, Tid.MAKS)).isNotEmpty() ||
+                        sisteYtelsesBehandling.status().erÅpen()
             val opphørsdato = uførevedtak.opphørsdato(mottattTidspunkt.toLocalDate())
 
             if (opphørErAlleredeVurdert(uførevedtak, opphørsdato, sisteYtelsesBehandling)) {
@@ -137,10 +136,13 @@ class HåndterUførevedtakService(
         opphørsdato: LocalDate,
         mottattDato: LocalDate,
     ): Boolean {
-        return rettighetstypeTidslinje.segment(opphørsdato)?.verdi == RettighetsType.VURDERES_FOR_UFØRETRYGD
-                && uførevedtak.resultat == UførevedtakResultat.INNV
-                && (uførevedtak.virkningsdato.isAfter(mottattDato) ||
-                unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende))
+        val harRettighetstypeForUføretrygd = rettighetstypeTidslinje
+            .begrensetTil(Periode(opphørsdato, Tid.MAKS))
+            .any { it == RettighetsType.VURDERES_FOR_UFØRETRYGD }
+        return harRettighetstypeForUføretrygd &&
+                uførevedtak.resultat == UførevedtakResultat.INNV &&
+                (uførevedtak.virkningsdato.isAfter(mottattDato) ||
+                        unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende))
     }
 
     private fun opphørErAlleredeVurdert(
