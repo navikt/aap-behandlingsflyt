@@ -23,6 +23,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.april
+import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.mars
@@ -202,6 +203,59 @@ class UtledArenaVedtakstypeTest {
             resultat,
             tidslinjeOf(
                 førsteSøknadMottatt.toLocalDate().somPeriode() to UtledArenaVedtakstype.ArenaVedtak(
+                    vedtakId = førstegangsbehandling.vedtakId,
+                    vedtaksvariant = UtledArenaVedtakstype.ArenaVedtaksvariant.O_AVSLAG
+                ),
+                innvilgetPeriode to UtledArenaVedtakstype.ArenaVedtak(
+                    vedtakId = revurdering.vedtakId,
+                    vedtaksvariant = UtledArenaVedtakstype.ArenaVedtaksvariant.O_INNV_SOKNAD
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `gjenopptak etter opphør`() {
+        // Given
+        val førsteSøknadMottatt = 1 april 2020
+        val revurderingdato = 1 mai 2020
+        val tredjesøknad = 1 juli 2020
+        val førstegangsbehandling = behandling(opprettet = førsteSøknadMottatt.atStartOfDay())
+        val revurdering = behandling(opprettet = revurderingdato.atStartOfDay(), forrige = førstegangsbehandling)
+        val revurdering2 = behandling(opprettet = tredjesøknad.atStartOfDay(), forrige = revurdering)
+        val innvilgetPeriode = Periode(
+            førsteSøknadMottatt,
+            førsteSøknadMottatt.plusDays(30)
+        )
+
+        // When
+        val resultat = utledArenaVedtakForKelvinSak(
+            AvsluttetKelvinBehandling(
+                behandling = førstegangsbehandling,
+                nyeSøknader = setOf(søknad(førstegangsbehandling.id, førsteSøknadMottatt.atStartOfDay())),
+                rettighetsType = tidslinjeOf(innvilgetPeriode to RettighetsType.BISTANDSBEHOV),
+                stansOgOpphør = mapOf(),
+            ),
+            AvsluttetKelvinBehandling(
+                behandling = revurdering,
+                nyeSøknader = setOf(),
+                rettighetsType = tidslinjeOf(innvilgetPeriode to RettighetsType.BISTANDSBEHOV),
+                stansOgOpphør = mapOf(innvilgetPeriode.tom.plusDays(1) to Opphør(årsaker = setOf(Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE))),
+            ),
+            AvsluttetKelvinBehandling(
+                behandling = revurdering2,
+                nyeSøknader = setOf(søknad(revurdering2.id, tredjesøknad.atStartOfDay())),
+                rettighetsType = tidslinjeOf(Periode(tredjesøknad, tredjesøknad.plusDays(100)) to RettighetsType.BISTANDSBEHOV),
+                stansOgOpphør = mapOf()
+            )
+        )
+        println(resultat)
+
+        // Then
+        assertTidslinjeEquals(
+            resultat,
+            tidslinjeOf(
+                førsteSøknadMottatt.somPeriode() to UtledArenaVedtakstype.ArenaVedtak(
                     vedtakId = førstegangsbehandling.vedtakId,
                     vedtaksvariant = UtledArenaVedtakstype.ArenaVedtaksvariant.O_AVSLAG
                 ),
