@@ -162,6 +162,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING,
                     Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.DØDSFALL_BRUKER,
@@ -175,6 +176,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING,
                     Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.DØDSFALL_BRUKER,
@@ -500,4 +502,3 @@ object Revurdering : BehandlingType {
     }
 
 }
-

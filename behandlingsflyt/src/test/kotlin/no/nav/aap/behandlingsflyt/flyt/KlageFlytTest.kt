@@ -1323,8 +1323,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                         begrunnelse = "Begrunnelse for håndtering",
                         konsekvens = SvarFraAndreinstansKonsekvens.OMGJØRING,
                         vilkårSomOmgjøres = listOf(
-                            Hjemmel.FOLKETRYGDLOVEN_11_5,
-                            Hjemmel.FOLKETRYGDLOVEN_11_6
+                            Hjemmel.FOLKETRYGDLOVEN_11_13
                         )
                     )
                 )
@@ -1340,7 +1339,8 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
         assertThat(revurdering).isNotNull
         assertThat(revurdering.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
         assertThat(
-            revurdering.vurderingsbehov().map { it.type }).contains(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+            revurdering.vurderingsbehov().map { it.type })
+            .containsExactly(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING)
     }
 
     @Test
