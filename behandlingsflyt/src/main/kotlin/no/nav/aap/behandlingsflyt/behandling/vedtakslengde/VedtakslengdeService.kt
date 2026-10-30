@@ -179,12 +179,28 @@ class VedtakslengdeService(
         val vedtattUtvidelse = vedtattVedtakslengdeGrunnlag?.gjeldendeVurdering()?.utvidetMed
         val sluttdato = utledSluttdato(behandlingId, rettighetsperiode, vedtattSluttdato)
 
-        // Henter forrige automatiske vurdering for å sammenligne med ny automatisk beregnet sluttdato
-        val sisteAutomatiskeVurdering = vedtakslengdeGrunnlag?.vurderinger.orEmpty()
+        val vurderingerFraBehandlingen =
+            vedtakslengdeGrunnlag?.vurderinger.orEmpty().filter { it.vurdertIBehandling == behandlingId }
+        val automatiskVurderingFraBehandlingen = vurderingerFraBehandlingen
             .filter { it.vurdertAutomatisk }
             .maxByOrNull { it.opprettet }
 
-        if (sisteAutomatiskeVurdering?.sluttdato != sluttdato && vedtattSluttdato != sluttdato) {
+        // Det kan kun være en ny manuell vurdering pr behandling
+        val manuellVurderingFraBehandlingen = vurderingerFraBehandlingen.filter { it.vurdertManuelt }.also {
+            require(it.size <= 1) { "Det skal kun være opp til én manuell vurdering per behandling, fant ${it.size} for behandling $behandlingId" }
+        }
+        val vedtatteVurderinger = vedtattVedtakslengdeGrunnlag?.vurderinger.orEmpty()
+
+        if (sluttdato == vedtattSluttdato) {
+            // Ingen utvidelse - fjerner eventuell automatisk vurdering lagret tidligere i behandlingen
+            if (automatiskVurderingFraBehandlingen != null) {
+                log.info("Fjerner automatisk vurdering av sluttdato ${automatiskVurderingFraBehandlingen.sluttdato} for behandling $behandlingId, sluttdato er uendret fra vedtatt $vedtattSluttdato")
+                vedtakslengdeRepository.lagre(
+                    behandlingId = behandlingId,
+                    vurderinger = vedtatteVurderinger + manuellVurderingFraBehandlingen
+                )
+            }
+        } else if (automatiskVurderingFraBehandlingen?.sluttdato != sluttdato) {
             log.info("Automatisk vurdering av sluttdato endret fra $vedtattSluttdato til $sluttdato for behandling $behandlingId")
 
             val nyAutomatiskVurdering = VedtakslengdeVurdering(
@@ -197,18 +213,9 @@ class VedtakslengdeService(
                 begrunnelse = "Automatisk vurdert"
             )
 
-            val vedtatteVurderinger = vedtattVedtakslengdeGrunnlag?.vurderinger.orEmpty()
-            val nyeVurderingerFraBehandlingen =
-                vedtakslengdeGrunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandlingId }.orEmpty()
-
-            // Det kan kun være en ny manuell vurdering pr behandling
-            val nyManuellVurderingFraBehandlingen = nyeVurderingerFraBehandlingen.filter { it.vurdertManuelt }.also {
-                require(it.size <= 1) { "Det skal kun være opp til én manuell vurdering per behandling, fant ${it.size} for behandling $behandlingId" }
-            }
-
             vedtakslengdeRepository.lagre(
                 behandlingId = behandlingId,
-                vurderinger = vedtatteVurderinger + nyManuellVurderingFraBehandlingen + nyAutomatiskVurdering
+                vurderinger = vedtatteVurderinger + manuellVurderingFraBehandlingen + nyAutomatiskVurdering
             )
         }
         return sluttdato
@@ -241,9 +248,9 @@ class VedtakslengdeService(
 
         log.info("Sluttdato for siste bistandsbehov: $sluttdatoSisteBistandsbehov")
 
-        // Logikken rundt sluttdato når det ligger et bistandsbehov til slutt, må gåes opp. Inntil videre gis det
-        // opp til initiell sluttdato / vedtatt sluttdato.
-        val sluttdatoBistandsbehov = if (sluttdatoSisteBistandsbehov != null) {
+        // Bistandsbehov gir kun sluttdato når det ikke finnes en vedtatt sluttdato (førstegangsbehandling).
+        // Ved revurdering skal bistandsbehov ikke utvide vedtakslengden - det gjøres kun via UTVID_VEDTAKSLENGDE.
+        val sluttdatoBistandsbehov = if (sluttdatoSisteBistandsbehov != null && vedtattSluttdato == null) {
             // Returnere til og med kvote-slutt dersom denne datoen kommer før utledet sluttdato
             listOfNotNull(sluttdatoSisteBistandsbehov, initiellSluttdato).min()
         } else null

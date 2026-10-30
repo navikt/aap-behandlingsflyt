@@ -20,10 +20,18 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.Vedt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
+import no.nav.aap.behandlingsflyt.test.august
+import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.fixedClock
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mars
+import no.nav.aap.behandlingsflyt.test.november
+import no.nav.aap.behandlingsflyt.test.september
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -31,10 +39,16 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.util.RestoreSystemProperties
 import java.time.Instant
 import java.time.LocalDate
+import java.util.concurrent.atomic.AtomicLong
+
+// Unike id-er siden InMemoryVedtakslengdeRepository er delt i hele JVM-en
+private val idTeller = AtomicLong(9_100_000L)
+private fun nesteId() = idTeller.incrementAndGet()
 
 @RestoreSystemProperties
 class VedtakslengdeServiceTest {
@@ -305,6 +319,153 @@ class VedtakslengdeServiceTest {
         )
 
         assertThat(resultat).isEqualTo(VedtakslengdeUtvidelse.IngenFremtidigBistandsbehovRettighet)
+    }
+
+    @Nested
+    inner class LagreAutomatiskVedtakslengde {
+        private val virkningstidspunkt = 1 januar 2026
+        private val rettighetsperiode = Periode(virkningstidspunkt, Tid.MAKS)
+        private val forrigeId = BehandlingId(nesteId())
+        private val nåværendeId = BehandlingId(nesteId())
+
+        @Test
+        fun `revurdering utvider ikke vedtakslengde ved bistandsbehov når vedtatt sluttdato er kortere enn ett år`() {
+            val migrertSluttdato = 31 august 2026
+            settOppForrigeVedtak(migrertSluttdato)
+            settOppRettighetstyper(
+                Segment(Periode(virkningstidspunkt, Tid.MAKS), RettighetsType.BISTANDSBEHOV)
+            )
+
+            val sluttdato = lagreAutomatisk(forrigeId)
+
+            assertThat(sluttdato).isEqualTo(migrertSluttdato)
+            assertThat(InMemoryVedtakslengdeRepository.hentHvisEksisterer(nåværendeId)?.vurderinger)
+                .extracting<LocalDate> { it.sluttdato }
+                .containsExactly(migrertSluttdato)
+        }
+
+        @Test
+        fun `revurdering utvider vedtakslengde ved overgang til sykepengeerstatning som varer forbi vedtatt sluttdato`() {
+            val vedtattSluttdato = 31 desember 2026
+            val sykepengeerstatningTom = 28 februar 2027
+            settOppForrigeVedtak(vedtattSluttdato)
+            settOppRettighetstyper(
+                Segment(Periode(virkningstidspunkt, 31 august 2026), RettighetsType.BISTANDSBEHOV),
+                Segment(Periode(1 september 2026, sykepengeerstatningTom), RettighetsType.SYKEPENGEERSTATNING),
+            )
+
+            val sluttdato = lagreAutomatisk(forrigeId)
+
+            assertThat(sluttdato).isEqualTo(sykepengeerstatningTom)
+            val gjeldende = InMemoryVedtakslengdeRepository.hentHvisEksisterer(nåværendeId)?.gjeldendeVurdering()
+            assertThat(gjeldende?.sluttdato).isEqualTo(sykepengeerstatningTom)
+            assertThat(gjeldende?.vurdertIBehandling).isEqualTo(nåværendeId)
+        }
+
+        @Test
+        fun `revurdering utvider ikke vedtakslengde når unntaksrettighet slutter før vedtatt sluttdato`() {
+            val vedtattSluttdato = 31 august 2026
+            settOppForrigeVedtak(vedtattSluttdato)
+            settOppRettighetstyper(
+                Segment(Periode(virkningstidspunkt, 30 juni 2026), RettighetsType.STUDENT),
+                Segment(Periode(1 juli 2026, Tid.MAKS), RettighetsType.BISTANDSBEHOV),
+            )
+
+            val sluttdato = lagreAutomatisk(forrigeId)
+
+            assertThat(sluttdato).isEqualTo(vedtattSluttdato)
+        }
+
+        @Test
+        fun `førstegangsbehandling setter sluttdato ett år frem ved bistandsbehov`() {
+            settOppRettighetstyper(
+                Segment(Periode(virkningstidspunkt, Tid.MAKS), RettighetsType.BISTANDSBEHOV)
+            )
+
+            val sluttdato = lagreAutomatisk(forrigeBehandlingId = null)
+
+            assertThat(sluttdato).isEqualTo(virkningstidspunkt.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
+        }
+
+        @Test
+        fun `fjerner automatisk vurdering fra behandlingen når sluttdato ikke lenger utvides`() {
+            val vedtattSluttdato = 31 august 2026
+            settOppForrigeVedtak(vedtattSluttdato)
+            leggTilVurderingIBehandlingen(31 desember 2026, SYSTEMBRUKER)
+            settOppRettighetstyper(
+                Segment(Periode(virkningstidspunkt, Tid.MAKS), RettighetsType.BISTANDSBEHOV)
+            )
+
+            val sluttdato = lagreAutomatisk(forrigeId)
+
+            assertThat(sluttdato).isEqualTo(vedtattSluttdato)
+            val grunnlag = InMemoryVedtakslengdeRepository.hentHvisEksisterer(nåværendeId)!!
+            assertThat(grunnlag.vurderinger.filter { it.vurdertIBehandling == nåværendeId }).isEmpty()
+            assertThat(grunnlag.gjeldendeVurdering()?.sluttdato).isEqualTo(vedtattSluttdato)
+        }
+
+        @Test
+        fun `beholder manuell vurdering fra behandlingen når automatisk vurdering fjernes`() {
+            val vedtattSluttdato = 31 august 2026
+            val manuellSluttdato = 30 november 2026
+            settOppForrigeVedtak(vedtattSluttdato)
+            leggTilVurderingIBehandlingen(31 desember 2026, SYSTEMBRUKER)
+            leggTilVurderingIBehandlingen(manuellSluttdato, Bruker("Z123456"))
+            settOppRettighetstyper(
+                Segment(Periode(virkningstidspunkt, Tid.MAKS), RettighetsType.BISTANDSBEHOV)
+            )
+
+            lagreAutomatisk(forrigeId)
+
+            val grunnlag = InMemoryVedtakslengdeRepository.hentHvisEksisterer(nåværendeId)!!
+            assertThat(grunnlag.vurderinger.filter { it.vurdertIBehandling == nåværendeId })
+                .singleElement()
+                .matches { it.vurdertManuelt && it.sluttdato == manuellSluttdato }
+            assertThat(grunnlag.gjeldendeVurdering()?.sluttdato).isEqualTo(manuellSluttdato)
+        }
+
+        private fun leggTilVurderingIBehandlingen(sluttdato: LocalDate, vurdertAv: Bruker) {
+            val eksisterende = InMemoryVedtakslengdeRepository.hentHvisEksisterer(nåværendeId)?.vurderinger.orEmpty()
+            val vurdering = vedtakslengdeVurdering(sluttdato).copy(
+                vurdertAv = vurdertAv,
+                vurdertIBehandling = nåværendeId,
+                opprettet = Instant.now(clock).minusSeconds(30),
+            )
+            InMemoryVedtakslengdeRepository.lagre(nåværendeId, eksisterende + vurdering)
+        }
+
+        private fun settOppForrigeVedtak(sluttdato: LocalDate) {
+            val vurdering = vedtakslengdeVurdering(sluttdato).copy(
+                vurdertIBehandling = forrigeId,
+                opprettet = Instant.now(clock).minusSeconds(60),
+            )
+            InMemoryVedtakslengdeRepository.lagre(forrigeId, listOf(vurdering))
+            InMemoryVedtakslengdeRepository.kopier(forrigeId, nåværendeId)
+            every { underveisRepository.hentHvisEksisterer(forrigeId) } returns UnderveisGrunnlag(
+                id = 1L,
+                perioder = listOf(mockk { every { periode } returns Periode(virkningstidspunkt, sluttdato) })
+            )
+        }
+
+        private fun settOppRettighetstyper(vararg segmenter: Segment<RettighetsType>) {
+            every { rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(nåværendeId) } returns
+                    Tidslinje(segmenter.toList())
+        }
+
+        private fun lagreAutomatisk(forrigeBehandlingId: BehandlingId?): LocalDate {
+            val virkningstidspunktService = mockk<VirkningstidspunktService> {
+                every { finnVirkningstidspunkt(nåværendeId) } returns virkningstidspunkt
+            }
+            val service = VedtakslengdeService(
+                vedtakslengdeRepository = InMemoryVedtakslengdeRepository,
+                underveisRepository = underveisRepository,
+                rettighetstypeService = rettighetstypeService,
+                stansOpphørRepository = stansOpphørRepository,
+                clock = clock,
+                virkningstidspunktService = virkningstidspunktService,
+            )
+            return service.lagreAutomatiskVedtakslengde(nåværendeId, forrigeBehandlingId, rettighetsperiode)
+        }
     }
 
     // -- Hjelpefunksjoner --
