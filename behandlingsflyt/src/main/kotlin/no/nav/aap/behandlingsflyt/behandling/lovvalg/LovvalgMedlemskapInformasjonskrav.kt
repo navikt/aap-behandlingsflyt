@@ -23,7 +23,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.ereg.Organisasjonsnumme
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.LovvalgMedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.tilDomene
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -123,29 +125,26 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         val (medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag) = registerdata
 
         val eksisterendeData = input.eksisterendeData
-        // TODO: kun lagre hvis forskjell!
-        lagre(
-            behandlingId = kontekst.behandlingId,
-            medlemskapGrunnlag = medlemskapPerioder,
-            arbeidGrunnlag = arbeidGrunnlag,
-            relevantDato = input.sak.rettighetsperiode.fom,
-            inntektGrunnlag = inntektGrunnlag,
-            enhetGrunnlag = enhetGrunnlag
+
+        val nyRegisterdata = LovvalgMedlemskapRegisterGrunnlag(
+            inntekterINorgeGrunnlag = inntektGrunnlag.tilDomene(enhetGrunnlag),
+            arbeiderINorgeGrunnlag = arbeidGrunnlag,
+            medlemskapUnntakGrunnlag = medlemskapPerioder
+                .takeIf { it.isNotEmpty() }
+                ?.let { MedlemskapUnntakGrunnlag(it.tilDomene()) }
         )
 
-        val nyData = lovvalgMedlemskapRepository.hentHvisEksisterer(kontekst.behandlingId)
+        if (nyRegisterdata != eksisterendeData?.registerGrunnlag) {
+            lagre(
+                behandlingId = kontekst.behandlingId,
+                relevantDato = input.sak.rettighetsperiode.fom,
+                registerGrunnlag = nyRegisterdata
+            )
 
-        return if (erRelevantEndring(eksisterendeData, nyData)) ENDRET else IKKE_ENDRET
-    }
+            return ENDRET
+        }
 
-    private fun erRelevantEndring(
-        grunnlag1: LovvalgMedlemskapGrunnlag?,
-        grunnlag2: LovvalgMedlemskapGrunnlag?
-    ): Boolean {
-        return grunnlag1?.medlemskapGrunnlag != grunnlag2?.medlemskapGrunnlag
-                || grunnlag1?.inntekterINorgeGrunnlag != grunnlag2?.inntekterINorgeGrunnlag // Ignorerer inntekterINorgePerRelevanteKrav
-                || grunnlag1?.arbeiderINorgeGrunnlag != grunnlag2?.arbeiderINorgeGrunnlag
-                || grunnlag1?.vurderinger != grunnlag2?.vurderinger
+        return IKKE_ENDRET
     }
 
     private fun innhentAARegisterGrunnlag(sak: Sak): List<ArbeidINorgeGrunnlag> {
@@ -191,24 +190,18 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
     private fun lagre(
         behandlingId: BehandlingId,
         relevantDato: LocalDate, // TODO: Denne vil etterhvert være på registergrunnlagnivå
-        medlemskapGrunnlag: List<MedlemskapDataIntern>,
-        arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
-        inntektGrunnlag: List<ArbeidsInntektMåned>,
-        enhetGrunnlag: List<EnhetGrunnlag>,
+        registerGrunnlag: LovvalgMedlemskapRegisterGrunnlag
     ) {
-        val perioder = medlemskapGrunnlag.map { Pair(it.fraOgMed, it.tilOgMed) }
-
-        log.info("Lagrer medlemskap, arbeidsforhold og inntekt for behandling $behandlingId. Perioder: $perioder")
-        val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapUnntakRepository.lagreUnntakMedlemskap(
+        val medlemskapUnntakGrunnlag = registerGrunnlag.medlemskapUnntakGrunnlag
+        val medlId = if (medlemskapUnntakGrunnlag != null) medlemskapUnntakRepository.lagreUnntakMedlemskap(
             behandlingId,
-            medlemskapGrunnlag
+            medlemskapUnntakGrunnlag
         ) else null
 
-        lovvalgMedlemskapRepository.lagreArbeidsforholdOgInntektINorge(
+        lovvalgMedlemskapRepository.lagreRegisterGrunnlag(
             behandlingId,
             relevantDato,
-            arbeidGrunnlag,
-            inntektGrunnlag.tilDomene(enhetGrunnlag),
+            registerGrunnlag,
             medlId,
         )
     }

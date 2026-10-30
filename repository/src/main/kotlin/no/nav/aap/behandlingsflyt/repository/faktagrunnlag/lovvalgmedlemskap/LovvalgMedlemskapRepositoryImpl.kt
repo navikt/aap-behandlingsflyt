@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterForKrav
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterINorgeRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
@@ -128,11 +129,10 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
         return vurderingerId
     }
 
-    override fun lagreArbeidsforholdOgInntektINorge(
+    override fun lagreRegisterGrunnlag(
         behandlingId: BehandlingId,
         relevantDato: LocalDate,
-        arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
-        inntektGrunnlag: List<InntektINorgeGrunnlag>,
+        registerGrunnlag: LovvalgMedlemskapRegisterGrunnlag,
         medlId: Long?,
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
@@ -141,8 +141,8 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
             deaktiverGrunnlag(behandlingId)
         }
 
-        val arbeiderId = lagreArbeidGrunnlag(arbeidGrunnlag)
-        val inntekterINorgeId = lagreArbeidsInntektGrunnlag(relevantDato, inntektGrunnlag)
+        val arbeiderId = lagreArbeidGrunnlag(registerGrunnlag.arbeiderINorgeGrunnlag)
+        val inntekterINorgeId = lagreArbeidsInntektGrunnlag(relevantDato, registerGrunnlag.inntekterINorgeGrunnlag)
 
         val grunnlagQuery = """
             INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, vurderinger_id) VALUES (?, ?, ?, ?, ?)
@@ -650,10 +650,12 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
         val inntekt = hentInntekterINorgeGrunnlag(row.getLongOrNull("inntekter_i_norge_id"))
 
         return LovvalgMedlemskapGrunnlag(
-            medlemskapGrunnlag = hentMedlemskapGrunnlag(row.getLongOrNull("medlemskap_unntak_person_id")),
-            inntekterINorgeGrunnlag = inntekt.tilDomene(),
+            LovvalgMedlemskapRegisterGrunnlag(
+                medlemskapUnntakGrunnlag = hentMedlemskapGrunnlag(row.getLongOrNull("medlemskap_unntak_person_id")),
+                arbeiderINorgeGrunnlag = hentArbeiderINorgeGrunnlag(row.getLongOrNull("arbeider_id")),
+                inntekterINorgeGrunnlag = inntekt.tilDomene(),
+            ),
             inntekterINorgeRegisterGrunnlag = InntekterINorgeRegisterGrunnlag(inntekt.perKrav()),
-            arbeiderINorgeGrunnlag = hentArbeiderINorgeGrunnlag(row.getLongOrNull("arbeider_id")),
             vurderinger = hentVurderinger(row.getLongOrNull("vurderinger_id")),
         )
     }
