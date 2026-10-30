@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.pdl
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
@@ -11,7 +13,11 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import java.net.URI
 
-object PdlGateway {
+interface PdlGateway {
+    fun <E> query(request: PdlRequest, typeReference: TypeReference<E>, currentToken: OidcToken? = null): E
+}
+
+object PdlGatewayImpl : PdlGateway {
     val url: URI = URI.create(requiredConfigForKey("INTEGRASJON_PDL_URL"))
     val config = ClientConfig(
         scope = requiredConfigForKey("INTEGRASJON_PDL_SCOPE"),
@@ -24,10 +30,15 @@ object PdlGateway {
         prometheus = prometheus
     )
 
-    inline fun <reified E> query(request: PdlRequest, currentToken: OidcToken? = null): E {
+    override fun <E> query(request: PdlRequest, typeReference: TypeReference<E>, currentToken: OidcToken?): E {
         val httpRequest = PostRequest(body = request, currentToken = currentToken)
         return requireNotNull(client.post(uri = url, request = httpRequest, mapper = { body, _ ->
-            DefaultJsonMapper.fromJson(body)
+            DefaultJsonMapper.objectMapper().readValue(body, typeReference)
         }))
+    }
+
+    inline fun <reified E> query(request: PdlRequest, currentToken: OidcToken? = null): E {
+        return query(request, jacksonTypeRef<E>(), currentToken)
+
     }
 }
