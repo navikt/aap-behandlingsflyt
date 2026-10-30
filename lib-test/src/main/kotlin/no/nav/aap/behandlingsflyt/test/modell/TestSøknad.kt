@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.test.modell
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 
