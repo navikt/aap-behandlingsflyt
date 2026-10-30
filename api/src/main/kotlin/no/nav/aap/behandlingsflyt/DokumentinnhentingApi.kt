@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeResponse
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeService
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentBehandlerDialogService
-import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.`HentUbesvarteForespørslerLegeerklæringDto`
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentUbesvarteForespørslerLegeerklæringDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentStatusLegeerklæring
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.MeldingMedDokumenterDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.MeldingerResponse
@@ -33,7 +33,6 @@ import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForSakResolver
 import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentingBestillingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingForhåndsvisningDto
-import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DokumentasjonType
 import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.PåminnelseDto
@@ -136,18 +135,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                     respond(bestillingUuid)
                 }
             }
-            route("/status/{saksnummer}") {
-                authorizedGet<HentStatusLegeerklæring, List<DialogmeldingStatusTilBehandslingsflytDto>>(
-                    AuthorizationParamPathConfig(
-                        applicationsOnly = false,
-                        relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
-                        sakPathParam = SakPathParam("saksnummer")
-                    )
-                ) { par ->
-                    val status = dokumentinnhentingGateway.legeerklæringStatus(par.saksnummer)
-                    respond(status)
-                }
-            }
+
             route("/brevpreview") {
                 authorizedPost<Unit, DialogmeldingForhåndsvisningDto, ForhåndsvisBrevRequest>(
                     AuthorizationBodyPathConfig(

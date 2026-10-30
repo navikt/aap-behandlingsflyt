@@ -12,7 +12,6 @@ import no.nav.aap.dokumentinnhenting.kontrakt.BegrensetJournalpostDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DokumentasjonType
 import no.nav.aap.dokumentinnhenting.kontrakt.FellesDialogmeldingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDialogmeldingerForSakParams
-import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostListeParams
 import no.nav.aap.dokumentinnhenting.kontrakt.HentLegeerklæringForespørslerForSakParams
 import no.nav.aap.dokumentinnhenting.kontrakt.MeldingStatusDto
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
@@ -62,7 +61,8 @@ class HentBehandlerDialogService(
         dialogmeldinger: List<MeldingDto>,
         legeerklæringer: Set<MottattDokument>
     ): List<KommendeMeldingDto> {
-        val forespørslerSomIkkeErBesvart = utledUbesvarteForespørslerLegeerklæringInnenTidsfrist(dialogmeldinger, legeerklæringer)
+        val forespørslerSomIkkeErBesvart =
+            utledUbesvarteForespørslerLegeerklæringInnenTidsfrist(dialogmeldinger, legeerklæringer)
 
         return forespørslerSomIkkeErBesvart.sortedBy { it.opprettetTidspunkt }.map { melding ->
             KommendeMeldingDto(
@@ -87,7 +87,8 @@ class HentBehandlerDialogService(
                 it.dokumentasjonsType == no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumentasjonType.L40
                         && it.innkommendeUtgående == InnkommendeUtgående.UTGÅENDE
                         && it.dialogmeldingId != null
-                        && it.opprettetTidspunkt.toLocalDate().plusDays(DAGER_TIL_PÅMINNELSE) > java.time.LocalDate.now()
+                        && it.opprettetTidspunkt.toLocalDate()
+                    .plusDays(DAGER_TIL_PÅMINNELSE) > java.time.LocalDate.now()
             }
 
         return kandidaterForPåminnelse.filter { melding ->
@@ -109,19 +110,22 @@ class HentBehandlerDialogService(
                         && it.dialogmeldingId != null
             }
 
-        return filtreteForespørsler.filter {
-            forespørsel -> ingenLegeerklæringMottattEtterBestilling(forespørsel, legeerklæringer)
+        return filtreteForespørsler.filter { forespørsel ->
+            ingenLegeerklæringMottattEtterBestilling(forespørsel, legeerklæringer)
         }
     }
 
-    private fun ingenLegeerklæringMottattEtterBestilling(forespørsel: MeldingDto, legeerklæringer: Set<MottattDokument>): Boolean {
+    private fun ingenLegeerklæringMottattEtterBestilling(
+        forespørsel: MeldingDto,
+        legeerklæringer: Set<MottattDokument>
+    ): Boolean {
         val finnesLegeerklæringSomKomInnEtterBestilling = legeerklæringer.any { legeerklæring ->
             legeerklæring.mottattTidspunkt > forespørsel.opprettetTidspunkt
         }
         return !finnesLegeerklæringSomKomInnEtterBestilling
     }
 
-    private fun hentDialogmeldingerFraDokumentinnhenting(saksnummer: String): List<no.nav.aap.dokumentinnhenting.kontrakt.FellesDialogmeldingDto> {
+    private fun hentDialogmeldingerFraDokumentinnhenting(saksnummer: String): List<FellesDialogmeldingDto> {
         return dokumentinnhentingGateway.hentDialogmeldingerForSak(
             HentDialogmeldingerForSakParams(saksnummer)
         )
@@ -141,17 +145,13 @@ class HentBehandlerDialogService(
         token: OidcToken,
     ): Map<String, BegrensetJournalpostDto> {
         val journalposter = dokumentinnhentingGateway.hentDokumentoversiktForJournalpostListe(
-            HentDokumentoversiktJournalpostListeParams(journalpostIDer),
+            journalpostIDer,
             token
         )
 
-        val dokumentoversiktMap = HashMap<String, BegrensetJournalpostDto>()
-        journalposter.journalposter
+        return journalposter.journalposter
             .filter { it.journalpostId != null }
-            .forEach { journalpost ->
-                dokumentoversiktMap[journalpost.journalpostId!!] = journalpost
-            }
-        return dokumentoversiktMap
+            .associateBy { it.journalpostId!! }
     }
 
     fun hentUbesvarteForespørslerOmLegeerklæringer(
