@@ -30,6 +30,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.Melde
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.forutgåendemedlemskap.ForutgåendeMedlemskapRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap.LovvalgMedlemskapRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap.OppgittUtenlandsopplysningerRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
@@ -718,6 +719,7 @@ fun main() {
         FormkravRepositoryImpl(connection).slett(BehandlingId(1L))
         ForutgåendeMedlemskapRepositoryImpl(connection).slett(BehandlingId(1L))
         LovvalgMedlemskapRepositoryImpl(connection).slett(BehandlingId(1L))
+        OppgittUtenlandsopplysningerRepositoryImpl(connection).slett(BehandlingId(1L))
         PersonopplysningForutgåendeRepositoryImpl(connection).slett(BehandlingId(1L))
         PersonopplysningRepositoryImpl(connection).slett(BehandlingId(1L))
         BarnRepositoryImpl(connection).slett(BehandlingId(1L))

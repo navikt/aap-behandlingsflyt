@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.Medlemskapvilkå
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.OppgittUtenlandsopplysningerRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.LovvalgMedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
@@ -38,6 +39,7 @@ class VurderLovvalgSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val personopplysningRepository: PersonopplysningRepository,
     private val lovvalgMedlemskapRepository: LovvalgMedlemskapRepository,
+    private val oppgittUtenlandsopplysningerRepository: OppgittUtenlandsopplysningerRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val lovvalgDelvurderingRepository: LovvalgDelvurderingRepository,
@@ -47,6 +49,7 @@ class VurderLovvalgSteg private constructor(
         vilkårsresultatRepository = repositoryProvider.provide(),
         personopplysningRepository = repositoryProvider.provide(),
         lovvalgMedlemskapRepository = repositoryProvider.provide(),
+        oppgittUtenlandsopplysningerRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         lovvalgDelvurderingRepository = repositoryProvider.provide(),
@@ -199,8 +202,8 @@ class VurderLovvalgSteg private constructor(
         val medlemskapArbeidInntektGrunnlag =
             lovvalgMedlemskapRepository.hentHvisEksisterer(behandlingId)
         val oppgittUtenlandsOppholdGrunnlag =
-            lovvalgMedlemskapRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandlingId)
-                ?: lovvalgMedlemskapRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sakId)
+            oppgittUtenlandsopplysningerRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandlingId)
+                ?: oppgittUtenlandsopplysningerRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sakId)
 
         val brukerPersonopplysning = personopplysningRepository.hentBrukerPersonOpplysningHvisEksisterer(behandlingId)
 
