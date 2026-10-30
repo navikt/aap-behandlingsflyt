@@ -326,7 +326,7 @@ class TestBehandlingFullføringService(
 
         Definisjon.KVALITETSSIKRING -> KvalitetssikringLøsning(
             alleAvklaringsbehov
-                .filter { it.erIkkeAvbrutt() && (it.erTotrinn() || it.kreverKvalitetssikring()) }
+                .filter { (it.kreverToTrinnsvurdering() || it.kreverKvalitetssikring()) }
                 .map {
                     TotrinnsVurdering(
                         it.definisjon.kode,

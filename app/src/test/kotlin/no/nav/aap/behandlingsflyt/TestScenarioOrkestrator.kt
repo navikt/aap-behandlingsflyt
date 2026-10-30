@@ -209,7 +209,7 @@ class TestScenarioOrkestrator(
         val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling.id, datasource)
         return løsAvklaringsBehov(
             behandling,
-            KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
+            KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.kreverToTrinnsvurdering() || behov.kreverKvalitetssikring() }
                 .map { behov ->
                     TotrinnsVurdering(
                         behov.definisjon.kode, true, "begrunnelse", emptyList()
