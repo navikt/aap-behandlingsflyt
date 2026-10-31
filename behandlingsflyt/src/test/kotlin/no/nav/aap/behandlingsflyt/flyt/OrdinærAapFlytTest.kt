@@ -104,8 +104,7 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             .medKontekst {
                 if (toggleForHoppOverBeslutter()) {
                     assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
-                        .containsOnly(Definisjon.SKRIV_VEDTAKSBREV)
-                    assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+                    assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
                 } else {
                     assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
                     assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
@@ -120,7 +119,7 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             }
         behandlingMedFattetVedtak
             .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
 
                 val vedtak = hentVedtak()
                 assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
@@ -133,7 +132,6 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
 
                 assertThat(resultat).isEqualTo(Resultat.AVSLAG)
             }
-            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG)
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
 

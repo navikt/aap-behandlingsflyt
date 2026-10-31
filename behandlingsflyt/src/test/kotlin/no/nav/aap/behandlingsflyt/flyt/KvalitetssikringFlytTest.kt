@@ -303,7 +303,6 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(UnleashMedK
             .bekreftVurderinger()
             .kvalitetssikre()
             .fattVedtak()
-            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG)
 
         assertThat(hentAvklaringsbehovSomMåLøses(behandlingMedAvslag)).isEmpty()
 
