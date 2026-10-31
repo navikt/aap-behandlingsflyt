@@ -76,7 +76,7 @@ class ArenaMeldeperiodesyklusInformasjonskrav(
             }
             is HarSyklus -> {
                 val (år, isoUke) = registerdata
-                val fastsattDag = LocalDate.parse("$år-W$isoUke-1", DateTimeFormatter.ISO_WEEK_DATE)
+                val fastsattDag = LocalDate.parse("$år-W${isoUke.toString().padStart(2, '0')}-1", DateTimeFormatter.ISO_WEEK_DATE)
                 meldeperiodeRepository.lagreFastsattDag(kontekst.behandlingId, fastsattDag)
                 return Informasjonskrav.Endret.ENDRET
             }
