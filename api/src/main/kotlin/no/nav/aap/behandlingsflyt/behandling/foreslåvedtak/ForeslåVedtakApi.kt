@@ -24,7 +24,9 @@ import no.nav.aap.behandlingsflyt.utils.tilForeslåVedtakDataTidslinje
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
@@ -119,33 +121,65 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                             generateSequence(behandling.forrigeBehandlingId) { behandlingRepository.hent(it).forrigeBehandlingId }
                                 .toList()
                                 .reversed()
-                                .mapNotNull { underveisRepository.hentHvisEksisterer(it)?.tilForeslåVedtakDataTidslinje() }
+                                .mapNotNull {
+                                    underveisRepository.hentHvisEksisterer(it)?.tilForeslåVedtakDataTidslinje()
+                                }
 
-                        val forrigeTidslinje = tidligereTidslinjer.lastOrNull()
+                        val forrigeHelePeriode =
+                            tidligereTidslinjer.lastOrNull()?.takeIf { !it.isEmpty() }?.helePerioden()
+                        val gjeldendeHelePeriode = foreslåVedtakData.takeIf { !it.isEmpty() }?.helePerioden()
+
+                        val endretRettighetsperiode =
+                            if (forrigeHelePeriode != null && gjeldendeHelePeriode != null && forrigeHelePeriode != gjeldendeHelePeriode) {
+                                EndretRettighetsperiodeDto(fra = forrigeHelePeriode, til = gjeldendeHelePeriode)
+                            } else {
+                                null
+                            }
+
+                        val forrigeOppfyltPerioder: List<Periode>? = tidligereTidslinjer.lastOrNull()
+                            ?.segmenter()
+                            ?.filter { it.verdi.utfall == Utfall.OPPFYLT }
+                            ?.map { it.periode }
+
+                        val oppfyltPerioderNå = foreslåVedtakData.segmenter()
+                            .filter { it.verdi.first.utfall == Utfall.OPPFYLT }
+                            .map { it.periode }
 
                         val foreslåVedtakPerioder =
                             foreslåVedtakData
                                 .segmenter()
                                 .map { segment ->
                                     val (data, vilkårsavslag) = segment.verdi
-                                    val tidligereTilOgMed = if (data.utfall == Utfall.OPPFYLT) {
-                                        tidligereTidslinjer
-                                            .mapNotNull { tidslinje ->
-                                                tidslinje.segmenter()
-                                                    .firstOrNull { it.verdi.utfall == Utfall.OPPFYLT && it.periode.fom == segment.periode.fom }
-                                                    ?.periode?.tom
-                                            }
-                                            .filter { it != segment.periode.tom }
-                                            .distinct()
-                                    } else {
-                                        emptyList()
-                                    }
+                                    val oppfyltIndex = oppfyltPerioderNå.indexOf(segment.periode)
 
                                     val erNy = data.utfall == Utfall.OPPFYLT
-                                            && forrigeTidslinje != null
-                                            && forrigeTidslinje.segmenter().none {
-                                        it.verdi.utfall == Utfall.OPPFYLT && it.periode == segment.periode
+                                            && forrigeOppfyltPerioder != null
+                                            && forrigeOppfyltPerioder.getOrNull(oppfyltIndex) != segment.periode
+
+                                    val forrigeSegmenter: List<Segment<ForeslåVedtakData>> =
+                                        tidligereTidslinjer.lastOrNull()?.segmenter()?.toList() ?: emptyList()
+
+                                    val forrigeSisteOppfyltIndex =
+                                        forrigeSegmenter.indexOfLast { it.verdi.utfall == Utfall.OPPFYLT }
+                                    val forrigeIkkeOppfyltIndex = forrigeSegmenter.indexOfFirst {
+                                        it.verdi.utfall == Utfall.IKKE_OPPFYLT && it.periode.fom == segment.periode.fom
                                     }
+                                    val forrigeIkkeOppfylt = forrigeSegmenter.getOrNull(forrigeIkkeOppfyltIndex)
+
+                                    val tidligerePerioder = if (data.utfall == Utfall.OPPFYLT) {
+                                        listOfNotNull(
+                                            forrigeOppfyltPerioder
+                                                ?.getOrNull(oppfyltIndex)
+                                                ?.takeIf { it != segment.periode }
+                                        )
+                                    } else {
+                                        listOfNotNull(
+                                            forrigeIkkeOppfylt?.periode?.takeIf { it.tom != segment.periode.tom }
+                                        )
+                                    }
+                                    val tidligereVarÅpen = data.utfall == Utfall.IKKE_OPPFYLT
+                                            && forrigeIkkeOppfylt != null
+                                            && forrigeIkkeOppfyltIndex > forrigeSisteOppfyltIndex
 
                                     ForeslåVedtakDto(
                                         periode = segment.periode,
@@ -155,14 +189,17 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                                             vilkårsavslag = vilkårsavslag,
                                             underveisavslag = data.underveisÅrsak
                                         ),
-                                        tidligereTilOgMed = tidligereTilOgMed,
+                                        tidligerePerioder = tidligerePerioder,
+                                        tidligereVarÅpen = tidligereVarÅpen,
                                         erNy = erNy
                                     )
                                 }
+
                         ForeslåVedtakResponse(
                             foreslåVedtakPerioder,
                             stansOgOpphørDto,
                             harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                            endretRettighetsperiode = endretRettighetsperiode,
                         )
                     }
                 }
