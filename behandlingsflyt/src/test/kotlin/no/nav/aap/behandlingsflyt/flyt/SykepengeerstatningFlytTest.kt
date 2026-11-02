@@ -22,7 +22,9 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
@@ -142,9 +144,17 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             }
     }
 
-        @Test
+    @Test
     fun `revurdere 11-13 på ordinær AAP skal først kreve ny vurdering av 11-5 og 11-6`() {
         val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
+        val forrigeBehandling = dataSource.transaction(readOnly = true) { connection ->
+            val behandlingRepository = postgresRepositoryRegistry.provider(connection).provide<BehandlingRepository>()
+            val forrigeBehandlingId =
+                behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id)!!.behandlingId
+            behandlingRepository.hent(forrigeBehandlingId)
+        }
+
+        forrigeBehandling.assertRettighetstype(sak.rettighetsperiode to RettighetsType.BISTANDSBEHOV)
 
         sak.opprettManuellRevurdering(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING)
             .medKontekst {
