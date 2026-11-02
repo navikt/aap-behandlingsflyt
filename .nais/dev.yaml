@@ -13,10 +13,10 @@ spec:
     - https://aap-behandlingsflyt.intern.dev.nav.no
   resources:
     limits:
-      memory: 1024Mi
+      memory: 1536Mi
     requests:
       cpu: 500m
-      memory: 750Mi
+      memory: 900Mi
   observability:
     autoInstrumentation:
       enabled: true
