@@ -10,10 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgaveEnhet
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.AVBRYT_AKTIVITETSPLIKTBEHANDING
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.AVBRYT_REVURDERING
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.VURDER_TREKK_AV_KLAGE
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.VURDER_TREKK_AV_SØKNAD
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon.*
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.brev.kontrakt.SignaturGrunnlag
@@ -29,13 +26,6 @@ class SignaturService(
     private val behandlingRepository: BehandlingRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) {
-    private val ekskluderteAvklaringsbehov: Set<Definisjon> = setOf(
-        AVBRYT_REVURDERING,
-        AVBRYT_AKTIVITETSPLIKTBEHANDING,
-        VURDER_TREKK_AV_KLAGE,
-        VURDER_TREKK_AV_SØKNAD,
-    )
-
     constructor(
         repositoryProvider: RepositoryProvider,
         gatewayProvider: GatewayProvider
@@ -125,8 +115,8 @@ class SignaturService(
     private val rolleTilAvklaringsbehov: Map<Rolle, List<Definisjon>> = buildMap {
         put(Rolle.SAKSBEHANDLER_OPPFOLGING, definisjonerSomLøsesAv(Rolle.SAKSBEHANDLER_OPPFOLGING))
         put(Rolle.SAKSBEHANDLER_NASJONAL, definisjonerSomLøsesAv(Rolle.SAKSBEHANDLER_NASJONAL))
-        put(Rolle.KVALITETSSIKRER, listOf(Definisjon.KVALITETSSIKRING))
-        put(Rolle.BESLUTTER, listOf(Definisjon.FATTE_VEDTAK, Definisjon.SKRIV_VEDTAKSBREV))
+        put(Rolle.KVALITETSSIKRER, listOf(KVALITETSSIKRING))
+        put(Rolle.BESLUTTER, listOf(FATTE_VEDTAK, SKRIV_VEDTAKSBREV))
     }
 
     /**
@@ -134,9 +124,9 @@ class SignaturService(
      * definisjoner filtrert ut der det har ført til feil i signaturer.
      */
     private fun definisjonerSomLøsesAv(rolle: Rolle): List<Definisjon> {
-        return Definisjon.entries
+        return entries
             .filter { rolle in it.løsesAv }
-            .filterNot { it.erVentebehov() || it in ekskluderteAvklaringsbehov }
+            .filter { it.triggerSignatur() }
     }
 
     private fun utledSignaturerForVedtak(
@@ -280,4 +270,99 @@ class SignaturService(
             else -> null
         }
     }
+
+    private fun Definisjon.triggerSignatur(): Boolean =
+        when (this) {
+            /*
+             * Handlinger som avbryter en behandling
+             */
+            AVBRYT_REVURDERING,
+            AVBRYT_AKTIVITETSPLIKTBEHANDING,
+            VURDER_TREKK_AV_KLAGE,
+            VURDER_TREKK_AV_SØKNAD,
+            /*
+             * Ventebehov
+             */
+            MANUELT_SATT_PÅ_VENT,
+            BESTILL_BREV,
+            BESTILL_LEGEERKLÆRING,
+            OPPRETT_HENDELSE_PÅ_SAK,
+            SAMORDNING_VENT_PA_VIRKNINGSTIDSPUNKT,
+            FORHÅNDSVARSEL_AKTIVITETSPLIKT,
+            VENTE_PÅ_FRIST_EFFEKTUER_11_7,
+            VENTE_PÅ_UTENLANDSK_VIDEREFØRING_AVKLARING,
+            VENTE_PÅ_KLAGE_IMPLEMENTASJON,
+            VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV,
+            VENT_PÅ_OPPFØLGING,
+            VENT_PÅ_OPPFØLGING_NY,
+            VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT -> false
+
+            /*
+             * Behov som skal trigge signatur
+             */
+            SKRIV_BREV,
+            SKRIV_VEDTAKSBREV,
+            VURDER_RETTIGHETSPERIODE,
+            AVKLAR_STUDENT,
+            AVKLAR_STUDENT_V2,
+            AVKLAR_SAMORDNING_SYKESTIPEND,
+            OVERSTYR_IKKE_OPPFYLT_MELDEPLIKT,
+            AVKLAR_SYKDOM,
+            BEKREFT_VURDERINGER_OPPFØLGING,
+            KVALITETSSIKRING,
+            ARBEIDSOPPTRAPPING,
+            ETABLERING_EGEN_VIRKSOMHET,
+            AVKLAR_VEDTAKSLENGDE,
+            FASTSETT_ARBEIDSEVNE,
+            FASTSETT_BEREGNINGSTIDSPUNKT,
+            FASTSETT_YRKESSKADEINNTEKT,
+            VURDER_INNTEKTSBORTFALL,
+            SKRIV_VEDTAKSBREV_SAKSBEHANDLER,
+            VURDER_AVSLAG_11_27,
+            SKRIV_SYKDOMSVURDERING_BREV,
+            FASTSETT_MANUELL_INNTEKT,
+            FRITAK_MELDEPLIKT,
+            AVKLAR_BISTANDSBEHOV,
+            AVKLAR_OVERGANG_ARBEID,
+            AVKLAR_OVERGANG_UFORE,
+            AVKLAR_SYKEPENGEERSTATNING,
+            AVKLAR_YRKESSKADE,
+            AVKLAR_BARNETILLEGG,
+            AVKLAR_SONINGSFORRHOLD,
+            AVKLAR_HELSEINSTITUSJON,
+            AVKLAR_SAMORDNING_GRADERING,
+            AVKLAR_SAMORDNING_UFØRE,
+            SAMORDNING_ANDRE_STATLIGE_YTELSER,
+            SAMORDNING_ARBEIDSGIVER,
+            SAMORDNING_BARNEPENSJON,
+            VURDER_KRAV,
+            AVKLAR_STØNADSPERIODE,
+            EFFEKTUER_11_7,
+            AVKLAR_LOVVALG_MEDLEMSKAP,
+            FORESLÅ_UTTAK,
+            FORESLÅ_VEDTAK,
+            FORESLÅ_VEDTAK_VEDTAKSLENGDE,
+            FATTE_VEDTAK,
+            AVKLAR_FORUTGÅENDE_MEDLEMSKAP,
+            MANUELL_OVERSTYRING_LOVVALG,
+            MANUELL_OVERSTYRING_MEDLEMSKAP,
+            REFUSJON_KRAV,
+            AVKLAR_OPPHOLDSKRAV,
+            FASTSETT_PÅKLAGET_BEHANDLING,
+            SAMORDNING_REFUSJONS_KRAV,
+            VURDER_FORMKRAV,
+            FASTSETT_BEHANDLENDE_ENHET,
+            VURDER_KLAGE_KONTOR,
+            VURDER_KLAGE_NAY,
+            BEKREFT_TOTALVURDERING_KLAGE,
+            EFFEKTUER_AVVIST_PÅ_FORMKRAV,
+            FASTSETT_FULLMEKTIG,
+            SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV,
+            HÅNDTER_SVAR_FRA_ANDREINSTANS,
+            AVKLAR_OPPFØLGINGSBEHOV_LOKALKONTOR,
+            AVKLAR_OPPFØLGINGSBEHOV_NAY,
+            VURDER_BRUDD_11_7,
+            VURDER_BRUDD_11_9,
+            SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV -> true
+        }
 }
