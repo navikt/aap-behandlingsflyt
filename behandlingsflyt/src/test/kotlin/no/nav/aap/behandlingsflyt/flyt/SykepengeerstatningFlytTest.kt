@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -154,7 +155,15 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             behandlingRepository.hent(forrigeBehandlingId)
         }
 
-        forrigeBehandling.assertRettighetstype(sak.rettighetsperiode to RettighetsType.BISTANDSBEHOV)
+        val forrigeRettighetstyper = dataSource.transaction(readOnly = true) { connection ->
+            postgresRepositoryRegistry.provider(connection)
+                .provide<RettighetstypeRepository>()
+                .hent(forrigeBehandling.id)
+                .rettighetstypeTidslinje
+                .segmenter()
+                .map { it.verdi }
+        }
+        assertThat(forrigeRettighetstyper).contains(RettighetsType.BISTANDSBEHOV)
 
         sak.opprettManuellRevurdering(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING)
             .medKontekst {
