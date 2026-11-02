@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.hendelse.kafka.inst2
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Inst2KafkaDto
@@ -22,7 +21,6 @@ class InstitusjonsOppholdService(
     private val trukketSøknadService: TrukketSøknadService,
     private val behandlingService: BehandlingService,
     private val institusjonsoppholdKlient: InstitusjonsoppholdGateway,
-    private val institusjonsoppholdInformasjonskrav: InstitusjonsoppholdInformasjonskrav,
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
@@ -34,9 +32,6 @@ class InstitusjonsOppholdService(
         trukketSøknadService = TrukketSøknadService(repositoryProvider),
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
         institusjonsoppholdKlient = gatewayProvider.provide(),
-        institusjonsoppholdInformasjonskrav = InstitusjonsoppholdInformasjonskrav.konstruer(
-            repositoryProvider, gatewayProvider
-        ),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -58,12 +53,8 @@ class InstitusjonsOppholdService(
                     }
                 }
                 val institusjonsopphold = institusjonsoppholdKlient.hentDataForHendelse(meldingVerdi.oppholdId)
-                // En korrigering fra HS/FO til AS må fortsatt kunne fjerne et tidligere relevant opphold.
-                if (institusjonsopphold.institusjonstype == Institusjonstype.AS &&
-                    (sisteYtelsesBehandling == null ||
-                            institusjonsoppholdInformasjonskrav.behovForRevurdering(sisteYtelsesBehandling.id).isEmpty())
-                ) {
-                    log.info("Ignorerer alders- og sykehjemshendelse uten endringer i relevante institusjonsopphold")
+                if (institusjonsopphold.institusjonstype == Institusjonstype.AS) {
+                    log.info("Ignorerer alders- og sykehjemshendelse")
                     continue
                 }
                 val beriketInstitusjonsopphold = Inst2KafkaDto(

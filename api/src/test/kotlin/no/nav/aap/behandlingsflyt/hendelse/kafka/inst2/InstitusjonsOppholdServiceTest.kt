@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.hendelse.kafka.inst2
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
@@ -20,7 +19,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
 import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -36,9 +34,6 @@ class InstitusjonsOppholdServiceTest {
         override fun hentDataForHendelse(oppholdId: Long): Institusjonsopphold = opphold
     }
 
-    private val gatewayProvider = minimalGatewayProvider {
-        register<FakeInstitusjonsoppholdGateway>()
-    }
     private val service = InstitusjonsOppholdService(
         sakRepository = InMemorySakRepository,
         personRepository = InMemoryPersonRepository,
@@ -46,15 +41,12 @@ class InstitusjonsOppholdServiceTest {
         trukketSøknadService = TrukketSøknadService(inMemoryRepositoryProvider),
         behandlingService = InMemoryBehandlingService,
         institusjonsoppholdKlient = FakeInstitusjonsoppholdGateway,
-        institusjonsoppholdInformasjonskrav = InstitusjonsoppholdInformasjonskrav.konstruer(
-            inMemoryRepositoryProvider, gatewayProvider
-        ),
     )
 
     @ParameterizedTest
     @NullSource
     @EnumSource(Institusjonstype::class)
-    fun `AS ignoreres med mindre relevante registeropphold er endret`(tidligereType: Institusjonstype?) {
+    fun `AS ignoreres uavhengig av tidligere registeropphold`(tidligereType: Institusjonstype?) {
         val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = 1 januar 2026)
         if (tidligereType != null) {
             InMemoryInstitusjonsoppholdRepository.lagreOpphold(behandling.id, listOf(opphold(tidligereType)))
@@ -63,8 +55,7 @@ class InstitusjonsOppholdServiceTest {
 
         service.håndter("melding", melding(sak.person))
 
-        val forventetAntall = if (tidligereType == Institusjonstype.HS || tidligereType == Institusjonstype.FO) 1 else 0
-        assertThat(InMemoryFlytJobbRepository.hentJobberForSak(sak.id.id)).hasSize(forventetAntall)
+        assertThat(InMemoryFlytJobbRepository.hentJobberForSak(sak.id.id)).isEmpty()
     }
 
     @ParameterizedTest
