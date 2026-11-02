@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.hendelse.kafka.inst2
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
@@ -13,7 +14,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Institusjonsoppho
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsoppholdsType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryFlytJobbRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryInstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
@@ -49,7 +49,8 @@ class InstitusjonsOppholdServiceTest {
     fun `AS ignoreres uavhengig av tidligere registeropphold`(tidligereType: Institusjonstype?) {
         val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = 1 januar 2026)
         if (tidligereType != null) {
-            InMemoryInstitusjonsoppholdRepository.lagreOpphold(behandling.id, listOf(opphold(tidligereType)))
+            inMemoryRepositoryProvider.provide<InstitusjonsoppholdRepository>()
+                .lagreOpphold(behandling.id, listOf(opphold(tidligereType)))
         }
         FakeInstitusjonsoppholdGateway.opphold = opphold(Institusjonstype.AS)
 
