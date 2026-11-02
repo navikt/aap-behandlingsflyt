@@ -2,57 +2,21 @@ package no.nav.aap.behandlingsflyt.integrasjon.pdl
 
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.mockkStatic
-import io.mockk.unmockkAll
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.help.person
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
-import no.nav.aap.komponenter.config.requiredConfigForKey
-import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.parallel.Execution
-import org.junit.jupiter.api.parallel.ExecutionMode
-import java.io.InputStream
-import java.net.URI
 import java.time.LocalDate
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Execution(ExecutionMode.SAME_THREAD)
 class PdlBarnGatewayTest {
+    private val pdlGateway = mockk<PdlGateway>()
 
-    private lateinit var gateway: PdlBarnGateway
+    private val pdlBarnGateway = PdlBarnGateway(pdlGateway)
     private val mockPerson = person()
-
-    @BeforeAll
-    fun setupMocks() {
-        mockkStatic("no.nav.aap.komponenter.config.ConfigUtilsKt")
-        every { requiredConfigForKey(any()) } answers { "mock-${firstArg<String>()}" }
-
-        mockkObject(PdlGateway)
-
-        val mockClient = mockk<RestClient<InputStream>>()
-        every { PdlGateway getProperty "client" } returns mockClient
-        every { PdlGateway getProperty "url" } returns URI.create("http://mock-url")
-    }
-
-    @AfterAll
-    fun cleanupMocks() {
-        unmockkAll()
-    }
-
-    @BeforeEach
-    fun setup() {
-        gateway = PdlBarnGateway()
-    }
 
     @Test
     fun `hentBarn skal returnere barn med ident fra register`() {
@@ -60,16 +24,11 @@ class PdlBarnGatewayTest {
         val pdlResponse = lagPdlRelasjonResponse(listOf(lagBarnRelasjonMedIdent(barnIdent)))
         val pdlBolkResponse = lagPdlBolkResponse(listOf(Triple(barnIdent, "2015-01-01", null)))
 
-        val mockClient = PdlGateway.client
         every {
-            mockClient.post<Any, PdlRelasjonDataResponse>(
-                any(),
-                any(),
-                any()
-            )
+            pdlGateway.query<PdlRelasjonDataResponse>(any(), any(), any())
         } returnsMany listOf(pdlResponse, pdlBolkResponse)
 
-        val resultat = gateway.hentBarn(mockPerson, emptyList(), emptyList())
+        val resultat = pdlBarnGateway.hentBarn(mockPerson, emptyList(), emptyList())
 
         assertEquals(1, resultat.registerBarn.size)
         val barn = resultat.registerBarn.first()
@@ -83,16 +42,11 @@ class PdlBarnGatewayTest {
             listOf(lagBarnRelasjonUtenIdent("Ella", "Hansen", "2015-01-01"))
         )
 
-        val mockClient = PdlGateway.client
         every {
-            mockClient.post<Any, PdlRelasjonDataResponse>(
-                any(),
-                any(),
-                any()
-            )
+            pdlGateway.query<PdlRelasjonDataResponse>(any(), any(), any())
         } returns pdlResponse
 
-        val resultat = gateway.hentBarn(mockPerson, emptyList(), emptyList())
+        val resultat = pdlBarnGateway.hentBarn(mockPerson, emptyList(), emptyList())
 
         assertThat(resultat.registerBarn.size).isEqualTo(1)
 
@@ -108,16 +62,11 @@ class PdlBarnGatewayTest {
             listOf(lagBarnRelasjonUtenIdentOgData())
         )
 
-        val mockClient = PdlGateway.client
         every {
-            mockClient.post<Any, PdlRelasjonDataResponse>(
-                any(),
-                any(),
-                any()
-            )
+            pdlGateway.query<PdlRelasjonDataResponse>(any(), any(), any())
         } returns pdlResponse
 
-        val resultat = gateway.hentBarn(mockPerson, emptyList(), emptyList())
+        val resultat = pdlBarnGateway.hentBarn(mockPerson, emptyList(), emptyList())
 
         assertTrue(resultat.registerBarn.isEmpty())
         assertTrue(resultat.oppgitteBarnFraPDL.isEmpty())
@@ -130,16 +79,11 @@ class PdlBarnGatewayTest {
         val pdlResponse = lagPdlRelasjonResponse(emptyList())
         val pdlBolkResponse = lagPdlBolkResponse(listOf(Triple(oppgittIdent.identifikator, "2016-01-01", null)))
 
-        val mockClient = PdlGateway.client
         every {
-            mockClient.post<Any, PdlRelasjonDataResponse>(
-                any(),
-                any(),
-                any()
-            )
+            pdlGateway.query<PdlRelasjonDataResponse>(any(), any(), any())
         } returnsMany listOf(pdlResponse, pdlBolkResponse)
 
-        val resultat = gateway.hentBarn(mockPerson, listOf(oppgittIdent), emptyList())
+        val resultat = pdlBarnGateway.hentBarn(mockPerson, listOf(oppgittIdent), emptyList())
 
         assertThat(resultat.oppgitteBarnFraPDL.size).isEqualTo(1)
         assertThat(resultat.registerBarn.size).isEqualTo(0)
@@ -149,16 +93,11 @@ class PdlBarnGatewayTest {
     fun `hentBarn skal håndtere tom liste med identer`() {
         val pdlResponse = lagPdlRelasjonResponse(emptyList())
 
-        val mockClient = PdlGateway.client
         every {
-            mockClient.post<Any, PdlRelasjonDataResponse>(
-                any(),
-                any(),
-                any()
-            )
+            pdlGateway.query<PdlRelasjonDataResponse>(any(), any(), any())
         } returns pdlResponse
 
-        val resultat = gateway.hentBarn(mockPerson, emptyList(), emptyList())
+        val resultat = pdlBarnGateway.hentBarn(mockPerson, emptyList(), emptyList())
 
         assertTrue(resultat.registerBarn.isEmpty())
         assertTrue(resultat.oppgitteBarnFraPDL.isEmpty())
@@ -172,16 +111,11 @@ class PdlBarnGatewayTest {
             listOf(Triple(barnIdent, "2015-01-01", "2020-01-01"))
         )
 
-        val mockClient = PdlGateway.client
         every {
-            mockClient.post<Any, PdlRelasjonDataResponse>(
-                any(),
-                any(),
-                any()
-            )
+            pdlGateway.query<PdlRelasjonDataResponse>(any(), any(), any())
         } returnsMany listOf(pdlResponse, pdlBolkResponse)
 
-        val resultat = gateway.hentBarn(mockPerson, emptyList(), emptyList())
+        val resultat = pdlBarnGateway.hentBarn(mockPerson, emptyList(), emptyList())
 
         val barn = resultat.registerBarn.first()
         assertNotNull(barn.dødsdato)
@@ -195,16 +129,11 @@ class PdlBarnGatewayTest {
             listOf(Triple(barnIdent, "2015-01-01", "2020-06-15"))
         )
 
-        val mockClient = PdlGateway.client
         every {
-            mockClient.post<Any, PdlRelasjonDataResponse>(
-                any(),
-                any(),
-                any()
-            )
+            pdlGateway.query<PdlRelasjonDataResponse>(any(), any(), any())
         } returnsMany listOf(pdlResponse, pdlBolkResponse)
 
-        val resultat = gateway.hentBarn(mockPerson, emptyList(), emptyList())
+        val resultat = pdlBarnGateway.hentBarn(mockPerson, emptyList(), emptyList())
 
         assertEquals(1, resultat.registerBarn.size)
         val barn = resultat.registerBarn.first()
@@ -227,16 +156,11 @@ class PdlBarnGatewayTest {
             )
         )
 
-        val mockClient = PdlGateway.client
         every {
-            mockClient.post<Any, PdlRelasjonDataResponse>(
-                any(),
-                any(),
-                any()
-            )
+            pdlGateway.query<PdlRelasjonDataResponse>(any(), any(), any())
         } returnsMany listOf(pdlRelasjonResponse, pdlBolkResponse)
 
-        val resultat = gateway.hentBarn(mockPerson, listOf(oppgittIdent), listOf(saksbehandlerIdent))
+        val resultat = pdlBarnGateway.hentBarn(mockPerson, listOf(oppgittIdent), listOf(saksbehandlerIdent))
 
         assertEquals(1, resultat.registerBarn.size)
         assertEquals(1, resultat.oppgitteBarnFraPDL.size)
@@ -262,16 +186,11 @@ class PdlBarnGatewayTest {
         val pdlRelasjonResponse = lagPdlRelasjonResponse(listOf(lagBarnRelasjonMedIdent(felles)))
         val pdlBolkResponse = lagPdlBolkResponse(listOf(Triple(felles, "2015-01-01", null)))
 
-        val mockClient = PdlGateway.client
         every {
-            mockClient.post<Any, PdlRelasjonDataResponse>(
-                any(),
-                any(),
-                any()
-            )
+            pdlGateway.query<PdlRelasjonDataResponse>(any(), any(), any())
         } returnsMany listOf(pdlRelasjonResponse, pdlBolkResponse)
 
-        val resultat = gateway.hentBarn(mockPerson, listOf(Ident(felles)), listOf(Ident(felles)))
+        val resultat = pdlBarnGateway.hentBarn(mockPerson, listOf(Ident(felles)), listOf(Ident(felles)))
 
         assertEquals(1, resultat.registerBarn.size)
         assertEquals(1, resultat.oppgitteBarnFraPDL.size)
@@ -284,16 +203,11 @@ class PdlBarnGatewayTest {
         val pdlRelasjonResponse = lagPdlRelasjonResponse(emptyList())
         val pdlBolkResponse = lagPdlBolkResponse(listOf(Triple(ident, "2015-01-01", null)))
 
-        val mockClient = PdlGateway.client
         every {
-            mockClient.post<Any, PdlRelasjonDataResponse>(
-                any(),
-                any(),
-                any()
-            )
+            pdlGateway.query<PdlRelasjonDataResponse>(any(), any(), any())
         } returnsMany listOf(pdlRelasjonResponse, pdlBolkResponse)
 
-        val resultat = gateway.hentBarn(
+        val resultat = pdlBarnGateway.hentBarn(
             mockPerson,
             listOf(Ident(ident), Ident(ident)),
             listOf(Ident(ident))
