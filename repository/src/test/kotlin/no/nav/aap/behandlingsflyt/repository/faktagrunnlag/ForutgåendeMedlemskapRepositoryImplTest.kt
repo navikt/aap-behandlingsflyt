@@ -23,7 +23,7 @@ import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.forutgåendemedlemskap.ForutgåendeMedlemskapRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap.LovvalgMedlemskapRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap.OppgittUtenlandsopplysningerRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
@@ -149,7 +149,7 @@ internal class ForutgåendeMedlemskapRepositoryImplTest {
 
         dataSource.transaction { connection ->
             val behandlingRepo = BehandlingRepositoryImpl(connection)
-            val arbeidInntektRepo = LovvalgMedlemskapRepositoryImpl(connection)
+            val oppgittUtenlandsopplysningerRepo = OppgittUtenlandsopplysningerRepositoryImpl(connection)
 
             val førstegangsBehandling =
                 opprettBehandlingMedVurdering(TypeBehandling.Førstegangsbehandling, sak.id, null, emptyList(), null)
@@ -186,7 +186,7 @@ internal class ForutgåendeMedlemskapRepositoryImplTest {
             )
 
             val sisteUtenlandsOppholdData =
-                arbeidInntektRepo.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sak.id)
+                oppgittUtenlandsopplysningerRepo.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sak.id)
             assertEquals(sisteUtenlandsOppholdData?.harBoddINorgeSiste5År, true)
         }
     }
@@ -506,8 +506,8 @@ internal class ForutgåendeMedlemskapRepositoryImplTest {
             utenlandsOpphold = null
         )
     ) {
-        val lovvalgRepository = LovvalgMedlemskapRepositoryImpl(connection)
-        if (utenlandsOppholdData != null) lovvalgRepository.lagreOppgittUtenlandsOppplysninger(
+        val oppgittUtenlandsopplysningerRepository = OppgittUtenlandsopplysningerRepositoryImpl(connection)
+        if (utenlandsOppholdData != null) oppgittUtenlandsopplysningerRepository.lagreOppgittUtenlandsOppplysninger(
             behandlingId,
             JournalpostId("1"),
             utenlandsOppholdData
