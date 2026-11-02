@@ -55,9 +55,9 @@ class InstitusjonsoppholdInformasjonskravIntegrasjonsTest {
     fun `AS filtreres bort før lagring med og uten sammenhengende opphold`(sammenhengendeOpphold: Boolean) {
         val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = 1 mars 2026)
         FakeInstitusjonsoppholdGateway.response = listOf(
-            institusjonsopphold(1 mars 2026, null, "Aldershjem", Institusjonstype.AS),
-            institusjonsopphold(1 mars 2026, null, "Helseinstitusjon"),
-            institusjonsopphold(1 mars 2026, null, "Fengsel", Institusjonstype.FO),
+            institusjonsopphold(1 mars 2026, 10 mars 2026, "Aldershjem", Institusjonstype.AS),
+            institusjonsopphold(11 mars 2026, 20 mars 2026, "Helseinstitusjon"),
+            institusjonsopphold(21 mars 2026, null, "Fengsel", Institusjonstype.FO),
         )
         val gateways = minimalGatewayProvider(
             if (sammenhengendeOpphold) InstitusjonFlytTest.SammenhengendeInstitusjonsoppholdUnleash::class
