@@ -11,8 +11,6 @@ import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDialogmeldingerForSakParams
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostListeParams
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostListeResponse
-import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostParams
-import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostResponse
 import no.nav.aap.dokumentinnhenting.kontrakt.HentFastlegeDto
 import no.nav.aap.dokumentinnhenting.kontrakt.HentLegeerklæringForespørslerForSakParams
 import no.nav.aap.dokumentinnhenting.kontrakt.PåminnelseDto
@@ -150,28 +148,12 @@ class DokumentinnhentingGatewayImpl : DokumentinnhentingGateway {
         )
     }
 
-    override fun hentDokumentoversiktForJournalpost(request: HentDokumentoversiktJournalpostParams, currentToken: OidcToken): HentDokumentoversiktJournalpostResponse {
-        val journalpostId = request.journalpostId
-        val request = GetRequest(
-            additionalHeaders = listOf(
-                Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
-                Header("Accept", "application/json")
-            ),
-            currentToken = currentToken
-        )
-
-        return requireNotNull(
-            client.get(
-                uri = URI.create("$dokumenterUri/api/dokumenter/$journalpostId/dokumentliste"),
-                request = request,
-                mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
-            )
-        )
-    }
-
-    override fun hentDokumentoversiktForJournalpostListe(request: HentDokumentoversiktJournalpostListeParams, currentToken: OidcToken): HentDokumentoversiktJournalpostListeResponse {
+    override fun hentDokumentoversiktForJournalpostListe(
+        journalpostIDer: List<String>,
+        currentToken: OidcToken
+    ): HentDokumentoversiktJournalpostListeResponse {
         val request = PostRequest(
-            body = request,
+            body = HentDokumentoversiktJournalpostListeParams(journalpostIDer),
             additionalHeaders = listOf(
                 Header("Nav-Consumer-Id", "aap-behandlingsflyt"),
                 Header("Accept", "application/json")
