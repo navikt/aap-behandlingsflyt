@@ -88,6 +88,7 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
     private fun hentInstitusjonsopphold(sak: Sak): List<Institusjonsopphold> {
         val gyldigeOpphold = institusjonsoppholdRegisterGateway
             .innhent(sak.person)
+            .filterNot { it.institusjonstype == Institusjonstype.AS }
             .filter {
                 try {
                     it.periode()
@@ -116,8 +117,13 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val sak = sakService.hentSakFor(behandlingId)
         val institusjonsopphold = hentInstitusjonsopphold(sak)
+        val eksisterendeRelevanteOpphold = Oppholdene(
+            eksisterendeGrunnlag?.oppholdene?.opphold.orEmpty()
+                .filterNot { it.verdi.type == Institusjonstype.AS }
+        )
+        val nyeRelevanteOpphold = Oppholdene(institusjonsopphold.map { it.tilInstitusjonSegment() })
 
-        return if (erEndret(eksisterendeGrunnlag, institusjonsopphold))
+        return if (eksisterendeRelevanteOpphold != nyeRelevanteOpphold)
             listOf(VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD))
         else
             emptyList()

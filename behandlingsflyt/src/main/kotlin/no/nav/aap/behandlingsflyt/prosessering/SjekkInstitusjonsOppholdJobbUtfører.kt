@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
@@ -92,7 +93,8 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         val opphold = institusjonsOppholdRepository.hentHvisEksisterer(behandlingId)?.oppholdene?.opphold
         val matchendeOpphold =
             opphold?.firstOrNull { oppholdPeriode ->
-                periodeErMinstFireMaanederOgFomVartIToMaaneder(oppholdPeriode.periode)
+                oppholdPeriode.verdi.type != Institusjonstype.AS &&
+                        periodeErMinstFireMaanederOgFomVartIToMaaneder(oppholdPeriode.periode)
             }
 
         if (matchendeOpphold != null) {
