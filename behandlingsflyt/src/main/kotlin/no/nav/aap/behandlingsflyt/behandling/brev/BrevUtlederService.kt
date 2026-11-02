@@ -899,14 +899,30 @@ class BrevUtlederService(
         val underveis = checkNotNull(underveisRepository.hentHvisEksisterer(behandlingId)) {
             "Vedtak mangler underveis"
         }
-        val harOverlappMedInnvilgetAAP = tjenestePensjonRepository.hentHvisEksisterer(behandlingId)
+        val tpPerioder = tjenestePensjonRepository.hentHvisEksisterer(behandlingId)
             .orEmpty()
-            .any { forhold ->
-                forhold.ytelser.any { ytelse ->
-                    val tpPeriode = Periode(ytelse.ytelseIverksattFom, ytelse.ytelseIverksattTom ?: Tid.MAKS)
-                    underveis.perioder.any { it.utfall == Utfall.OPPFYLT && it.periode.overlapper(tpPeriode) }
+            .flatMap { forhold ->
+                forhold.ytelser.map { ytelse ->
+                    Periode(ytelse.ytelseIverksattFom, ytelse.ytelseIverksattTom ?: Tid.MAKS)
                 }
             }
+
+        val harOverlappMedInnvilgetAAP = tpPerioder.any { tpPeriode ->
+            underveis.perioder.any {
+                it.utfall == Utfall.OPPFYLT && it.periode.overlapper(tpPeriode)
+            }
+        }
+
+        if (Miljø.erDev()) {
+            
+            log.info(
+                "TP-overlapp for behandling {}: harOverlapp={}, underveisperioder={}, tpPerioder={}",
+                behandlingId,
+                harOverlappMedInnvilgetAAP,
+                underveis.perioder.map { "${it.periode}: ${it.utfall}" },
+                tpPerioder,
+            )
+        }
         if (!harOverlappMedInnvilgetAAP) return null
 
         val vurdering = tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandlingId)
