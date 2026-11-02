@@ -1356,7 +1356,6 @@ class BrevUtlederServiceTest {
             avslagsårsak: Avslagsårsak,
             forventetBrevtype: TypeBrev,
         ) {
-            System.setProperty("NAIS_CLUSTER_NAME", "dev-gcp")
             val førstegangsbehandling = gittBehandling()
             gittUnderveisGrunnlag(
                 førstegangsbehandling.id,
