@@ -136,10 +136,8 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                                 null
                             }
 
-                        val forrigeOppfyltPerioder: List<Periode>? = tidligereTidslinjer.lastOrNull()
-                            ?.segmenter()
-                            ?.filter { it.verdi.utfall == Utfall.OPPFYLT }
-                            ?.map { it.periode }
+                        val forrigeSegmenter: List<Segment<ForeslåVedtakData>>? =
+                            tidligereTidslinjer.lastOrNull()?.segmenter()?.toList()
 
                         val oppfyltPerioderNå = foreslåVedtakData.segmenter()
                             .filter { it.verdi.first.utfall == Utfall.OPPFYLT }
@@ -150,36 +148,12 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                                 .segmenter()
                                 .map { segment ->
                                     val (data, vilkårsavslag) = segment.verdi
-                                    val oppfyltIndex = oppfyltPerioderNå.indexOf(segment.periode)
-
-                                    val erNy = data.utfall == Utfall.OPPFYLT
-                                            && forrigeOppfyltPerioder != null
-                                            && forrigeOppfyltPerioder.getOrNull(oppfyltIndex) != segment.periode
-
-                                    val forrigeSegmenter: List<Segment<ForeslåVedtakData>> =
-                                        tidligereTidslinjer.lastOrNull()?.segmenter()?.toList() ?: emptyList()
-
-                                    val forrigeSisteOppfyltIndex =
-                                        forrigeSegmenter.indexOfLast { it.verdi.utfall == Utfall.OPPFYLT }
-                                    val forrigeIkkeOppfyltIndex = forrigeSegmenter.indexOfFirst {
-                                        it.verdi.utfall == Utfall.IKKE_OPPFYLT && it.periode.fom == segment.periode.fom
-                                    }
-                                    val forrigeIkkeOppfylt = forrigeSegmenter.getOrNull(forrigeIkkeOppfyltIndex)
-
-                                    val tidligerePerioder = if (data.utfall == Utfall.OPPFYLT) {
-                                        listOfNotNull(
-                                            forrigeOppfyltPerioder
-                                                ?.getOrNull(oppfyltIndex)
-                                                ?.takeIf { it != segment.periode }
-                                        )
-                                    } else {
-                                        listOfNotNull(
-                                            forrigeIkkeOppfylt?.periode?.takeIf { it.tom != segment.periode.tom }
-                                        )
-                                    }
-                                    val tidligereVarÅpen = data.utfall == Utfall.IKKE_OPPFYLT
-                                            && forrigeIkkeOppfylt != null
-                                            && forrigeIkkeOppfyltIndex > forrigeSisteOppfyltIndex
+                                    val endring = utledEndringFraForrige(
+                                        segment = segment.periode,
+                                        utfall = data.utfall,
+                                        oppfyltIndex = oppfyltPerioderNå.indexOf(segment.periode),
+                                        forrigeSegmenter = forrigeSegmenter,
+                                    )
 
                                     ForeslåVedtakDto(
                                         periode = segment.periode,
@@ -189,9 +163,9 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                                             vilkårsavslag = vilkårsavslag,
                                             underveisavslag = data.underveisÅrsak
                                         ),
-                                        tidligerePerioder = tidligerePerioder,
-                                        tidligereVarÅpen = tidligereVarÅpen,
-                                        erNy = erNy
+                                        tidligerePerioder = endring.tidligerePerioder,
+                                        tidligereVarÅpen = endring.tidligereVarÅpen,
+                                        erNy = endring.erNy
                                     )
                                 }
 
@@ -205,6 +179,47 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                 }
             respond(response)
         }
+    }
+}
+
+internal data class EndringFraForrige(
+    val erNy: Boolean,
+    val tidligerePerioder: List<Periode>,
+    val tidligereVarÅpen: Boolean,
+)
+
+internal fun utledEndringFraForrige(
+    segment: Periode,
+    utfall: Utfall,
+    oppfyltIndex: Int,
+    forrigeSegmenter: List<Segment<ForeslåVedtakData>>?,
+): EndringFraForrige {
+    if (forrigeSegmenter == null) {
+        return EndringFraForrige(erNy = false, tidligerePerioder = emptyList(), tidligereVarÅpen = false)
+    }
+
+    return if (utfall == Utfall.OPPFYLT) {
+        val forrigePeriode = forrigeSegmenter
+            .filter { it.verdi.utfall == Utfall.OPPFYLT }
+            .map { it.periode }
+            .getOrNull(oppfyltIndex)
+        EndringFraForrige(
+            erNy = forrigePeriode != segment,
+            tidligerePerioder = listOfNotNull(forrigePeriode?.takeIf { it != segment }),
+            tidligereVarÅpen = false,
+        )
+    } else {
+        val forrigeIndex = forrigeSegmenter.indexOfFirst {
+            it.verdi.utfall == Utfall.IKKE_OPPFYLT && it.periode.fom == segment.fom
+        }
+        val forrige = forrigeSegmenter.getOrNull(forrigeIndex)
+        val tomEndret = forrige != null && forrige.periode.tom != segment.tom
+        EndringFraForrige(
+            erNy = false,
+            tidligerePerioder = listOfNotNull(forrige?.periode?.takeIf { tomEndret }),
+            tidligereVarÅpen = tomEndret &&
+                    forrigeIndex > forrigeSegmenter.indexOfLast { it.verdi.utfall == Utfall.OPPFYLT },
+        )
     }
 }
 

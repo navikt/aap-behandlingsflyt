@@ -19,6 +19,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
@@ -43,164 +46,38 @@ class ForeslåVedtakApiTest : BaseApiTest() {
 
     @Test
     fun `returnerer tom liste av perioder når det ikke finnes underveisgrunnlag`() {
-        val sak = opprettInMemorySak(LocalDate.of(2026, 1, 1))
-        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+        val behandling = opprettFørstegangsbehandling(opprettInMemorySak(dato(2026, 1, 1)))
         InMemoryVilkårsresultatRepository.slett(behandling.id)
 
-        testApplication {
-            installApplication {
-                foreslaaVedtakApi(MockDataSource(), inMemoryRepositoryRegistry, gatewayProvider())
-            }
+        val respons = hentForeslåVedtak(behandling)
 
-            val response =
-                createClient().get("/api/behandling/${behandling.referanse.referanse}/grunnlag/foreslaa-vedtak") {
-                    header("Authorization", "Bearer ${getToken().token()}")
-                }
-
-            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
-            val body = response.body<ForeslåVedtakResponse>()
-            assertThat(body.perioder).isEmpty()
-            assertThat(body.stansOpphør).isEmpty()
-            assertThat(body.harTilgangTilÅSaksbehandle).isTrue()
-        }
+        assertThat(respons.perioder).isEmpty()
+        assertThat(respons.stansOpphør).isEmpty()
+        assertThat(respons.harTilgangTilÅSaksbehandle).isTrue()
     }
 
     @Test
     fun `returnerer foreslått vedtak-periode uten vilkårsavslag når underveisgrunnlag finnes og vilkår er oppfylt`() {
-        val sak = opprettInMemorySak(LocalDate.of(2026, 1, 1))
-        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
-        val periode = Periode(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 15))
+        val behandling = opprettFørstegangsbehandling(opprettInMemorySak(dato(2026, 1, 1)))
+        val periode = Periode(dato(2026, 1, 1), dato(2026, 1, 15))
+        lagreGrunnlag(behandling.id, periode to Utfall.OPPFYLT)
 
-        InMemoryUnderveisRepository.lagre(
-            behandlingId = behandling.id,
-            underveisperioder = listOf(
-                Underveisperiode(
-                    periode = periode,
-                    meldePeriode = periode,
-                    utfall = Utfall.OPPFYLT,
-                    rettighetsType = RettighetsType.BISTANDSBEHOV,
-                    avslagsårsak = null,
-                    grenseverdi = Prosent.`100_PROSENT`,
-                    institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
-                    arbeidsgradering = ArbeidsGradering(
-                        totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
-                        andelArbeid = Prosent.`0_PROSENT`,
-                        fastsattArbeidsevne = Prosent.`100_PROSENT`,
-                        gradering = Prosent.`100_PROSENT`,
-                        opplysningerMottatt = null,
-                    ),
-                    trekk = Dagsatser(0),
-                    brukerAvKvoter = emptySet(),
-                    meldepliktStatus = null,
-                    meldepliktGradering = null,
-                )
-            ),
-            input = object : Faktagrunnlag {},
-        )
+        val foreslåttPeriode = hentForeslåVedtak(behandling).perioder.single()
 
-        // Alle vilkårene som TidligereVurderingerImpl sjekker før FORESLÅ_VEDTAK må være OPPFYLT
-        // for at ingen sjekk skal returnere UunngåeligAvslag pga. manglende vurdering.
-        val alleOppfylteVilkårtyper = listOf(
-            Vilkårtype.LOVVALG,
-            Vilkårtype.ALDERSVILKÅRET,
-            Vilkårtype.STUDENT,
-            Vilkårtype.SYKDOMSVILKÅRET,
-            Vilkårtype.OVERGANGUFØREVILKÅRET,
-            Vilkårtype.OVERGANGARBEIDVILKÅRET,
-            Vilkårtype.SYKEPENGEERSTATNING,
-            Vilkårtype.GRUNNLAGET,
-            Vilkårtype.INNTEKTSBORTFALL,
-            Vilkårtype.MEDLEMSKAP,
-            Vilkårtype.SAMORDNING,
-            Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING,
-        )
-        val vilkårsresultat = Vilkårsresultat(
-            vilkår = alleOppfylteVilkårtyper.map { type ->
-                Vilkår(
-                    type,
-                    setOf(
-                        Vilkårsperiode(
-                            periode = periode,
-                            utfall = Utfall.OPPFYLT,
-                            manuellVurdering = false,
-                            begrunnelse = null,
-                        )
-                    )
-                )
-            }
-        )
-        InMemoryVilkårsresultatRepository.lagre(behandling.id, vilkårsresultat)
-
-        testApplication {
-            installApplication {
-                foreslaaVedtakApi(MockDataSource(), inMemoryRepositoryRegistry, gatewayProvider())
-            }
-
-            val response = createClient().get("/api/behandling/${behandling.referanse.referanse}/grunnlag/foreslaa-vedtak") {
-                header("Authorization", "Bearer ${getToken().token()}")
-            }
-
-            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
-            val body = response.body<ForeslåVedtakResponse>()
-            assertThat(body.perioder).hasSize(1)
-            val foreslåttPeriode = body.perioder.first()
-            assertThat(foreslåttPeriode.periode).isEqualTo(periode)
-            assertThat(foreslåttPeriode.utfall).isEqualTo(Utfall.OPPFYLT)
-            assertThat(foreslåttPeriode.rettighetsType).isEqualTo(RettighetsType.BISTANDSBEHOV)
-            assertThat(foreslåttPeriode.avslagsårsak.vilkårsavslag).isEmpty()
-            assertThat(foreslåttPeriode.avslagsårsak.underveisavslag).isNull()
-        }
+        assertThat(foreslåttPeriode.periode).isEqualTo(periode)
+        assertThat(foreslåttPeriode.utfall).isEqualTo(Utfall.OPPFYLT)
+        assertThat(foreslåttPeriode.rettighetsType).isEqualTo(RettighetsType.BISTANDSBEHOV)
+        assertThat(foreslåttPeriode.avslagsårsak.vilkårsavslag).isEmpty()
+        assertThat(foreslåttPeriode.avslagsårsak.underveisavslag).isNull()
     }
 
     @Test
     fun `inkluderer vilkårsavslag i respons når tidligereVurderinger gir UunngåeligAvslag`() {
-        val sak = opprettInMemorySak(LocalDate.of(2026, 1, 1))
-        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
-        val periode = Periode(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 15))
+        val behandling = opprettFørstegangsbehandling(opprettInMemorySak(dato(2026, 1, 1)))
+        val periode = Periode(dato(2026, 1, 1), dato(2026, 1, 15))
+        lagreGrunnlag(behandling.id, periode to Utfall.IKKE_OPPFYLT)
 
-        InMemoryUnderveisRepository.lagre(
-            behandlingId = behandling.id,
-            underveisperioder = listOf(
-                Underveisperiode(
-                    periode = periode,
-                    meldePeriode = periode,
-                    utfall = Utfall.IKKE_OPPFYLT,
-                    rettighetsType = null,
-                    avslagsårsak = UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
-                    grenseverdi = Prosent.`100_PROSENT`,
-                    institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
-                    arbeidsgradering = ArbeidsGradering(
-                        totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
-                        andelArbeid = Prosent.`0_PROSENT`,
-                        fastsattArbeidsevne = Prosent.`100_PROSENT`,
-                        gradering = Prosent.`100_PROSENT`,
-                        opplysningerMottatt = null,
-                    ),
-                    trekk = Dagsatser(0),
-                    brukerAvKvoter = emptySet(),
-                    meldepliktStatus = null,
-                    meldepliktGradering = null,
-                )
-            ),
-            input = object : Faktagrunnlag {},
-        )
-
-        // Alle andre vilkår enn ALDERSVILKÅRET settes OPPFYLT, slik at kun ALDERSVILKÅRET
-        // gir opphav til UunngåeligAvslag i tidslinjen som TidligereVurderingerImpl produserer.
-        val øvrigeOppfylteVilkårtyper = listOf(
-            Vilkårtype.LOVVALG,
-            Vilkårtype.STUDENT,
-            Vilkårtype.SYKDOMSVILKÅRET,
-            Vilkårtype.OVERGANGUFØREVILKÅRET,
-            Vilkårtype.OVERGANGARBEIDVILKÅRET,
-            Vilkårtype.SYKEPENGEERSTATNING,
-            Vilkårtype.GRUNNLAGET,
-            Vilkårtype.INNTEKTSBORTFALL,
-            Vilkårtype.MEDLEMSKAP,
-            Vilkårtype.SAMORDNING,
-            Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING,
-        )
-
+        // Kun ALDERSVILKÅRET er ikke oppfylt, slik at det gir opphav til UunngåeligAvslag.
         val aldersvilkåretIkkeOppfylt = Vilkår(
             Vilkårtype.ALDERSVILKÅRET,
             setOf(
@@ -213,40 +90,215 @@ class ForeslåVedtakApiTest : BaseApiTest() {
                 )
             )
         )
-
-        val vilkårsresultat = Vilkårsresultat(
-            vilkår = listOf(aldersvilkåretIkkeOppfylt) + øvrigeOppfylteVilkårtyper.map { type ->
-                Vilkår(
-                    type,
-                    setOf(
-                        Vilkårsperiode(
-                            periode = periode,
-                            utfall = Utfall.OPPFYLT,
-                            manuellVurdering = false,
-                            begrunnelse = null,
-                        )
-                    )
-                )
-            }
+        InMemoryVilkårsresultatRepository.lagre(
+            behandling.id,
+            Vilkårsresultat(
+                vilkår = listOf(aldersvilkåretIkkeOppfylt) +
+                        oppfylteVilkår(periode).filter { it.type != Vilkårtype.ALDERSVILKÅRET }
+            )
         )
-        InMemoryVilkårsresultatRepository.lagre(behandling.id, vilkårsresultat)
 
+        val foreslåttPeriode = hentForeslåVedtak(behandling).perioder.single()
+
+        assertThat(foreslåttPeriode.avslagsårsak.vilkårsavslag)
+            .extracting("vilkår")
+            .containsExactly(Vilkårtype.ALDERSVILKÅRET.hjemmel)
+    }
+
+    @Test
+    fun `markerer periode med endret tom som ny og viser forrige tom`() {
+        val (forrige, gjeldende) = opprettBehandlingskjede(2)
+
+        lagreGrunnlag(forrige.id, Periode(dato(2025, 1, 1), dato(2025, 12, 31)) to Utfall.OPPFYLT)
+        lagreGrunnlag(
+            gjeldende.id,
+            Periode(dato(2025, 1, 1), dato(2025, 3, 14)) to Utfall.OPPFYLT,
+            Periode(dato(2025, 3, 15), dato(2025, 12, 31)) to Utfall.IKKE_OPPFYLT,
+        )
+
+        val perioder = hentForeslåVedtak(gjeldende).perioder
+
+        assertThat(perioder).hasSize(2)
+        assertThat(perioder[0].erNy).isTrue()
+        assertThat(perioder[0].tidligerePerioder)
+            .containsExactly(Periode(dato(2025, 1, 1), dato(2025, 12, 31)))
+        assertThat(perioder[1].erNy).isFalse()
+        assertThat(perioder[1].tidligerePerioder).isEmpty()
+    }
+
+    @Test
+    fun `viser kun endringer fra forrige behandling og ikke fra eldre behandlinger`() {
+        val (første, andre, tredje) = opprettBehandlingskjede(3)
+        val medStans = arrayOf(
+            Periode(dato(2025, 1, 1), dato(2025, 3, 14)) to Utfall.OPPFYLT,
+            Periode(dato(2025, 3, 15), dato(2025, 12, 31)) to Utfall.IKKE_OPPFYLT,
+        )
+
+        lagreGrunnlag(første.id, Periode(dato(2025, 1, 1), dato(2025, 12, 31)) to Utfall.OPPFYLT)
+        lagreGrunnlag(andre.id, *medStans)
+        lagreGrunnlag(tredje.id, *medStans)
+
+        val perioder = hentForeslåVedtak(tredje).perioder
+
+        assertThat(perioder[0].erNy).isFalse()
+        assertThat(perioder[0].tidligerePerioder).isEmpty()
+    }
+
+    @Test
+    fun `markerer ny innvilget periode og at stans fikk sluttdato`() {
+        val (forrige, gjeldende) = opprettBehandlingskjede(2)
+
+        lagreGrunnlag(
+            forrige.id,
+            Periode(dato(2025, 1, 1), dato(2025, 3, 14)) to Utfall.OPPFYLT,
+            Periode(dato(2025, 3, 15), dato(2025, 12, 31)) to Utfall.IKKE_OPPFYLT,
+        )
+        lagreGrunnlag(
+            gjeldende.id,
+            Periode(dato(2025, 1, 1), dato(2025, 3, 14)) to Utfall.OPPFYLT,
+            Periode(dato(2025, 3, 15), dato(2025, 3, 30)) to Utfall.IKKE_OPPFYLT,
+            Periode(dato(2025, 3, 31), dato(2025, 12, 31)) to Utfall.OPPFYLT,
+        )
+
+        val perioder = hentForeslåVedtak(gjeldende).perioder
+
+        assertThat(perioder).hasSize(3)
+        assertThat(perioder[0].erNy).isFalse()
+        assertThat(perioder[0].tidligerePerioder).isEmpty()
+        assertThat(perioder[1].tidligerePerioder)
+            .containsExactly(Periode(dato(2025, 3, 15), dato(2025, 12, 31)))
+        assertThat(perioder[1].tidligereVarÅpen).isTrue()
+        assertThat(perioder[2].erNy).isTrue()
+        assertThat(perioder[2].tidligerePerioder).isEmpty()
+    }
+
+    @Test
+    fun `ingen endringer når forrige behandling er identisk`() {
+        val (forrige, gjeldende) = opprettBehandlingskjede(2)
+        val periode = Periode(dato(2025, 1, 1), dato(2025, 12, 31))
+
+        lagreGrunnlag(forrige.id, periode to Utfall.OPPFYLT)
+        lagreGrunnlag(gjeldende.id, periode to Utfall.OPPFYLT)
+
+        val respons = hentForeslåVedtak(gjeldende)
+
+        assertThat(respons.perioder.single().erNy).isFalse()
+        assertThat(respons.perioder.single().tidligerePerioder).isEmpty()
+        assertThat(respons.endretRettighetsperiode).isNull()
+    }
+
+    @Test
+    fun `førstegangsbehandling uten forrige behandling har ingen endringer`() {
+        val (behandling) = opprettBehandlingskjede(1)
+        lagreGrunnlag(behandling.id, Periode(dato(2025, 1, 1), dato(2025, 12, 31)) to Utfall.OPPFYLT)
+
+        val respons = hentForeslåVedtak(behandling)
+
+        assertThat(respons.perioder.single().erNy).isFalse()
+        assertThat(respons.endretRettighetsperiode).isNull()
+    }
+
+    @Test
+    fun `returnerer endret rettighetsperiode når helhetlig periode er utvidet`() {
+        val (forrige, gjeldende) = opprettBehandlingskjede(2)
+        val forrigePeriode = Periode(dato(2025, 1, 1), dato(2025, 12, 31))
+        val nyPeriode = Periode(dato(2025, 1, 1), dato(2026, 12, 31))
+
+        lagreGrunnlag(forrige.id, forrigePeriode to Utfall.OPPFYLT)
+        lagreGrunnlag(gjeldende.id, nyPeriode to Utfall.OPPFYLT)
+
+        val endret = hentForeslåVedtak(gjeldende).endretRettighetsperiode
+
+        assertThat(endret).isNotNull
+        assertThat(endret!!.fra).isEqualTo(forrigePeriode)
+        assertThat(endret.til).isEqualTo(nyPeriode)
+    }
+
+    private fun dato(år: Int, måned: Int, dag: Int) = LocalDate.of(år, måned, dag)
+
+    private fun opprettFørstegangsbehandling(sak: Sak, forrige: Behandling? = null) =
+        opprettBehandling(sak, TypeBehandling.Førstegangsbehandling, forrige?.id)
+
+    /** Oppretter [antall] behandlinger der hver peker på forrige. */
+    private fun opprettBehandlingskjede(antall: Int): List<Behandling> {
+        val sak = opprettInMemorySak(LocalDate.of(2025, 1, 1))
+        return (1 until antall).fold(listOf(opprettFørstegangsbehandling(sak))) { kjede, _ ->
+            kjede + opprettFørstegangsbehandling(sak, kjede.last())
+        }
+    }
+
+    private fun oppfylteVilkår(periode: Periode) = listOf(
+        Vilkårtype.LOVVALG,
+        Vilkårtype.ALDERSVILKÅRET,
+        Vilkårtype.STUDENT,
+        Vilkårtype.SYKDOMSVILKÅRET,
+        Vilkårtype.OVERGANGUFØREVILKÅRET,
+        Vilkårtype.OVERGANGARBEIDVILKÅRET,
+        Vilkårtype.SYKEPENGEERSTATNING,
+        Vilkårtype.GRUNNLAGET,
+        Vilkårtype.INNTEKTSBORTFALL,
+        Vilkårtype.MEDLEMSKAP,
+        Vilkårtype.SAMORDNING,
+        Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING,
+    ).map { type ->
+        Vilkår(
+            type,
+            setOf(
+                Vilkårsperiode(
+                    periode = periode,
+                    utfall = Utfall.OPPFYLT,
+                    manuellVurdering = false,
+                    begrunnelse = null,
+                )
+            )
+        )
+    }
+
+    private fun underveisperiode(periode: Periode, utfall: Utfall) = Underveisperiode(
+        periode = periode,
+        meldePeriode = periode,
+        utfall = utfall,
+        rettighetsType = if (utfall == Utfall.OPPFYLT) RettighetsType.BISTANDSBEHOV else null,
+        avslagsårsak = if (utfall == Utfall.OPPFYLT) null else UnderveisÅrsak.IKKE_GRUNNLEGGENDE_RETT,
+        grenseverdi = Prosent.`100_PROSENT`,
+        institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
+        arbeidsgradering = ArbeidsGradering(
+            totaltAntallTimer = TimerArbeid(BigDecimal.ZERO),
+            andelArbeid = Prosent.`0_PROSENT`,
+            fastsattArbeidsevne = Prosent.`100_PROSENT`,
+            gradering = Prosent.`100_PROSENT`,
+            opplysningerMottatt = null,
+        ),
+        trekk = Dagsatser(0),
+        brukerAvKvoter = emptySet(),
+        meldepliktStatus = null,
+        meldepliktGradering = null,
+    )
+
+    /** Lagrer underveisperioder, og et vilkårsresultat der alle vilkår er oppfylt i hele perioden. */
+    private fun lagreGrunnlag(behandlingId: BehandlingId, vararg perioder: Pair<Periode, Utfall>) {
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandlingId,
+            underveisperioder = perioder.map { (periode, utfall) -> underveisperiode(periode, utfall) },
+            input = object : Faktagrunnlag {},
+        )
+        val helePerioden = Periode(perioder.minOf { it.first.fom }, perioder.maxOf { it.first.tom })
+        InMemoryVilkårsresultatRepository.lagre(behandlingId, Vilkårsresultat(vilkår = oppfylteVilkår(helePerioden)))
+    }
+
+    private fun hentForeslåVedtak(behandling: Behandling): ForeslåVedtakResponse {
+        var body: ForeslåVedtakResponse? = null
         testApplication {
             installApplication {
                 foreslaaVedtakApi(MockDataSource(), inMemoryRepositoryRegistry, gatewayProvider())
             }
-
-            val response = createClient().get("/api/behandling/${behandling.referanse.referanse}/grunnlag/foreslaa-vedtak") {
-                header("Authorization", "Bearer ${getToken().token()}")
-            }
-
+            val response =
+                createClient().get("/api/behandling/${behandling.referanse.referanse}/grunnlag/foreslaa-vedtak") {
+                    header("Authorization", "Bearer ${getToken().token()}")
+                }
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
-            val body = response.body<ForeslåVedtakResponse>()
-            assertThat(body.perioder).hasSize(1)
-            val foreslåttPeriode = body.perioder.first()
-            assertThat(foreslåttPeriode.avslagsårsak.vilkårsavslag)
-                .extracting("vilkår")
-                .containsExactly(Vilkårtype.ALDERSVILKÅRET.hjemmel)
+            body = response.body<ForeslåVedtakResponse>()
         }
+        return requireNotNull(body)
     }
 }
