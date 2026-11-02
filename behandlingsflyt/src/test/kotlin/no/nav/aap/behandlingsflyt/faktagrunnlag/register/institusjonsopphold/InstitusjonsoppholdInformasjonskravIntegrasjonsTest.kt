@@ -84,7 +84,7 @@ class InstitusjonsoppholdInformasjonskravIntegrasjonsTest {
         val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = 1 mars 2026)
         FakeInstitusjonsoppholdGateway.response = listOf(
             institusjonsopphold(1 januar 2026, 1 februar 2026, "Helseinstitusjon"),
-            institusjonsopphold(1 februar 2026, null, "Aldershjem", Institusjonstype.AS),
+            institusjonsopphold(1 mars 2026, null, "Aldershjem", Institusjonstype.AS),
         )
         val informasjonskrav = InstitusjonsoppholdInformasjonskrav.konstruer(inMemoryRepositoryProvider, gatewayProvider)
 
