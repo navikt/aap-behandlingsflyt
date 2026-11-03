@@ -342,7 +342,7 @@ internal class ForutgåendeMedlemskapRepositoryImplTest {
 
             assertThat(medlemskapArbeidInntektGrunnlag?.inntekterINorgeGrunnlag?.size).isEqualTo(2)
             assertThat(medlemskapArbeidInntektGrunnlag?.arbeiderINorgeGrunnlag?.size).isEqualTo(1)
-            assertThat(medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag).isNotNull
+            assertThat(medlemskapArbeidInntektGrunnlag?.medlemskapUnntakGrunnlag).isNotNull
             assertThat(medlemskapArbeidInntektGrunnlag?.vurderinger?.size).isEqualTo(3)
         }
     }

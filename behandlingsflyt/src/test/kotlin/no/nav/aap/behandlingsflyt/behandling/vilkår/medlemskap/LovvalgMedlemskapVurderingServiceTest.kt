@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterINorgeRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
@@ -26,25 +27,27 @@ class LovvalgMedlemskapVurderingServiceTest {
     fun `automatisk om alle krav er oppfylt`() {
         val grunnlag = MedlemskapLovvalgRegisterGrunnlag.fra(
             lovvalgMedlemskapGrunnlag = LovvalgMedlemskapGrunnlag(
-                medlemskapGrunnlag = MedlemskapUnntakGrunnlag(
-                    unntak = listOf(
-                        Segment(
-                            periode = Periode(LocalDate.now().minusMonths(1), LocalDate.now()),
-                            verdi = Unntak(
-                                "unntak",
-                                "statusaarsak",
-                                true,
-                                "grunnlag",
-                                "lovvalg",
-                                false,
-                                EØSLandEllerLandMedAvtale.NOR.toString(),
-                                null
+                registerGrunnlag = LovvalgMedlemskapRegisterGrunnlag(
+                    medlemskapUnntakGrunnlag = MedlemskapUnntakGrunnlag(
+                        unntak = listOf(
+                            Segment(
+                                periode = Periode(LocalDate.now().minusMonths(1), LocalDate.now()),
+                                verdi = Unntak(
+                                    "unntak",
+                                    "statusaarsak",
+                                    true,
+                                    "grunnlag",
+                                    "lovvalg",
+                                    false,
+                                    EØSLandEllerLandMedAvtale.NOR.toString(),
+                                    null
+                                )
                             )
                         )
-                    )
+                    ),
+                    inntekterINorgeGrunnlag = emptyList(),
+                    arbeiderINorgeGrunnlag = emptyList(),
                 ),
-                inntekterINorgeGrunnlag = emptyList(),
-                arbeiderINorgeGrunnlag = emptyList(),
                 inntekterINorgeRegisterGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet())
             ),
             personopplysning = Personopplysning(
@@ -73,25 +76,27 @@ class LovvalgMedlemskapVurderingServiceTest {
     fun `kan håndtere flere statsborgerskap`() {
         val grunnlag = MedlemskapLovvalgRegisterGrunnlag.fra(
             lovvalgMedlemskapGrunnlag = LovvalgMedlemskapGrunnlag(
-                medlemskapGrunnlag = MedlemskapUnntakGrunnlag(
-                    unntak = listOf(
-                        Segment(
-                            periode = Periode(LocalDate.now().minusMonths(1), LocalDate.now()),
-                            verdi = Unntak(
-                                "unntak",
-                                "statusaarsak",
-                                true,
-                                "grunnlag",
-                                "lovvalg",
-                                false,
-                                EØSLandEllerLandMedAvtale.NOR.toString(),
-                                null
+                registerGrunnlag = LovvalgMedlemskapRegisterGrunnlag(
+                    medlemskapUnntakGrunnlag = MedlemskapUnntakGrunnlag(
+                        unntak = listOf(
+                            Segment(
+                                periode = Periode(LocalDate.now().minusMonths(1), LocalDate.now()),
+                                verdi = Unntak(
+                                    "unntak",
+                                    "statusaarsak",
+                                    true,
+                                    "grunnlag",
+                                    "lovvalg",
+                                    false,
+                                    EØSLandEllerLandMedAvtale.NOR.toString(),
+                                    null
+                                )
                             )
                         )
-                    )
+                    ),
+                    inntekterINorgeGrunnlag = emptyList(),
+                    arbeiderINorgeGrunnlag = emptyList(),
                 ),
-                inntekterINorgeGrunnlag = emptyList(),
-                arbeiderINorgeGrunnlag = emptyList(),
                 inntekterINorgeRegisterGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet())
             ),
             personopplysning = Personopplysning(
@@ -121,25 +126,27 @@ class LovvalgMedlemskapVurderingServiceTest {
     fun `manuell om lovvalgsland ikke er Norge`() {
         val grunnlag = MedlemskapLovvalgRegisterGrunnlag.fra(
             lovvalgMedlemskapGrunnlag = LovvalgMedlemskapGrunnlag(
-                medlemskapGrunnlag = MedlemskapUnntakGrunnlag(
-                    unntak = listOf(
-                        Segment(
-                            periode = Periode(LocalDate.now().minusMonths(1), LocalDate.now()),
-                            verdi = Unntak(
-                                "unntak",
-                                "statusaarsak",
-                                true,
-                                "grunnlag",
-                                "lovvalg",
-                                false,
-                                EØSLandEllerLandMedAvtale.SWE.toString(),
-                                KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+                registerGrunnlag = LovvalgMedlemskapRegisterGrunnlag(
+                    medlemskapUnntakGrunnlag = MedlemskapUnntakGrunnlag(
+                        unntak = listOf(
+                            Segment(
+                                periode = Periode(LocalDate.now().minusMonths(1), LocalDate.now()),
+                                verdi = Unntak(
+                                    "unntak",
+                                    "statusaarsak",
+                                    true,
+                                    "grunnlag",
+                                    "lovvalg",
+                                    false,
+                                    EØSLandEllerLandMedAvtale.SWE.toString(),
+                                    KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+                                )
                             )
                         )
-                    )
+                    ),
+                    inntekterINorgeGrunnlag = emptyList(),
+                    arbeiderINorgeGrunnlag = emptyList(),
                 ),
-                inntekterINorgeGrunnlag = emptyList(),
-                arbeiderINorgeGrunnlag = emptyList(),
                 inntekterINorgeRegisterGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet())
             ),
             personopplysning = Personopplysning(
@@ -261,9 +268,11 @@ class LovvalgMedlemskapVurderingServiceTest {
         statsborgerskap: List<Statsborgerskap>,
     ) = MedlemskapLovvalgRegisterGrunnlag.fra(
         lovvalgMedlemskapGrunnlag = LovvalgMedlemskapGrunnlag(
-            medlemskapGrunnlag = MedlemskapUnntakGrunnlag(emptyList()),
-            inntekterINorgeGrunnlag = emptyList(),
-            arbeiderINorgeGrunnlag = emptyList(),
+            registerGrunnlag = LovvalgMedlemskapRegisterGrunnlag(
+                medlemskapUnntakGrunnlag = MedlemskapUnntakGrunnlag(emptyList()),
+                inntekterINorgeGrunnlag = emptyList(),
+                arbeiderINorgeGrunnlag = emptyList(),
+            ),
             inntekterINorgeRegisterGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet())
         ),
         personopplysning = Personopplysning(
