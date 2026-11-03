@@ -69,16 +69,14 @@ class KravSteg(
             return Fullført
         }
 
-        val erManuellVurderingAktivertForSak = unleashGateway.erPåskruddForSak(
+        val manuellVurderingIkkeAktivertForSak = !unleashGateway.erPåskruddForSak(
             BehandlingsflytFeature.KravManuellVurdering,
             "saksnummer"
         ) { sakRepository.hent(kontekst.sakId).saksnummer }
 
-        if (!erManuellVurderingAktivertForSak) {
+        if (manuellVurderingIkkeAktivertForSak && harIkkeMigrertKrav(kontekst)) {
             vurderHelautomatisk(kontekst)
-        }
-
-        if (erManuellVurderingAktivertForSak) {
+        } else {
             when (kontekst.behandlingType) {
                 TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
                     when (kontekst.vurderingType) {
@@ -107,7 +105,6 @@ class KravSteg(
                         }
                     }
                 }
-
                 else -> {}
             }
         }
@@ -300,6 +297,11 @@ class KravSteg(
                 sluttDato = Tid.MAKS
             )
         }
+    }
+
+    private fun harIkkeMigrertKrav(kontekst: FlytKontekstMedPerioder): Boolean {
+        val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
+        return kravGrunnlag?.gjeldendeMigrertKrav() == null
     }
 
     private fun ArenaKrav.erLikVurdering(grunnlag: KravGrunnlag?): Boolean {
