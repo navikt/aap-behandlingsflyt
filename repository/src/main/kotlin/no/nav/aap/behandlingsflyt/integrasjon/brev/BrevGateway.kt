@@ -452,6 +452,15 @@ class BrevGateway : BrevbestillingGateway {
                     ?.let { add(it) }
             }
 
+            is AvslagBrev.AvslagSykdomsvilkåret -> buildSet {
+                brevBehov.sykdomsvurdering?.let {
+                    add(Faktagrunnlag.Sykdomsvurdering(it))
+                }
+                brevBehov.yrkesSkadeISøknadIkkeIRegister?.let {
+                    add(Faktagrunnlag.YrkesskadeISøknadIkkeIRegister(it))
+                }
+            }
+
             is AvslagBrev -> buildSet {
                 brevBehov.sykdomsvurdering?.let {
                     add(Faktagrunnlag.Sykdomsvurdering(it))

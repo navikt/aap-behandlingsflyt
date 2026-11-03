@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.Vilkårsvurderer
 import no.nav.aap.behandlingsflyt.behandling.vilkår.VurderingsResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
@@ -9,22 +9,17 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.type.Periode
 
 class Medlemskapvilkåret(
     vilkårsresultat: Vilkårsresultat,
     private val rettighetsPeriode: Periode,
-    private val vurderingstype: VurderingType? = null,
-) : Vilkårsvurderer<MedlemskapLovvalgGrunnlag> {
+) : Vilkårsvurderer<MedlemskapLovvalgFaktagrunnlag> {
     private val vilkår = vilkårsresultat.leggTilHvisIkkeEksisterer(Vilkårtype.LOVVALG)
 
-    override fun vurder(grunnlag: MedlemskapLovvalgGrunnlag) {
-        val brukManuellVurderingForLovvalgMedlemskap =
-            grunnlag.medlemskapArbeidInntektGrunnlag?.vurderinger?.isNotEmpty() ?: false
-
-        if (brukManuellVurderingForLovvalgMedlemskap) {
-            val gjeldendeVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag.gjeldendeVurderinger()
+    override fun vurder(grunnlag: MedlemskapLovvalgFaktagrunnlag) {
+        if (grunnlag.manuelleVurderinger.isNotEmpty()) {
+            val gjeldendeVurderinger = grunnlag.gjeldendeManuelleVurderinger()
 
             val vilkårsvurderinger = gjeldendeVurderinger
                 .map { vurdering ->
@@ -58,15 +53,11 @@ class Medlemskapvilkåret(
 
             vilkår.leggTilVurderinger(vilkårsvurderinger)
 
-        } else if (grunnlag.nyeSoknadGrunnlag == null) {
+        } else if (grunnlag.register.nyeSoknadGrunnlag == null) {
             val vurderingsResultat = VurderingsResultat(Utfall.IKKE_RELEVANT, null, null)
             leggTilVurdering(rettighetsPeriode, grunnlag, vurderingsResultat, false)
         } else {
-            val kanBehandlesAutomatisk = MedlemskapLovvalgVurderingService().vurderTilhørighet(
-                grunnlag,
-                rettighetsPeriode,
-                vurderingstype
-            ).kanBehandlesAutomatisk
+            val kanBehandlesAutomatisk = grunnlag.delvurdering?.kanBehandlesAutomatisk == true
             val utfall = if (kanBehandlesAutomatisk) Utfall.OPPFYLT else Utfall.IKKE_VURDERT
             val vurderingsResultat = VurderingsResultat(utfall, null, null)
             leggTilVurdering(rettighetsPeriode, grunnlag, vurderingsResultat, false)
@@ -75,7 +66,7 @@ class Medlemskapvilkåret(
 
     private fun leggTilVurdering(
         periode: Periode,
-        grunnlag: MedlemskapLovvalgGrunnlag,
+        grunnlag: MedlemskapLovvalgFaktagrunnlag,
         vurderingsResultat: VurderingsResultat,
         vurdertManuelt: Boolean
     ) {

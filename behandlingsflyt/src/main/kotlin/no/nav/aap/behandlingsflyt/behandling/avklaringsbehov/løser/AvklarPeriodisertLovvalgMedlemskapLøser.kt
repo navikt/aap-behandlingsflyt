@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.validerGyldigVurderinger
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.validerGyldigForRettighetsperiode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.LovvalgMedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -13,13 +13,13 @@ import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklarPeriodisertLovvalgMedlemskapLøser(
-    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
+    private val lovvalgMedlemskapRepository: LovvalgMedlemskapRepository,
     private val behandlingRepository: BehandlingRepository,
     private val sakRepository: SakRepository,
 ) : AvklaringsbehovsLøser<AvklarPeriodisertLovvalgMedlemskapLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider) : this(
-        medlemskapArbeidInntektRepository = repositoryProvider.provide(),
+        lovvalgMedlemskapRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
     )
@@ -32,7 +32,7 @@ class AvklarPeriodisertLovvalgMedlemskapLøser(
         val sak = sakRepository.hent(behandling.sakId)
 
         val nyeVurderinger = løsning.løsningerForPerioder.map { it.toManuellVurderingForLovvalgMedlemskap(kontekst, overstyrt = false) }
-        val tidligereVurderinger = kontekst.kontekst.forrigeBehandlingId?.let { medlemskapArbeidInntektRepository.hentHvisEksisterer(it) }?.vurderinger ?: emptyList()
+        val tidligereVurderinger = kontekst.kontekst.forrigeBehandlingId?.let { lovvalgMedlemskapRepository.hentHvisEksisterer(it) }?.vurderinger ?: emptyList()
         val vurderinger = tidligereVurderinger + nyeVurderinger
 
         val komplettTidslinje = tidligereVurderinger.gjeldendeVurderinger()
@@ -41,7 +41,7 @@ class AvklarPeriodisertLovvalgMedlemskapLøser(
         komplettTidslinje.validerGyldigForRettighetsperiode(sak.rettighetsperiode)
             .throwOnInvalid { UgyldigForespørselException("Løsningen for vurdert lovvalg og medlemskap er ikke gyldig: ${it.errorMessage}") }
             .onValid {
-                medlemskapArbeidInntektRepository.lagreVurderinger(
+                lovvalgMedlemskapRepository.lagreVurderinger(
                     behandlingId = behandling.id,
                     vurderinger = vurderinger
                 )

@@ -62,7 +62,7 @@ class BeregningTest {
         val beregning = Beregning(
             nedsettelsesDato = LocalDate.of(2015, 1, 1),
             årsInntekter = årsInntekter,
-            uføregrad = setOf(Uføre(LocalDate.now().minusYears(5), Prosent(30))),
+            uføregrad = setOf(Uføre(LocalDate.of(2022, 1, 1), Prosent(30))),
             yrkesskadevurdering = null,
             ytterligereNedsettelsesDato = LocalDate.of(2023, 1, 1),
             yrkesskadeBeløpVurderinger = null,

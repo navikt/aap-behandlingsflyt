@@ -679,6 +679,23 @@ fun NormalOpenAPIRoute.driftApi(
             }
         }
 
+        route("/sak/{saksnummer}/tilbakestill-rettighetsperiode-trukket-sak") {
+            authorizedPost<SaksnummerParameter, Periode, Unit>(
+                AuthorizationParamPathConfig(
+                    sakPathParam = SakPathParam("saksnummer"),
+                    operasjon = Operasjon.DRIFTE
+                )
+            ) { params, _ ->
+                val nyPeriode = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val driftfunksjoner = Driftfunksjoner(repositoryProvider, gatewayProvider)
+
+                    driftfunksjoner.tilbakestillRettighetsperiodeForTrukketSak(Saksnummer(params.saksnummer))
+                }
+                respond(nyPeriode)
+            }
+        }
+
     }
 }
 

@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.ident
 
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.IdentVariables
-import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlGateway
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlNavnDataBolk
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonNavnDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRequest
@@ -16,7 +16,7 @@ object PdlPersoninfoBulkGateway : PersoninfoBulkGateway {
 
     override fun hentPersoninfoForIdenter(identer: List<Ident>): List<Personinfo> {
         val request = PdlRequest(PERSONINFO_BOLK_QUERY, IdentVariables(identer = identer.map { it.identifikator }))
-        val response: PdlPersonNavnDataResponse = PdlGateway.query(request)
+        val response: PdlPersonNavnDataResponse = PdlGatewayImpl.query(request)
 
         return response.data?.hentPersonBolk?.map { person -> mapPersoninformasjon(person) }.orEmpty()
     }

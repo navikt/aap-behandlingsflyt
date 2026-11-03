@@ -134,7 +134,7 @@ class VurderSykdomSteg(
          */
         arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, stegType, sykdomsvurderingFraArena)
 
-        val vurdering = ArenaMigreringMapper.mapOppfyltOrdinærSykdomsvurdering(
+        val vurdering = ArenaMigreringMapper.tilOppfyltOrdinærSykdomsvurdering(
             fraArena = sykdomsvurderingFraArena,
             behandlingId = kontekst.behandlingId,
             vurderingenGjelderFra = kontekst.rettighetsperiode.fom,

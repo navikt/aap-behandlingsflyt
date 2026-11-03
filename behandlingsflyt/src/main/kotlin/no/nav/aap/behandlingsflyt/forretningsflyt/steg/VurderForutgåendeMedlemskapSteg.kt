@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringMapper
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapFaktaGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.ForutgåendeMedlemskapvilkåret
@@ -11,13 +13,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.OppgittUtenlandsopplysningerRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningForutgåendeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.flyt.steg.MigrerVurderingFraArena
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -26,6 +29,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -34,25 +39,37 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 class VurderForutgåendeMedlemskapSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
-    private val forutgåendeMedlemskapArbeidInntektRepository: MedlemskapArbeidInntektForutgåendeRepository,
-    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
+    private val forutgåendeMedlemskapRepository: ForutgåendeMedlemskapRepository,
+    private val oppgittUtenlandsopplysningerRepository: OppgittUtenlandsopplysningerRepository,
     private val personopplysningForutgåendeRepository: PersonopplysningForutgåendeRepository,
     private val sykdomRepository: SykdomRepository,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val avklaringsbehovService: AvklaringsbehovService
-) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
+    private val avklaringsbehovService: AvklaringsbehovService,
+    private val arenaMigreringService: ArenaMigreringService,
+    private val unleashGateway: UnleashGateway,
+) : BehandlingSteg, AvklaringsbehovMetadataUtleder, MigrerVurderingFraArena {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
-        forutgåendeMedlemskapArbeidInntektRepository = repositoryProvider.provide(),
-        medlemskapArbeidInntektRepository = repositoryProvider.provide(),
+        forutgåendeMedlemskapRepository = repositoryProvider.provide(),
+        oppgittUtenlandsopplysningerRepository = repositoryProvider.provide(),
         personopplysningForutgåendeRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
+        avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
+        arenaMigreringService = ArenaMigreringService(repositoryProvider, gatewayProvider),
+        unleashGateway = gatewayProvider.provide(),
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (kontekst.erMigreringFraArena()
+            && unleashGateway.isEnabled(BehandlingsflytFeature.MigrererForutgaaendeMedlemskapFraArenaAutomatisk)
+            && !harYrkesskadeSammenheng(kontekst)
+            && nårVurderingErRelevant(kontekst).any { it }
+        ) {
+            migrerVurderingFraArena(kontekst)
+        }
+
         val grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
@@ -60,8 +77,13 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             tvingerAvklaringsbehov = setOf(Vurderingsbehov.REVURDER_MEDLEMSKAP, Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP),
             nårVurderingErRelevant = ::nårVurderingErRelevant,
             perioderSomIkkeErTilstrekkeligVurdert = ::perioderSomIkkeErTilstrekkeligVurdert,
+            gjeldendeVurderinger = {
+                forutgåendeMedlemskapRepository.hentHvisEksisterer(kontekst.behandlingId)
+                    ?.gjeldendeVurderinger()
+                    .orEmpty()
+            },
             kontekst = kontekst,
-            tilbakestillGrunnlag = { tilbakestillGrunnlagNy(kontekst, grunnlag.value.medlemskapArbeidInntektGrunnlag) },
+            tilbakestillGrunnlag = { tilbakestillGrunnlagNy(kontekst, grunnlag.value.forutgåendeMedlemskapGrunnlag) },
         )
 
         when (kontekst.vurderingType) {
@@ -90,15 +112,15 @@ class VurderForutgåendeMedlemskapSteg private constructor(
 
     private fun tilbakestillGrunnlagNy(
         kontekst: FlytKontekstMedPerioder,
-        grunnlag: ForutgåendeMedlemskapArbeidInntektGrunnlag?
+        grunnlag: ForutgåendeMedlemskapGrunnlag?
     ) {
         val forrigeVurderinger = kontekst.forrigeBehandlingId?.let { forrigeBehandlingId ->
-            forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(forrigeBehandlingId)
+            forutgåendeMedlemskapRepository.hentHvisEksisterer(forrigeBehandlingId)
                 ?.vurderinger
         } ?: emptyList()
 
         if (forrigeVurderinger.toSet() != grunnlag?.vurderinger?.toSet()) {
-            forutgåendeMedlemskapArbeidInntektRepository.lagreVurderinger(
+            forutgåendeMedlemskapRepository.lagreVurderinger(
                 kontekst.behandlingId,
                 forrigeVurderinger,
             )
@@ -112,7 +134,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         val relevantTidslinje = nårVurderingErRelevant(kontekst)
         val automatiskVilkårsvurderingLovvalg =
             vilkårsvurderingForutgåendeMedlemskapUtenManuelleVurderinger(kontekst, grunnlag).mapValue { it.erOppfylt() }
-        val manuelleVurderinger = grunnlag.medlemskapArbeidInntektGrunnlag?.gjeldendeVurderinger()
+        val manuelleVurderinger = grunnlag.forutgåendeMedlemskapGrunnlag?.gjeldendeVurderinger()
 
         return Tidslinje.map3(relevantTidslinje, manuelleVurderinger.orEmpty(), automatiskVilkårsvurderingLovvalg) { relevant, manuellVurdering, automatiskVurdering ->
             relevant == true && manuellVurdering == null && automatiskVurdering != true
@@ -125,7 +147,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         return harYrkesskadeSammenheng == true
     }
 
-    private fun vurderVilkår(kontekst: FlytKontekstMedPerioder, grunnlag: ForutgåendeMedlemskapGrunnlag) {
+    private fun vurderVilkår(kontekst: FlytKontekstMedPerioder, grunnlag: ForutgåendeMedlemskapFaktaGrunnlag) {
         val vilkårsresultat = vilkårsresultatRepository.hent(kontekst.behandlingId)
 
         if (kontekst.harNoeTilBehandling()) {
@@ -176,11 +198,11 @@ class VurderForutgåendeMedlemskapSteg private constructor(
 
     private fun vilkårsvurderingForutgåendeMedlemskapUtenManuelleVurderinger(
         kontekst: FlytKontekstMedPerioder,
-        grunnlag: ForutgåendeMedlemskapGrunnlag,
+        grunnlag: ForutgåendeMedlemskapFaktaGrunnlag,
     ): Tidslinje<Vilkårsvurdering> {
         val vilkårsresultat = Vilkårsresultat()
         val grunnlagUtenManuellVurdering = grunnlag.copy(
-            medlemskapArbeidInntektGrunnlag = grunnlag.medlemskapArbeidInntektGrunnlag?.copy(
+            forutgåendeMedlemskapGrunnlag = grunnlag.forutgåendeMedlemskapGrunnlag?.copy(
                 vurderinger = emptyList()
             )
         )
@@ -198,19 +220,19 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         return vilkårsresultat.finnVilkår(Vilkårtype.MEDLEMSKAP).tidslinje()
     }
 
-    private fun hentGrunnlag(sakId: SakId, behandlingId: BehandlingId): ForutgåendeMedlemskapGrunnlag {
+    private fun hentGrunnlag(sakId: SakId, behandlingId: BehandlingId): ForutgåendeMedlemskapFaktaGrunnlag {
         val personopplysningForutgåendeGrunnlag =
             personopplysningForutgåendeRepository.hentHvisEksisterer(behandlingId)
 
         val forutgåendeMedlemskapArbeidInntektGrunnlag =
-            forutgåendeMedlemskapArbeidInntektRepository.hentHvisEksisterer(behandlingId)
+            forutgåendeMedlemskapRepository.hentHvisEksisterer(behandlingId)
         val oppgittUtenlandsOppholdGrunnlag =
-            medlemskapArbeidInntektRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandlingId)
-                ?: medlemskapArbeidInntektRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(
+            oppgittUtenlandsopplysningerRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandlingId)
+                ?: oppgittUtenlandsopplysningerRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(
                     sakId
                 )
 
-        val grunnlag = ForutgåendeMedlemskapGrunnlag(
+        val grunnlag = ForutgåendeMedlemskapFaktaGrunnlag(
             forutgåendeMedlemskapArbeidInntektGrunnlag,
             personopplysningForutgåendeGrunnlag,
             oppgittUtenlandsOppholdGrunnlag
@@ -220,6 +242,23 @@ class VurderForutgåendeMedlemskapSteg private constructor(
 
     private fun vurderingsbehovSomTvingerAvklaringsbehov(): Set<Vurderingsbehov> =
         setOf(Vurderingsbehov.REVURDER_MEDLEMSKAP, Vurderingsbehov.FORUTGAENDE_MEDLEMSKAP)
+
+    override fun migrerVurderingFraArena(kontekst: FlytKontekstMedPerioder) {
+        require(kontekst.erMigreringFraArena()) {
+            "Kan ikke migrere vurdering fra Arena for sak ${kontekst.sakId} fordi vurderingstype ikke er migrering"
+        }
+
+        val forutgåendeMedlemskap = arenaMigreringService.hentForutgåendeMedlemskap(kontekst.sakId)
+        arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, stegType, forutgåendeMedlemskap)
+
+        val vurdering = ArenaMigreringMapper.tilOppfyltForutgåendeMedlemskapVurdering(
+            fraArena = forutgåendeMedlemskap,
+            behandlingId = kontekst.behandlingId,
+            fom = kontekst.rettighetsperiode.fom,
+        )
+
+        forutgåendeMedlemskapRepository.lagreVurderinger(kontekst.behandlingId, listOf(vurdering))
+    }
 
     override val stegType = type()
 

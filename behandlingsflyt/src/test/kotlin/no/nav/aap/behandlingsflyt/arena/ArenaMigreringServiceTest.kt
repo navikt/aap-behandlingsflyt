@@ -61,6 +61,12 @@ class ArenaMigreringServiceTest {
     }
 
     @Test
+    fun `hentForutgåendeMedlemskap returnerer svaret fra Arena`() {
+        val respons = service.hentForutgåendeMedlemskap(sakId)
+        assertThat(respons).isEqualTo(FakeArenaOppslagGateway().hentForutgaaendeMedlemskap("2018-123456").tilDomene())
+    }
+
+    @Test
     fun `hentBeregningstidspunkt returnerer svaret fra Arena`() {
         val respons = service.hentBeregningstidspunkt(sakId)
         assertThat(respons).isEqualTo(FakeArenaOppslagGateway().hentBeregningstidspunkt("2018-123456").tilDomene())

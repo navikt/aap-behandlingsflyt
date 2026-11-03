@@ -60,5 +60,7 @@ interface BehandlingRepository : Repository {
     fun finnAlleGjeldendeVedtatteBehandlinger(): List<SakOgBehandling>
 
     fun finnGjeldendeVedtattBehandlingForSak(sakId: SakId): SakOgBehandling?
+
+    fun finnBehandlingerSomManglerRedusertDagsats(sakId: SakId): List<BehandlingId>
 }
 

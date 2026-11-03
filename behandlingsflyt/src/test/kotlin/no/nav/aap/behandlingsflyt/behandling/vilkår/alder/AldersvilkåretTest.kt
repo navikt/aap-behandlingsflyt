@@ -17,12 +17,12 @@ class AldersvilkåretTest {
 
     @Test
     fun `vilkåret er ikke oppfylt hvis bruker søker dagen før 18-årsdagen (gammel løsning)`() {
-        val fødselsdato = LocalDate.now().minusYears(18)
-        val dagenFør18årsdagen = LocalDate.now().minusDays(1)
+        val fødselsdato = Fødselsdato(15 mars 2000)
+        val dagenFør18årsdagen = fødselsdato.toLocalDate().plusYears(18).minusDays(1)
         val rettighetsperiode = Periode(dagenFør18årsdagen, dagenFør18årsdagen.plusYears(3))
         val aldersgrunnlaget = Aldersgrunnlag(
             periode = rettighetsperiode,
-            fødselsdato = Fødselsdato(fødselsdato),
+            fødselsdato = fødselsdato,
             grenseForAntallMånederFørFylte18 = 0,
         )
 

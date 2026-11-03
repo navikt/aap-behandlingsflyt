@@ -91,6 +91,26 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         return hent(BehandlingId(behandlingId))
     }
 
+    override fun finnBehandlingerSomManglerRedusertDagsats(sakId: SakId): List<BehandlingId> {
+        return connection.queryList("""
+            SELECT DISTINCT b.id AS behandling_id
+            FROM behandling b
+            JOIN tilkjent_ytelse ty ON b.id = ty.behandling_id
+            JOIN tilkjent_periode tp ON ty.id = tp.tilkjent_ytelse_id
+            WHERE b.sak_id = ?
+            AND tp.dagsats IS NOT NULL
+            AND tp.redusert_dagsats IS NULL
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, sakId.toLong())
+            }
+            setRowMapper { row ->
+                BehandlingId(row.getLong("behandling_id"))
+            }
+        }
+    }
+
     override fun finnSaksnummer(referanse: BehandlingReferanse): Saksnummer {
         return connection.queryFirst(
             """

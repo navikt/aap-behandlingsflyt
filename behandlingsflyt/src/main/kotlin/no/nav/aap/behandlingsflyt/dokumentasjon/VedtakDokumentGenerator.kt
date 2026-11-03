@@ -23,8 +23,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.LovvalgMedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
@@ -95,8 +95,8 @@ class VedtakDokumentGenerator(
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val kravRepository: KravRepository,
     private val vurderRettighetsperiodeRepository: VurderRettighetsperiodeRepository,
-    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
-    private val medlemskapArbeidInntektForutgåendeRepository: MedlemskapArbeidInntektForutgåendeRepository,
+    private val lovvalgMedlemskapRepository: LovvalgMedlemskapRepository,
+    private val forutgåendeMedlemskapRepository: ForutgåendeMedlemskapRepository,
     private val oppholdskravGrunnlagRepository: OppholdskravGrunnlagRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
@@ -141,8 +141,8 @@ class VedtakDokumentGenerator(
         beregningVurderingRepository = repositoryProvider.provide(),
         kravRepository = repositoryProvider.provide(),
         vurderRettighetsperiodeRepository = repositoryProvider.provide(),
-        medlemskapArbeidInntektRepository = repositoryProvider.provide(),
-        medlemskapArbeidInntektForutgåendeRepository = repositoryProvider.provide(),
+        lovvalgMedlemskapRepository = repositoryProvider.provide(),
+        forutgåendeMedlemskapRepository = repositoryProvider.provide(),
         oppholdskravGrunnlagRepository = repositoryProvider.provide(),
     )
 
@@ -230,8 +230,8 @@ class VedtakDokumentGenerator(
             beregningVurderingGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId),
             kravGrunnlag = kravRepository.hentHvisEksisterer(behandlingId),
             rettighetsperiodeVurdering = vurderRettighetsperiodeRepository.hentVurdering(behandlingId),
-            lovvalgMedlemskapGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandlingId),
-            forutgåendeMedlemskapGrunnlag = medlemskapArbeidInntektForutgåendeRepository.hentHvisEksisterer(
+            lovvalgMedlemskapGrunnlag = lovvalgMedlemskapRepository.hentHvisEksisterer(behandlingId),
+            forutgåendeMedlemskapGrunnlag = forutgåendeMedlemskapRepository.hentHvisEksisterer(
                 behandlingId
             ),
             oppholdskravGrunnlag = oppholdskravGrunnlagRepository.hentHvisEksisterer(behandlingId),

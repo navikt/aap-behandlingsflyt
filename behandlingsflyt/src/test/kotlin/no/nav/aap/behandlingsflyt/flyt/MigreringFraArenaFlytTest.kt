@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import no.nav.aap.behandlingsflyt.arena.ArenaBeregningstidspunkt
+import no.nav.aap.behandlingsflyt.arena.ArenaForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.arena.ArenaMigreringsdataRepository
 import no.nav.aap.behandlingsflyt.arena.ArenaOppholdskrav
 import no.nav.aap.behandlingsflyt.arena.ArenaVedtaksperiode
@@ -10,6 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.Vedt
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKravLøsning
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
@@ -186,8 +188,8 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
             )
             .løsLovvalg(startDato, medlem = true)
             .medKontekst {
-                val medlemskapArbeidInntektRepository: SykdomRepository = repositoryProvider.provide()
-                val vurderinger = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger
+                val sykdomRepository: SykdomRepository = repositoryProvider.provide()
+                val vurderinger = sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger
 
                 assertThat(behandling.aktivtSteg()).isEqualTo(StegType.REFUSJON_KRAV)
 
@@ -213,8 +215,8 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
         migreringsbehandling
             .løsLovvalg(startDato, medlem = true)
             .medKontekst {
-                val medlemskapArbeidInntektRepository: SykdomRepository = repositoryProvider.provide()
-                val vurderinger = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger
+                val sykdomRepository: SykdomRepository = repositoryProvider.provide()
+                val vurderinger = sykdomRepository.hentHvisEksisterer(behandling.id)?.sykdomsvurderinger
 
                 assertThat(behandling.aktivtSteg()).isEqualTo(StegType.FASTSETT_BEREGNINGSTIDSPUNKT)
 
@@ -303,7 +305,59 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
                 assertThat(migreringsdata).isNotNull
                 val lagretOppholdskrav =
                     DefaultJsonMapper.fromJson<ArenaOppholdskrav>(migreringsdata!!.data!!)
-                assertThat(lagretOppholdskrav.vilkar?.status).isEqualTo("V")
+                assertThat(lagretOppholdskrav.vilkår?.status).isEqualTo("V")
+            }
+    }
+
+    @Test
+    fun `skal automatisk legge inn oppfylt forutgående medlemskap i migreringsbehandlingen`() {
+        unleash = MigreringFraArenaMedAutomatiskForutgåendeMedlemskapFlytTestUnleash::class
+
+        val (sak, migreringsbehandling) = migrerFraArena()
+        val startDato = sak.rettighetsperiode.fom
+
+        migreringsbehandling
+            .løsAvklaringsBehov(
+                VurderKravLøsning(
+                    kravVurderinger = setOf(
+                        MigrertKravLøsningDto(
+                            begrunnelse = "en begrunnelse",
+                            virkningstidspunktArena = startDato.minusMonths(5),
+                            muligRettFra = startDato,
+                            arenaSaksnummer = "2016-123456",
+                            rettighetstype = MigrertRettighetstype.ORDINÆR,
+                            resterendeKvoteOrdinær = 300,
+                        )
+                    )
+                )
+            )
+            .løsLovvalg(startDato, medlem = true)
+            .løsSykdom(startDato, erOppfylt = true)
+            .løsBistand(startDato, erOppfylt = true)
+            .løsRefusjonskrav()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt(startDato)
+            .løsFastsettManuellInntekt()
+            .medKontekst {
+                val repository: ForutgåendeMedlemskapRepository = repositoryProvider.provide()
+                val vurdering = repository.hentHvisEksisterer(behandling.id)!!.vurderinger.single()
+                assertThat(vurdering.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
+                assertThat(vurdering.harForutgåendeMedlemskap).isTrue()
+                assertThat(vurdering.fom).isEqualTo(startDato)
+                assertThat(vurdering.tom).isNull()
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                    .doesNotContain(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP)
+
+                val migreringsdataRepository: ArenaMigreringsdataRepository = repositoryProvider.provide()
+                val migreringsdata = migreringsdataRepository.hentAktivHvisEksisterer(
+                    behandlingId = behandling.id,
+                    steg = StegType.VURDER_MEDLEMSKAP,
+                )
+                assertThat(migreringsdata).isNotNull
+                val lagret = DefaultJsonMapper.fromJson<ArenaForutgåendeMedlemskap>(migreringsdata!!.data!!)
+                assertThat(lagret.vilkår?.kode).isEqualTo("MEDLSKAP5")
+                assertThat(lagret.vilkår?.status).isEqualTo("J")
             }
     }
 
@@ -457,6 +511,12 @@ object MigreringFraArenaMedAutomatiskeVurderingerFlytTestUnleash : FakeUnleashBa
 object MigreringFraArenaMedAutomatiskOppholdskravFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
         BehandlingsflytFeature.MigrererOppholdskravFraArenaAutomatisk,
+    )
+)
+
+object MigreringFraArenaMedAutomatiskForutgåendeMedlemskapFlytTestUnleash : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(
+        BehandlingsflytFeature.MigrererForutgaaendeMedlemskapFraArenaAutomatisk,
     )
 )
 

@@ -25,13 +25,13 @@ class ArenaMigreringService(
     fun hentSaksnummerArena(sakId: SakId): String {
         val arenaMigrering = arenaMigreringRepository.hentForSakHvisEksisterer(sakId)
         requireNotNull(arenaMigrering) {
-            "Fant ingen migrering for sak $sakId."
+            "Fant ingen migrering for sak $sakId"
         }
         return arenaMigrering.saksnummerArena
     }
 
     fun hentSykdomsvurdering(sakId: SakId): ArenaSykdomsvurdering {
-        logger.info("Henter sykdomsvurdering fra Arena for sak $sakId.")
+        logger.info("Henter sykdomsvurdering fra Arena for sak $sakId")
         val saksnummerArena = hentSaksnummerArena(sakId)
         val sykdomsvurderingFraArena = arenaOppslagGateway.hentSykdomsvurdering(saksnummerArena)
 
@@ -43,24 +43,29 @@ class ArenaMigreringService(
     }
 
     fun hentOppholdskrav(sakId: SakId): ArenaOppholdskrav {
-        logger.info("Henter oppholdskrav fra Arena for sak $sakId.")
+        logger.info("Henter oppholdskrav fra Arena for sak $sakId")
         val oppholdskrav = arenaOppslagGateway.hentOppholdskrav(hentSaksnummerArena(sakId))
         return oppholdskrav.tilDomene()
     }
 
+    fun hentForutgåendeMedlemskap(sakId: SakId): ArenaForutgåendeMedlemskap {
+        logger.info("Henter forutgående medlemskap fra Arena for sak $sakId")
+        return arenaOppslagGateway.hentForutgaaendeMedlemskap(hentSaksnummerArena(sakId)).tilDomene()
+    }
+
     fun hentVedtaksperiode(sakId: SakId): ArenaVedtaksperiode {
-        logger.info("Henter vedtaksperiode fra Arena for sak $sakId.")
+        logger.info("Henter vedtaksperiode fra Arena for sak $sakId")
         return arenaOppslagGateway.hentVedtaksperiode(hentSaksnummerArena(sakId)).tilDomene()
     }
 
     fun hentRefusjonskrav(sakId: SakId): ArenaRefusjonskrav? {
-        logger.info("Henter refusjonskrav fra Arena for sak $sakId.")
+        logger.info("Henter refusjonskrav fra Arena for sak $sakId")
         val refusjonskrav = arenaOppslagGateway.hentRefusjonskrav(hentSaksnummerArena(sakId))
         return refusjonskrav.tilDomene()
     }
 
     fun hentBeregningstidspunkt(sakId: SakId): ArenaBeregningstidspunkt {
-        logger.info("Henter beregningstidspunkt fra Arena for sak $sakId.")
+        logger.info("Henter beregningstidspunkt fra Arena for sak $sakId")
         val beregningstidspunkt = arenaOppslagGateway.hentBeregningstidspunkt(hentSaksnummerArena(sakId)).tilDomene()
         return requireNotNull(beregningstidspunkt) {
             "Kan ikke migrere beregningstidspunkt fra Arena for sak $sakId fordi Arena mangler beregningstidspunkt"
@@ -74,7 +79,7 @@ class ArenaMigreringService(
     }
 
     fun lagreMigreringsdataForSporing(behandlingId: BehandlingId, steg: StegType, data: Any?) {
-        logger.info("Lagrer migreringsdata for behandling $behandlingId, steg $steg.")
+        logger.info("Lagrer migreringsdata for behandling $behandlingId, steg $steg")
         arenaMigreringsdataRepository.lagre(
             behandlingId = behandlingId,
             steg = steg,

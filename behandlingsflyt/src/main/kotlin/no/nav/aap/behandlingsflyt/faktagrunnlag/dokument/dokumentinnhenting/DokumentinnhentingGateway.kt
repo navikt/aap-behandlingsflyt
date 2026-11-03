@@ -7,9 +7,7 @@ import no.nav.aap.dokumentinnhenting.kontrakt.FastlegeDto
 import no.nav.aap.dokumentinnhenting.kontrakt.FellesDialogmeldingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDialogmeldingerForSakParams
-import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostListeParams
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostListeResponse
-import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostParams
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostResponse
 import no.nav.aap.dokumentinnhenting.kontrakt.HentFastlegeDto
 import no.nav.aap.dokumentinnhenting.kontrakt.HentLegeerklæringForespørslerForSakParams
@@ -25,8 +23,7 @@ interface DokumentinnhentingGateway : Gateway {
     fun legeerklæringStatus(saksnummer: String): List<DialogmeldingStatusTilBehandslingsflytDto>
     fun forhåndsvisDialogmelding(request: ForhåndsvisDialogmeldingDto): DialogmeldingForhåndsvisningDto
     fun hentDialogmeldingerForSak(request: HentDialogmeldingerForSakParams): List<FellesDialogmeldingDto>
-    fun hentDokumentoversiktForJournalpost(request: HentDokumentoversiktJournalpostParams, currentToken: OidcToken): HentDokumentoversiktJournalpostResponse
-    fun hentDokumentoversiktForJournalpostListe(request: HentDokumentoversiktJournalpostListeParams, currentToken: OidcToken): HentDokumentoversiktJournalpostListeResponse
+    fun hentDokumentoversiktForJournalpostListe(journalpostIDer: List<String>, currentToken: OidcToken): HentDokumentoversiktJournalpostListeResponse
     fun hentLegeerklæringForespørslerForSak(requestParams: HentLegeerklæringForespørslerForSakParams): List<FellesDialogmeldingDto>
     fun hentFastlege(request: HentFastlegeDto, currentToken: OidcToken): FastlegeDto
 }

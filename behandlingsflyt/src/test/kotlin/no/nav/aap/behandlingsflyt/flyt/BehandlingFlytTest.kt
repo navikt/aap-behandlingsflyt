@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgInformasjonskrav
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapInformasjonskrav
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Førstegangsbehandling
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Revurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -91,7 +91,7 @@ class BehandlingFlytTest {
             .medSteg(GeneriskTestFlytSteg(StegType.START_BEHANDLING), vurderingsbehovRelevanteForSteg = emptyList())
             .medSteg(
                 GeneriskTestFlytSteg(StegType.VURDER_MEDLEMSKAP),
-                informasjonskrav = listOf(LovvalgInformasjonskrav),
+                informasjonskrav = listOf(LovvalgMedlemskapInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = emptyList()
             )
             .medSteg(GeneriskTestFlytSteg(StegType.FASTSETT_GRUNNLAG), vurderingsbehovRelevanteForSteg = emptyList())
@@ -101,7 +101,7 @@ class BehandlingFlytTest {
         behandlingFlyt.forberedFlyt(StegType.VURDER_MEDLEMSKAP)
         val faktagrunnlag = behandlingFlyt.faktagrunnlagForGjeldendeSteg()
 
-        assertThat(faktagrunnlag).containsExactly(Pair(StegType.VURDER_MEDLEMSKAP, LovvalgInformasjonskrav))
+        assertThat(faktagrunnlag).containsExactly(Pair(StegType.VURDER_MEDLEMSKAP, LovvalgMedlemskapInformasjonskrav))
 
         // Flytter til nytt steg, her er ingen informasjonskrav
         behandlingFlyt.forberedFlyt(StegType.FASTSETT_GRUNNLAG)
@@ -116,7 +116,7 @@ class BehandlingFlytTest {
             .medSteg(GeneriskTestFlytSteg(StegType.START_BEHANDLING), vurderingsbehovRelevanteForSteg = emptyList())
             .medSteg(
                 GeneriskTestFlytSteg(StegType.VURDER_MEDLEMSKAP),
-                informasjonskrav = listOf(LovvalgInformasjonskrav), vurderingsbehovRelevanteForSteg = emptyList()
+                informasjonskrav = listOf(LovvalgMedlemskapInformasjonskrav), vurderingsbehovRelevanteForSteg = emptyList()
             )
             .medSteg(GeneriskTestFlytSteg(StegType.FASTSETT_GRUNNLAG), vurderingsbehovRelevanteForSteg = emptyList())
             .build()
@@ -132,7 +132,7 @@ class BehandlingFlytTest {
         behandlingFlyt.forberedFlyt(StegType.FASTSETT_GRUNNLAG)
         val faktagrunnlag2 = behandlingFlyt.alleFaktagrunnlagFørGjeldendeSteg()
 
-        assertThat(faktagrunnlag2).containsExactly(Pair(StegType.VURDER_MEDLEMSKAP, LovvalgInformasjonskrav))
+        assertThat(faktagrunnlag2).containsExactly(Pair(StegType.VURDER_MEDLEMSKAP, LovvalgMedlemskapInformasjonskrav))
     }
 
 

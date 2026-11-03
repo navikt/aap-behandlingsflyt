@@ -102,13 +102,13 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
         assertThat(etableringGrunnlag?.vurderinger?.size).isEqualTo(2)
         assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
 
+        val oppfyltVurdering = requireNotNull(etableringGrunnlag?.vurderinger)
+            .single { it.virksomhetErNy == true }
+        val ikkeOppfyltVurdering = requireNotNull(etableringGrunnlag?.vurderinger)
+            .single { it.virksomhetErNy == false }
 
-        val oppfylt = etableringGrunnlag?.vurderinger?.first()!!.evaluerVirksomhetVurdering()
-        val ikkeOppfyltVurdering = etableringGrunnlag.vurderinger.last().evaluerVirksomhetVurdering()
-
-        assertThat(oppfylt).isEqualTo(true)
-        assertThat(ikkeOppfyltVurdering).isEqualTo(false)
-
+        assertThat(oppfyltVurdering.evaluerVirksomhetVurdering()).isEqualTo(true)
+        assertThat(ikkeOppfyltVurdering.evaluerVirksomhetVurdering()).isEqualTo(false)
     }
 
     @Test

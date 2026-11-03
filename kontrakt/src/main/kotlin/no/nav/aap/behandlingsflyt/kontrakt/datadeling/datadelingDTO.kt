@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.kontrakt.datadeling
 
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import java.math.BigDecimal
@@ -195,60 +197,107 @@ public data class DetaljertMeldekortDTO(
     val mottattTidspunkt: LocalDateTime,
     val timerArbeidPerPeriode: List<ArbeidIPeriodeDTO>,
 )
-enum class BehandlingHendelseNavnDto{
+
+enum class BehandlingHendelseNavn {
     SØKNAD_MOTTATT,
-    UNDER_BEHANDLING,
+    ALDER_LOVVALG_MEDLEMSKAP,
+    NAV_KONTOR,
+    NAY,
     FERDIG_BEHANDLET,
-    SØKNAD_TRUKKET,
-    VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
-    VENTER_PÅ_SVAR_FRA_BRUKER,
-    VENTER_PÅ_OPPLYSNINGER,
-    VENTER_PÅ_SVAR_PÅ_FORHÅNDSVARSEL,
-    VENTER_PÅ_OPPLYSNINGER_FRA_UTENLANDSKE_MYNDIGHETER,
 }
-enum class BehandlingHendelseTypeDto{
+
+enum class BehandlingHendelseType {
     SØKNAD,
     KLAGE
 }
 
-
-enum class BehandlingHendelseNavn{
-    SØKNAD_MOTTATT,
-    UNDER_BEHANDLING,
-    FERDIG_BEHANDLET,
-    SØKNAD_TRUKKET,
-    VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
-    VENTER_PÅ_SVAR_FRA_BRUKER,
-    VENTER_PÅ_OPPLYSNINGER,
-    VENTER_PÅ_SVAR_PÅ_FORHÅNDSVARSEL,
-    VENTER_PÅ_OPPLYSNINGER_FRA_UTENLANDSKE_MYNDIGHETER,
-}
-
-enum class BehandlingHendelseType{
-    SØKNAD,
-    KLAGE
-}
-
-enum class BehandlingHendelseStatus{
+enum class BehandlingHendelseProgresjon {
     AKTIV,
     FULLFØRT,
     IKKE_PÅBEGYNT,
 }
 
-public data class BehandlingHendelseDto(
-    val navn: BehandlingHendelseNavn,
-    val tidsstempel: LocalDateTime,
-    val status: BehandlingHendelseStatus,
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.EXISTING_PROPERTY,
+    property = "navn",
+    visible = true,
 )
+@JsonSubTypes(
+    JsonSubTypes.Type(value = BehandlingHendelse.SøknadMottatt::class, name = "SØKNAD_MOTTATT"),
+    JsonSubTypes.Type(value = BehandlingHendelse.AlderLovvalgMedlemskap::class, name = "ALDER_LOVVALG_MEDLEMSKAP"),
+    JsonSubTypes.Type(value = BehandlingHendelse.NavKontor::class, name = "NAV_KONTOR"),
+    JsonSubTypes.Type(value = BehandlingHendelse.Nay::class, name = "NAY"),
+    JsonSubTypes.Type(value = BehandlingHendelse.FerdigBehandlet::class, name = "FERDIG_BEHANDLET"),
+)
+public sealed interface BehandlingHendelse {
+    public val navn: BehandlingHendelseNavn
+    public val sistEndret: LocalDateTime?
+    public val progresjon: BehandlingHendelseProgresjon
+
+    public data class SøknadMottatt(
+        override val sistEndret: LocalDateTime,
+        override val progresjon: BehandlingHendelseProgresjon
+    ) : BehandlingHendelse {
+        override val navn: BehandlingHendelseNavn = BehandlingHendelseNavn.SØKNAD_MOTTATT
+    }
+
+    public data class AlderLovvalgMedlemskap(
+        override val sistEndret: LocalDateTime?,
+        override val progresjon: BehandlingHendelseProgresjon,
+        public val status: Status? = null,
+    ) : BehandlingHendelse {
+        override val navn = BehandlingHendelseNavn.ALDER_LOVVALG_MEDLEMSKAP
+
+        public enum class Status {
+            VENTER_PÅ_INFORMASJON_FRA_UTENLANDSKE_MYNDIGHETER,
+            MOTTATT_INFORMASJON_FRA_UTENLANDSKE_MYNDIGHETER,
+        }
+    }
+
+    public data class NavKontor(
+        override val sistEndret: LocalDateTime?,
+        override val progresjon: BehandlingHendelseProgresjon,
+        val status: Status? = null,
+    ) : BehandlingHendelse {
+        override val navn: BehandlingHendelseNavn = BehandlingHendelseNavn.NAV_KONTOR
+
+        public enum class Status {
+            VENTER_PÅ_LEGEERKLÆRING,
+            PURRET_PÅ_LEGERERKLÆRING,
+            MOTTATT_LEGEERKLÆRING,
+        }
+    }
+
+    public data class Nay(
+        override val sistEndret: LocalDateTime?,
+        override val progresjon: BehandlingHendelseProgresjon,
+        val status: Status? = null,
+    ) : BehandlingHendelse {
+        override val navn: BehandlingHendelseNavn = BehandlingHendelseNavn.NAY
+
+        public enum class Status {
+            VENTER_PÅ_INFORMASJON_FRA_UTENLANDSKE_MYNDIGHETER,
+            MOTTATT_INFORMASJON_FRA_UTENLANDSKE_MYNDIGHETER,
+        }
+    }
+
+    public data class FerdigBehandlet(
+        override val sistEndret: LocalDateTime?,
+        override val progresjon: BehandlingHendelseProgresjon
+    ) : BehandlingHendelse {
+        override val navn: BehandlingHendelseNavn = BehandlingHendelseNavn.FERDIG_BEHANDLET
+    }
+}
 
 public data class BehandlingVisningDto(
     val behandlingReferanse: BehandlingReferanse,
     val avsluttet: Boolean,
     val behandlingType: BehandlingHendelseType,
-    val hendelser: List<BehandlingHendelseDto>
+    val hendelser: List<BehandlingHendelse>
 )
 
-public data class BehandlingVisningRequest (
+public data class BehandlingVisningRequest(
     val ident: String,
     val saksnummer: String,
     val behandling: BehandlingVisningDto

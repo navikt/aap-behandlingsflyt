@@ -12,6 +12,7 @@ enum class BehandlingsflytFeature(
 ): FeatureToggle {
     // Se: https://aap-unleash-web.iap.nav.cloud.nais.io/projects/default
     IngenValidering,
+    AutomatiskOpphorUforeTilbakevirkende,
     BrevtyperTilNyBrevbygger,
     Under18,
     VisIkkeRelevantPeriode,
@@ -21,6 +22,7 @@ enum class BehandlingsflytFeature(
     VentStatusForTilbakekrevingIBehandlingsflyt,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
     SynkroniserArenaMeldeperiodesyklus,
+    HandtereMaksdatoForKantTilKant,
     DynamiskFrivilligSykestipend,
 
     // --- Krav ---
@@ -33,6 +35,7 @@ enum class BehandlingsflytFeature(
     MigrerRefusjonskravFraArenaAutomatisk,
     MigrererKravFraArenaAutomatisk,
     MigrererOppholdskravFraArenaAutomatisk,
+    MigrererForutgaaendeMedlemskapFraArenaAutomatisk,
     MigrererVedtakslengdeFraArenaAutomatisk,
     MigrererBeregningstidspunktFraArenaAutomatisk,
 
@@ -50,7 +53,8 @@ enum class BehandlingsflytFeature(
     NySoknadTilApiIntern,
     SammenhengendeInstitusjonsopphold,
     DatadelingBehandlingVisning,
-    Helseinstitusjon1Manedsregel
+    Helseinstitusjon1Manedsregel,
+    BackfillRedusertDagsats,
     ;
 
     override fun key(): String = name

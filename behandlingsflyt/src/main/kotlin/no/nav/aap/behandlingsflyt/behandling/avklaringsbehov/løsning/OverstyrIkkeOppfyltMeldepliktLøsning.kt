@@ -8,18 +8,18 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsRes
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.OverstyrIkkeOppfyltMeldepliktLøser
 import no.nav.aap.meldeplikt.MeldepliktOverstyringLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.OVERSTYR_IKKE_OPPFYKT_MELDEPLIKT_KODE
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.OVERSTYR_IKKE_OPPFYLT_MELDEPLIKT_KODE
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeName(value = OVERSTYR_IKKE_OPPFYKT_MELDEPLIKT_KODE)
+@JsonTypeName(value = OVERSTYR_IKKE_OPPFYLT_MELDEPLIKT_KODE)
 class OverstyrIkkeOppfyltMeldepliktLøsning(
     @param:JsonProperty("meldepliktOverstyringVurdering", required = true) val meldepliktOverstyringVurdering: MeldepliktOverstyringLøsningDto,
     @param:JsonProperty(
         "behovstype",
         required = true,
-        defaultValue = OVERSTYR_IKKE_OPPFYKT_MELDEPLIKT_KODE
+        defaultValue = OVERSTYR_IKKE_OPPFYLT_MELDEPLIKT_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5002`
 ) : EnkeltAvklaringsbehovLøsning {
 

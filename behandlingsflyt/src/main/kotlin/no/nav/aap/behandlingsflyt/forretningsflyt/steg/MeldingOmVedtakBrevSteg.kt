@@ -205,10 +205,12 @@ class MeldingOmVedtakBrevSteg(
             "J158692",
             "R152079",
             "B156492",
-            "S154973"
+            "S154973",
+            "S154176",
+            "Z990265"
         )
         val brevtyperSomSkalBrukeBrevbygger = listOf(TypeBrev.VEDTAK_INNVILGELSE)
-        return typeBrev in brevtyperSomSkalBrukeBrevbygger && (bruker.ident in brukereSomSkalBrukeBrevbygger || Miljø.erDev())
+        return typeBrev in brevtyperSomSkalBrukeBrevbygger && bruker.ident in brukereSomSkalBrukeBrevbygger
     }
 
     companion object : FlytSteg {

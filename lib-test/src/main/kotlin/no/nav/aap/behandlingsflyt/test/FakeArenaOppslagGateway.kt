@@ -5,8 +5,10 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoMedVedtakResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaBeregningstidspunktResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaForutgaaendeMedlemskapResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVedtaksperiodeResponse
@@ -20,7 +22,7 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
 
-class FakeArenaOppslagGateway : ArenaOppslagGateway {
+open class FakeArenaOppslagGateway : ArenaOppslagGateway {
     companion object : Factory<ArenaOppslagGateway> {
         override fun konstruer(): ArenaOppslagGateway {
             return FakeArenaOppslagGateway()
@@ -47,6 +49,10 @@ class FakeArenaOppslagGateway : ArenaOppslagGateway {
                 )
             )
         )
+    }
+
+    override fun hentMaksdato(ident: Ident): MaksdatoMedVedtakResponse {
+        return MaksdatoMedVedtakResponse(sak = null)
     }
 
 
@@ -77,6 +83,18 @@ class FakeArenaOppslagGateway : ArenaOppslagGateway {
                 id = 4,
                 kode = "AOINORGE3",
                 status = "V",
+                begrunnelse = null,
+            ),
+        )
+    }
+
+    override fun hentForutgaaendeMedlemskap(saksnummerArena: String): ArenaForutgaaendeMedlemskapResponse {
+        return ArenaForutgaaendeMedlemskapResponse(
+            vedtakId = 1,
+            vilkar = ArenaVilkarKontrakt(
+                id = 5,
+                kode = "MEDLSKAP5",
+                status = "J",
                 begrunnelse = null,
             ),
         )

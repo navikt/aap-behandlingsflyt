@@ -1,7 +1,8 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgInformasjonskrav
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnbeløpInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdatoInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.DagpengerInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.TiltakspengerInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
@@ -110,7 +111,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = AvklarStønadsperiodeSteg,
-                informasjonskrav = emptyList(),
+                informasjonskrav = listOf(ArenaMaksdatoInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = emptyList()
             )
             .medSteg(
@@ -123,7 +124,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = VurderLovvalgSteg,
-                informasjonskrav = listOf(PersonopplysningInformasjonskrav, LovvalgInformasjonskrav),
+                informasjonskrav = listOf(PersonopplysningInformasjonskrav, LovvalgMedlemskapInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.MIGRERING_FRA_ARENA,

@@ -24,6 +24,7 @@ enum class InformasjonskravNavn {
     VEDTAKSLENGDE,
     GRUNNBELØP,
     ARENA_MELDEKORTSYKLUS,
+    ARENA_MAKSDATO,
 
     @Deprecated("Ikke i bruk, men finnes i databasen.")
     RETTIGHETSPERIODE,

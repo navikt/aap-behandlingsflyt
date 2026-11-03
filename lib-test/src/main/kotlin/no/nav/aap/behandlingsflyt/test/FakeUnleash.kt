@@ -67,6 +67,7 @@ open class FakeUnleashBaseWithDefaultDisabled(
 object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
+        BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende to false,
         BehandlingsflytFeature.BrevtyperTilNyBrevbygger to false,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
@@ -76,6 +77,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
         BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
         BehandlingsflytFeature.SynkroniserArenaMeldeperiodesyklus to false,
+        BehandlingsflytFeature.HandtereMaksdatoForKantTilKant to true,
         BehandlingsflytFeature.DynamiskFrivilligSykestipend to true,
         
         // --- Krav ---
@@ -88,6 +90,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigrerRefusjonskravFraArenaAutomatisk to true,
         BehandlingsflytFeature.MigrererKravFraArenaAutomatisk to true,
         BehandlingsflytFeature.MigrererOppholdskravFraArenaAutomatisk to true,
+        BehandlingsflytFeature.MigrererForutgaaendeMedlemskapFraArenaAutomatisk to true,
         BehandlingsflytFeature.MigrererVedtakslengdeFraArenaAutomatisk to true,
         BehandlingsflytFeature.MigrererBeregningstidspunktFraArenaAutomatisk to true,
 

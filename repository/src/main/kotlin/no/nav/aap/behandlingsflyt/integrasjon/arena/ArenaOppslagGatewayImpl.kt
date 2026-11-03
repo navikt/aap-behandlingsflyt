@@ -4,10 +4,13 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkRequest
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoMedVedtakResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoRequest
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerRequest
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaBeregningstidspunktResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaForutgaaendeMedlemskapResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVedtaksperiodeResponse
@@ -25,10 +28,12 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.Duration
 
 class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<ArenaOppslagGateway> {
         override fun konstruer(): ArenaOppslagGateway {
@@ -82,6 +87,19 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
         return response
     }
 
+    override fun hentMaksdato(ident: Ident): MaksdatoMedVedtakResponse {
+        val response: MaksdatoMedVedtakResponse? = restClient.post(
+            uri.resolve("/api/v1/person/maksdato"),
+            PostRequest(
+                body = MaksdatoRequest(ident.identifikator),
+                timeout = Duration.ofSeconds(5)
+            ),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson<MaksdatoMedVedtakResponse>(body) }
+        )
+        requireNotNull(response) { "Fikk ikke gyldig svar fra /api/v1/person/maksdato" }
+        return response
+    }
+
     override fun hentKravDataForSak(arenasaksnummer: String): KravResponse {
         val response: KravResponse? = restClient.get(
             uri.resolve("/api/migrering/$arenasaksnummer/krav"),
@@ -109,6 +127,16 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
             mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
         )
         requireNotNull(response) { "Fikk ikke gyldig svar fra /api/migrering/$saksnummerArena/oppholdskrav" }
+        return response
+    }
+
+    override fun hentForutgaaendeMedlemskap(saksnummerArena: String): ArenaForutgaaendeMedlemskapResponse {
+        val response: ArenaForutgaaendeMedlemskapResponse? = restClient.get(
+            uri.resolve("/api/migrering/$saksnummerArena/forutgaaende-medlemskap"),
+            GetRequest(timeout = Duration.ofSeconds(5)),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson(body) }
+        )
+        requireNotNull(response) { "Fikk ikke gyldig svar fra /api/migrering/$saksnummerArena/forutgaaende-medlemskap" }
         return response
     }
 
@@ -144,9 +172,10 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
 
     override fun hentArenaMeldekortsyklus(ident: Ident): ArenaMeldeperiodesyklusInformasjonskrav.Registerdata {
         val response = restClient.post<ArenaMeldekortsyklusRequest, ArenaMeldekortsyklusResponse>(
-            uri.resolve("/api/person/meldekort/startuke"),
+            uri.resolve("/api/v1/samordning/meldekort/startuke"),
             PostRequest(ArenaMeldekortsyklusRequest(ident.identifikator)),
         )
+        log.info("ArenaOppslagGateway mottok {}", response)
 
         val år = response?.aar
         val ukenummer = response?.ukenummer
@@ -160,6 +189,6 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
     @Suppress("unused")
     private class ArenaMeldekortsyklusRequest(val personidentifikator: String)
 
-    private class ArenaMeldekortsyklusResponse( val aar: Int?, val ukenummer: Int?)
+    private data class ArenaMeldekortsyklusResponse(val aar: Int?, val ukenummer: Int?)
 
 }

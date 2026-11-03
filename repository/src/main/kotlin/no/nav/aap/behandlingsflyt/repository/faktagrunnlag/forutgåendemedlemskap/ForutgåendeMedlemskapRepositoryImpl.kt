@@ -1,0 +1,534 @@
+package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.forutgåendemedlemskap
+
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidAnsettelsesdetaljGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Fartsomraade
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipsregister
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.Yrke
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.dbconnect.Row
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.lookup.repository.Factory
+import org.slf4j.LoggerFactory
+
+class ForutgåendeMedlemskapRepositoryImpl(private val connection: DBConnection) :
+    ForutgåendeMedlemskapRepository {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
+    companion object : Factory<ForutgåendeMedlemskapRepositoryImpl> {
+        override fun konstruer(connection: DBConnection): ForutgåendeMedlemskapRepositoryImpl {
+            return ForutgåendeMedlemskapRepositoryImpl(connection)
+        }
+    }
+
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): ForutgåendeMedlemskapGrunnlag? {
+        val query = """
+            SELECT * FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG WHERE behandling_id = ? and aktiv = true
+        """.trimIndent()
+
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper {
+                ForutgåendeMedlemskapGrunnlag(
+                    medlemskapUnntakGrunnlag = hentMedlemskapGrunnlag(it.getLongOrNull("medlemskap_unntak_person_id")),
+                    inntekterINorgeGrunnlag = hentInntekterINorgeGrunnlag(it.getLongOrNull("inntekter_i_norge_id")),
+                    arbeiderINorgeGrunnlag = hentArbeiderINorgeGrunnlag(it.getLongOrNull("arbeider_id")),
+                    vurderinger = hentVurderinger(it.getLongOrNull("vurderinger_id"))
+                )
+            }
+        }
+    }
+
+    private fun hentVurderinger(vurderingerId: Long?): List<ManuellVurderingForForutgåendeMedlemskap> {
+        if (vurderingerId == null) return emptyList()
+
+        val query = """
+            SELECT * FROM FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING WHERE VURDERINGER_ID = ?
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, vurderingerId)
+            }
+            setRowMapper(::mapManuellVurderingForForutgåendeMedlemskap)
+        }
+    }
+
+    override fun lagreVurderinger(
+        behandlingId: BehandlingId,
+        vurderinger: List<ManuellVurderingForForutgåendeMedlemskap>
+    ) {
+        val grunnlagOppslag = hentGrunnlag(behandlingId)
+        if (grunnlagOppslag != null) {
+            deaktiverGrunnlag(behandlingId)
+        }
+
+        val vurderingerId = if (vurderinger.isNotEmpty()) lagreVurderinger(vurderinger) else null
+
+        val grunnlagQuery = """
+            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, vurderinger_id) VALUES (?, ?, ?, ?, ?)
+        """.trimIndent()
+
+        connection.execute(grunnlagQuery) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLong(2, grunnlagOppslag?.arbeiderId)
+                setLong(3, grunnlagOppslag?.inntektINorgeId)
+                setLong(4, grunnlagOppslag?.medlId)
+                setLong(5, vurderingerId)
+            }
+            setResultValidator { require(it == 1) }
+        }
+    }
+
+    private fun lagreVurderinger(vurderinger: List<ManuellVurderingForForutgåendeMedlemskap>): Long {
+        val overstyrt = vurderinger.any { it.overstyrt }
+
+        val vurderingerId = connection.executeReturnKey(
+            """
+            INSERT INTO forutgaaende_medlemskap_manuell_vurderinger DEFAULT VALUES
+        """.trimIndent()
+        )
+
+        val manuellVurderingQuery = """
+            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING (BEGRUNNELSE, HAR_FORUTGAAENDE_MEDLEMSKAP, 
+                VAR_MEDLEM_MED_NEDSATT_ARBEIDSEVNE, MEDLEM_MED_UNNTAK_AV_MAKS_FEM_AAR, OVERSTYRT, VURDERT_AV, 
+                OPPRETTET_TID, FOM, TOM, VURDERT_I_BEHANDLING, VURDERINGER_ID) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """.trimIndent()
+
+        connection.executeBatch(manuellVurderingQuery, vurderinger) {
+            setParams { manuellVurdering ->
+                setString(1, manuellVurdering.begrunnelse)
+                setBoolean(2, manuellVurdering.harForutgåendeMedlemskap)
+                setBoolean(3, manuellVurdering.varMedlemMedNedsattArbeidsevne)
+                setBoolean(4, manuellVurdering.medlemMedUnntakAvMaksFemAar)
+                setBoolean(5, overstyrt)
+                setBruker(6, manuellVurdering.vurdertAv)
+                setLocalDateTime(7, manuellVurdering.vurdertTidspunkt)
+                setLocalDate(8, manuellVurdering.fom)
+                setLocalDate(9, manuellVurdering.tom)
+                setLong(10, manuellVurdering.vurdertIBehandling.id)
+                setLong(11, vurderingerId)
+            }
+        }
+
+        return vurderingerId
+    }
+
+    override fun lagreArbeidsforholdOgInntektINorge(
+        behandlingId: BehandlingId,
+        arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
+        inntektGrunnlag: List<ArbeidsInntektMåned>,
+        medlId: Long?,
+        enhetGrunnlag: List<EnhetGrunnlag>
+    ) {
+        val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
+        val grunnlagOppslag = hentGrunnlag(behandlingId)
+        if (eksisterendeGrunnlag != null) {
+            deaktiverGrunnlag(behandlingId)
+        }
+
+        val arbeiderId = lagreArbeidGrunnlag(arbeidGrunnlag, enhetGrunnlag)
+        val inntekterINorgeId = lagreArbeidsInntektGrunnlag(inntektGrunnlag, enhetGrunnlag)
+
+        val grunnlagQuery = """
+            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, vurderinger_id) VALUES (?, ?, ?, ?, ?)
+        """.trimIndent()
+        connection.execute(grunnlagQuery) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLong(2, arbeiderId)
+                setLong(3, inntekterINorgeId)
+                setLong(4, medlId)
+                setLong(5, grunnlagOppslag?.vurderingerId)
+            }
+        }
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+        val arbeidIds = getArbeidIds(behandlingId)
+        val inntekterIds = getInntekterIds(behandlingId)
+        val vurderingerIds = getManuellVurderingerIds(behandlingId)
+
+        val deletedRows = connection.executeReturnUpdated(
+            """
+            delete from FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ?; 
+            delete from INNTEKT_I_NORGE_FORUTGAAENDE where inntekter_i_norge_id = ANY(?::bigint[]);
+            delete from INNTEKTER_I_NORGE_FORUTGAAENDE where id = ANY(?::bigint[]);
+            delete from ARBEID_DETALJER where arbeid_forutgaaende_id in (select id from ARBEID_FORUTGAAENDE where arbeider_id = ANY(?::bigint[]));
+            delete from ARBEID_FORUTGAAENDE where arbeider_id = ANY(?::bigint[]);
+            delete from ARBEIDER_FORUTGAAENDE where id = ANY(?::bigint[]);
+            delete from FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERING where vurderinger_id = ANY(?::bigint[]);
+            delete from FORUTGAAENDE_MEDLEMSKAP_MANUELL_VURDERINGER where id = ANY(?::bigint[]);
+           
+        """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.id)
+                setLongArray(2, inntekterIds)
+                setLongArray(3, inntekterIds)
+                setLongArray(4, arbeidIds)
+                setLongArray(5, arbeidIds)
+                setLongArray(6, arbeidIds)
+                setLongArray(7, vurderingerIds)
+                setLongArray(8, vurderingerIds)
+            }
+        }
+        log.info("Slettet $deletedRows rader fra FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG")
+    }
+
+    private fun getManuellVurderingerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT vurderinger_id
+                    FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
+                    WHERE behandling_id = ? AND vurderinger_id is not null
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("vurderinger_id")
+        }
+    }
+
+    private fun getArbeidIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT arbeider_id
+                    FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
+                    WHERE behandling_id = ? AND arbeider_id is not null
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("arbeider_id")
+        }
+    }
+
+    private fun getInntekterIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
+        """
+                    SELECT inntekter_i_norge_id
+                    FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
+                    WHERE behandling_id = ? AND inntekter_i_norge_id is not null
+                 
+                """.trimIndent()
+    ) {
+        setParams { setLong(1, behandlingId.id) }
+        setRowMapper { row ->
+            row.getLong("inntekter_i_norge_id")
+        }
+    }
+
+    private fun lagreArbeidGrunnlag(
+        arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
+        enhetGrunnlag: List<EnhetGrunnlag>
+    ): Long? {
+        if (arbeidGrunnlag.isEmpty()) return null
+
+        val arbeiderQuery = """
+            INSERT INTO ARBEIDER_FORUTGAAENDE DEFAULT VALUES
+        """.trimIndent()
+        val arbeiderId = connection.executeReturnKey(arbeiderQuery)
+
+        for (forhold in arbeidGrunnlag) {
+            val arbeidQuery = """
+                INSERT INTO ARBEID_FORUTGAAENDE (
+                    identifikator,
+                    arbeidsforhold_kode,
+                    arbeider_id,
+                    startdato,
+                    sluttdato,
+                    organisasjonsnavn
+                ) VALUES (?, ?, ?, ?, ?, ?)
+            """.trimIndent()
+            val orgNavn =
+                enhetGrunnlag.firstOrNull { it.orgnummer == forhold.identifikator }?.orgNavn
+
+            val arbeidId = connection.executeReturnKey(arbeidQuery) {
+                setParams {
+                    setString(1, forhold.identifikator)
+                    setString(2, forhold.arbeidsforholdKode.kode)
+                    setLong(3, arbeiderId)
+                    setLocalDate(4, forhold.startdato)
+                    setLocalDate(5, forhold.sluttdato)
+                    setString(6, orgNavn)
+                }
+            }
+
+            lagreArbeidDetaljer(arbeidId, forhold.ansettelsesdetaljer)
+        }
+        return arbeiderId
+    }
+
+    private fun lagreArbeidDetaljer(arbeidId: Long, ansettelsesdetaljer: List<ArbeidAnsettelsesdetaljGrunnlag>) {
+        if (ansettelsesdetaljer.isEmpty()) return
+
+        val query = """
+            INSERT INTO ARBEID_DETALJER (
+                arbeid_forutgaaende_id,
+                skipsregister_kode,
+                skipstype_kode,
+                fartsomraade_kode,
+                yrke_kode,
+                yrke_beskrivelse
+            ) VALUES (?, ?, ?, ?, ?, ?)
+        """.trimIndent()
+
+        connection.executeBatch(query, ansettelsesdetaljer) {
+            setParams { detalj ->
+                setLong(1, arbeidId)
+                setString(2, detalj.skipsregister?.kode)
+                setString(3, detalj.skipstype?.kode)
+                setString(4, detalj.fartsomraade?.kode)
+                setString(5, detalj.yrke?.kode)
+                setString(6, detalj.yrke?.beskrivelse)
+            }
+        }
+    }
+
+    private fun lagreArbeidsInntektGrunnlag(
+        arbeidsInntektGrunnlag: List<ArbeidsInntektMåned>,
+        enhetGrunnlag: List<EnhetGrunnlag>
+    ): Long? {
+        if (arbeidsInntektGrunnlag.isEmpty()) return null
+
+        val inntekterINorgeQuery = """
+            INSERT INTO INNTEKTER_I_NORGE_FORUTGAAENDE DEFAULT VALUES
+        """.trimIndent()
+        val inntekterINorgeId = connection.executeReturnKey(inntekterINorgeQuery)
+
+        val inntektQuery = """
+                    INSERT INTO INNTEKT_I_NORGE_FORUTGAAENDE (identifikator, beloep, skattemessig_bosatt_land, opptjenings_land, inntekt_type, inntekter_i_norge_id, periode, organisasjonsnavn) VALUES (?, ?, ?, ?, ?, ?, ?::daterange, ?)
+                """.trimIndent()
+
+        connection.executeBatch(
+            inntektQuery,
+            arbeidsInntektGrunnlag.flatMap {
+                it.arbeidsInntektInformasjon.inntektListe.map { inntekt ->
+                    Pair(
+                        it.årMåned,
+                        inntekt
+                    )
+                }
+            }
+        ) {
+            setParams { (årMåned, inntekt) ->
+                val orgNavn =
+                    enhetGrunnlag.firstOrNull { it.orgnummer == inntekt.virksomhet.identifikator }?.orgNavn
+                val tomFallback = inntekt.opptjeningsperiodeFom ?: årMåned.atDay(1)
+
+                setString(1, inntekt.virksomhet.identifikator)
+                setDouble(2, inntekt.beløp)
+                setString(3, inntekt.skattemessigBosattLand)
+                setString(4, inntekt.opptjeningsland)
+                setString(5, inntekt.beskrivelse)
+                setLong(6, inntekterINorgeId)
+                setPeriode(
+                    7,
+                    Periode(
+                        inntekt.opptjeningsperiodeFom ?: årMåned.atDay(1),
+                        inntekt.opptjeningsperiodeTom ?: tomFallback
+                    )
+                )
+                setString(8, orgNavn)
+            }
+        }
+        return inntekterINorgeId
+    }
+
+    private fun mapManuellVurderingForForutgåendeMedlemskap(row: Row): ManuellVurderingForForutgåendeMedlemskap =
+        ManuellVurderingForForutgåendeMedlemskap(
+            begrunnelse = row.getString("begrunnelse"),
+            harForutgåendeMedlemskap = row.getBoolean("har_forutgaaende_medlemskap"),
+            varMedlemMedNedsattArbeidsevne = row.getBooleanOrNull("var_medlem_med_nedsatt_arbeidsevne"),
+            medlemMedUnntakAvMaksFemAar = row.getBooleanOrNull("medlem_med_unntak_av_maks_fem_aar"),
+            overstyrt = row.getBoolean("overstyrt"),
+            vurdertAv = row.getBruker("vurdert_av"),
+            vurdertTidspunkt = row.getLocalDateTime("opprettet_tid"),
+            vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
+            fom = row.getLocalDate("fom"),
+            tom = row.getLocalDateOrNull("tom"),
+        )
+
+    private fun hentMedlemskapGrunnlag(medlemskapId: Long?): MedlemskapUnntakGrunnlag? {
+        if (medlemskapId == null) return null
+
+        val data = connection.queryList(
+            """SELECT * FROM MEDLEMSKAP_FORUTGAAENDE_UNNTAK WHERE MEDLEMSKAP_FORUTGAAENDE_UNNTAK_PERSON_ID = ?""".trimIndent()
+        ) {
+            setParams {
+                setLong(1, medlemskapId)
+            }
+            setRowMapper {
+                val unntak = Unntak(
+                    status = it.getString("STATUS"),
+                    statusaarsak = it.getStringOrNull("STATUS_ARSAK"),
+                    medlem = it.getBoolean("MEDLEM"),
+                    grunnlag = it.getString("GRUNNLAG"),
+                    lovvalg = it.getString("LOVVALG"),
+                    helsedel = it.getBoolean("HELSEDEL"),
+                    lovvalgsland = it.getStringOrNull("LOVVALGSLAND"),
+                    kilde = hentKildesystem(it)
+                )
+                Segment(
+                    it.getPeriode("PERIODE"),
+                    unntak
+                )
+            }
+        }.toList()
+        return MedlemskapUnntakGrunnlag(data)
+    }
+
+    private fun hentKildesystem(row: Row): KildesystemMedl? {
+        val kildesystemKode: KildesystemKode? = row.getEnumOrNull("KILDESYSTEM")
+        val kildeNavn = row.getStringOrNull("KILDENAVN")
+
+        return if (kildesystemKode != null && kildeNavn != null) {
+            KildesystemMedl(kildesystemKode, kildeNavn)
+        } else null
+    }
+
+    private fun hentArbeiderINorgeGrunnlag(arbeiderINorgeId: Long?): List<ArbeidINorgeGrunnlag> {
+        if (arbeiderINorgeId == null) return emptyList()
+
+        val query = """
+            SELECT * FROM ARBEID_FORUTGAAENDE WHERE arbeider_id = ?
+        """.trimIndent()
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, arbeiderINorgeId)
+            }
+            setRowMapper {
+                ArbeidINorgeGrunnlag(
+                    identifikator = it.getString("identifikator"),
+                    arbeidsforholdKode = Arbeidsforholdtype.fraKode(it.getString("arbeidsforhold_kode")),
+                    startdato = it.getLocalDate("startdato"),
+                    sluttdato = it.getLocalDateOrNull("sluttdato"),
+                    organisasjonsNavn = it.getStringOrNull("organisasjonsnavn"),
+                    ansettelsesdetaljer = hentAnsettelsesdetaljer(it.getLong("id"))
+                )
+            }
+        }
+    }
+
+    private fun hentAnsettelsesdetaljer(arbeidId: Long): List<ArbeidAnsettelsesdetaljGrunnlag> {
+        val query = """
+            SELECT * FROM ARBEID_DETALJER WHERE arbeid_forutgaaende_id = ?
+        """.trimIndent()
+
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, arbeidId)
+            }
+            setRowMapper {
+                ArbeidAnsettelsesdetaljGrunnlag(
+                    skipsregister = it.getStringOrNull("skipsregister_kode")
+                        ?.let { kode -> Skipsregister.fraKode(kode) },
+                    skipstype = it.getStringOrNull("skipstype_kode")
+                        ?.let { kode -> Skipstype.fraKode(kode) },
+                    fartsomraade = it.getStringOrNull("fartsomraade_kode")
+                        ?.let { kode -> Fartsomraade.fraKode(kode) },
+                    yrke = it.getStringOrNull("yrke_kode")
+                        ?.let { kode -> Yrke(kode, it.getStringOrNull("yrke_beskrivelse")) },
+                )
+            }
+        }
+    }
+
+    private fun hentInntekterINorgeGrunnlag(inntekterINorgeId: Long?): List<InntektINorgeGrunnlag> {
+        if (inntekterINorgeId == null) return emptyList()
+
+        val query = """
+            SELECT * FROM INNTEKT_I_NORGE_FORUTGAAENDE WHERE inntekter_i_norge_id = ?
+        """.trimIndent()
+        return connection.queryList(query) {
+            setParams {
+                setLong(1, inntekterINorgeId)
+            }
+            setRowMapper {
+                InntektINorgeGrunnlag(
+                    identifikator = it.getString("identifikator"),
+                    beloep = it.getDouble("beloep"),
+                    skattemessigBosattLand = it.getStringOrNull("skattemessig_bosatt_land"),
+                    opptjeningsLand = it.getStringOrNull("opptjenings_land"),
+                    inntektType = it.getStringOrNull("inntekt_type"),
+                    periode = it.getPeriode("periode"),
+                    organisasjonsNavn = it.getStringOrNull("organisasjonsnavn")
+                )
+            }
+        }
+    }
+
+    private fun hentGrunnlag(behandlingId: BehandlingId): GrunnlagOppslag? {
+        val query = """
+            SELECT * FROM FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG WHERE behandling_id = ? and aktiv = true
+        """.trimIndent()
+
+        return connection.queryFirstOrNull(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper {
+                GrunnlagOppslag(
+                    it.getLongOrNull("medlemskap_unntak_person_id"),
+                    it.getLongOrNull("inntekter_i_norge_id"),
+                    it.getLongOrNull("arbeider_id"),
+                    it.getLongOrNull("vurderinger_id")
+                )
+            }
+        }
+    }
+
+    private fun deaktiverGrunnlag(behandlingId: BehandlingId) {
+        connection.execute("UPDATE FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG set aktiv = false WHERE behandling_id = ? and aktiv = true") {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setResultValidator { require(it == 1) }
+        }
+    }
+
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        hentHvisEksisterer(fraBehandling) ?: return
+
+        val query = """
+            INSERT INTO FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
+                (behandling_id, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id, vurderinger_id) 
+            SELECT ?, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id, vurderinger_id
+                from FORUTGAAENDE_MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
+                where behandling_id = ? and aktiv
+        """.trimIndent()
+
+        connection.execute(query) {
+            setParams {
+                setLong(1, tilBehandling.toLong())
+                setLong(2, fraBehandling.toLong())
+            }
+        }
+    }
+
+    internal data class GrunnlagOppslag(
+        val medlId: Long?,
+        val inntektINorgeId: Long?,
+        val arbeiderId: Long?,
+        val vurderingerId: Long?
+    )
+}

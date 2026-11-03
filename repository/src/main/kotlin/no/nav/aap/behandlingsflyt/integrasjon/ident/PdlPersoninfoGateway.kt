@@ -5,7 +5,7 @@ package no.nav.aap.behandlingsflyt.integrasjon.ident
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.IdentVariables
-import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlGateway
+import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlGatewayImpl
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlPersonNavnDataResponse
 import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlRequest
 import no.nav.aap.behandlingsflyt.prometheus
@@ -49,7 +49,7 @@ object PdlPersoninfoGateway : PersoninfoGateway {
     override fun hentPersoninfoForIdent(ident: Ident, currentToken: OidcToken): Personinfo {
         return personinfoCache.get(ident.identifikator) {
             val request = PdlRequest(PERSONINFO_QUERY, IdentVariables(ident.identifikator))
-            val person = PdlGateway.query<PdlPersonNavnDataResponse>(request, currentToken).data?.hentPerson
+            val person = PdlGatewayImpl.query<PdlPersonNavnDataResponse>(request, currentToken).data?.hentPerson
 
             val navn = person?.navn?.firstOrNull()
             val foedselsdato = person?.foedselsdato?.firstOrNull()?.foedselsdato?.let(LocalDate::parse)

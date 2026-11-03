@@ -113,7 +113,7 @@ class RefusjonkravSteg(
         val refusjonskravFraArena = arenaMigreringService.hentRefusjonskrav(kontekst.sakId)
         arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, type(), refusjonskravFraArena)
 
-        val vurdering = ArenaMigreringMapper.mapRefusjonskravVurdering(refusjonskravFraArena)
+        val vurdering = ArenaMigreringMapper.tilRefusjonskravVurdering(refusjonskravFraArena)
         refusjonkravRepository.lagre(
             kontekst.sakId, kontekst.behandlingId, listOf(vurdering)
         )
