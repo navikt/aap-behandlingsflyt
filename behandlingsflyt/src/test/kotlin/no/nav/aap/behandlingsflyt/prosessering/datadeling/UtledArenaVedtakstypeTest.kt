@@ -225,10 +225,11 @@ class UtledArenaVedtakstypeTest {
         val revurdering2 = behandling(opprettet = tredjesøknad.atStartOfDay(), forrige = revurdering)
         val innvilgetPeriode = Periode(
             førsteSøknadMottatt,
-            førsteSøknadMottatt.plusDays(30)
+            førsteSøknadMottatt.plusYears(1)
         )
 
         // When
+        val avslagFra = førsteSøknadMottatt.plusDays(30)
         val resultat = utledArenaVedtakForKelvinSak(
             AvsluttetKelvinBehandling(
                 behandling = førstegangsbehandling,
@@ -239,15 +240,18 @@ class UtledArenaVedtakstypeTest {
             AvsluttetKelvinBehandling(
                 behandling = revurdering,
                 nyeSøknader = setOf(),
-                rettighetsType = tidslinjeOf(innvilgetPeriode to RettighetsType.BISTANDSBEHOV),
-                stansOgOpphør = mapOf(innvilgetPeriode.tom.plusDays(1) to Opphør(årsaker = setOf(Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE))),
+                rettighetsType = tidslinjeOf(Periode(førsteSøknadMottatt, avslagFra) to RettighetsType.BISTANDSBEHOV),
+                stansOgOpphør = mapOf(avslagFra.plusDays(1) to Opphør(årsaker = setOf(Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE))),
             ),
             AvsluttetKelvinBehandling(
                 behandling = revurdering2,
                 nyeSøknader = setOf(søknad(revurdering2.id, tredjesøknad.atStartOfDay())),
-                rettighetsType = tidslinjeOf(Periode(tredjesøknad, tredjesøknad.plusDays(100)) to RettighetsType.BISTANDSBEHOV),
+                rettighetsType = tidslinjeOf(
+                    Periode(førsteSøknadMottatt, avslagFra) to RettighetsType.BISTANDSBEHOV,
+                    Periode(tredjesøknad, tredjesøknad.plusDays(100)) to RettighetsType.BISTANDSBEHOV
+                ),
                 stansOgOpphør = mapOf()
-            )
+            ),
         )
         println(resultat)
 
@@ -255,14 +259,22 @@ class UtledArenaVedtakstypeTest {
         assertTidslinjeEquals(
             resultat,
             tidslinjeOf(
-                førsteSøknadMottatt.somPeriode() to UtledArenaVedtakstype.ArenaVedtak(
+                Periode(førsteSøknadMottatt, avslagFra) to UtledArenaVedtakstype.ArenaVedtak(
+                    vedtakId = førstegangsbehandling.vedtakId,
+                    vedtaksvariant = UtledArenaVedtakstype.ArenaVedtaksvariant.O_INNV_SOKNAD
+                ),
+                innvilgetPeriode.tom.plusDays(1).somPeriode() to UtledArenaVedtakstype.ArenaVedtak(
                     vedtakId = førstegangsbehandling.vedtakId,
                     vedtaksvariant = UtledArenaVedtakstype.ArenaVedtaksvariant.O_AVSLAG
                 ),
-                innvilgetPeriode to UtledArenaVedtakstype.ArenaVedtak(
-                    vedtakId = revurdering.vedtakId,
-                    vedtaksvariant = UtledArenaVedtakstype.ArenaVedtaksvariant.O_INNV_SOKNAD
-                )
+                Periode(tredjesøknad, tredjesøknad.plusDays(100)) to UtledArenaVedtakstype.ArenaVedtak(
+                    vedtakId = revurdering2.vedtakId,
+                    vedtaksvariant = UtledArenaVedtakstype.ArenaVedtaksvariant.G_INNV_SOKNAD
+                ),
+                tredjesøknad.plusDays(100).plusDays(2).somPeriode() to UtledArenaVedtakstype.ArenaVedtak(
+                    vedtakId = revurdering2.vedtakId,
+                    vedtaksvariant = UtledArenaVedtakstype.ArenaVedtaksvariant.G_INNV_SOKNAD
+                ),
             )
         )
     }
