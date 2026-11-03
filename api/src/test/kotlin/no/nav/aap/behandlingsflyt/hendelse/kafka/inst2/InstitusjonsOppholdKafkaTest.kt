@@ -25,7 +25,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
 
-class InstitusjonsOppholdServiceTest {
+class InstitusjonsOppholdKafkaTest {
     object FakeInstitusjonsoppholdGateway : InstitusjonsoppholdGateway {
         lateinit var opphold: Institusjonsopphold
 
