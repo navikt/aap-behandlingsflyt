@@ -54,7 +54,11 @@ class ArenaoppslagFake : FakeServer() {
                 )
             }
             post("/api/v1/person/maksdato") {
-                call.respond(MaksdatoMedVedtakResponse(sak = null))
+                call.respond(
+                    MaksdatoMedVedtakResponse(
+                        sak = null
+                    )
+                )
             }
             get("/api/migrering/{saksnummerArena}/sykdom") {
                 call.respond(
