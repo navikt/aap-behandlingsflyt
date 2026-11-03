@@ -55,6 +55,7 @@ enum class BehandlingsflytFeature(
     DatadelingBehandlingVisning,
     Helseinstitusjon1Manedsregel,
     BackfillRedusertDagsats,
+    VedtaksperiodeBeslutter,
     ;
 
     override fun key(): String = name

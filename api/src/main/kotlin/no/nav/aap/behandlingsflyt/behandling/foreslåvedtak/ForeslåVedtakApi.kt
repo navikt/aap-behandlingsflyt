@@ -20,6 +20,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.utils.tilForeslåVedtakDataTidslinje
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -63,6 +65,8 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                     val referanseOppslag = behandlingRepository
                         .hentAlleFor(behandling.sakId, TypeBehandling.ytelseBehandlingstyper())
                         .associate { it.id to it.referanse }
+                    val visPeriodeEndringer = gatewayProvider.provide<UnleashGateway>()
+                        .isEnabled(BehandlingsflytFeature.VedtaksperiodeBeslutter)
 
                     val stansOgOpphørDto = stansOgOpphør.map { (fom, historikk) ->
                         StansOpphørDto(
@@ -77,7 +81,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                                     behandlingReferanse = requireNotNull(referanseOppslag[vurdering.vurdertIBehandling]) {
                                         "Finner ikke ytelsesbehandling i sak med behandlingsid"
                                     }.referanse,
-                                    erNy = vurdering.vurdertIBehandling == behandling.id
+                                    erNy = visPeriodeEndringer && vurdering.vurdertIBehandling == behandling.id
                                 )
                             }
                         )
@@ -118,19 +122,20 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                                 .komprimer()
 
                         val tidligereTidslinjer: List<Tidslinje<ForeslåVedtakData>> =
-                            generateSequence(behandling.forrigeBehandlingId) { behandlingRepository.hent(it).forrigeBehandlingId }
-                                .toList()
-                                .reversed()
-                                .mapNotNull {
-                                    underveisRepository.hentHvisEksisterer(it)?.tilForeslåVedtakDataTidslinje()
-                                }
+                            if (!visPeriodeEndringer) emptyList() else
+                                generateSequence(behandling.forrigeBehandlingId) { behandlingRepository.hent(it).forrigeBehandlingId }
+                                    .toList()
+                                    .reversed()
+                                    .mapNotNull {
+                                        underveisRepository.hentHvisEksisterer(it)?.tilForeslåVedtakDataTidslinje()
+                                    }
 
                         val forrigeHelePeriode =
                             tidligereTidslinjer.lastOrNull()?.takeIf { !it.isEmpty() }?.helePerioden()
                         val gjeldendeHelePeriode = foreslåVedtakData.takeIf { !it.isEmpty() }?.helePerioden()
 
                         val endretRettighetsperiode =
-                            if (forrigeHelePeriode != null && gjeldendeHelePeriode != null && forrigeHelePeriode != gjeldendeHelePeriode) {
+                            if (visPeriodeEndringer && forrigeHelePeriode != null && gjeldendeHelePeriode != null && forrigeHelePeriode != gjeldendeHelePeriode) {
                                 EndretRettighetsperiodeDto(fra = forrigeHelePeriode, til = gjeldendeHelePeriode)
                             } else {
                                 null

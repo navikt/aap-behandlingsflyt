@@ -23,11 +23,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockDataSource
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -40,8 +42,8 @@ import java.time.LocalDate
 @Fakes
 class ForeslåVedtakApiTest : BaseApiTest() {
 
-    private fun gatewayProvider() = createGatewayProvider {
-        register<AlleAvskruddUnleash>()
+    private fun gatewayProvider(vedtaksperiodeBeslutter: Boolean = true) = createGatewayProvider {
+        if (vedtaksperiodeBeslutter) register<VedtaksperiodeBeslutterPåUnleash>() else register<AlleAvskruddUnleash>()
     }
 
     @Test
@@ -214,6 +216,22 @@ class ForeslåVedtakApiTest : BaseApiTest() {
         assertThat(endret.til).isEqualTo(nyPeriode)
     }
 
+    @Test
+    fun `ingen endringsinformasjon når VedtaksperiodeBeslutter er skrudd av`() {
+        val (forrige, gjeldende) = opprettBehandlingskjede(2)
+        lagreGrunnlag(forrige.id, Periode(dato(2025, 1, 1), dato(2025, 12, 31)) to Utfall.OPPFYLT)
+        lagreGrunnlag(
+            gjeldende.id,
+            Periode(dato(2025, 1, 1), dato(2026, 12, 31)) to Utfall.OPPFYLT,
+        )
+
+        val respons = hentForeslåVedtak(gjeldende, vedtaksperiodeBeslutter = false)
+
+        assertThat(respons.endretRettighetsperiode).isNull()
+        assertThat(respons.perioder.single().erNy).isFalse()
+        assertThat(respons.perioder.single().tidligerePerioder).isEmpty()
+    }
+
     private fun dato(år: Int, måned: Int, dag: Int) = LocalDate.of(år, måned, dag)
 
     private fun opprettFørstegangsbehandling(sak: Sak, forrige: Behandling? = null) =
@@ -286,11 +304,18 @@ class ForeslåVedtakApiTest : BaseApiTest() {
         InMemoryVilkårsresultatRepository.lagre(behandlingId, Vilkårsresultat(vilkår = oppfylteVilkår(helePerioden)))
     }
 
-    private fun hentForeslåVedtak(behandling: Behandling): ForeslåVedtakResponse {
+    private fun hentForeslåVedtak(
+        behandling: Behandling,
+        vedtaksperiodeBeslutter: Boolean = true
+    ): ForeslåVedtakResponse {
         var body: ForeslåVedtakResponse? = null
         testApplication {
             installApplication {
-                foreslaaVedtakApi(MockDataSource(), inMemoryRepositoryRegistry, gatewayProvider())
+                foreslaaVedtakApi(
+                    MockDataSource(),
+                    inMemoryRepositoryRegistry,
+                    gatewayProvider(vedtaksperiodeBeslutter)
+                )
             }
             val response =
                 createClient().get("/api/behandling/${behandling.referanse.referanse}/grunnlag/foreslaa-vedtak") {
@@ -302,3 +327,7 @@ class ForeslåVedtakApiTest : BaseApiTest() {
         return requireNotNull(body)
     }
 }
+
+object VedtaksperiodeBeslutterPåUnleash : FakeUnleashBaseWithDefaultDisabled(
+    enabledFlags = listOf(BehandlingsflytFeature.VedtaksperiodeBeslutter)
+)
