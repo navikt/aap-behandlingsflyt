@@ -28,10 +28,12 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.Duration
 
 class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
+    private val log = LoggerFactory.getLogger(javaClass)
 
     companion object : Factory<ArenaOppslagGateway> {
         override fun konstruer(): ArenaOppslagGateway {
@@ -173,6 +175,7 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
             uri.resolve("/api/v1/samordning/meldekort/startuke"),
             PostRequest(ArenaMeldekortsyklusRequest(ident.identifikator)),
         )
+        log.info("ArenaOppslagGateway mottok {}", response)
 
         val år = response?.aar
         val ukenummer = response?.ukenummer
@@ -186,6 +189,6 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
     @Suppress("unused")
     private class ArenaMeldekortsyklusRequest(val personidentifikator: String)
 
-    private class ArenaMeldekortsyklusResponse(val aar: Int?, val ukenummer: Int?)
+    private data class ArenaMeldekortsyklusResponse(val aar: Int?, val ukenummer: Int?)
 
 }

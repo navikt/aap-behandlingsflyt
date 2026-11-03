@@ -67,6 +67,7 @@ open class FakeUnleashBaseWithDefaultDisabled(
 object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
+        BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende to false,
         BehandlingsflytFeature.BrevtyperTilNyBrevbygger to false,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,

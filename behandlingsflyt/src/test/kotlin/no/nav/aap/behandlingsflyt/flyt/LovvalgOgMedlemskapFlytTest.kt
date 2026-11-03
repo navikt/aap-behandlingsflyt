@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadStudentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UtenlandsPeriodeDto
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap.LovvalgMedlemskapRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap.OppgittUtenlandsopplysningerRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -203,6 +204,7 @@ class LovvalgOgMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
         // var fortsatt relevant for lovvalg, men mangler nå en reell/gyldig vurdering.
         dataSource.transaction {
             LovvalgMedlemskapRepositoryImpl(it).slett(fullførtFørstegangsbehandling.id)
+            OppgittUtenlandsopplysningerRepositoryImpl(it).slett(fullførtFørstegangsbehandling.id)
         }
 
         val revurdering = sak.opprettManuellRevurdering(

@@ -17,6 +17,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonOrdning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonYtelse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansEllerOpphør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørGrunnlag
@@ -29,6 +34,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingVurdering
@@ -121,6 +131,7 @@ class BrevUtlederServiceTest {
     val unleashGateway = BrevUtlederServiceTestUnleash
     val stansOpphørRepository = repositoryProvider.provide<StansOpphørRepository>()
     val tpRefusjonskravRepository = repositoryProvider.provide<TjenestepensjonRefusjonsKravVurderingRepository>()
+    val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
     val refusjonkravRepository = repositoryProvider.provide<RefusjonkravRepository>()
     val brevUtlederService = BrevUtlederService(
         repositoryProvider,
@@ -1045,6 +1056,7 @@ class BrevUtlederServiceTest {
         @Test
         fun `gir ikke datoer for refusjonskrav når utbetaling ikke skal holdes tilbake`() {
             val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
+            gittTjenestepensjon(behandling.id)
             gittUnderveisGrunnlag(
                 behandling.id,
                 underveisperiode(
@@ -1071,6 +1083,7 @@ class BrevUtlederServiceTest {
                 vedtakstidspunkt = virkningstidspunktet.plusDays(8).atStartOfDay()
             )
             val kravdato = 14 juni 2026
+            gittTjenestepensjon(behandling.id, kravdato)
             gittUnderveisGrunnlag(
                 behandling.id,
                 underveisperiode(
@@ -1100,6 +1113,7 @@ class BrevUtlederServiceTest {
             val vedtakstidspunkt = virkningstidspunktet.plusDays(8)
             val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling, virkningstidspunkt = virkningstidspunktet, vedtakstidspunkt = vedtakstidspunkt.atStartOfDay())
             val kravdato = 14 juni 2026
+            gittTjenestepensjon(behandling.id, kravdato)
             gittUnderveisGrunnlag(
                 behandling.id,
                 underveisperiode(
@@ -1131,6 +1145,7 @@ class BrevUtlederServiceTest {
             val vedtakstidspunkt = virkningstidspunktet
             val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling, virkningstidspunkt = virkningstidspunktet, vedtakstidspunkt = vedtakstidspunkt.atStartOfDay())
             val kravdato = 14 juni 2026
+            gittTjenestepensjon(behandling.id, kravdato)
             gittUnderveisGrunnlag(
                 behandling.id,
                 underveisperiode(
@@ -1159,6 +1174,7 @@ class BrevUtlederServiceTest {
             val mnd_bruker_fyller_67 = 31 august 2026
             val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling, virkningstidspunkt = virkningstidspunktet, vedtakstidspunkt = vedtakstidspunkt.atStartOfDay())
             val kravdato = 14 juni 2026
+            gittTjenestepensjon(behandling.id, kravdato)
             gittUnderveisGrunnlag(
                 behandling.id,
                 underveisperiode(
@@ -1185,6 +1201,70 @@ class BrevUtlederServiceTest {
             assertThat(resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon?.tilOgMed).isEqualTo(mnd_bruker_fyller_67)
         }
 
+    }
+
+    @ParameterizedTest
+    @MethodSource("tjenestepensjonPerioder")
+    fun `TP-tekst krever overlapp med innvilget AAP også uten refusjonsvurdering`(
+        tpFom: LocalDate?,
+        tpTom: LocalDate?,
+        forventerTPTekst: Boolean,
+    ) {
+        val behandling = gittBehandling()
+        gittUnderveisGrunnlag(
+            behandling.id,
+            underveisperiode(
+                Periode(1 januar 2025, 10 januar 2025),
+                RettighetsType.BISTANDSBEHOV,
+                Utfall.OPPFYLT,
+            ),
+            underveisperiode(
+                Periode(11 januar 2025, 20 januar 2025),
+                null,
+                Utfall.IKKE_OPPFYLT,
+            ),
+            underveisperiode(
+                Periode(21 januar 2025, 31 januar 2025),
+                RettighetsType.BISTANDSBEHOV,
+                Utfall.OPPFYLT,
+            ),
+        )
+        if (tpFom != null) {
+            gittTjenestepensjon(behandling.id, tpFom, tpTom)
+        }
+
+        val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+        assertIs<Innvilgelse>(resultat)
+        val tp = resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon
+        if (forventerTPTekst) {
+            assertNotNull(tp)
+            assertThat(tp.skalEtterbetalingHoldesIgjen).isFalse
+            assertNull(tp.fraOgMed)
+            assertNull(tp.tilOgMed)
+        } else {
+            assertNull(tp)
+        }
+    }
+
+    @Test
+    fun `refusjonsvurdering gir ikke TP-tekst uten overlapp med innvilget AAP`() {
+        val behandling = gittBehandling()
+        gittUnderveisGrunnlag(
+            behandling.id,
+            underveisperiode(
+                Periode(1 januar 2025, 31 januar 2025),
+                RettighetsType.BISTANDSBEHOV,
+                Utfall.OPPFYLT,
+            ),
+        )
+        gittTjenestepensjon(behandling.id, 1 februar 2025)
+        gittTjenestepensjonRefusjonskravVurdering(behandling.sakId, behandling.id, harKrav = true)
+
+        val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+        assertIs<Innvilgelse>(resultat)
+        assertNull(resultat.forholdTilAndreYtelser?.refusjonskravTjenestepensjon)
     }
 
     @Test
@@ -1340,6 +1420,66 @@ class BrevUtlederServiceTest {
 
     @Nested
     inner class TestGruppe_AvslagBrev {
+
+        @RestoreSystemProperties
+        @ParameterizedTest
+        @MethodSource("no.nav.aap.behandlingsflyt.behandling.brev.BrevUtlederServiceTest#revurderingAvslagsbrev")
+        fun `velger sykdomsavslagsbrev etter tidligere avslag uavhengig av ny søknad`(
+            vurderingsbehov: Vurderingsbehov,
+            haddeRettTilAAP: Boolean,
+            vilkårtype: Vilkårtype,
+            avslagsårsak: Avslagsårsak,
+            forventetBrevtype: TypeBrev,
+        ) {
+            val førstegangsbehandling = gittBehandling()
+            gittUnderveisGrunnlag(
+                førstegangsbehandling.id,
+                underveisperiode(
+                    periode = Periode(1 januar 2025, 31 desember 2025),
+                    rettighetsType = if (haddeRettTilAAP) RettighetsType.BISTANDSBEHOV else null,
+                    utfall = if (haddeRettTilAAP) Utfall.OPPFYLT else Utfall.IKKE_OPPFYLT,
+                ),
+            )
+            val revurdering = gittBehandling(
+                forrigeBehandlingId = førstegangsbehandling.id,
+                sakId = førstegangsbehandling.sakId,
+                årsakTilOpprettelse = if (vurderingsbehov == Vurderingsbehov.MOTTATT_SØKNAD) {
+                    ÅrsakTilOpprettelse.SØKNAD
+                } else {
+                    ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+                },
+                vurderingsbehov = listOf(vurderingsbehov),
+            )
+            gittUnderveisgrunnlagAvslag(revurdering.id)
+            sykdomsvurderingForBrevRepository.lagre(revurdering.id, sykdomsvurderingForBrevGrunnlag())
+            repositoryProvider.provide<VilkårsresultatRepository>().lagre(
+                revurdering.id,
+                Vilkårsresultat(
+                    vilkår = listOf(
+                        Vilkår(
+                            type = vilkårtype,
+                            vilkårsperioder = setOf(
+                                Vilkårsperiode(
+                                    periode = Periode(1 januar 2025, 31 desember 2025),
+                                    utfall = Utfall.IKKE_OPPFYLT,
+                                    begrunnelse = "Vilkåret er ikke oppfylt",
+                                    avslagsårsak = avslagsårsak,
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
+
+            assertNotNull(resultat)
+            assertEquals(forventetBrevtype, resultat.typeBrev)
+            if (forventetBrevtype == TypeBrev.VEDTAK_AVSLAG_11_5) {
+                assertIs<AvslagBrev.AvslagSykdomsvilkåret>(resultat)
+                assertEquals("Vurdering av sykdom", resultat.sykdomsvurdering)
+            }
+        }
 
         @Test
         fun `skal hente ut sykdomsvurdering ved avslag`() {
@@ -1587,6 +1727,30 @@ class BrevUtlederServiceTest {
         return underveisRepository.hent(behandlingId)
     }
 
+    private fun gittTjenestepensjon(
+        behandlingId: BehandlingId,
+        fom: LocalDate = virkningstidspunkt,
+        tom: LocalDate? = null,
+    ) {
+        tjenestePensjonRepository.lagre(
+            behandlingId,
+            listOf(
+                TjenestePensjonForhold(
+                    ordning = TjenestePensjonOrdning("Testpensjon", "1234", "123456789"),
+                    ytelser = setOf(
+                        TjenestePensjonYtelse(
+                            innmeldtYtelseFom = fom,
+                            ytelseType = YtelseTypeCode.UFORE,
+                            ytelseIverksattFom = fom,
+                            ytelseIverksattTom = tom,
+                            ytelseId = 1,
+                        ),
+                    ),
+                ),
+            ),
+        )
+    }
+
     private fun gittTjenestepensjonRefusjonskravVurdering(
         sakId: SakId,
         behandlingId: BehandlingId,
@@ -1728,6 +1892,39 @@ class BrevUtlederServiceTest {
     }
 
     companion object {
+        @JvmStatic
+        fun revurderingAvslagsbrev(): Stream<Arguments> = Stream.of(
+            Arguments.of(
+                Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, false, Vilkårtype.SYKDOMSVILKÅRET,
+                Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE, TypeBrev.VEDTAK_AVSLAG_11_5,
+            ),
+            Arguments.of(
+                Vurderingsbehov.MOTTATT_SØKNAD, false, Vilkårtype.SYKDOMSVILKÅRET,
+                Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE, TypeBrev.VEDTAK_AVSLAG_11_5,
+            ),
+            Arguments.of(
+                Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, true, Vilkårtype.SYKDOMSVILKÅRET,
+                Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE, TypeBrev.VEDTAK_ENDRING,
+            ),
+            Arguments.of(
+                Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND, false, Vilkårtype.MEDLEMSKAP,
+                Avslagsårsak.IKKE_MEDLEM, TypeBrev.VEDTAK_ENDRING,
+            ),
+        )
+
+        @JvmStatic
+        fun tjenestepensjonPerioder(): Stream<Arguments> = Stream.of(
+            Arguments.of(null, null, false),
+            Arguments.of(1 desember 2024, 31 desember 2024, false),
+            Arguments.of(1 desember 2024, 1 januar 2025, true),
+            Arguments.of(5 januar 2025, 8 januar 2025, true),
+            Arguments.of(11 januar 2025, 20 januar 2025, false),
+            Arguments.of(15 januar 2025, 21 januar 2025, true),
+            Arguments.of(31 januar 2025, null, true),
+            Arguments.of(1 februar 2025, null, false),
+            Arguments.of(1 desember 2024, null, true),
+        )
+
         @JvmStatic
         fun avslagsårsakTilBrevBehov(): Stream<Arguments> = Stream.of(
             Arguments.of(Avslagsårsak.BRUKER_OVER_67, TypeBrev.VEDTAK_FORLENGELSE_UNDER_ETT_ÅR_11_4),

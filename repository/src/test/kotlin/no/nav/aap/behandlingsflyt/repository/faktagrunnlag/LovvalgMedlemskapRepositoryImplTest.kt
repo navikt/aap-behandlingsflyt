@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLan
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektInformasjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntekt
@@ -39,7 +38,6 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -81,10 +79,10 @@ internal class LovvalgMedlemskapRepositoryImplTest {
             val inntekt1 = lagretInntekt.registerGrunnlag.inntekterINorgeGrunnlag.first { it.identifikator == "1234" }
             val inntekt2 = lagretInntekt.registerGrunnlag.inntekterINorgeGrunnlag.first { it.identifikator == "4321" }
 
-            assertEquals(inntekt1.organisasjonsNavn, "Bepis AS")
-            assertEquals(inntekt1.identifikator, "1234")
-            assertEquals(inntekt2.organisasjonsNavn, "Rotte AS")
-            assertEquals(inntekt2.identifikator, "4321")
+            assertEquals("Bepis AS", inntekt1.organisasjonsNavn)
+            assertEquals("1234", inntekt1.identifikator)
+            assertEquals("Rotte AS", inntekt2.organisasjonsNavn)
+            assertEquals("4321", inntekt2.identifikator)
         }
     }
 
@@ -205,12 +203,6 @@ internal class LovvalgMedlemskapRepositoryImplTest {
                 medlId = medlId,
             )
 
-            medlemskapArbeidInntektRepository.lagreOppgittUtenlandsOppplysninger(
-                behandling.id,
-                JournalpostId("1"),
-                utenlandsOppholdData()
-            )
-
             medlemskapArbeidInntektRepository.lagreVurderinger(
                 behandling.id,
                 vurderinger
@@ -281,7 +273,7 @@ internal class LovvalgMedlemskapRepositoryImplTest {
             val grunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)
             assertThat(grunnlag?.inntekterINorgeRegisterGrunnlag?.inntekterForKrav).hasSize(1)
             assertThat(grunnlag?.inntekterINorgeRegisterGrunnlag!!.inntekterForKrav.first().relevantDato).isEqualTo(forventetStartdato)
-            assertThat(grunnlag?.inntekterINorgeRegisterGrunnlag!!.inntekterForKrav.first().inntekter).isEqualTo(forventetInntektGrunnlag.toSet())
+            assertThat(grunnlag.inntekterINorgeRegisterGrunnlag.inntekterForKrav.first().inntekter).isEqualTo(forventetInntektGrunnlag.toSet())
 
         }
     }
@@ -369,11 +361,6 @@ internal class LovvalgMedlemskapRepositoryImplTest {
             ),
         )
 
-        repo.lagreOppgittUtenlandsOppplysninger(
-            behandlingId,
-            JournalpostId("1"),
-            utenlandsOppholdData()
-        )
     }
 
     private fun manuellVurdering(
@@ -391,14 +378,6 @@ internal class LovvalgMedlemskapRepositoryImplTest {
             vurdertDato = LocalDateTime.now(),
             vurdertIBehandling = vurdertIBehandling
         )
-
-    private fun utenlandsOppholdData(): UtenlandsOppholdData = UtenlandsOppholdData(
-        harBoddINorgeSiste5År = true,
-        harArbeidetINorgeSiste5År = false,
-        arbeidetUtenforNorgeFørSykdom = false,
-        iTilleggArbeidUtenforNorge = false,
-        utenlandsOpphold = null
-    )
 
     private fun arbeidGrunnlag(): List<ArbeidINorgeGrunnlag> = listOf(
         ArbeidINorgeGrunnlag(
