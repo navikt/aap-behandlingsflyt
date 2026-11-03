@@ -117,13 +117,14 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val sak = sakService.hentSakFor(behandlingId)
         val institusjonsopphold = hentInstitusjonsopphold(sak)
-        val eksisterendeRelevanteOpphold = Oppholdene(
-            eksisterendeGrunnlag?.oppholdene?.opphold.orEmpty()
-                .filterNot { it.verdi.type == Institusjonstype.AS }
+        val eksisterendeRelevantGrunnlag = InstitusjonsoppholdGrunnlag(
+            oppholdene = Oppholdene(
+                eksisterendeGrunnlag?.oppholdene?.opphold.orEmpty()
+                    .filterNot { it.verdi.type == Institusjonstype.AS }
+            )
         )
-        val nyeRelevanteOpphold = Oppholdene(institusjonsopphold.map { it.tilInstitusjonSegment() })
 
-        return if (eksisterendeRelevanteOpphold != nyeRelevanteOpphold)
+        return if (erEndret(eksisterendeRelevantGrunnlag, institusjonsopphold))
             listOf(VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD))
         else
             emptyList()
