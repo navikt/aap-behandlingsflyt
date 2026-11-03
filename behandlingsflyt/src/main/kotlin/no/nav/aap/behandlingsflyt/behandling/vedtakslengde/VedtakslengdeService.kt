@@ -145,6 +145,27 @@ class VedtakslengdeService(
         )
     }
 
+    /**
+     * Sjekker om siste rettighetstype har gått fra en unntaksrettighet i forrige behandling til bistandsbehov i
+     * inneværende behandling. Bistandsbehov utvider ikke vedtakslengden automatisk ved revurdering, så dette må vurderes manuelt.
+     */
+    fun harOvergangFraUnntakTilBistandsbehov(
+        behandlingId: BehandlingId,
+        forrigeBehandlingId: BehandlingId?,
+    ): Boolean {
+        if (forrigeBehandlingId == null) return false
+
+        val forrigeSisteRettighet = rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(forrigeBehandlingId)
+            .segmenter().lastOrNull()?.verdi
+        val sisteRettighet = rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandlingId)
+            .segmenter().lastOrNull()?.verdi
+
+        val harOvergang = forrigeSisteRettighet in unntaksrettighetstyper() && sisteRettighet == RettighetsType.BISTANDSBEHOV
+        log.info("Siste rettighetstype i forrige behandling $forrigeBehandlingId: $forrigeSisteRettighet, i behandling $behandlingId: $sisteRettighet. Overgang fra unntak til bistandsbehov: $harOvergang")
+
+        return harOvergang
+    }
+
     fun hentAvslagsårsakerVedStansEllerOpphør(
         behandlingId: BehandlingId,
         stansEllerOpphørFom: LocalDate

@@ -41,6 +41,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.api.util.RestoreSystemProperties
 import java.time.Instant
 import java.time.LocalDate
@@ -465,6 +467,105 @@ class VedtakslengdeServiceTest {
                 virkningstidspunktService = virkningstidspunktService,
             )
             return service.lagreAutomatiskVedtakslengde(nåværendeId, forrigeBehandlingId, rettighetsperiode)
+        }
+    }
+
+    @Nested
+    inner class OvergangFraUnntakTilBistandsbehov {
+
+        @ParameterizedTest
+        @EnumSource(RettighetsType::class, names = ["SYKEPENGEERSTATNING", "STUDENT", "VURDERES_FOR_UFØRETRYGD", "ARBEIDSSØKER"])
+        fun `gir true når siste rettighet går fra unntak til bistandsbehov`(unntak: RettighetsType) {
+            settOppSisteRettighet(forrigeBehandlingId, Segment(Periode(1 januar 2025, 31 desember 2025), unntak))
+            settOppSisteRettighet(
+                behandlingId,
+                Segment(Periode(1 januar 2025, 31 desember 2025), unntak),
+                Segment(Periode(1 januar 2026, 31 desember 2026), RettighetsType.BISTANDSBEHOV),
+            )
+
+            assertThat(vedtakslengdeService().harOvergangFraUnntakTilBistandsbehov(behandlingId, forrigeBehandlingId))
+                .isTrue()
+        }
+
+        @Test
+        fun `gir false når siste rettighet er bistandsbehov i begge behandlinger`() {
+            settOppSisteRettighet(
+                forrigeBehandlingId,
+                Segment(Periode(1 januar 2025, 31 desember 2025), RettighetsType.BISTANDSBEHOV)
+            )
+            settOppSisteRettighet(
+                behandlingId,
+                Segment(Periode(1 januar 2025, 31 desember 2026), RettighetsType.BISTANDSBEHOV)
+            )
+
+            assertThat(vedtakslengdeService().harOvergangFraUnntakTilBistandsbehov(behandlingId, forrigeBehandlingId))
+                .isFalse()
+        }
+
+        @Test
+        fun `gir false når siste rettighet er samme unntak i begge behandlinger`() {
+            settOppSisteRettighet(
+                forrigeBehandlingId,
+                Segment(Periode(1 januar 2025, 31 desember 2025), RettighetsType.STUDENT)
+            )
+            settOppSisteRettighet(
+                behandlingId,
+                Segment(Periode(1 januar 2025, 31 desember 2026), RettighetsType.STUDENT)
+            )
+
+            assertThat(vedtakslengdeService().harOvergangFraUnntakTilBistandsbehov(behandlingId, forrigeBehandlingId))
+                .isFalse()
+        }
+
+        @Test
+        fun `gir false når siste rettighet går fra bistandsbehov til unntak`() {
+            settOppSisteRettighet(
+                forrigeBehandlingId,
+                Segment(Periode(1 januar 2025, 31 desember 2025), RettighetsType.BISTANDSBEHOV)
+            )
+            settOppSisteRettighet(
+                behandlingId,
+                Segment(Periode(1 januar 2025, 31 desember 2025), RettighetsType.BISTANDSBEHOV),
+                Segment(Periode(1 januar 2026, 31 desember 2026), RettighetsType.SYKEPENGEERSTATNING),
+            )
+
+            assertThat(vedtakslengdeService().harOvergangFraUnntakTilBistandsbehov(behandlingId, forrigeBehandlingId))
+                .isFalse()
+        }
+
+        @Test
+        fun `gir false når forrige behandling ikke har rettighetstyper`() {
+            settOppSisteRettighet(forrigeBehandlingId)
+            settOppSisteRettighet(
+                behandlingId,
+                Segment(Periode(1 januar 2026, 31 desember 2026), RettighetsType.BISTANDSBEHOV)
+            )
+
+            assertThat(vedtakslengdeService().harOvergangFraUnntakTilBistandsbehov(behandlingId, forrigeBehandlingId))
+                .isFalse()
+        }
+
+        @Test
+        fun `gir false når inneværende behandling ikke har rettighetstyper`() {
+            settOppSisteRettighet(
+                forrigeBehandlingId,
+                Segment(Periode(1 januar 2025, 31 desember 2025), RettighetsType.STUDENT)
+            )
+            settOppSisteRettighet(behandlingId)
+
+            assertThat(vedtakslengdeService().harOvergangFraUnntakTilBistandsbehov(behandlingId, forrigeBehandlingId))
+                .isFalse()
+        }
+
+        @Test
+        fun `gir false når det ikke finnes forrige behandling`() {
+            assertThat(vedtakslengdeService().harOvergangFraUnntakTilBistandsbehov(behandlingId, null))
+                .isFalse()
+        }
+
+        private fun settOppSisteRettighet(id: BehandlingId, vararg segmenter: Segment<RettighetsType>) {
+            every { rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(id) } returns
+                    Tidslinje(segmenter.toList())
         }
     }
 
