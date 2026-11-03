@@ -93,7 +93,7 @@ class SjekkInstitusjonsOppholdJobbUtfører(
         val opphold = institusjonsOppholdRepository.hentHvisEksisterer(behandlingId)?.oppholdene?.opphold
         val matchendeOpphold =
             opphold?.firstOrNull { oppholdPeriode ->
-                oppholdPeriode.verdi.type != Institusjonstype.AS &&
+                (oppholdPeriode.verdi.type == Institusjonstype.HS || oppholdPeriode.verdi.type == Institusjonstype.FO) &&
                         periodeErMinstFireMaanederOgFomVartIToMaaneder(oppholdPeriode.periode)
             }
 

@@ -53,8 +53,8 @@ class InstitusjonsOppholdService(
                     }
                 }
                 val institusjonsopphold = institusjonsoppholdKlient.hentDataForHendelse(meldingVerdi.oppholdId)
-                if (institusjonsopphold.institusjonstype == Institusjonstype.AS) {
-                    log.info("Ignorerer alders- og sykehjemshendelse")
+                if (institusjonsopphold.institusjonstype != Institusjonstype.HS && institusjonsopphold.institusjonstype != Institusjonstype.FO) {
+                    log.info("Ignorerer hendelse som ikke er helseinstitusjon eller soningsopphold")
                     continue
                 }
                 val beriketInstitusjonsopphold = Inst2KafkaDto(
