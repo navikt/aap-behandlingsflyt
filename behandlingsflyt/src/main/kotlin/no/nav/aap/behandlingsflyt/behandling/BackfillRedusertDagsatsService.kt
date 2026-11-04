@@ -18,24 +18,27 @@ class BackfillRedusertDagsatsService(
      * Backfiller redusertDagsats for én behandling.
      */
     fun backfillBehandling(behandlingId: BehandlingId): Int {
-        var antallBackfillUtført = 0
-        val tilkjentBackfillKandidater = tilkjentYtelseRepository.hentTilkjentUtenRedusertDagsats(behandlingId)
-        if (tilkjentBackfillKandidater.isEmpty()) {
-            return antallBackfillUtført
+        var iderMedBackfillUtført = emptyList<Long>()
+        val backfillKandidater = tilkjentYtelseRepository.hentTilkjentUtenRedusertDagsats(behandlingId)
+        if (backfillKandidater.isEmpty()) {
+            return iderMedBackfillUtført.size
         }
 
-        for (tilkjent in tilkjentBackfillKandidater) {
+        for (tilkjent in backfillKandidater) {
             check(tilkjent.redusertDagsats == null)
             tilkjent.redusertDagsats = tilkjent.beregnRedusertDagsats()
         }
-        tilkjentYtelseRepository.backfillRedusertDagsats(tilkjentBackfillKandidater)
+        tilkjentYtelseRepository.backfillRedusertDagsats(backfillKandidater)
 
         val gjenstående = tilkjentYtelseRepository.hentTilkjentUtenRedusertDagsats(behandlingId)
-        antallBackfillUtført = tilkjentBackfillKandidater.size - gjenstående.size
         if (gjenstående.isNotEmpty()) {
-            log.warn("Backfill av redusertDagsats for $behandlingId ble gjennomført for $antallBackfillUtført tilkjent_periode rader, men ${gjenstående.size} rader gjenstår.")
+            iderMedBackfillUtført = backfillKandidater.map { it.tilkjentPeriodeId } - gjenstående.map { it.tilkjentPeriodeId }
+            log.warn("Backfill av redusertDagsats for $behandlingId ble gjennomført for ${iderMedBackfillUtført.size} tilkjent_periode rader, men ${gjenstående.size} rader gjenstår.")
+        } else {
+            iderMedBackfillUtført = backfillKandidater.map { it.tilkjentPeriodeId }
         }
 
-        return antallBackfillUtført
+        log.info("Backfill utført for tilkjent_periode radene: ${iderMedBackfillUtført}")
+        return iderMedBackfillUtført.size
     }
 }
