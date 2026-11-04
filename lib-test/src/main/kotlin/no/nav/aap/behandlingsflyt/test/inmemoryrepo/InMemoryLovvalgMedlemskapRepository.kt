@@ -1,13 +1,11 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterForKrav
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterINorgeRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.LovvalgMedlemskapRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import java.time.LocalDate
 
 object InMemoryLovvalgMedlemskapRepository : LovvalgMedlemskapRepository {
     private val grunnlag = mutableMapOf<BehandlingId, MutableList<LovvalgMedlemskapGrunnlag>>()
@@ -20,22 +18,15 @@ object InMemoryLovvalgMedlemskapRepository : LovvalgMedlemskapRepository {
 
     override fun lagreRegisterGrunnlag(
         behandlingId: BehandlingId,
-        relevantDato: LocalDate,
         registerGrunnlag: LovvalgMedlemskapRegisterGrunnlag,
         medlId: Long?
     ) {
         synchronized(lock) {
             val forrige = grunnlag[behandlingId]?.lastOrNull()
-            val inntekterForKrav = if (registerGrunnlag.inntekterINorgeGrunnlag.isEmpty()) {
-                emptySet()
-            } else {
-                setOf(InntekterForKrav(relevantDato, registerGrunnlag.inntekterINorgeGrunnlag.toSet()))
-            }
             leggTilVersjon(
                 behandlingId,
                 LovvalgMedlemskapGrunnlag(
                     registerGrunnlag = registerGrunnlag,
-                    inntekterINorgeRegisterGrunnlag = InntekterINorgeRegisterGrunnlag(inntekterForKrav),
                     vurderinger = forrige?.vurderinger ?: emptyList()
                 )
             )
@@ -52,9 +43,7 @@ object InMemoryLovvalgMedlemskapRepository : LovvalgMedlemskapRepository {
                 behandlingId,
                 LovvalgMedlemskapGrunnlag(
                     registerGrunnlag = forrige?.registerGrunnlag
-                        ?: LovvalgMedlemskapRegisterGrunnlag(null, emptyList(), emptyList()),
-                    inntekterINorgeRegisterGrunnlag = forrige?.inntekterINorgeRegisterGrunnlag
-                        ?: InntekterINorgeRegisterGrunnlag(emptySet()),
+                        ?: LovvalgMedlemskapRegisterGrunnlag(null, null, emptyList()),
                     vurderinger = vurderinger
                 )
             )

@@ -104,7 +104,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         return LovvalgInput(
             sak = sak,
             datoerViSkalHenteInnForNå = utledDatoerDetSkalInnhentesNyRegisterdataFor(
-                eksisterendeData?.inntekterINorgeRegisterGrunnlag,
+                eksisterendeData?.registerGrunnlag?.inntekterINorgeGrunnlag,
                 relevanteKrav
             ),
             kravViKreverVurderingFor = relevanteKrav,
@@ -199,10 +199,9 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         val eksisterendeData = input.eksisterendeData
 
         val eksisterndeRelevanteInntekter =
-            eksisterendeData?.inntekterINorgeRegisterGrunnlag?.inntekterForKrav.orEmpty()
-                .filterNot { inntekter ->
-                    (inntekter.relevantDato
-                        ?: input.sak.rettighetsperiode.fom) in input.kravViKreverVurderingFor.map { it.startDato }
+            eksisterendeData?.registerGrunnlag?.inntekterINorgeGrunnlag?.inntekterForKrav.orEmpty()
+                .filter { inntekter ->
+                    inntekter.relevantDato in input.kravViKreverVurderingFor.map { it.startDato }
                 }
                 .filterNot { inntekter -> inntekter.relevantDato in input.datoerViSkalHenteInnForNå }
                 .toSet()

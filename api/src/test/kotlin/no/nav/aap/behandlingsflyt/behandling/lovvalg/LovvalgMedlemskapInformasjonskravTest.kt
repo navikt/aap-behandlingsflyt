@@ -218,14 +218,14 @@ class LovvalgMedlemskapInformasjonskravTest {
             inMemoryRepositoryProvider,
             testGatewayProvider(LovvalgInformasjonskravPå::class)
         )
-        
+
         val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = 1 mars 2025)
-        
+
         val kontekst = flytKontekstMedPerioder {
             this.behandling = behandling
             this.rettighetsperiode = sak.rettighetsperiode
         }
-        
+
         settOppKravOgStønadsperiode(
             behandling, mapOf(
                 1 mars 2025 to Pair(null, RelevantKravType.NY_STØNADSPERIODE),
@@ -323,21 +323,23 @@ class LovvalgMedlemskapInformasjonskravTest {
             input, LovvalgMedlemskapInformasjonskrav.LovvalgRegisterData(
                 medlemskapPerioder = emptyList(),
                 arbeidGrunnlag = emptyList(),
-                inntektGrunnlag = input.datoerViSkalHenteInnForNå.map {
-                    ArbeidsInntektMåned(
-                        årMåned = YearMonth.from(it),
-                        arbeidsInntektInformasjon = ArbeidsInntektInformasjon(
-                            listOf(
-                                Inntekt(
-                                    beløp = 10000.0,
-                                    opptjeningsland = null,
-                                    skattemessigBosattLand = null,
-                                    opptjeningsperiodeFom = null,
-                                    opptjeningsperiodeTom = null,
-                                    virksomhet = Virksomhet(
-                                        identifikator = "1234"
-                                    ),
-                                    beskrivelse = null
+                inntektPerDato = input.datoerViSkalHenteInnForNå.associate { dato ->
+                    dato to listOf(
+                        ArbeidsInntektMåned(
+                            årMåned = YearMonth.from(dato),
+                            arbeidsInntektInformasjon = ArbeidsInntektInformasjon(
+                                listOf(
+                                    Inntekt(
+                                        beløp = 10000.0,
+                                        opptjeningsland = null,
+                                        skattemessigBosattLand = null,
+                                        opptjeningsperiodeFom = null,
+                                        opptjeningsperiodeTom = null,
+                                        virksomhet = Virksomhet(
+                                            identifikator = "1234"
+                                        ),
+                                        beskrivelse = null
+                                    )
                                 )
                             )
                         )
