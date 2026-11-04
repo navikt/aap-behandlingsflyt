@@ -23,6 +23,7 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
@@ -88,16 +89,21 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
     }
 
     override fun hentMaksdato(ident: Ident): MaksdatoMedVedtakResponse {
-        val response: MaksdatoMedVedtakResponse? = restClient.post(
-            uri.resolve("/api/v1/person/maksdato"),
-            PostRequest(
-                body = MaksdatoRequest(ident.identifikator),
-                timeout = Duration.ofSeconds(5)
-            ),
-            mapper = { body, _ -> DefaultJsonMapper.fromJson<MaksdatoMedVedtakResponse>(body) }
-        )
-        requireNotNull(response) { "Fikk ikke gyldig svar fra /api/v1/person/maksdato" }
-        return response
+        return try {
+            val response: MaksdatoMedVedtakResponse? = restClient.post(
+                uri.resolve("/api/v1/person/maksdato"),
+                PostRequest(
+                    body = MaksdatoRequest(ident.identifikator),
+                    timeout = Duration.ofSeconds(5)
+                ),
+                mapper = { body, _ -> DefaultJsonMapper.fromJson<MaksdatoMedVedtakResponse>(body) }
+            )
+            requireNotNull(response) { "Fikk ikke gyldig svar fra /api/v1/person/maksdato" }
+            response
+        } catch (_: IkkeFunnetException) {
+            // Personen finnes ikke i Arena
+            MaksdatoMedVedtakResponse(sak = null)
+        }
     }
 
     override fun hentKravDataForSak(arenasaksnummer: String): KravResponse {
