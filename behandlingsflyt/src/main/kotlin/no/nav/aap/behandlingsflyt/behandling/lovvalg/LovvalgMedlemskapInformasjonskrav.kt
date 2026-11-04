@@ -162,7 +162,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
 
         val eksisterendeData = input.eksisterendeData
 
-        // Beholder eksisterende registerdato for annen startdato
+        // Beholder eksisterende registerdata for andre startdatoer
         val oppdatertInntekt = eksisterendeData?.inntekterINorgeRegisterGrunnlag
             ?.inntekterForKrav.orEmpty()
             .filterNot { (it.relevantDato ?: input.sak.rettighetsperiode.fom) == input.relevantDato }
