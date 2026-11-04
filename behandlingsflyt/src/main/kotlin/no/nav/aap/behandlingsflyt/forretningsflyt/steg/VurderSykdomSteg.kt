@@ -82,14 +82,16 @@ class VurderSykdomSteg(
         val vedtatteSykdomsvurderinger = kontekst.forrigeBehandlingId?.let {
             sykdomRepository.hentHvisEksisterer(it)?.sykdomsvurderinger ?: emptyList()
         }
-
         val skalTriggesVedRevurderingOvergangArbeid = forrigeOvergangArbeidGrunnlag?.vurderinger.isNullOrEmpty()
         val skalTriggesVedRevurderingStudent =
             vedtatteSykdomsvurderinger?.none { it.potensieltOppfyltStudent() } == true
+        val skalTriggesVedRevurderingSykepengeerstatning =
+            vedtatteSykdomsvurderinger?.none { it.skalVurderesForSykepengeerstatning() } == true
 
         val irrelevanteVurderingsbehov = buildSet {
             if (!skalTriggesVedRevurderingStudent) add(Vurderingsbehov.REVURDER_STUDENT)
             if (!skalTriggesVedRevurderingOvergangArbeid) add(Vurderingsbehov.OVERGANG_ARBEID)
+            if (!skalTriggesVedRevurderingSykepengeerstatning) add(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING)
         }
         return kontekst.vurderingsbehovRelevanteForSteg - irrelevanteVurderingsbehov
 

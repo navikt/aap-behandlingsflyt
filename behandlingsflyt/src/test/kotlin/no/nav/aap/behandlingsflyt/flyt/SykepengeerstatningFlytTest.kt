@@ -22,7 +22,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
@@ -139,6 +142,38 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                     .allSatisfy { rettighetsType ->
                         assertThat(rettighetsType).isEqualTo(RettighetsType.BISTANDSBEHOV)
                     }
+            }
+    }
+
+    @Test
+    fun `revurdere 11-13 på ordinær AAP skal kreve ny vurdering av 11-5`() {
+        val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
+        val forrigeBehandling = dataSource.transaction(readOnly = true) { connection ->
+            val behandlingRepository = postgresRepositoryRegistry.provider(connection).provide<BehandlingRepository>()
+            val forrigeBehandlingId =
+                behandlingRepository.finnGjeldendeVedtattBehandlingForSak(sak.id)!!.behandlingId
+            behandlingRepository.hent(forrigeBehandlingId)
+        }
+
+        val forrigeRettighetstyper = dataSource.transaction(readOnly = true) { connection ->
+            postgresRepositoryRegistry.provider(connection)
+                .provide<RettighetstypeRepository>()
+                .hent(forrigeBehandling.id)
+                .rettighetstypeTidslinje
+                .segmenter()
+                .map { it.verdi }
+        }
+        assertThat(forrigeRettighetstyper).contains(RettighetsType.BISTANDSBEHOV)
+
+        sak.opprettManuellRevurdering(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING)
+            .medKontekst {
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                    .containsExactly(Definisjon.AVKLAR_SYKDOM)
+            }
+            .løsSykdom(sak.rettighetsperiode.fom)
+            .medKontekst {
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                    .doesNotContain(Definisjon.AVKLAR_BISTANDSBEHOV, Definisjon.AVKLAR_SYKEPENGEERSTATNING)
             }
     }
 
@@ -363,7 +398,8 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
     fun `happy case førstegangsbehandling + revurder førstegangssøknad, gi sykepengererstatning hele perioden`() {
         val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
 
-        revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = false)
+        sak.opprettManuellRevurdering(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING)
+            .løsSykdom(sak.rettighetsperiode.fom, vissVarighet = false)
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
@@ -385,6 +421,13 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 ) to
                         RettighetsType.SYKEPENGEERSTATNING
             )
+            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+
+        sak.opprettManuellRevurdering(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING)
+            .medKontekst {
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                    .containsExactly(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
+            }
     }
 
 
