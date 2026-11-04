@@ -31,16 +31,12 @@ class InstitusjonsOppholdKafkaKonsument(
     closeTimeout = closeTimeout,
     consumerName = "AapBehandlingsflytInstitusjonsOppholdHendelse",
 ) {
-    private val log = LoggerFactory.getLogger(javaClass)
 
     override fun håndter(meldinger: ConsumerRecords<String, InstitusjonsOppholdHendelseKafkaMelding>) {
         meldinger.forEach(::håndter)
     }
 
     fun håndter(melding: ConsumerRecord<String, InstitusjonsOppholdHendelseKafkaMelding>) {
-        log.info(
-            "Behandler institusjonsopphold-record med id: ${melding.key()}, partition ${melding.partition()}, offset: ${melding.offset()}, topic: $topic"
-        )
         val meldingKey = "${melding.partition()}-${melding.offset()}"
         dataSource.transaction { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
