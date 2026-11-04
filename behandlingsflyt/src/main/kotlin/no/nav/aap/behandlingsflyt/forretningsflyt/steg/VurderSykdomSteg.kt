@@ -7,8 +7,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMeta
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
-import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.overgangarbeid.OvergangArbeidRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
@@ -31,7 +29,6 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class VurderSykdomSteg(
     private val sykdomRepository: SykdomRepository,
     private val overgangArbeidRepository: OvergangArbeidRepository,
-    private val rettighetstypeService: RettighetstypeService,
     private val tidligereVurderinger: TidligereVurderinger,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val arenaMigreringService: ArenaMigreringService,
@@ -40,7 +37,6 @@ class VurderSykdomSteg(
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         sykdomRepository = repositoryProvider.provide(),
         overgangArbeidRepository = repositoryProvider.provide(),
-        rettighetstypeService = RettighetstypeService(repositoryProvider, gatewayProvider),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         arenaMigreringService = ArenaMigreringService(repositoryProvider, gatewayProvider),
@@ -89,19 +85,13 @@ class VurderSykdomSteg(
         val skalTriggesVedRevurderingOvergangArbeid = forrigeOvergangArbeidGrunnlag?.vurderinger.isNullOrEmpty()
         val skalTriggesVedRevurderingStudent =
             vedtatteSykdomsvurderinger?.none { it.potensieltOppfyltStudent() } == true
+        val skalTriggesVedRevurderingSykepengeerstatning =
+            vedtatteSykdomsvurderinger?.none { it.skalVurderesForSykepengeerstatning() } == true
 
         val irrelevanteVurderingsbehov = buildSet {
             if (!skalTriggesVedRevurderingStudent) add(Vurderingsbehov.REVURDER_STUDENT)
             if (!skalTriggesVedRevurderingOvergangArbeid) add(Vurderingsbehov.OVERGANG_ARBEID)
-            if (Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING in kontekst.vurderingsbehovRelevanteForSteg) {
-                val forrigeRettighetstypeTidslinje = forrigeRettighetstypeTidslinje(kontekst)
-                val skalTriggesVedRevurderingSykepengeerstatning =
-                    forrigeRettighetstypeTidslinje.isEmpty() ||
-                        forrigeRettighetstypeTidslinje.any { it == RettighetsType.BISTANDSBEHOV }
-                if (!skalTriggesVedRevurderingSykepengeerstatning) {
-                    add(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING)
-                }
-            }
+            if (!skalTriggesVedRevurderingSykepengeerstatning) add(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING)
         }
         return kontekst.vurderingsbehovRelevanteForSteg - irrelevanteVurderingsbehov
 
@@ -112,36 +102,17 @@ class VurderSykdomSteg(
             kontekst,
             type()
         )
-        val revurdererSykepengeerstatning =
-            Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING in kontekst.vurderingsbehovRelevanteForSteg
-        if (!revurdererSykepengeerstatning) {
-            return tidligereVurderingsutfall.mapValue { behandlingsutfall ->
-                when (behandlingsutfall) {
-                    TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
-                    is TidligereVurderinger.UunngåeligAvslag -> false
-                    is TidligereVurderinger.PotensieltOppfylt -> behandlingsutfall.rettighetstype == null
-                }
-            }
-        }
 
-        return tidligereVurderingsutfall.leftJoin(
-            forrigeRettighetstypeTidslinje(kontekst)
-        ) { _, behandlingsutfall, forrigeRettighetstype ->
+        return tidligereVurderingsutfall.mapValue { behandlingsutfall ->
             when (behandlingsutfall) {
                 TidligereVurderinger.IkkeBehandlingsgrunnlag -> false
                 is TidligereVurderinger.UunngåeligAvslag -> false
                 is TidligereVurderinger.PotensieltOppfylt -> {
-                    forrigeRettighetstype?.let { it == RettighetsType.BISTANDSBEHOV }
-                        ?: (behandlingsutfall.rettighetstype == null)
+                    behandlingsutfall.rettighetstype == null
                 }
             }
         }
     }
-
-    private fun forrigeRettighetstypeTidslinje(kontekst: FlytKontekstMedPerioder) =
-        kontekst.forrigeBehandlingId?.let {
-            rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(it)
-        }.orEmpty()
 
     override fun migrerVurderingFraArena(kontekst: FlytKontekstMedPerioder) {
         require(kontekst.erMigreringFraArena()) {

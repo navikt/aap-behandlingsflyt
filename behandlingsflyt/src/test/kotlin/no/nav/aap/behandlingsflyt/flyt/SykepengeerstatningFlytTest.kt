@@ -146,7 +146,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
     }
 
     @Test
-    fun `revurdere 11-13 på ordinær AAP skal først kreve ny vurdering av 11-5 og 11-6`() {
+    fun `revurdere 11-13 på ordinær AAP skal kreve ny vurdering av 11-5`() {
         val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
         val forrigeBehandling = dataSource.transaction(readOnly = true) { connection ->
             val behandlingRepository = postgresRepositoryRegistry.provider(connection).provide<BehandlingRepository>()
@@ -173,12 +173,7 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsSykdom(sak.rettighetsperiode.fom)
             .medKontekst {
                 assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
-                    .containsExactly(Definisjon.AVKLAR_BISTANDSBEHOV)
-            }
-            .løsBistand(sak.rettighetsperiode.fom)
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
-                    .doesNotContain(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
+                    .doesNotContain(Definisjon.AVKLAR_BISTANDSBEHOV, Definisjon.AVKLAR_SYKEPENGEERSTATNING)
             }
     }
 
@@ -403,7 +398,8 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
     fun `happy case førstegangsbehandling + revurder førstegangssøknad, gi sykepengererstatning hele perioden`() {
         val sak = happyCaseFørstegangsbehandling(sendMeldekort = false)
 
-        revurdereFramTilOgMedSykdom(sak, sak.rettighetsperiode.fom, vissVarighet = false)
+        sak.opprettManuellRevurdering(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING)
+            .løsSykdom(sak.rettighetsperiode.fom, vissVarighet = false)
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
@@ -425,6 +421,13 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 ) to
                         RettighetsType.SYKEPENGEERSTATNING
             )
+            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+
+        sak.opprettManuellRevurdering(Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING)
+            .medKontekst {
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                    .containsExactly(Definisjon.AVKLAR_SYKEPENGEERSTATNING)
+            }
     }
 
 
