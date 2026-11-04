@@ -98,7 +98,11 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         requireNotNull(stønadsperiodeGrunnlag)
 
         val skalVurdereLovvalgPåNyttVed =
-            listOf(RelevantKravType.NY_STØNADSPERIODE, RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR)
+            listOf(
+                RelevantKravType.NY_STØNADSPERIODE,
+                RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR,
+                RelevantKravType.MIGRERT_STØNADSPERIODE
+            )
 
         // Skal hente inn for siste aktuelle krav
         val relevantDato = stønadsperiodeGrunnlag
