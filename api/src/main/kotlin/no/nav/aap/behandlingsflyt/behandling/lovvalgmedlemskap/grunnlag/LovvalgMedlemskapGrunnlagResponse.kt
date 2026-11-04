@@ -32,6 +32,8 @@ data class PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
     val lovvalg: LovvalgResponse,
     val medlemskap: MedlemskapResponse?,
     val overstyrt: Boolean = false,
+    // Delvurderingene som var gjeldende i behandlingen den manuelle vurderingen ble gjort
+    val delvurderinger: KanBehandlesAutomatiskVurdering? = null,
 ): VurderingDto
 
 data class LovvalgResponse(
@@ -48,6 +50,7 @@ fun ManuellVurderingForLovvalgMedlemskap.toResponse(
     vurdertAvService: VurdertAvService,
     fom: LocalDate = this.fom,
     tom: LocalDate? = this.tom,
+    delvurderinger: KanBehandlesAutomatiskVurdering? = null,
 ) =
     PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
         fom = fom,
@@ -59,7 +62,8 @@ fun ManuellVurderingForLovvalgMedlemskap.toResponse(
         ),
         lovvalg = lovvalg.toResponse(),
         medlemskap = medlemskap?.toResponse(),
-        overstyrt = overstyrt
+        overstyrt = overstyrt,
+        delvurderinger = delvurderinger,
     )
 
 fun MedlemskapDto.toResponse() =

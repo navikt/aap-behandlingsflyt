@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderLovvalgSteg
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
@@ -71,6 +72,12 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
                                 ?.gjeldendeVurderinger()
                                 .orEmpty()
 
+                        val delvurderingerForVurdertIBehandling = mutableMapOf<BehandlingId, KanBehandlesAutomatiskVurdering?>()
+                        fun delvurderingerFor(vurdertIBehandling: BehandlingId) =
+                            delvurderingerForVurdertIBehandling.getOrPut(vurdertIBehandling) {
+                                lovvalgDelvurderingRepository.hentHvisEksisterer(vurdertIBehandling)?.vurdering()
+                            }
+
                         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                         val behøverVurderinger =
                             avklaringsbehov.hentBehovForDefinisjon(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
@@ -88,7 +95,12 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
                             behøverVurderinger = behøverVurderinger.toList(),
                             delvurderinger = delvurderinger,
                             kanVurderes = listOf(sak.rettighetsperiode),
-                            nyeVurderinger = nyeVurderinger?.map { it.toResponse(vurdertAvService) } ?: emptyList(),
+                            nyeVurderinger = nyeVurderinger?.map {
+                                it.toResponse(
+                                    vurdertAvService = vurdertAvService,
+                                    delvurderinger = delvurderingerFor(it.vurdertIBehandling),
+                                )
+                            } ?: emptyList(),
                             sisteVedtatteVurderinger = gjeldendeVedtatteVurderinger
                                 .komprimer()
                                 .segmenter()
@@ -97,7 +109,8 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
                                     verdi.toResponse(
                                         vurdertAvService = vurdertAvService,
                                         fom = segment.fom(),
-                                        tom = if (segment.tom().isEqual(Tid.MAKS)) null else segment.tom()
+                                        tom = if (segment.tom().isEqual(Tid.MAKS)) null else segment.tom(),
+                                        delvurderinger = delvurderingerFor(verdi.vurdertIBehandling),
                                     )
                                 },
                             ikkeRelevantePerioder = avklaringsbehovMetadataService.perioderSomSkalFremhevesSomIkkeRelevant(
