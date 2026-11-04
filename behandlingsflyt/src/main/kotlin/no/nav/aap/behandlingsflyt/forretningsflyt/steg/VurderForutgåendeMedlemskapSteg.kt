@@ -14,7 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.LovvalgMedlemskapRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.OppgittUtenlandsopplysningerRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningForutgåendeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -40,7 +40,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class VurderForutgåendeMedlemskapSteg private constructor(
     private val vilkårsresultatRepository: VilkårsresultatRepository,
     private val forutgåendeMedlemskapRepository: ForutgåendeMedlemskapRepository,
-    private val lovvalgMedlemskapRepository: LovvalgMedlemskapRepository,
+    private val oppgittUtenlandsopplysningerRepository: OppgittUtenlandsopplysningerRepository,
     private val personopplysningForutgåendeRepository: PersonopplysningForutgåendeRepository,
     private val sykdomRepository: SykdomRepository,
     private val tidligereVurderinger: TidligereVurderinger,
@@ -52,7 +52,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         vilkårsresultatRepository = repositoryProvider.provide(),
         forutgåendeMedlemskapRepository = repositoryProvider.provide(),
-        lovvalgMedlemskapRepository = repositoryProvider.provide(),
+        oppgittUtenlandsopplysningerRepository = repositoryProvider.provide(),
         personopplysningForutgåendeRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
@@ -227,8 +227,8 @@ class VurderForutgåendeMedlemskapSteg private constructor(
         val forutgåendeMedlemskapArbeidInntektGrunnlag =
             forutgåendeMedlemskapRepository.hentHvisEksisterer(behandlingId)
         val oppgittUtenlandsOppholdGrunnlag =
-            lovvalgMedlemskapRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandlingId)
-                ?: lovvalgMedlemskapRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(
+            oppgittUtenlandsopplysningerRepository.hentOppgittUtenlandsOppholdHvisEksisterer(behandlingId)
+                ?: oppgittUtenlandsopplysningerRepository.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(
                     sakId
                 )
 

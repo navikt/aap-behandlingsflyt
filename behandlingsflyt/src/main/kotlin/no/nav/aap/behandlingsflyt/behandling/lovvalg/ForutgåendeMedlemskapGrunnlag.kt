@@ -15,7 +15,7 @@ data class ForutgåendeMedlemskapFaktaGrunnlag(
 ) : Faktagrunnlag
 
 data class ForutgåendeMedlemskapGrunnlag(
-    val medlemskapGrunnlag: MedlemskapUnntakGrunnlag?,
+    val medlemskapUnntakGrunnlag: MedlemskapUnntakGrunnlag?,
     val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
     val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
     val vurderinger: List<ManuellVurderingForForutgåendeMedlemskap>,

@@ -14,10 +14,10 @@ spec:
     max: 4
   resources:
     limits:
-      memory: 1536Mi
+      memory: 2048Mi
     requests:
-      cpu: 1000m
-      memory: 1024Mi
+      cpu: 1200m
+      memory: 1250Mi
   observability:
     autoInstrumentation:
       enabled: true

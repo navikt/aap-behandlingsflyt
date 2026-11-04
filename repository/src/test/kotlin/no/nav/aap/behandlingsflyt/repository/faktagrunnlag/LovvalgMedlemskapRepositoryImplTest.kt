@@ -3,11 +3,11 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektInformasjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntekt
@@ -16,6 +16,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.tilDomene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.tilDomene as tilMedlemskapDomene
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -36,7 +38,6 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -75,8 +76,8 @@ internal class LovvalgMedlemskapRepositoryImplTest {
 
             val lagretInntekt = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandling.id)!!
 
-            val inntekt1 = lagretInntekt.inntekterINorgeGrunnlag.first { it.identifikator == "1234" }
-            val inntekt2 = lagretInntekt.inntekterINorgeGrunnlag.first { it.identifikator == "4321" }
+            val inntekt1 = lagretInntekt.registerGrunnlag.inntekterINorgeGrunnlag.first { it.identifikator == "1234" }
+            val inntekt2 = lagretInntekt.registerGrunnlag.inntekterINorgeGrunnlag.first { it.identifikator == "4321" }
 
             assertEquals("Bepis AS", inntekt1.organisasjonsNavn)
             assertEquals("1234", inntekt1.identifikator)
@@ -144,14 +145,17 @@ internal class LovvalgMedlemskapRepositoryImplTest {
 
             val medlId = medlemskapRepository.lagreUnntakMedlemskap(
                 behandlingId = behandling.id,
-                unntak = listOf(medlemskapData())
+                medlemskapUnntakGrunnlag = medlemskapUnntakGrunnlag()
             )
 
-            medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
+            medlemskapArbeidInntektRepository.lagreRegisterGrunnlag(
                 behandlingId = behandling.id,
                 relevantDato = sak.rettighetsperiode.fom,
-                arbeidGrunnlag = arbeidGrunnlag(),
-                inntektGrunnlag = inntektGrunnlag().tilDomene(enhetsGrunnlag()),
+                registerGrunnlag = LovvalgMedlemskapRegisterGrunnlag(
+                    medlemskapUnntakGrunnlag = null,
+                    inntekterINorgeGrunnlag = inntektGrunnlag().tilDomene(enhetsGrunnlag()),
+                    arbeiderINorgeGrunnlag = arbeidGrunnlag()
+                ),
                 medlId = medlId,
             )
 
@@ -185,21 +189,18 @@ internal class LovvalgMedlemskapRepositoryImplTest {
 
             val medlId = medlemskapRepository.lagreUnntakMedlemskap(
                 behandlingId = behandling.id,
-                unntak = listOf(medlemskapData())
+                medlemskapUnntakGrunnlag = medlemskapUnntakGrunnlag()
             )
 
-            medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
+            medlemskapArbeidInntektRepository.lagreRegisterGrunnlag(
                 behandlingId = behandling.id,
                 relevantDato = sak.rettighetsperiode.fom,
-                arbeidGrunnlag = arbeidGrunnlag(),
-                inntektGrunnlag = inntektGrunnlag().tilDomene(enhetsGrunnlag()),
+                registerGrunnlag = LovvalgMedlemskapRegisterGrunnlag(
+                    medlemskapUnntakGrunnlag = null,
+                    inntekterINorgeGrunnlag = inntektGrunnlag().tilDomene(enhetsGrunnlag()),
+                    arbeiderINorgeGrunnlag = arbeidGrunnlag()
+                ),
                 medlId = medlId,
-            )
-
-            medlemskapArbeidInntektRepository.lagreOppgittUtenlandsOppplysninger(
-                behandling.id,
-                JournalpostId("1"),
-                utenlandsOppholdData()
             )
 
             medlemskapArbeidInntektRepository.lagreVurderinger(
@@ -239,12 +240,12 @@ internal class LovvalgMedlemskapRepositoryImplTest {
 
             medlemskapArbeidInntektRepository.lagreVurderinger(revurdering.id, vurderinger)
 
-            val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(revurdering.id)
+            val lovvalgMedlemskapGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(revurdering.id)
 
-            assertThat(medlemskapArbeidInntektGrunnlag?.inntekterINorgeGrunnlag?.size).isEqualTo(2)
-            assertThat(medlemskapArbeidInntektGrunnlag?.arbeiderINorgeGrunnlag?.size).isEqualTo(1)
-            assertThat(medlemskapArbeidInntektGrunnlag?.medlemskapGrunnlag).isNotNull
-            assertThat(medlemskapArbeidInntektGrunnlag?.vurderinger?.size).isEqualTo(3)
+            assertThat(lovvalgMedlemskapGrunnlag?.registerGrunnlag?.inntekterINorgeGrunnlag?.size).isEqualTo(2)
+            assertThat(lovvalgMedlemskapGrunnlag?.registerGrunnlag?.arbeiderINorgeGrunnlag?.size).isEqualTo(1)
+            assertThat(lovvalgMedlemskapGrunnlag?.registerGrunnlag?.medlemskapUnntakGrunnlag).isNotNull
+            assertThat(lovvalgMedlemskapGrunnlag?.vurderinger?.size).isEqualTo(3)
         }
     }
 
@@ -258,11 +259,14 @@ internal class LovvalgMedlemskapRepositoryImplTest {
             val forventetInntektGrunnlag = inntektGrunnlag().tilDomene(enhetsGrunnlag())
             val forventetStartdato = sak.rettighetsperiode.fom
 
-            medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
+            medlemskapArbeidInntektRepository.lagreRegisterGrunnlag(
                 behandlingId = behandling.id,
                 relevantDato = forventetStartdato,
-                arbeidGrunnlag = emptyList(),
-                inntektGrunnlag = forventetInntektGrunnlag,
+                registerGrunnlag = LovvalgMedlemskapRegisterGrunnlag(
+                    medlemskapUnntakGrunnlag = null,
+                    inntekterINorgeGrunnlag = forventetInntektGrunnlag,
+                    arbeiderINorgeGrunnlag = emptyList()
+                ),
                 medlId = null,
             )
             
@@ -304,14 +308,17 @@ internal class LovvalgMedlemskapRepositoryImplTest {
 
             val medlId = medlemskapRepository.lagreUnntakMedlemskap(
                 behandlingId = behandling.id,
-                unntak = listOf(medlemskapData())
+                medlemskapUnntakGrunnlag = medlemskapUnntakGrunnlag()
             )
 
-            medlemskapArbeidInntektRepository.lagreArbeidsforholdOgInntektINorge(
+            medlemskapArbeidInntektRepository.lagreRegisterGrunnlag(
                 behandlingId = behandling.id,
                 relevantDato = sak.rettighetsperiode.fom,
-                arbeidGrunnlag = arbeidGrunnlag(),
-                inntektGrunnlag = inntektGrunnlag().tilDomene(enhetsGrunnlag()),
+                registerGrunnlag = LovvalgMedlemskapRegisterGrunnlag(
+                    medlemskapUnntakGrunnlag = null,
+                    inntekterINorgeGrunnlag = inntektGrunnlag().tilDomene(enhetsGrunnlag()),
+                    arbeiderINorgeGrunnlag = arbeidGrunnlag()
+                ),
                 medlId = medlId,
             )
 
@@ -331,11 +338,14 @@ internal class LovvalgMedlemskapRepositoryImplTest {
         repo: LovvalgMedlemskapRepositoryImpl,
         begrunnelse: String
     ) {
-        repo.lagreArbeidsforholdOgInntektINorge(
+        repo.lagreRegisterGrunnlag(
             behandlingId = behandlingId,
             relevantDato = sak.rettighetsperiode.fom,
-            arbeidGrunnlag = emptyList(),
-            inntektGrunnlag = inntektGrunnlag().tilDomene(enhetsGrunnlag()),
+            registerGrunnlag = LovvalgMedlemskapRegisterGrunnlag(
+                medlemskapUnntakGrunnlag = null,
+                inntekterINorgeGrunnlag = inntektGrunnlag().tilDomene(enhetsGrunnlag()),
+                arbeiderINorgeGrunnlag = emptyList()
+            ),
             medlId = null,
         )
 
@@ -351,11 +361,6 @@ internal class LovvalgMedlemskapRepositoryImplTest {
             ),
         )
 
-        repo.lagreOppgittUtenlandsOppplysninger(
-            behandlingId,
-            JournalpostId("1"),
-            utenlandsOppholdData()
-        )
     }
 
     private fun manuellVurdering(
@@ -373,14 +378,6 @@ internal class LovvalgMedlemskapRepositoryImplTest {
             vurdertDato = LocalDateTime.now(),
             vurdertIBehandling = vurdertIBehandling
         )
-
-    private fun utenlandsOppholdData(): UtenlandsOppholdData = UtenlandsOppholdData(
-        harBoddINorgeSiste5År = true,
-        harArbeidetINorgeSiste5År = false,
-        arbeidetUtenforNorgeFørSykdom = false,
-        iTilleggArbeidUtenforNorge = false,
-        utenlandsOpphold = null
-    )
 
     private fun arbeidGrunnlag(): List<ArbeidINorgeGrunnlag> = listOf(
         ArbeidINorgeGrunnlag(
@@ -442,4 +439,7 @@ internal class LovvalgMedlemskapRepositoryImplTest {
         lovvalgsland = "NOR",
         kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
     )
+
+    private fun medlemskapUnntakGrunnlag(): MedlemskapUnntakGrunnlag =
+        MedlemskapUnntakGrunnlag(listOf(medlemskapData()).tilMedlemskapDomene())
 }

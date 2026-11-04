@@ -282,7 +282,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
 
         return ForutgåendeMedlemskapFaktaGrunnlag(
             forutgåendeMedlemskapGrunnlag = ForutgåendeMedlemskapGrunnlag(
-                medlemskapGrunnlag = medlUnntak,
+                medlemskapUnntakGrunnlag = medlUnntak,
                 inntekterINorgeGrunnlag = inntekterINorgeGrunnlag,
                 arbeiderINorgeGrunnlag = emptyList(),
                 vurderinger = emptyList()
@@ -377,7 +377,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
 
         return ForutgåendeMedlemskapFaktaGrunnlag(
             forutgåendeMedlemskapGrunnlag = ForutgåendeMedlemskapGrunnlag(
-                medlemskapGrunnlag = medlUnntak,
+                medlemskapUnntakGrunnlag = medlUnntak,
                 inntekterINorgeGrunnlag = inntekterINorgeGrunnlag,
                 arbeiderINorgeGrunnlag = emptyList(),
                 vurderinger = emptyList()
@@ -480,7 +480,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
 
         return ForutgåendeMedlemskapFaktaGrunnlag(
             forutgåendeMedlemskapGrunnlag = ForutgåendeMedlemskapGrunnlag(
-                medlemskapGrunnlag = medlUnntak,
+                medlemskapUnntakGrunnlag = medlUnntak,
                 inntekterINorgeGrunnlag = inntekterINorgeGrunnlag,
                 arbeiderINorgeGrunnlag = emptyList(),
                 vurderinger = emptyList()
@@ -532,7 +532,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
 
         return ForutgåendeMedlemskapFaktaGrunnlag(
             forutgåendeMedlemskapGrunnlag = ForutgåendeMedlemskapGrunnlag(
-                medlemskapGrunnlag = null,
+                medlemskapUnntakGrunnlag = null,
                 inntekterINorgeGrunnlag = inntekterINorgeGrunnlag,
                 arbeiderINorgeGrunnlag = emptyList(),
                 vurderinger = emptyList()
@@ -591,7 +591,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
 
         return ForutgåendeMedlemskapFaktaGrunnlag(
             forutgåendeMedlemskapGrunnlag = ForutgåendeMedlemskapGrunnlag(
-                medlemskapGrunnlag = null,
+                medlemskapUnntakGrunnlag = null,
                 inntekterINorgeGrunnlag = inntekterINorgeGrunnlag,
                 arbeiderINorgeGrunnlag = emptyList(),
                 vurderinger = emptyList()
@@ -637,7 +637,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     ): ForutgåendeMedlemskapFaktaGrunnlag =
         ForutgåendeMedlemskapFaktaGrunnlag(
             forutgåendeMedlemskapGrunnlag = ForutgåendeMedlemskapGrunnlag(
-                medlemskapGrunnlag = null,
+                medlemskapUnntakGrunnlag = null,
                 inntekterINorgeGrunnlag = listOf(
                     InntektINorgeGrunnlag(
                         "1", 1.0, "NOR", "NOR", "type",

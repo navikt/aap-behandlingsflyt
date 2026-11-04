@@ -69,7 +69,7 @@ class ForutgåendeMedlemskapVurderingService {
         val arbeidInntektINorgeVurdering =
             harArbeidInntektINorge(grunnlag.forutgåendeMedlemskapGrunnlag, forutgåendePeriode)
         val vedtakIMedl =
-            harVedtakIMEDL(grunnlag.forutgåendeMedlemskapGrunnlag?.medlemskapGrunnlag, forutgåendePeriode)
+            harVedtakIMEDL(grunnlag.forutgåendeMedlemskapGrunnlag?.medlemskapUnntakGrunnlag, forutgåendePeriode)
 
         return listOf(arbeidInntektINorgeVurdering, vedtakIMedl)
     }
@@ -82,7 +82,7 @@ class ForutgåendeMedlemskapVurderingService {
         val harJobbetIUtland = oppgittJobbetIUtland(grunnlag.nyeSoknadGrunnlag, forutgåendePeriode)
         val harHattUtenlandsOpphold = oppgittUtenlandsOpphold(grunnlag.nyeSoknadGrunnlag, forutgåendePeriode)
         val harUtenlandsAdresse = utenlandskAdresse(grunnlag.personopplysningGrunnlag, forutgåendePeriode)
-        val annetLovvalgsland = lovvalgslandIkkeErNorge(grunnlag.forutgåendeMedlemskapGrunnlag?.medlemskapGrunnlag)
+        val annetLovvalgsland = lovvalgslandIkkeErNorge(grunnlag.forutgåendeMedlemskapGrunnlag?.medlemskapUnntakGrunnlag)
         val utenforEØS = manglerStatsborgerskapIEØSiPerioden(grunnlag.personopplysningGrunnlag, forutgåendePeriode)
         val bestemtArbeidsgruppe =
             bestemtArbeidsgruppe(
@@ -432,7 +432,7 @@ class ForutgåendeMedlemskapVurderingService {
         val arbeidInntektMedGap = sammenhengendePerioderMedEttMånedsgap(inntekterINorgePerioder, forutgåendePeriode)
 
         val vedtakIMedl =
-            harVedtakIMEDL(grunnlag.forutgåendeMedlemskapGrunnlag?.medlemskapGrunnlag, forutgåendePeriode)
+            harVedtakIMEDL(grunnlag.forutgåendeMedlemskapGrunnlag?.medlemskapUnntakGrunnlag, forutgåendePeriode)
         val oppfyltMinstEttKrav = arbeidInntektMedGap || vedtakIMedl.resultat
         val ingenInntruffet = andreDelVurdering.all { !it.resultat }
 

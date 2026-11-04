@@ -89,7 +89,7 @@ class LovvalgMedlemskapVurderingService {
     ): List<TilhørighetVurdering> {
         val mottarSykepengerVurdering = mottarSykepenger(grunnlag.inntekterINorgeGrunnlag)
         val arbeidInntektINorgeVurdering = harArbeidInntektINorge(grunnlag.inntekterINorgeGrunnlag)
-        val vedtakIMedl = harVedtakIMEDL(grunnlag.medlemskapGrunnlag)
+        val vedtakIMedl = harVedtakIMEDL(grunnlag.medlemskapUnntakGrunnlag)
 
         return if (grunnlag.vurderBosattStatusOgNorskStatsborgerskap) {
             val bosattOgNorskStatsborger =
@@ -108,7 +108,7 @@ class LovvalgMedlemskapVurderingService {
         val harJobbetIUtland = oppgittJobbetIUtland(grunnlag.nyeSoknadGrunnlag, rettighetsPeriode)
         val harHattUtenlandsOpphold = oppgittUtenlandsOpphold(grunnlag.nyeSoknadGrunnlag, rettighetsPeriode)
         val harUtenlandsAdresse = utenlandskAdresse(grunnlag.personopplysning, rettighetsPeriode)
-        val annetLovvalgsland = lovvalgslandIkkeErNorge(grunnlag.medlemskapGrunnlag)
+        val annetLovvalgsland = lovvalgslandIkkeErNorge(grunnlag.medlemskapUnntakGrunnlag)
         val utenforEØS = manglerStatsborgerskapIEØS(grunnlag.personopplysning, rettighetsPeriode)
 
         return listOf(harJobbetIUtland, harHattUtenlandsOpphold, harUtenlandsAdresse, annetLovvalgsland, utenforEØS)
