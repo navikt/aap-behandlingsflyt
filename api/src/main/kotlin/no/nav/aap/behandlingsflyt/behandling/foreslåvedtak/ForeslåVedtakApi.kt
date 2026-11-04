@@ -69,15 +69,18 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                         .isEnabled(BehandlingsflytFeature.VedtaksperiodeBeslutter)
 
                     val stansOgOpphørDto = stansOgOpphør.map { (fom, historikk) ->
+
                         StansOpphørDto(
                             stansOpphørFraOgMed = fom,
                             historikk = historikk.map { vurdering ->
+                                val årsaker = vurdering.vurdering.årsaker.toList()
                                 StansOpphørVurderingDto(
                                     type = when (vurdering.vurdering) {
                                         is Opphør -> StansOpphørVurderingTypeDto.OPPHØR
                                         is Stans -> StansOpphørVurderingTypeDto.STANS
                                     },
-                                    årsaker = vurdering.vurdering.årsaker.toList(),
+                                    årsaker = årsaker,
+                                    hjemler = årsaker.map { it.hjemmel }.distinct(),
                                     behandlingReferanse = requireNotNull(referanseOppslag[vurdering.vurdertIBehandling]) {
                                         "Finner ikke ytelsesbehandling i sak med behandlingsid"
                                     }.referanse,
