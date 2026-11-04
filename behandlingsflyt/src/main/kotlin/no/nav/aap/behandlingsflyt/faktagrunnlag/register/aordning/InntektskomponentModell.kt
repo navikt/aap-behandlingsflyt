@@ -44,7 +44,7 @@ fun Map<LocalDate, List<ArbeidsInntektMåned>>.tilDomene(enhetGrunnlag: List<Enh
     }.toSet()
 }
 
-fun List<ArbeidsInntektMåned>.tilDomene(enhetGrunnlag: List<EnhetGrunnlag>): List<InntektINorgeGrunnlag> {
+private fun List<ArbeidsInntektMåned>.tilDomene(enhetGrunnlag: List<EnhetGrunnlag>): List<InntektINorgeGrunnlag> {
     return this.flatMap { it.tilDomene(enhetGrunnlag) }
 }
 
