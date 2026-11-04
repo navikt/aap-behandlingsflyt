@@ -224,6 +224,7 @@ class ApiTest {
         assertThat(medlemskapGrunnlag?.kanVurderes).isNotEmpty
     }
 
+    @Suppress("DEPRECATION")
     @Test
     fun `hente arena-status fra sak-endepunkt`() {
         val sak = dataSource.transaction { connection ->
@@ -263,6 +264,7 @@ class ApiTest {
 
         assertThat(egenskaper).isNotNull
         assertThat(egenskaper?.erMigrertFraArena).isFalse()
+        assertThat(egenskaper?.harArenaHistorikk).isFalse()
     }
 
     @Test

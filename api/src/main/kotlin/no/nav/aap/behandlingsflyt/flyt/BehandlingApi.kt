@@ -10,6 +10,7 @@ import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.egenskaper.BehandlingEgenskaperGrunnlagService
 import no.nav.aap.behandlingsflyt.behandling.egenskaper.BehandlingEgenskaperService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
@@ -162,14 +163,16 @@ fun NormalOpenAPIRoute.behandlingApi(
                     )
                 )
             ) { req ->
-                val egenskaper = dataSource.transaction(readOnly = true) { connection ->
+                val grunnlag = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val behandling = behandling(repositoryProvider.provide(), req)
-                    BehandlingEgenskaperService(repositoryProvider, gatewayProvider).hentEgenskaper(behandling.id)
+                    BehandlingEgenskaperGrunnlagService(repositoryProvider).hentGrunnlag(behandling)
                 }
+                val egenskaper = BehandlingEgenskaperService(gatewayProvider).hentEgenskaper(grunnlag)
                 respond(
                     BehandlingEgenskaperDTO(
                         erMigrertFraArena = egenskaper.erMigrertFraArena,
+                        harArenaHistorikk = egenskaper.harArenaHistorikk,
                     )
                 )
             }
