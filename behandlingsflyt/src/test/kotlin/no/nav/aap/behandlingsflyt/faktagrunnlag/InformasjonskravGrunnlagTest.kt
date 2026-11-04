@@ -504,6 +504,7 @@ class InformasjonskravGrunnlagTest {
                     enhetsregisteretGateway = gatewayProvider.provide(),
                     inntektskomponentenGateway = gatewayProvider.provide(),
                     unleashGateway = LokalUnleash,
+                    stønadsperiodeRepository = repositoryProvider.provide(),
                 )
             }
         }

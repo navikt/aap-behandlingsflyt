@@ -26,7 +26,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapGa
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.tilDomene
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -41,7 +44,6 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.util.concurrent.*
 
-
 class LovvalgMedlemskapInformasjonskrav internal constructor(
     private val sakService: SakService,
     private val lovvalgMedlemskapRepository: LovvalgMedlemskapRepository,
@@ -51,13 +53,16 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
     private val arbeidsForholdGateway: ArbeidsforholdGateway,
     private val enhetsregisteretGateway: EnhetsregisteretGateway,
     private val inntektskomponentenGateway: InntektkomponentenGateway,
+    private val stønadsperiodeRepository: StønadsperiodeRepository,
     private val unleashGateway: UnleashGateway,
 ) : Informasjonskrav<LovvalgMedlemskapInformasjonskrav.LovvalgInput, LovvalgMedlemskapInformasjonskrav.LovvalgRegisterData> {
     private val log = LoggerFactory.getLogger(javaClass)
 
     data class LovvalgInput(
         val sak: Sak,
-        val eksisterendeData: LovvalgMedlemskapGrunnlag?
+        val relevantDato: LocalDate,
+        val eksisterendeData: LovvalgMedlemskapGrunnlag?,
+        val skalHenteKunForNyesteAktuelleKrav: Boolean
     ) : InformasjonskravInput
 
     data class LovvalgRegisterData(
@@ -88,22 +93,53 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
     override fun klargjør(kontekst: FlytKontekstMedPerioder): LovvalgInput {
         val sak = sakService.hent(kontekst.sakId)
         val eksisterendeData = lovvalgMedlemskapRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+        val stønadsperiodeGrunnlag = stønadsperiodeRepository.hentHvisEksisterer(kontekst.behandlingId)
+        requireNotNull(stønadsperiodeGrunnlag)
+
+        val skalVurdereLovvalgPåNyttVed =
+            listOf(RelevantKravType.NY_STØNADSPERIODE, RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR)
+
+        // Skal hente inn for siste aktuelle krav
+        val relevantDato = stønadsperiodeGrunnlag
+            .gjeldendeVurderinger()
+            .toList()
+            .last { it.relevantKravType in skalVurdereLovvalgPåNyttVed }.startDato
+
         return LovvalgInput(
             sak = sak,
-            eksisterendeData = eksisterendeData
+            relevantDato = relevantDato,
+            eksisterendeData = eksisterendeData,
+            skalHenteKunForNyesteAktuelleKrav = unleashGateway.erPåskruddForSak(
+                BehandlingsflytFeature.HentInnLovvalgRegisterdataForNyesteAktuelleKrav,
+                "saksnummer",
+                sak.saksnummer
+            )
         )
     }
 
     override fun hentData(input: LovvalgInput): LovvalgRegisterData {
         val sak = input.sak
+        val relevantDato = input.relevantDato
+
         val executor = informasjonskravExecutor
         val medlemskapPerioderFuture = CompletableFuture
             .supplyAsync(withMdc { medlemskapGateway.innhent(sak.person, sak.rettighetsperiode) }, executor)
         val arbeidGrunnlagFuture = CompletableFuture
             .supplyAsync(withMdc { innhentAARegisterGrunnlag(sak) }, executor)
-        val inntektGrunnlagFuture = CompletableFuture
-            .supplyAsync(withMdc { innhentAInntektGrunnlag(sak) }, executor)
+        val inntektGrunnlagFuture =
+            CompletableFuture
+                .supplyAsync(withMdc {
+                    when (input.skalHenteKunForNyesteAktuelleKrav) {
+                        true -> innhentAInntekt(
+                            årMånedFom = YearMonth.from(relevantDato.minusMonths(2)),
+                            årMånedTom = YearMonth.from(relevantDato),
+                            ident = sak.person.aktivIdent()
+                        )
 
+                        false -> innhentAInntektGrunnlag(sak)
+                    }
+                }, executor)
         val medlemskapPerioder = medlemskapPerioderFuture.get()
         val arbeidGrunnlag = arbeidGrunnlagFuture.get()
         val inntektGrunnlag = inntektGrunnlagFuture.get()
@@ -126,8 +162,14 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
 
         val eksisterendeData = input.eksisterendeData
 
+        // Beholder eksisterende registerdato for annen startdato
+        val oppdatertInntekt = eksisterendeData?.inntekterINorgeRegisterGrunnlag
+            ?.inntekterForKrav.orEmpty()
+            .filterNot { (it.relevantDato ?: input.sak.rettighetsperiode.fom) == input.relevantDato }
+            .flatMap { it.inntekter } + inntektGrunnlag.tilDomene(enhetGrunnlag).toSet()
+
         val nyRegisterdata = LovvalgMedlemskapRegisterGrunnlag(
-            inntekterINorgeGrunnlag = inntektGrunnlag.tilDomene(enhetGrunnlag),
+            inntekterINorgeGrunnlag = oppdatertInntekt,
             arbeiderINorgeGrunnlag = arbeidGrunnlag,
             medlemskapUnntakGrunnlag = medlemskapPerioder
                 .takeIf { it.isNotEmpty() }
@@ -180,10 +222,18 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
     }
 
     private fun innhentAInntektGrunnlag(sak: Sak): List<ArbeidsInntektMåned> {
+        return innhentAInntekt(
+            ident = sak.person.aktivIdent(),
+            årMånedFom = YearMonth.from(sak.rettighetsperiode.fom.minusMonths(2)),
+            årMånedTom = YearMonth.from(sak.rettighetsperiode.fom)
+        )
+    }
+
+    private fun innhentAInntekt(ident: Ident, årMånedFom: YearMonth, årMånedTom: YearMonth): List<ArbeidsInntektMåned> {
         return inntektskomponentenGateway.hentAInntekt(
-            fnr = sak.person.aktivIdent().identifikator,
-            fom = YearMonth.from(sak.rettighetsperiode.fom.minusMonths(2)),
-            tom = YearMonth.from(sak.rettighetsperiode.fom)
+            fnr = ident.identifikator,
+            fom = årMånedFom,
+            tom = årMånedTom
         ).arbeidsInntektMåned
     }
 
@@ -225,6 +275,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
                 enhetsregisteretGateway = gatewayProvider.provide(),
                 inntektskomponentenGateway = gatewayProvider.provide(),
                 unleashGateway = gatewayProvider.provide(),
+                stønadsperiodeRepository = repositoryProvider.provide(),
             )
         }
     }
