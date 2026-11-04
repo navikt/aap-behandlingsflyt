@@ -189,32 +189,6 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                     respond(meldinger)
                 }
             }
-            route("/dialogmeldinger/{saksnummer}/v2") {
-                authorizedGet<HentStatusLegeerklæring, MeldingerResponse>(
-                    AuthorizationParamPathConfig(
-                        relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
-                        applicationsOnly = false,
-                        sakPathParam = SakPathParam("saksnummer")
-                    )
-                ) { params ->
-                    val meldinger = dataSource.transaction(readOnly = true) { connection ->
-                        val sakRepository = repositoryRegistry.provider(connection).provide<SakRepository>()
-                        val mottattDokumentRepository =
-                            repositoryRegistry.provider(connection).provide<MottattDokumentRepository>()
-                        val behandlingRepository =
-                            repositoryRegistry.provider(connection).provide<BehandlingRepository>()
-                        val service = HentBehandlerDialogService(
-                            dokumentinnhentingGateway,
-                            sakRepository,
-                            mottattDokumentRepository,
-                            behandlingRepository
-                        )
-
-                        service.hentDialogForSak(params.saksnummer, token())
-                    }
-                    respond(meldinger)
-                }
-            }
 
             route("/dialogmeldinger/legeerklaering/{behandlingsReferanse}/ubesvarte-foresporsler") {
                 authorizedGet<HentUbesvarteForespørslerLegeerklæringDto, UbesvarteForespørslerLegeerklæringResponse>(
