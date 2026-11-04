@@ -30,7 +30,18 @@ class EtableringEgenVirksomhetLøsning(
         kontekst: AvklaringsbehovKontekst,
         gatewayProvider: GatewayProvider
     ): LøsningsResultat {
-        validerVurderingsperioder(løsningerForPerioder)
+        val sorterteVurderinger = løsningerForPerioder.sortedBy { it.fom }
+        val perioderTilValidering = sorterteVurderinger.mapIndexed { index, vurdering ->
+            val nesteVurdering = sorterteVurderinger.getOrNull(index + 1)
+
+            if (vurdering.tom == null && nesteVurdering != null) {
+                vurdering.copy(tom = nesteVurdering.fom.minusDays(1))
+            } else {
+                vurdering
+            }
+        }
+
+        validerVurderingsperioder(perioderTilValidering)
         return EtableringEgenVirksomhetLøser(
             repositoryProvider
         ).løs(kontekst, this)
