@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student
+package no.nav.aap.student
 
 enum class ErStudentStatus {
     JA,
