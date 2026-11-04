@@ -171,7 +171,7 @@ class AvklarStønadsperiodeStegTest {
         assertThat(vurdering.relevantKravType).isEqualTo(RelevantKravType.NY_STØNADSPERIODE)
         assertThat(vurdering.harGjenværendeKvote).isFalse()
         assertThat(vurdering.begrunnelse)
-            .isEqualTo("Tilstøtende avsluttet Arena-sak 2023-5, stønadsperiode starter dagen etter maksdato 01.08.2024")
+            .isEqualTo("Startdatoen er dagen etter siste dag med rett til AAP i tilstøtende Arena-sak 2023-5")
     }
 
     @Test

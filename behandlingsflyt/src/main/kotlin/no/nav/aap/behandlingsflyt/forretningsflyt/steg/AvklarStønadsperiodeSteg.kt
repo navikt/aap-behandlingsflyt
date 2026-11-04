@@ -19,7 +19,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.behandlingsflyt.utils.tilNorskFormat
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.Instant
@@ -100,8 +99,8 @@ class AvklarStønadsperiodeSteg(
                 opprettet = Instant.now(),
                 vurdertIBehandling = kontekst.behandlingId,
                 vurdertAv = SYSTEMBRUKER,
-                begrunnelse = "Tilstøtende avsluttet Arena-sak ${arenaMaksdato.arenaSaksnummer}, " +
-                        "stønadsperiode starter dagen etter maksdato ${arenaMaksdato.maksdato.tilNorskFormat()}",
+                begrunnelse = "Startdatoen er dagen etter siste dag med rett til AAP i tilstøtende " +
+                        "Arena-sak ${arenaMaksdato.arenaSaksnummer}",
                 harHattOrdinærSiste52Uker = true,
                 harGjenværendeKvote = false,
                 relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
