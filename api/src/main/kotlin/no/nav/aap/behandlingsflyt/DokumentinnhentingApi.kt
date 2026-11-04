@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.ForhåndsvisBrevReq
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentBehandlerDialogService
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentUbesvarteForespørslerLegeerklæringDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentStatusLegeerklæring
-import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.MeldingMedDokumenterDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.MeldingerResponse
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.PurringLegeerklæringRequest
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.UbesvarteForespørslerLegeerklæringResponse
@@ -165,7 +164,7 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
             }
 
             route("/dialogmeldinger/{saksnummer}") {
-                authorizedGet<HentStatusLegeerklæring, List<MeldingMedDokumenterDto>>(
+                authorizedGet<HentStatusLegeerklæring, MeldingerResponse>(
                     AuthorizationParamPathConfig(
                         relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
                         applicationsOnly = false,
@@ -185,13 +184,11 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                             behandlingRepository
                         )
 
-                        service.hentDialogForSak(params.saksnummer, token()).meldinger
+                        service.hentDialogForSak(params.saksnummer, token())
                     }
-
                     respond(meldinger)
                 }
             }
-
             route("/dialogmeldinger/{saksnummer}/v2") {
                 authorizedGet<HentStatusLegeerklæring, MeldingerResponse>(
                     AuthorizationParamPathConfig(
