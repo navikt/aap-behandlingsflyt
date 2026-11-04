@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService.Behov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
+import no.nav.aap.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId

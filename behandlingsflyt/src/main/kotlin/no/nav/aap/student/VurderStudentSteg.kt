@@ -1,13 +1,7 @@
-package no.nav.aap.behandlingsflyt.forretningsflyt.steg
+package no.nav.aap.student
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
-import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
-import no.nav.aap.behandlingsflyt.behandling.vilkår.student.StudentFaktagrunnlag
-import no.nav.aap.behandlingsflyt.behandling.vilkår.student.StudentVilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.skalVurdereStudent
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -16,9 +10,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 

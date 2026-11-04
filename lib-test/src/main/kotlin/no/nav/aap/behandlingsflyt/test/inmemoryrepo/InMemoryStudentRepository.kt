@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.OppgittStudent
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentVurdering
+import no.nav.aap.student.OppgittStudent
+import no.nav.aap.student.StudentGrunnlag
+import no.nav.aap.student.StudentRepository
+import no.nav.aap.student.StudentVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 
 object InMemoryStudentRepository : StudentRepository {
