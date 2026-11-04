@@ -8,7 +8,7 @@ data class InntekterForKrav(
     /**
      * Datoen vi henter inntekter i forhold til
      */
-    val relevantDato: LocalDate?,     // TODO: Nullable i overgangsperiode. Skal migreres til stønadsperiode.startdato
+    val relevantDato: LocalDate,     // TODO: Nullable i overgangsperiode. Skal migreres til stønadsperiode.startdato
     val inntekter: Set<InntektINorgeGrunnlag>
 ) {
     /**

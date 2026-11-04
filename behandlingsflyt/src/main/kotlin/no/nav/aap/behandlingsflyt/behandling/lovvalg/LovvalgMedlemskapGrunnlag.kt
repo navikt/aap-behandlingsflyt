@@ -67,7 +67,7 @@ data class LovvalgMedlemskapGrunnlag(
 
 data class LovvalgMedlemskapRegisterGrunnlag(
     val medlemskapUnntakGrunnlag: MedlemskapUnntakGrunnlag?,
-    val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
+    val inntekterINorgeGrunnlag: InntekterINorgeRegisterGrunnlag,
     val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
 )
 

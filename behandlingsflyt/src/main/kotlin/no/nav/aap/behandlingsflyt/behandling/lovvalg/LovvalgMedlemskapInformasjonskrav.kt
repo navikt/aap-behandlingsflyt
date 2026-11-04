@@ -71,7 +71,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
     data class LovvalgRegisterData(
         val medlemskapPerioder: List<MedlemskapDataIntern>,
         val arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
-        val inntektGrunnlag: List<ArbeidsInntektMåned>,
+        val inntektPerDato: Map<LocalDate, List<ArbeidsInntektMåned>>,
         val enhetGrunnlag: List<EnhetGrunnlag>
     ) : InformasjonskravRegisterdata
 
@@ -158,27 +158,33 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
 
         val inntektGrunnlagFutures = if (input.skalHentePerKrav) {
             datoerViSkalHenteInnForNå.map { dato ->
-                CompletableFuture.supplyAsync(withMdc {
+                Pair(dato, CompletableFuture.supplyAsync(withMdc {
                     innhentAInntekt(
                         årMånedFom = YearMonth.from(dato.minusMonths(2)),
                         årMånedTom = YearMonth.from(dato),
                         ident = sak.person.aktivIdent()
                     )
-                }, executor)
+                }, executor))
             }
         } else {
-            listOf(CompletableFuture.supplyAsync(withMdc { innhentAInntektGrunnlag(sak) }, executor))
+            listOf(
+                Pair(
+                    sak.rettighetsperiode.fom,
+                    CompletableFuture.supplyAsync(withMdc { innhentAInntektGrunnlag(sak) }, executor)
+                )
+            )
         }
 
         val medlemskapPerioder = medlemskapPerioderFuture.get()
         val arbeidGrunnlag = arbeidGrunnlagFuture.get()
-        val inntektGrunnlag = inntektGrunnlagFutures.flatMap { it.get() }.distinct()
-        val enhetGrunnlag = innhentEREGGrunnlag(inntektGrunnlag)
+
+        val inntektPerDato = inntektGrunnlagFutures.associate { it.first to it.second.get() }
+        val enhetGrunnlag = innhentEREGGrunnlag(inntektPerDato.flatMap { it.value })
 
         return LovvalgRegisterData(
             medlemskapPerioder = medlemskapPerioder,
             arbeidGrunnlag = arbeidGrunnlag,
-            inntektGrunnlag = inntektGrunnlag,
+            inntektPerDato = inntektPerDato,
             enhetGrunnlag = enhetGrunnlag
         )
     }
@@ -192,17 +198,20 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
 
         val eksisterendeData = input.eksisterendeData
 
-        val oppdatertInntekt =
+        val eksisterndeRelevanteInntekter =
             eksisterendeData?.inntekterINorgeRegisterGrunnlag?.inntekterForKrav.orEmpty()
                 .filterNot { inntekter ->
                     (inntekter.relevantDato
                         ?: input.sak.rettighetsperiode.fom) in input.kravViKreverVurderingFor.map { it.startDato }
                 }
                 .filterNot { inntekter -> inntekter.relevantDato in input.datoerViSkalHenteInnForNå }
-                .flatMap { it.inntekter } + inntektGrunnlag.tilDomene(enhetGrunnlag).toSet()
+                .toSet()
+
+
+        val gjeldendeInntekter = eksisterndeRelevanteInntekter + inntektGrunnlag.tilDomene(enhetGrunnlag).toSet()
 
         val nyRegisterdata = LovvalgMedlemskapRegisterGrunnlag(
-            inntekterINorgeGrunnlag = oppdatertInntekt,
+            inntekterINorgeGrunnlag = InntekterINorgeRegisterGrunnlag(gjeldendeInntekter),
             arbeiderINorgeGrunnlag = arbeidGrunnlag,
             medlemskapUnntakGrunnlag = medlemskapPerioder
                 .takeIf { it.isNotEmpty() }
@@ -212,8 +221,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         if (nyRegisterdata != eksisterendeData?.registerGrunnlag) {
             lagre(
                 behandlingId = kontekst.behandlingId,
-                relevantDato = input.sak.rettighetsperiode.fom,
-                registerGrunnlag = nyRegisterdata
+                registerGrunnlag = nyRegisterdata,
             )
 
             return ENDRET
@@ -272,7 +280,6 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
 
     private fun lagre(
         behandlingId: BehandlingId,
-        relevantDato: LocalDate, // TODO: Denne vil etterhvert være på registergrunnlagnivå
         registerGrunnlag: LovvalgMedlemskapRegisterGrunnlag
     ) {
         val medlemskapUnntakGrunnlag = registerGrunnlag.medlemskapUnntakGrunnlag
@@ -283,7 +290,6 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
 
         lovvalgMedlemskapRepository.lagreRegisterGrunnlag(
             behandlingId,
-            relevantDato,
             registerGrunnlag,
             medlId,
         )
