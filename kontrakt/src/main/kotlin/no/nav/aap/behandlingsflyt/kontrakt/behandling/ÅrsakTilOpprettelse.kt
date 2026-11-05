@@ -33,6 +33,9 @@ public enum class ÅrsakTilOpprettelse {
     AKTIVITETSPLIKT, // 11-7
     AKTIVITETSPLIKT_11_9,
 
+    // Søknad om å beholde AAP under opphold i utlandet
+    SØKNAD_UTENLANDSOPPHOLD,
+
     // Tilbakekreving
     TILBAKEKREVING_HENDELSE,
     FAGSYSTEMINFO_BEHOV_HENDELSE,

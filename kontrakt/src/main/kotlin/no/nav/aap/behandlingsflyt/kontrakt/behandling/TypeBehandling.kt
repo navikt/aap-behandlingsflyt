@@ -14,7 +14,8 @@ public enum class TypeBehandling(
     SvarFraAndreinstans("svar-fra-andreinstans"),
     OppfølgingsBehandling("oppfølgingsbehandling"),
     Aktivitetsplikt("aktivitetsplikt"),
-    Aktivitetsplikt11_9("aktivitetsplikt11-9");
+    Aktivitetsplikt11_9("aktivitetsplikt11-9"),
+    Utenlandsopphold("utenlandsopphold");
 
     public fun identifikator(): String = identifikator
 
