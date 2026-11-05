@@ -19,6 +19,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.flyt.ArenaStatusDTO
+import no.nav.aap.behandlingsflyt.flyt.BehandlingEgenskaperDTO
 import no.nav.aap.behandlingsflyt.flyt.VilkårDTO
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -223,6 +224,7 @@ class ApiTest {
         assertThat(medlemskapGrunnlag?.kanVurderes).isNotEmpty
     }
 
+    @Suppress("DEPRECATION")
     @Test
     fun `hente arena-status fra sak-endepunkt`() {
         val sak = dataSource.transaction { connection ->
@@ -237,6 +239,32 @@ class ApiTest {
 
         assertThat(arenaStatus).isNotNull
         assertThat(arenaStatus?.harArenaHistorikk).isFalse()
+    }
+
+    @Test
+    fun `hente egenskaper fra behandling-endepunkt`() {
+        val referanse = dataSource.transaction { connection ->
+            val sak = opprettSak(connection, LocalDate.now())
+            BehandlingRepositoryImpl(connection).opprettBehandling(
+                sakId = sak.id,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD,
+                ),
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null
+            ).referanse
+        }
+
+        val egenskaper: BehandlingEgenskaperDTO? = client.get(
+            URI.create("http://localhost:$port/")
+                .resolve("api/behandling/${referanse.referanse}/egenskaper"),
+            GetRequest(currentToken = getToken())
+        )
+
+        assertThat(egenskaper).isNotNull
+        assertThat(egenskaper?.erMigrertFraArena).isFalse()
+        assertThat(egenskaper?.harArenaHistorikk).isFalse()
     }
 
     @Test
