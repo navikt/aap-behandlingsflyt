@@ -15,7 +15,7 @@ spec:
     limits:
       memory: 1536Mi
     requests:
-      cpu: 500m
+      cpu: 600m
       memory: 900Mi
   observability:
     autoInstrumentation:
@@ -43,10 +43,10 @@ spec:
   terminationGracePeriodSeconds: 30
   liveness:
     path: /actuator/live
-    initialDelay: 5
+    initialDelay: 15
   readiness:
     path: /actuator/ready
-    initialDelay: 5
+    initialDelay: 15
   prometheus:
     enabled: true
     path: /actuator/metrics
