@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.dokument
 
+import no.nav.aap.utenlandsopphold.SøknadUtenlandsoppholdDokumentDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadUtenlandsopphold
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadUtenlandsoppholdV0
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.UbehandletMeldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.UbehandletDialogmelding
@@ -155,5 +158,26 @@ class MottaDokumentService(
         val dokument = uthentede.first().strukturerteData<Oppfølgingsoppgave>()!!.data
 
         return BehandletOppfølgingsOppgave.fraDokument(dokument)
+    }
+
+    fun hentSøknadUtenlandsoppholdDokument(behandlingId: BehandlingId): SøknadUtenlandsoppholdDokumentDto? {
+        val dokumenter = mottattDokumentRepository.hentDokumenterAvType(behandlingId, InnsendingType.SØKNAD_UTENLANDSOPPHOLD)
+
+        if (dokumenter.isEmpty()) {
+            return null
+        }
+
+        require(dokumenter.size == 1) { "Forventer kun ett dokument per behandling." }
+
+        val dokument = dokumenter.first()
+        val melding = dokument.strukturerteData<SøknadUtenlandsopphold>()!!.data
+
+        return when (melding) {
+            is SøknadUtenlandsoppholdV0 -> SøknadUtenlandsoppholdDokumentDto(
+                journalpostId = dokument.referanse.verdi,
+                mottattDato = melding.mottattDato,
+                fritekst = melding.fritekst,
+            )
+        }
     }
 }

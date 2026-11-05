@@ -44,5 +44,8 @@ enum class ÅrsakTilOpprettelse {
     MIGRERING_FRA_ARENA,
 
     // Korrigering av søknadsdato § 22-13 femte ledd
-    KORRIGER_SØKNADSDATO
+    KORRIGER_SØKNADSDATO,
+
+    // Søknad om å beholde AAP under opphold i utlandet
+    SØKNAD_UTENLANDSOPPHOLD
 }
