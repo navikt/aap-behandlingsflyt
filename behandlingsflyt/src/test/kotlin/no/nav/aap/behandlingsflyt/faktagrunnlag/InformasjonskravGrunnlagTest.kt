@@ -239,7 +239,7 @@ class InformasjonskravGrunnlagTest {
             LovvalgMedlemskapRepositoryImpl(it).hentHvisEksisterer(kontekst.behandlingId)
         }
 
-        assertThat(lagretData?.registerGrunnlag?.inntekterINorgeGrunnlag!!).hasSizeGreaterThan(0)
+        assertThat(lagretData?.registerGrunnlag?.inntekterINorgeGrunnlag?.inntekterForKrav!!).hasSizeGreaterThan(0)
         assertThat(erOppdatert).isEmpty()
 
     }
