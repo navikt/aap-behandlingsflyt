@@ -48,6 +48,7 @@ object MottattHendelseUtleder {
             InnsendingType.UFØRE_VEDTAK_HENDELSE -> ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE
             InnsendingType.MIGRERING_FRA_ARENA -> ÅrsakTilOpprettelse.MIGRERING_FRA_ARENA
             InnsendingType.KORRIGER_SØKNADSDATO -> ÅrsakTilOpprettelse.KORRIGER_SØKNADSDATO
+            InnsendingType.SØKNAD_UTENLANDSOPPHOLD -> ÅrsakTilOpprettelse.SØKNAD_UTENLANDSOPPHOLD
         }
     }
 
@@ -112,6 +113,8 @@ object MottattHendelseUtleder {
             InnsendingType.MIGRERING_FRA_ARENA -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MIGRERING_FRA_ARENA))
 
             InnsendingType.KORRIGER_SØKNADSDATO -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.VURDER_KRAV))
+
+            InnsendingType.SØKNAD_UTENLANDSOPPHOLD -> listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_UTENLANDSOPPHOLD))
         }
     }
 

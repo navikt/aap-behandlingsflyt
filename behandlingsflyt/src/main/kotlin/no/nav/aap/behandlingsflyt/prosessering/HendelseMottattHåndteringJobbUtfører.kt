@@ -265,7 +265,8 @@ class HendelseMottattHåndteringJobbUtfører(
                 InnsendingType.INSTITUSJONSOPPHOLD,
                 InnsendingType.SYKEPENGE_VEDTAK_HENDELSE,
                 InnsendingType.FORELDREPENGE_VEDTAK_HENDELSE,
-                InnsendingType.UFØRE_VEDTAK_HENDELSE -> Prioritet.LAV
+                InnsendingType.UFØRE_VEDTAK_HENDELSE,
+                InnsendingType.SØKNAD_UTENLANDSOPPHOLD -> Prioritet.LAV
             }
         }
 
