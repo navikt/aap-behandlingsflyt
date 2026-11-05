@@ -172,7 +172,7 @@ private fun beslutterVurdering(
     flyt: BehandlingFlyt
 ): List<TotrinnsVurderingResponse> {
     return avklaringsbehovene.alle()
-        .filter { it.erIkkeAvbrutt() }
+        .filter { it.aktivHistorikk.any { it.status.erAvsluttet() } }
         .filter { it.erTotrinn() }
         .sortedWith(compareBy(flyt.stegComparator) { it.løsesISteg() })
         .map { tilTotrinnsVurderingResponse(it) }
