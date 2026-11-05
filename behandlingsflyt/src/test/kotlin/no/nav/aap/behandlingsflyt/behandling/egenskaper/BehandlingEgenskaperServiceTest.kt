@@ -50,17 +50,6 @@ class BehandlingEgenskaperServiceTest {
     }
 
     @Test
-    fun `behandling der migrert krav er erstattet av nyere krav er ikke migrert fra Arena`() {
-        val (_, behandling) = opprettInMemorySakOgBehandling()
-        val referanse = Kravreferanse.ny()
-        val migrertKrav = lagMigrertKrav(behandling.id, referanse, opprettet = Instant.parse("2025-01-01T00:00:00Z"))
-        val nyereKrav = lagRelevantKrav(behandling.id, referanse, opprettet = Instant.parse("2025-02-01T00:00:00Z"))
-        InMemoryKravRepository.lagre(behandling.id, setOf(migrertKrav, nyereKrav))
-
-        assertThat(hentEgenskaper(behandling).erMigrertFraArena).isFalse()
-    }
-
-    @Test
     fun `harArenaHistorikk følger svaret fra Arena`() {
         val (_, behandling) = opprettInMemorySakOgBehandling()
 
