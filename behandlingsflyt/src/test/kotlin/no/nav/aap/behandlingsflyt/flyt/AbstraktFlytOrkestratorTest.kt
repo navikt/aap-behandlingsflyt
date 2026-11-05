@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadUtenlandsoppholdV0
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
@@ -1063,6 +1064,21 @@ open class AbstraktFlytOrkestratorTest(
             kanal = Kanal.DIGITAL,
             mottattTidspunkt = mottattTidspunkt,
             melding = oppfølgingsoppgave,
+        )
+        return hentSisteOpprettedeBehandlingForSak(saksnummer)
+    }
+
+    protected fun Sak.sendInnSøknadUtenlandsopphold(
+        journalpostId: JournalpostId = journalpostId(),
+        mottattTidspunkt: LocalDateTime = LocalDateTime.now(),
+        søknad: SøknadUtenlandsoppholdV0 = SøknadUtenlandsoppholdV0(mottattDato = mottattTidspunkt.toLocalDate()),
+    ): Behandling {
+        sendInn(
+            referanse = InnsendingReferanse(journalpostId),
+            type = InnsendingType.SØKNAD_UTENLANDSOPPHOLD,
+            kanal = Kanal.PAPIR,
+            mottattTidspunkt = mottattTidspunkt,
+            melding = søknad,
         )
         return hentSisteOpprettedeBehandlingForSak(saksnummer)
     }

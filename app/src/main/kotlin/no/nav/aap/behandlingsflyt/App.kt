@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt
 
+import no.nav.aap.utenlandsopphold.søknadUtenlandsoppholdGrunnlagApi
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.papsign.ktor.openapigen.model.info.InfoModel
@@ -341,6 +342,7 @@ internal fun Application.server(
                 svarFraAndreinstansGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 // Oppfølgingsbehandling
                 avklarOppfolgingsoppgaveGrunnlag(fellesDataSource, repositoryRegistry, gatewayProvider)
+                søknadUtenlandsoppholdGrunnlagApi(fellesDataSource, repositoryRegistry)
                 oppfølgingsOppgaveApi(fellesDataSource, repositoryRegistry)
                 // Aktivitetsplikt
                 aktivitetsplikt11_7GrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
