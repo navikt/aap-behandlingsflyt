@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.TilOgMedBeregning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.antallHverdagerIFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.beregnTomForSistePeriode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.gjeldendeFasevurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.perioderForFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somFasetidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
@@ -96,24 +95,9 @@ class EtableringEgenVirksomhetService(
             )
         }
 
-        val resultat = gamleVurderinger + beregnedeVurderinger.filter { it.vurdertIBehandling == behandlingId }
-        val førsteOppstart = resultat.somFasetidslinje().perioderForFase(EtableringFase.OPPSTART).minOfOrNull { it.fom }
-
-        val avkortedeVurderinger = resultat.map { vurdering ->
-            if (
-                førsteOppstart != null &&
-                vurdering.fase == EtableringFase.UTVIKLING &&
-                vurdering.fom.isBefore(førsteOppstart)
-            ) {
-                vurdering.copy(tom = minOf(vurdering.tom ?: Tid.MAKS, førsteOppstart.minusDays(1)))
-            } else {
-                vurdering
-            }
-        }
-
         return VirksomhetEtableringResultat.Gyldig(
             Beregning(
-                avkortedeVurderinger,
+                gamleVurderinger + beregnedeVurderinger.filter { it.vurdertIBehandling == behandlingId }
             )
         )
     }
