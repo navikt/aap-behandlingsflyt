@@ -112,7 +112,6 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
 
     override fun lagreRegisterGrunnlag(
         behandlingId: BehandlingId,
-        relevantDato: LocalDate,
         registerGrunnlag: LovvalgMedlemskapRegisterGrunnlag,
         medlId: Long?,
     ) {
@@ -123,7 +122,7 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
         }
 
         val arbeiderId = lagreArbeidGrunnlag(registerGrunnlag.arbeiderINorgeGrunnlag)
-        val inntekterINorgeId = lagreArbeidsInntektGrunnlag(relevantDato, registerGrunnlag.inntekterINorgeGrunnlag)
+        val inntekterINorgeId = lagreArbeidsInntektGrunnlag(registerGrunnlag.inntekterINorgeGrunnlag)
 
         val grunnlagQuery = """
             INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, vurderinger_id) VALUES (?, ?, ?, ?, ?)
@@ -166,10 +165,10 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
     }
 
     private fun lagreArbeidsInntektGrunnlag(
-        relevantDato: LocalDate,
-        inntekter: List<InntektINorgeGrunnlag>,
+        inntekter: InntekterINorgeRegisterGrunnlag?,
     ): Long? {
-        if (inntekter.isEmpty()) return null
+        // TODO: Nå lagrer vi ikke ned at vi har hentet for enn dato, men at listen er tom
+        if (inntekter == null || inntekter.inntekterForKrav.flatMap { it.inntekter }.isEmpty()) return null
 
         val inntekterINorgeQuery = """
             INSERT INTO INNTEKTER_I_NORGE DEFAULT VALUES
@@ -180,20 +179,23 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
             INSERT INTO INNTEKT_I_NORGE (identifikator, beloep, skattemessig_bosatt_land, opptjenings_land, inntekt_type, inntekter_i_norge_id, periode, organisasjonsnavn, relevant_dato) VALUES (?, ?, ?, ?, ?, ?, ?::daterange, ?, ?)
         """.trimIndent()
 
+        val inntekterMedDatoFlateUt =
+            inntekter.inntekterForKrav.flatMap { forKrav -> forKrav.inntekter.map { Pair(forKrav.relevantDato, it) } }
+
         connection.executeBatch(
             inntektQuery,
-            inntekter
+            inntekterMedDatoFlateUt
         ) {
             setParams { inntekt ->
-                setString(1, inntekt.identifikator)
-                setDouble(2, inntekt.beloep)
-                setString(3, inntekt.skattemessigBosattLand)
-                setString(4, inntekt.opptjeningsLand)
-                setString(5, inntekt.inntektType)
+                setString(1, inntekt.second.identifikator)
+                setDouble(2, inntekt.second.beloep)
+                setString(3, inntekt.second.skattemessigBosattLand)
+                setString(4, inntekt.second.opptjeningsLand)
+                setString(5, inntekt.second.inntektType)
                 setLong(6, inntekterINorgeId)
-                setPeriode(7, inntekt.periode)
-                setString(8, inntekt.organisasjonsNavn)
-                setLocalDate(9, relevantDato)
+                setPeriode(7, inntekt.second.periode)
+                setString(8, inntekt.second.organisasjonsNavn)
+                setLocalDate(9, inntekt.first)
             }
         }
 
@@ -293,7 +295,7 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
                     inntektType = it.getStringOrNull("inntekt_type"),
                     periode = it.getPeriode("periode"),
                     organisasjonsNavn = it.getStringOrNull("organisasjonsnavn"),
-                    relevantDato = it.getLocalDateOrNull("relevant_dato")
+                    relevantDato = it.getLocalDate("relevant_dato")
                 )
             }
         }
@@ -307,7 +309,7 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
         val inntektType: String?,
         val periode: Periode,
         val organisasjonsNavn: String?,
-        val relevantDato: LocalDate?,
+        val relevantDato: LocalDate,
     )
 
     private fun List<InntektINorgeInternal>.tilDomene(): List<InntektINorgeGrunnlag> {
@@ -492,9 +494,8 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
             LovvalgMedlemskapRegisterGrunnlag(
                 medlemskapUnntakGrunnlag = hentMedlemskapGrunnlag(row.getLongOrNull("medlemskap_unntak_person_id")),
                 arbeiderINorgeGrunnlag = hentArbeiderINorgeGrunnlag(row.getLongOrNull("arbeider_id")),
-                inntekterINorgeGrunnlag = inntekt.tilDomene(),
+                inntekterINorgeGrunnlag = InntekterINorgeRegisterGrunnlag(inntekt.perKrav()),
             ),
-            inntekterINorgeRegisterGrunnlag = InntekterINorgeRegisterGrunnlag(inntekt.perKrav()),
             vurderinger = hentVurderinger(row.getLongOrNull("vurderinger_id")),
         )
     }

@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapInformasjonskrav
 import no.nav.aap.meldeplikt.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
@@ -13,6 +14,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Pers
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Statsborgerskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.ident
@@ -32,6 +41,8 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.undervei
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap.LovvalgMedlemskapRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.krav.KravRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -53,15 +64,19 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.time.LocalDate
+import java.util.UUID
 
 @Fakes
 class InformasjonskravGrunnlagTest {
@@ -427,10 +442,49 @@ class InformasjonskravGrunnlagTest {
         årsakerTilBehandling: Set<Vurderingsbehov> = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
 
     ): Pair<Ident, FlytKontekstMedPerioder> {
+        val søknadsdato = LocalDate.now()
         val ident = ident()
-        val sak = opprettSak(connection, ident, LocalDate.now())
+        val sak = opprettSak(connection, ident, søknadsdato)
         val behandling = finnEllerOpprettBehandling(connection, sak)
         val personopplysningRepository = PersonopplysningRepositoryImpl(connection)
+
+        val kravReferanse = Kravreferanse.ny()
+        KravRepositoryImpl(connection).lagre(
+            behandling.id, setOf(
+                RelevantKrav(
+                    referanse = kravReferanse,
+                    journalpostId = JournalpostId("123"),
+                    vurdertAv = SYSTEMBRUKER,
+                    begrunnelse = "Automatisk",
+                    vurdertIBehandling = behandling.id,
+                    opprettet = Instant.now(),
+                    søknadsdato = Søknadsdato(
+                        søknadsdato,
+                        årsak = SøknadsdatoÅrsak.SøknadMottatt,
+                        begrunnelse = "Automatisk"
+                    ),
+                    overstyrMuligRettFra = null,
+                    muligRettFra = søknadsdato
+                ),
+            )
+        )
+
+        StønadsperiodeRepositoryImpl(connection).lagre(
+            behandling.id, setOf(
+                StønadsperiodeVurdering(
+                    referanse = kravReferanse,
+                    startDato = søknadsdato,
+                    begrunnelse = "Begrunnelse",
+                    relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
+                    vurdertAv = SYSTEMBRUKER,
+                    vurdertIBehandling = behandling.id,
+                    opprettet = Instant.now(),
+                    harHattOrdinærSiste52Uker = false,
+                    harGjenværendeKvote = false
+                )
+            )
+        )
+
         personopplysningRepository.lagre(
             behandling.id,
             Personopplysning(
@@ -504,6 +558,7 @@ class InformasjonskravGrunnlagTest {
                     enhetsregisteretGateway = gatewayProvider.provide(),
                     inntektskomponentenGateway = gatewayProvider.provide(),
                     unleashGateway = LokalUnleash,
+                    stønadsperiodeRepository = repositoryProvider.provide(),
                 )
             }
         }

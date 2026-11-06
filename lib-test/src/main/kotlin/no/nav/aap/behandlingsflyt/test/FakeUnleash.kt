@@ -106,7 +106,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.KlagePaaTilbakekreving to true,
         BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true,
         BehandlingsflytFeature.DatadelingBehandlingVisning to true,
-        BehandlingsflytFeature.Helseinstitusjon1Manedsregel to true
+        BehandlingsflytFeature.Helseinstitusjon1Manedsregel to true,
+        BehandlingsflytFeature.HentInnLovvalgRegisterdataForNyesteAktuelleKrav to true,
     )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
