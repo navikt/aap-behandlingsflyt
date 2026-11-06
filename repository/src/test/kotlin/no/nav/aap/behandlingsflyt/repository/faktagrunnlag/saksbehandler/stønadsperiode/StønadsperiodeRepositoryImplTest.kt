@@ -196,6 +196,24 @@ class StønadsperiodeRepositoryImplTest {
         assertThat(grunnlag).isNotNull
     }
 
+    @Test
+    fun `anvendt Arena-maksdato lagres og hentes`() {
+        val behandlingId = opprettBehandlingId()
+        val kantIKant = vurdering(behandlingId).copy(anvendtArenaMaksdato = 31 januar 2026)
+        val vanlig = vurdering(behandlingId)
+
+        dataSource.transaction { connection ->
+            StønadsperiodeRepositoryImpl(connection).lagre(behandlingId, setOf(kantIKant, vanlig))
+        }
+
+        val vurderinger = dataSource.transaction(readOnly = true) { connection ->
+            StønadsperiodeRepositoryImpl(connection).hentHvisEksisterer(behandlingId)
+        }!!.vurderinger.associateBy { it.referanse }
+
+        assertThat(vurderinger.getValue(kantIKant.referanse).anvendtArenaMaksdato).isEqualTo(31 januar 2026)
+        assertThat(vurderinger.getValue(vanlig.referanse).anvendtArenaMaksdato).isNull()
+    }
+
     val eksempelKravTyper = listOf(
         RelevantKravType.NY_STØNADSPERIODE,
         RelevantKravType.AVSLAG,

@@ -76,7 +76,8 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
                 v.vurdert_i_behandling              AS v_vurdert_i_behandling,
                 v.vurdert_tidspunkt                 AS v_vurdert_tidspunkt,
                 v.vurdert_av                        AS v_vurdert_av,
-                v.startdato                         AS v_startdato
+                v.startdato                         AS v_startdato,
+                v.anvendt_arena_maksdato            AS v_anvendt_arena_maksdato
             FROM stonadsperiode_vurdering v 
             WHERE v.stonadsperiode_vurderinger_id = ?
         """.trimIndent()
@@ -105,6 +106,7 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
                         opprettet = it.getInstant("v_vurdert_tidspunkt"),
                         vurdertAv = it.getBruker("v_vurdert_av"),
                         startDato = it.getLocalDate("v_startdato"),
+                        anvendtArenaMaksdato = it.getLocalDateOrNull("v_anvendt_arena_maksdato"),
                     )
                 }
             }
@@ -193,8 +195,8 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
 
         val query = """
                 INSERT INTO stonadsperiode_vurdering 
-                (referanse, begrunnelse, har_hatt_ordinar_siste_52_uker, har_gjenvaerende_kvote, relevant_krav_type, avslagsaarsaker, vurdert_i_behandling, vurdert_tidspunkt, stonadsperiode_vurderinger_id, vurdert_av, startdato) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (referanse, begrunnelse, har_hatt_ordinar_siste_52_uker, har_gjenvaerende_kvote, relevant_krav_type, avslagsaarsaker, vurdert_i_behandling, vurdert_tidspunkt, stonadsperiode_vurderinger_id, vurdert_av, startdato, anvendt_arena_maksdato) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         connection.executeBatch(query, vurderinger) {
@@ -231,6 +233,7 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
                 setLong(9, vurderingerId)
                 setBruker(10, vurdering.vurdertAv)
                 setLocalDate(11, vurdering.startDato)
+                setLocalDate(12, vurdering.anvendtArenaMaksdato)
             }
         }
 
