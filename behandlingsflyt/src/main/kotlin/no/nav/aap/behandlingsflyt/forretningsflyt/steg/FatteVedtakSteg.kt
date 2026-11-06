@@ -101,7 +101,8 @@ class FatteVedtakSteg(
             TypeBehandling.SvarFraAndreinstans,
             TypeBehandling.OppfølgingsBehandling,
             TypeBehandling.Aktivitetsplikt,
-            TypeBehandling.Aktivitetsplikt11_9 -> {
+            TypeBehandling.Aktivitetsplikt11_9,
+            TypeBehandling.Utenlandsopphold -> {
                 return false
             }
         }

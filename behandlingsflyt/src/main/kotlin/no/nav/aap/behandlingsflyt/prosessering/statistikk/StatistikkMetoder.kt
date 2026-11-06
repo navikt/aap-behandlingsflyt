@@ -129,6 +129,7 @@ class StatistikkMetoder(
             TypeBehandling.OppfølgingsBehandling -> null
             TypeBehandling.Aktivitetsplikt -> null
             TypeBehandling.Aktivitetsplikt11_9 -> null
+            TypeBehandling.Utenlandsopphold -> null
         }
     }
 
