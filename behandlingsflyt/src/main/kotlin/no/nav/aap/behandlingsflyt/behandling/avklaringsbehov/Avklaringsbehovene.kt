@@ -39,7 +39,11 @@ class Avklaringsbehovene(
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
-    fun leggTilFrivilligHvisMangler(definisjon: Definisjon, bruker: Bruker, legacyAutomatiskFrivillgeAvklaringsbehov: Set<Definisjon>) {
+    fun leggTilFrivilligHvisMangler(
+        definisjon: Definisjon,
+        bruker: Bruker,
+        legacyAutomatiskFrivillgeAvklaringsbehov: Set<Definisjon>
+    ) {
         if (definisjon.erFrivillig() && definisjon in legacyAutomatiskFrivillgeAvklaringsbehov) {
             if (hentBehovForDefinisjon(definisjon) == null) {
                 // Legger til frivillig behov
@@ -366,8 +370,10 @@ class Avklaringsbehovene(
         return alle().filter { avklaringsbehov -> avklaringsbehov.kreverKvalitetssikring() && avklaringsbehov.erIkkeAvbrutt() }
     }
 
+    fun avklaringsbehovSomKreverToTrinn() =  alle().filter { it.erTotrinn() && it.aktivHistorikk.any { it.status.erAvsluttet() } }
+    
     fun harAvklaringsbehovSomKreverToTrinn(): Boolean {
-        return alle().any { it.erIkkeAvbrutt() && it.erTotrinn() }
+        return avklaringsbehovSomKreverToTrinn().isNotEmpty()
     }
 
     fun harAvklaringsbehovSomKreverToTrinnMenIkkeErGodkjent(): Boolean {
