@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningGraderingLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBeregningstidspunktLøsning
@@ -22,6 +23,9 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
+import no.nav.aap.behandlingsflyt.test.LokalUnleash
+import no.nav.aap.behandlingsflyt.test.april
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedClass
 import org.junit.jupiter.params.provider.MethodSource
@@ -74,7 +78,11 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
             .medKontekst {
                 // Saken står til en-trinnskontroll hos saksbehandler klar for å bli sendt til beslutter
                 assertThat(avklaringsbehovSomMåLøses).isNotEmpty()
-                assertThat(avklaringsbehovSomMåLøses).anySatisfy { behov -> assertThat(behov.definisjon).isEqualTo(Definisjon.KVALITETSSIKRING) }
+                assertThat(avklaringsbehovSomMåLøses).anySatisfy { behov ->
+                    assertThat(behov.definisjon).isEqualTo(
+                        Definisjon.KVALITETSSIKRING
+                    )
+                }
                 assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
             }
             .bekreftVurderinger()
@@ -255,6 +263,57 @@ class BeslutterFlytTest(val unleashGateway: KClass<UnleashGateway>) : AbstraktFl
                 // Avklar samordning gradering gjenåpnes, behandlingen står i samordning-steget
                 assertThat(avklaringsbehovSomMåLøses).anySatisfy { assertThat(it.definisjon).isEqualTo(Definisjon.AVKLAR_SAMORDNING_GRADERING) }
                 assertThat(this.behandling.aktivtSteg()).isEqualTo(StegType.SAMORDNING_GRADERING)
+            }
+    }
+
+    @Test
+    fun `frivillig sykestipend skal kun totrinnskontrolleres etter at det er løst`() {
+        assumeTrue(unleashGateway == LokalUnleash::class)
+        
+        val fom = 21 april 2026
+        val (_, behandling) = sendInnFørsteSøknad(mottattTidspunkt = fom.atStartOfDay())
+
+        behandling
+            .løsSykdom(fom)
+            .løsBistand(fom)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt()
+            .løsOppholdskrav(fom)
+            .medKontekst {
+                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
+                    .containsExactly(Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER) // Eller noe som etter sykestipend
+                val sykestipend = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND)
+                assertThat(sykestipend).isNotNull
+                assertThat(sykestipend!!.erÅpent()).isTrue
+                assertThat(sykestipend.gradBehov()).isEqualTo(GradBehov.FRIVILLIG)
+                assertThat(sykestipend.kreverToTrinnsvurdering()).describedAs { "Skal ikke beslutte frevillig behov som ikke er blitt løst" }.isFalse
+                assertThat(sykestipend.kreverKvalitetssikring()).isFalse
+            }
+            .løsSykestipend()
+            .medKontekst {
+                val sykestipend = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND)
+                assertThat(sykestipend).isNotNull
+                assertThat(sykestipend!!.harAvsluttetStatusIHistorikken()).isTrue
+                assertThat(sykestipend.kreverToTrinnsvurdering()).describedAs { "Skal beslutte frivillig behov som er blitt løst" }.isTrue
+                assertThat(sykestipend.erTotrinnsVurdert()).isFalse
+            }
+            .løsAndreStatligeYtelser()
+            .foreslåVedtak()
+            .beslutterGodkjennerIkke(underkjennVurderinger = listOf(Definisjon.AVKLAR_OPPHOLDSKRAV))
+            .løsOppholdskrav(fom)
+            .medKontekst {
+                val sykestipend = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND)
+                assertThat(sykestipend).isNotNull
+                assertThat(sykestipend!!.kreverToTrinnsvurdering()).describedAs { "Skal fortsatt beslutte frivillig med løsning etter at steget har kjørt på nytt" }.isTrue
+            }
+            .løsLovvalgOverstyrt(fom, medlem = false) // Gi avslag for å trigge avbrutt behov
+            .medKontekst {
+                val sykestipend = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND)
+                assertThat(sykestipend).isNotNull
+                assertThat(sykestipend!!.kreverToTrinnsvurdering()).describedAs { "Skal ikke beslutte avbrutt frivillig behov" }.isFalse
             }
     }
 

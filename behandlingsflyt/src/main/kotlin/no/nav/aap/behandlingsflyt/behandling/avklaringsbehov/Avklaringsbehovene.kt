@@ -39,7 +39,11 @@ class Avklaringsbehovene(
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
     }
 
-    fun leggTilFrivilligHvisMangler(definisjon: Definisjon, bruker: Bruker, legacyAutomatiskFrivillgeAvklaringsbehov: Set<Definisjon>) {
+    fun leggTilFrivilligHvisMangler(
+        definisjon: Definisjon,
+        bruker: Bruker,
+        legacyAutomatiskFrivillgeAvklaringsbehov: Set<Definisjon>
+    ) {
         if (definisjon.erFrivillig() && definisjon in legacyAutomatiskFrivillgeAvklaringsbehov) {
             if (hentBehovForDefinisjon(definisjon) == null) {
                 // Legger til frivillig behov
@@ -363,25 +367,23 @@ class Avklaringsbehovene(
     }
 
     fun avklaringsbehovSomKreverKvalitetssikring(): List<Avklaringsbehov> {
-        return alle().filter { avklaringsbehov -> avklaringsbehov.kreverKvalitetssikring() && avklaringsbehov.erIkkeAvbrutt() }
+        return alle().filter { avklaringsbehov -> avklaringsbehov.kreverKvalitetssikring() }
     }
-
+    
     fun harAvklaringsbehovSomKreverToTrinn(): Boolean {
-        return alle().any { it.erIkkeAvbrutt() && it.erTotrinn() }
+        return alle().any { behov -> behov.kreverToTrinnsvurdering() }
     }
 
     fun harAvklaringsbehovSomKreverToTrinnMenIkkeErGodkjent(): Boolean {
-        return alle().any { it.erIkkeAvbrutt() && it.erTotrinn() && !it.erTotrinnsVurdert() }
+        return alle().any { behov -> behov.kreverToTrinnsvurdering() && !behov.erTotrinnsVurdert() }
     }
 
     fun harAvklaringsbehovSomKreverKvalitetssikring(): Boolean {
-        return alle()
-            .filter { avklaringsbehov -> avklaringsbehov.kreverKvalitetssikring() }
-            .any { avklaringsbehov -> avklaringsbehov.erIkkeAvbrutt() }
+        return alle().any { it.kreverKvalitetssikring() }
     }
 
     fun harAvklaringsbehovSomKreverKvalitetssikringMenIkkeErGodkjent(): Boolean {
-        return alle().any { it.erIkkeAvbrutt() && it.kreverKvalitetssikring() && !it.erKvalitetssikret() }
+        return alle().any { it.kreverKvalitetssikring() && !it.erKvalitetssikret() }
     }
 
     fun harVærtSendtTilbakeFraBeslutterTidligere(): Boolean {
