@@ -695,7 +695,6 @@ fun NormalOpenAPIRoute.driftApi(
                 respond(nyPeriode)
             }
         }
-
     }
 }
 

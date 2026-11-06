@@ -110,6 +110,7 @@ class KravStegTest {
             arenaMigreringService = arenaMigreringService,
         )
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val behandling = opprettFørstegangsbehandling(sak.id)
 
         val resultat = stegUtenAutomatisk.utfør(flytKontekstMedPerioder { this.behandling = behandling })
@@ -130,6 +131,7 @@ class KravStegTest {
             arenaMigreringService = arenaMigreringService,
         )
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val behandling = opprettFørstegangsbehandling(sak.id)
         leggTilSøknad(behandling.id, sak.id, LocalDate.of(2024, 1, 15).atStartOfDay())
 
@@ -145,6 +147,7 @@ class KravStegTest {
     fun `migrering fra Arena med automatisk migrering - lagrer MigrertKrav basert på data fra Arena`() {
         val stegMedAutomatiskMigrering = stegMedAutomatiskMigrering()
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val behandling = opprettFørstegangsbehandling(sak.id)
         arenaMigreringForSak = arenaMigrering(sak.id)
 
@@ -165,6 +168,7 @@ class KravStegTest {
     @Test
     fun `migrering fra Arena med automatisk migrering - lagrer migreringsdata for sporing`() {
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val behandling = opprettFørstegangsbehandling(sak.id)
         arenaMigreringForSak = arenaMigrering(sak.id)
 
@@ -181,6 +185,7 @@ class KravStegTest {
         val avklaringsbehovService = mockk<AvklaringsbehovService>(relaxed = true)
         val steg = stegMedAutomatiskMigrering(avklaringsbehovService)
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val behandling = opprettFørstegangsbehandling(sak.id)
         arenaMigreringForSak = arenaMigrering(sak.id)
 
@@ -205,6 +210,7 @@ class KravStegTest {
     @Test
     fun `migrering fra Arena med automatisk migrering - feiler når sak ikke finnes i Arena`() {
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val behandling = opprettFørstegangsbehandling(sak.id)
 
         assertThatThrownBy { stegMedAutomatiskMigrering().utfør(migreringKontekst(behandling)) }
@@ -215,6 +221,7 @@ class KravStegTest {
     @Test
     fun `migrering fra Arena - oppdaterer MigrertKrav når data fra Arena er endret`() {
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val behandling = opprettFørstegangsbehandling(sak.id)
         arenaMigreringForSak = arenaMigrering(sak.id)
 
@@ -252,16 +259,17 @@ class KravStegTest {
         assertThat(oppdatertKrav.vurdertIBehandling).isEqualTo(behandling.id)
 
         verify(exactly = 1) {
-            sakService.overstyrRettighetsperioden(sak.id, LocalDate.of(2026, 9, 28), any())
+            sakService.overstyrRettighetsperioden(sak, LocalDate.of(2026, 9, 28), any())
         }
         verify(exactly = 1) {
-            sakService.overstyrRettighetsperioden(sak.id, LocalDate.of(2026, 9, 21), any())
+            sakService.overstyrRettighetsperioden(sak, LocalDate.of(2026, 9, 21), any())
         }
     }
 
     @Test
     fun `migrering fra Arena - lagrer ikke på nytt når data fra Arena er uendret`() {
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val behandling = opprettFørstegangsbehandling(sak.id)
         arenaMigreringForSak = arenaMigrering(sak.id)
 
@@ -295,6 +303,7 @@ class KravStegTest {
     @Test
     fun `revurdering med migrert krav skal vurderes manuelt selv om helautomatisk-vurdering er påskrudd`() {
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val migreringsbehandling = opprettFørstegangsbehandling(sak.id)
         arenaMigreringForSak = arenaMigrering(sak.id)
         stegMedAutomatiskMigrering().utfør(migreringKontekst(migreringsbehandling))
@@ -344,6 +353,7 @@ class KravStegTest {
     @Test
     fun `revurdering uten migrert krav vurderes helautomatisk når automatisk migrering er påskrudd`() {
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val forrigeBehandling = opprettFørstegangsbehandling(sak.id)
         val revurdering = opprettRevurdering(sak.id, forrigeBehandling.id)
         leggTilSøknad(revurdering.id, sak.id, LocalDate.of(2026, 10, 1).atStartOfDay())
@@ -412,6 +422,7 @@ class KravStegTest {
     @Test
     fun `førstegangsbehandling med én søknad - lagrer ett NyttKrav med riktig dato`() {
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val behandling = opprettFørstegangsbehandling(sak.id)
         val søknadsdato = LocalDate.of(2024, 1, 15)
         leggTilSøknad(behandling.id, sak.id, søknadsdato.atStartOfDay())
@@ -429,6 +440,7 @@ class KravStegTest {
     @Test
     fun `førstegangsbehandling med tre søknader - ett NyttKrav for eldste og to Tilleggsopplysning`() {
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val behandling = opprettFørstegangsbehandling(sak.id)
         val eldsteDato = LocalDate.of(2024, 1, 10)
         leggTilSøknad(behandling.id, sak.id, eldsteDato.atStartOfDay())
@@ -446,6 +458,7 @@ class KravStegTest {
     @Test
     fun `revurdering uten rent avslag med én søknad - lagrer Tilleggsopplysning`() {
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val forrigeBehandling = opprettFørstegangsbehandling(sak.id)
         val behandling = opprettRevurdering(sak.id, forrigeBehandling.id)
         leggTilSøknad(forrigeBehandling.id, sak.id, LocalDate.of(2024, 5, 1).atStartOfDay())
@@ -473,6 +486,7 @@ class KravStegTest {
     @Disabled("Starte med kun ett relevant krav")
     fun `revurdering etter rent avslag bevarer NyttKrav fra forrige behandling og oppretter nytt`() {
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val forrigeBehandling = opprettFørstegangsbehandling(sak.id)
         val behandling = opprettRevurdering(sak.id, forrigeBehandling.id)
 
@@ -498,6 +512,7 @@ class KravStegTest {
     @Test
     fun `overstyrt krav i inneværende behandling – overstyring kopieres til nytt RelevantKrav fra søknad`() {
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val behandling = opprettFørstegangsbehandling(sak.id)
         val overstyrtDato = LocalDate.of(2023, 6, 1)
 
@@ -532,6 +547,7 @@ class KravStegTest {
     @Disabled("Starter med kun ett relevant krav")
     fun `søknad etter rent avslag skal lagres som NyttKrav selv om det finnes et overstyrt krav fra forrige behandling`() {
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val forrigeBehandling = opprettFørstegangsbehandling(sak.id)
         val behandling = opprettRevurdering(sak.id, forrigeBehandling.id)
 
@@ -564,6 +580,7 @@ class KravStegTest {
     @Test
     fun `re-kjøring av steget gir stabilt grunnlag uten duplikater`() {
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val behandling = opprettFørstegangsbehandling(sak.id)
         leggTilSøknad(behandling.id, sak.id, LocalDate.of(2024, 1, 1).atStartOfDay())
 
@@ -579,6 +596,7 @@ class KravStegTest {
     @Test
     fun `søknad før legeerklæring – søknad er krav, legeerklæring ignoreres`() {
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val behandling = opprettFørstegangsbehandling(sak.id)
         val søknadDato = LocalDate.of(2024, 1, 1)
         val legeerklæringDato = LocalDate.of(2024, 2, 1)
@@ -596,6 +614,7 @@ class KravStegTest {
     @Test
     fun `revurdering med søknad eldre enn vedtatt krav – søknad tar over som RelevantKrav, gammelt krav nedgraderes`() {
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val behandling = opprettFørstegangsbehandling(sak.id)
         val revurdering = opprettRevurdering(sak.id, behandling.id)
 
@@ -624,6 +643,7 @@ class KravStegTest {
     @Test
     fun `Tilbakedatert søknad i revurdering arver overstyrMuligRettFra fra vedtatt krav`() {
         val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
         val behandling = opprettFørstegangsbehandling(sak.id)
         val revurdering = opprettRevurdering(sak.id, behandling.id)
 

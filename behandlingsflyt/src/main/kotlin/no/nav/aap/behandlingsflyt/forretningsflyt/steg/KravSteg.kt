@@ -291,8 +291,9 @@ class KravSteg(
                 setOf(ArenaMigreringMapper.tilMigrertKrav(kravdataFraArena, kontekst.behandlingId))
             )
 
+            val sak = sakService.hent(kontekst.sakId)
             sakService.overstyrRettighetsperioden(
-                sakId = kontekst.sakId,
+                sak = sak,
                 startDato = kravdataFraArena.migreringsdato,
                 sluttDato = Tid.MAKS
             )

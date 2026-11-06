@@ -56,6 +56,12 @@ class VedtakslengdeSteg(
                     vedtakBehøverVurdering = {
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
+                            kontekst.vurderingType == VurderingType.REVURDERING &&
+                                    vedtakslengdeService.harOvergangFraUnntakTilBistandsbehov(
+                                        behandlingId = kontekst.behandlingId,
+                                        forrigeBehandlingId = kontekst.forrigeBehandlingId,
+                                    ) -> true
+
                             kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
                             else ->
                                 Vurderingsbehov.VEDTAKSLENGDE_MANUELT in kontekst.vurderingsbehovRelevanteForSteg

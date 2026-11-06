@@ -429,6 +429,7 @@ fun NormalOpenAPIRoute.saksApi(
             }
         }
 
+        @Suppress("DEPRECATION") // Erstattet av GET /api/behandling/{referanse}/egenskaper
         route("/{saksnummer}/arena-status") {
             authorizedGet<HentSakDTO, ArenaStatusDTO>(
                 AuthorizationParamPathConfig(
