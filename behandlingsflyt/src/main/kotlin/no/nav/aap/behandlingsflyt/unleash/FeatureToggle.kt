@@ -52,6 +52,7 @@ enum class BehandlingsflytFeature(
     SammenhengendeInstitusjonsopphold,
     DatadelingBehandlingVisning,
     Helseinstitusjon1Manedsregel,
+    OvergangUfoereBrevbygger,
     BackfillRedusertDagsats,
     ;
 
