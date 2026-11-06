@@ -96,9 +96,24 @@ class EtableringEgenVirksomhetService(
             )
         }
 
+        val resultat = gamleVurderinger + beregnedeVurderinger.filter { it.vurdertIBehandling == behandlingId }
+        val førsteOppstart = resultat.somFasetidslinje().perioderForFase(EtableringFase.OPPSTART).minOfOrNull { it.fom }
+
+        val avkortedeVurderinger = resultat.map { vurdering ->
+            if (
+                førsteOppstart != null &&
+                vurdering.fase == EtableringFase.UTVIKLING &&
+                vurdering.fom.isBefore(førsteOppstart)
+            ) {
+                vurdering.copy(tom = minOf(vurdering.tom ?: Tid.MAKS, førsteOppstart.minusDays(1)))
+            } else {
+                vurdering
+            }
+        }
+
         return VirksomhetEtableringResultat.Gyldig(
             Beregning(
-                gamleVurderinger + beregnedeVurderinger.filter { it.vurdertIBehandling == behandlingId },
+                avkortedeVurderinger,
             )
         )
     }
