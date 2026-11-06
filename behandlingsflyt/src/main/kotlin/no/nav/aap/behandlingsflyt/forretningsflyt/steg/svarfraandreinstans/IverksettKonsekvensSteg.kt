@@ -76,7 +76,8 @@ class IverksettKonsekvensSteg private constructor(
                 brevkategori = InnsendingType.OMGJØRING_KLAGE_REVURDERING,
                 kanal = Kanal.DIGITAL,
                 melding = konstruerMelding(vurdering, kontekst),
-                mottattTidspunkt = LocalDateTime.now()
+                mottattTidspunkt = LocalDateTime.now(),
+                opprettetAv = vurdering.vurdertAv.ident
             )
                 .medPrioritet(Prioritet.LAV),
         )

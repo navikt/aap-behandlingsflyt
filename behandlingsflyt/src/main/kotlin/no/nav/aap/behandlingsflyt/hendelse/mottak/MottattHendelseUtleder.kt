@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.AnnetRelevantDoku
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KorrigerSøknadsdatoV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.LegeerklæringV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MeldekortV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MigreringFraArenaV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
@@ -115,9 +116,14 @@ object MottattHendelseUtleder {
         }
     }
 
-    fun utledOpprettetAv(melding: Melding?): Bruker? = when (melding) {
-        is ManuellRevurderingV0 -> melding.opprettetAv?.let(::Bruker)
-        else -> null
+    fun utledOpprettetAv(melding: Melding?, opprettetAv: String? = null): Bruker? {
+        return if (opprettetAv != null) Bruker(opprettetAv)
+        else when (melding) {
+            is ManuellRevurderingV0 -> melding.opprettetAv?.let { Bruker(it) }
+            is OppfølgingsoppgaveV0 -> melding.opprettetAv?.let { Bruker(it) }
+            is MeldekortV0 -> melding.opprettetAv?.let { Bruker(it) }
+            else -> null
+        }
     }
 
     fun utledBeskrivelseForÅrsakTilOpprettelse(melding: Melding?): String? = when (melding) {

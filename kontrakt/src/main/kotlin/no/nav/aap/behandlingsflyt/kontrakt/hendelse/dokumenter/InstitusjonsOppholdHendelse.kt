@@ -19,8 +19,7 @@ public data class InstitusjonsOppholdHendelseKafkaMelding(
     var type: InstitusjonsoppholdsType,
     var kilde: InstitusjonsoppholdKilde,
     var institusjonsOpphold: Inst2KafkaDto?
-)
-{
+) {
     public fun tilInstitusjonsOppholdHendelseV0(): InstitusjonsOppholdHendelse =
         InstitusjonsOppholdHendelseV0(
             hendelsesid = hendelseId,
@@ -36,7 +35,8 @@ public data class InstitusjonsOppholdHendelseKafkaMelding(
             type = InnsendingType.INSTITUSJONSOPPHOLD,
             kanal = Kanal.DIGITAL,
             mottattTidspunkt = LocalDateTime.now(),
-            melding = this.tilInstitusjonsOppholdHendelseV0()
+            melding = this.tilInstitusjonsOppholdHendelseV0(),
+            opprettetAv = "Kelvin",
         )
     }
 
@@ -68,4 +68,3 @@ public enum class InstitusjonsoppholdKilde {
     IT,
     INST,
 }
-
