@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Opphø
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -19,11 +20,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingReferanseService
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.utils.tilForeslåVedtakDataTidslinje
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
 import javax.sql.DataSource
@@ -60,21 +65,26 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                     val referanseOppslag = behandlingRepository
                         .hentAlleFor(behandling.sakId, TypeBehandling.ytelseBehandlingstyper())
                         .associate { it.id to it.referanse }
+                    val visPeriodeEndringer = gatewayProvider.provide<UnleashGateway>()
+                        .isEnabled(BehandlingsflytFeature.VedtaksperiodeBeslutter)
 
                     val stansOgOpphørDto = stansOgOpphør.map { (fom, historikk) ->
+
                         StansOpphørDto(
                             stansOpphørFraOgMed = fom,
                             historikk = historikk.map { vurdering ->
+                                val årsaker = vurdering.vurdering.årsaker.toList()
                                 StansOpphørVurderingDto(
                                     type = when (vurdering.vurdering) {
                                         is Opphør -> StansOpphørVurderingTypeDto.OPPHØR
                                         is Stans -> StansOpphørVurderingTypeDto.STANS
                                     },
-                                    årsaker = vurdering.vurdering.årsaker.toList(),
+                                    årsaker = årsaker,
+                                    hjemler = årsaker.map { it.hjemmel }.distinct(),
                                     behandlingReferanse = requireNotNull(referanseOppslag[vurdering.vurdertIBehandling]) {
                                         "Finner ikke ytelsesbehandling i sak med behandlingsid"
-                                    }
-                                        .referanse
+                                    }.referanse,
+                                    erNy = visPeriodeEndringer && vurdering.vurdertIBehandling == behandling.id
                                 )
                             }
                         )
@@ -114,30 +124,110 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                                 }
                                 .komprimer()
 
+                        val tidligereTidslinjer: List<Tidslinje<ForeslåVedtakData>> =
+                            if (!visPeriodeEndringer) emptyList() else
+                                generateSequence(behandling.forrigeBehandlingId) { behandlingRepository.hent(it).forrigeBehandlingId }
+                                    .toList()
+                                    .reversed()
+                                    .mapNotNull {
+                                        underveisRepository.hentHvisEksisterer(it)?.tilForeslåVedtakDataTidslinje()
+                                    }
+
+                        val forrigeHelePeriode =
+                            tidligereTidslinjer.lastOrNull()?.takeIf { !it.isEmpty() }?.helePerioden()
+                        val gjeldendeHelePeriode = foreslåVedtakData.takeIf { !it.isEmpty() }?.helePerioden()
+
+                        val endretRettighetsperiode =
+                            if (visPeriodeEndringer && forrigeHelePeriode != null && gjeldendeHelePeriode != null && forrigeHelePeriode != gjeldendeHelePeriode) {
+                                EndretRettighetsperiodeDto(fra = forrigeHelePeriode, til = gjeldendeHelePeriode)
+                            } else {
+                                null
+                            }
+
+                        val forrigeSegmenter: List<Segment<ForeslåVedtakData>>? =
+                            tidligereTidslinjer.lastOrNull()?.segmenter()?.toList()
+
+                        val oppfyltPerioderNå = foreslåVedtakData.segmenter()
+                            .filter { it.verdi.first.utfall == Utfall.OPPFYLT }
+                            .map { it.periode }
+
                         val foreslåVedtakPerioder =
                             foreslåVedtakData
                                 .segmenter()
-                                .map {
-                                    val (data, vilkårsavslag) = it.verdi
+                                .map { segment ->
+                                    val (data, vilkårsavslag) = segment.verdi
+                                    val endring = utledEndringFraForrige(
+                                        segment = segment.periode,
+                                        utfall = data.utfall,
+                                        oppfyltIndex = oppfyltPerioderNå.indexOf(segment.periode),
+                                        forrigeSegmenter = forrigeSegmenter,
+                                    )
+
                                     ForeslåVedtakDto(
-                                        periode = it.periode,
+                                        periode = segment.periode,
                                         utfall = data.utfall,
                                         rettighetsType = data.rettighetsType,
                                         avslagsårsak = AvslagsårsakDto(
                                             vilkårsavslag = vilkårsavslag,
                                             underveisavslag = data.underveisÅrsak
-                                        )
+                                        ),
+                                        tidligerePerioder = endring.tidligerePerioder,
+                                        tidligereVarÅpen = endring.tidligereVarÅpen,
+                                        erNy = endring.erNy
                                     )
                                 }
+
                         ForeslåVedtakResponse(
                             foreslåVedtakPerioder,
                             stansOgOpphørDto,
                             harTilgangTilÅSaksbehandle = kanSaksbehandle(),
+                            endretRettighetsperiode = endretRettighetsperiode,
                         )
                     }
                 }
             respond(response)
         }
+    }
+}
+
+internal data class EndringFraForrige(
+    val erNy: Boolean,
+    val tidligerePerioder: List<Periode>,
+    val tidligereVarÅpen: Boolean,
+)
+
+internal fun utledEndringFraForrige(
+    segment: Periode,
+    utfall: Utfall,
+    oppfyltIndex: Int,
+    forrigeSegmenter: List<Segment<ForeslåVedtakData>>?,
+): EndringFraForrige {
+    if (forrigeSegmenter == null) {
+        return EndringFraForrige(erNy = false, tidligerePerioder = emptyList(), tidligereVarÅpen = false)
+    }
+
+    return if (utfall == Utfall.OPPFYLT) {
+        val forrigePeriode = forrigeSegmenter
+            .filter { it.verdi.utfall == Utfall.OPPFYLT }
+            .map { it.periode }
+            .getOrNull(oppfyltIndex)
+        EndringFraForrige(
+            erNy = forrigePeriode != segment,
+            tidligerePerioder = listOfNotNull(forrigePeriode?.takeIf { it != segment }),
+            tidligereVarÅpen = false,
+        )
+    } else {
+        val forrigeIndex = forrigeSegmenter.indexOfFirst {
+            it.verdi.utfall == Utfall.IKKE_OPPFYLT && it.periode.fom == segment.fom
+        }
+        val forrige = forrigeSegmenter.getOrNull(forrigeIndex)
+        val tomEndret = forrige != null && forrige.periode.tom != segment.tom
+        EndringFraForrige(
+            erNy = false,
+            tidligerePerioder = listOfNotNull(forrige?.periode?.takeIf { tomEndret }),
+            tidligereVarÅpen = tomEndret &&
+                    forrigeIndex > forrigeSegmenter.indexOfLast { it.verdi.utfall == Utfall.OPPFYLT },
+        )
     }
 }
 
