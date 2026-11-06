@@ -49,6 +49,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad
 import no.nav.aap.behandlingsflyt.repository.log.ContextRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.SakOgBehandling
@@ -62,6 +63,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.bistandsbehov.BistandRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.tidslinje.Segment
@@ -281,6 +284,7 @@ internal class BehandlingRepositoryImplTest {
         dataSource.transaction { connection ->
             val behandlingRepository = BehandlingRepositoryImpl(connection)
             val sakRepository = SakRepositoryImpl(connection)
+            val sakService = SakService(postgresRepositoryRegistry.provider(connection), minimalGatewayProvider {  })
 
             val sakFerdigMedOppfølgingsoppgave = sak(connection)
             val behandlingForSakMedOppfølgingsoppgave = finnEllerOpprettBehandling(connection, sakFerdigMedOppfølgingsoppgave)
@@ -305,10 +309,10 @@ internal class BehandlingRepositoryImplTest {
             val behandlingForSakTrukket = finnEllerOpprettBehandling(connection, sakTrukket)
             behandlingRepository.oppdaterBehandlingStatus(behandlingForSakTrukket.id, Status.AVSLUTTET)
 
-            sakRepository.oppdaterRettighetsperiode(sakFerdigMedOppfølgingsoppgave.id, Periode(LocalDate.now(), LocalDate.now().plusDays(5)))
-            sakRepository.oppdaterRettighetsperiode(sakFerdig.id, Periode(LocalDate.now(), LocalDate.now().plusDays(5)))
-            sakRepository.oppdaterRettighetsperiode(sakÅpen.id, Periode(LocalDate.now(), LocalDate.now().plusDays(5)))
-            sakRepository.oppdaterRettighetsperiode(sakTrukket.id, Periode(LocalDate.now(), LocalDate.now()))
+            sakService.overstyrRettighetsperioden(sakFerdigMedOppfølgingsoppgave, LocalDate.now(), LocalDate.now().plusDays(5))
+            sakService.overstyrRettighetsperioden(sakFerdig, LocalDate.now(), LocalDate.now().plusDays(5))
+            sakService.overstyrRettighetsperioden(sakÅpen, LocalDate.now(), LocalDate.now().plusDays(5))
+            sakService.overstyrRettighetsperioden(sakTrukket, LocalDate.now(), LocalDate.now())
 
 
             // Skal ikke hente saker med åpen ytelsesbehandling

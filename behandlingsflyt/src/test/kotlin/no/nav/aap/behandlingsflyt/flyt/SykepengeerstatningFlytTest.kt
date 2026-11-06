@@ -272,6 +272,14 @@ class SykepengeerstatningFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .medKontekst {
+                assertThat(this.avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.AVKLAR_VEDTAKSLENGDE)
+            }
+            .løsVedtakslengde(revurderingFom, søknadsdato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
+            .medKontekst {
+                assertThat(this.avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.FORESLÅ_VEDTAK)
+            }
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .medKontekst {
                 assertThat(this.avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
             }
             .fattVedtak()

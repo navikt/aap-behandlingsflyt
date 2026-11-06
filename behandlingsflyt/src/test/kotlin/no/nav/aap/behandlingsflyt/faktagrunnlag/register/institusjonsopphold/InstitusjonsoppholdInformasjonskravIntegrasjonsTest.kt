@@ -11,12 +11,14 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
+import no.nav.aap.behandlingsflyt.utils.FarligMutering
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
+@OptIn(FarligMutering::class)
 class InstitusjonsoppholdInformasjonskravIntegrasjonsTest {
 
     object FakeInstitusjonsoppholdGateway : InstitusjonsoppholdGateway {
@@ -49,7 +51,7 @@ class InstitusjonsoppholdInformasjonskravIntegrasjonsTest {
     @Test
     fun `sammenhengende opphold som strekker seg inn i rettighetsperioden skal begge lagres, selv om kun det siste overlapper isolert sett`() {
         val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = 1 mars 2026)
-        InMemorySakRepository.oppdaterRettighetsperiode(sak.id, Periode(1 mars 2026, Tid.MAKS))
+        InMemorySakRepository.oppdaterRettighetsperiode(sak, Periode(1 mars 2026, Tid.MAKS))
 
         val oppholdA = institusjonsopphold(1 januar 2026, 1 februar 2026, "Institusjon A")
         val oppholdB = institusjonsopphold(1 februar 2026, null, "Institusjon B")
@@ -82,7 +84,7 @@ class InstitusjonsoppholdInformasjonskravIntegrasjonsTest {
     @Test
     fun `opphold med gap skal ikke dras inn selv om det ligger i registeret`() {
         val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = 1 mars 2026)
-        InMemorySakRepository.oppdaterRettighetsperiode(sak.id, Periode(1 mars 2026, Tid.MAKS))
+        InMemorySakRepository.oppdaterRettighetsperiode(sak, Periode(1 mars 2026, Tid.MAKS))
 
         val gammeltOpphold = institusjonsopphold(1 januar 2026, 1 februar 2026, "Gammel institusjon")
         val relevantOpphold = institusjonsopphold(3 februar 2026, null, "Relevant institusjon")

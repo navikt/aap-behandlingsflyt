@@ -63,7 +63,7 @@ jobs:
                 **/build/reports/
                 **/build/test-results
 
-      - uses: nais/docker-build-push@0e73849f69ff260ee27597553c0a7848ca4e9795 # v0
+      - uses: nais/docker-build-push@d3a1f7e259ecc381a50435e1d4add9059429ebd7 # v0
         id: docker-push
         with:
             team: aap # required
@@ -131,7 +131,7 @@ jobs:
             with:
                 fetch-depth: 0
             #  Ha denne tidlig, så action kan skippe raskt om ingen endringer.
-          - uses: paulhatch/semantic-version@79147b94804704a613626766998afe7b2bd0bb47 # v6.0.5
+          - uses: paulhatch/semantic-version@5ae1354e589c5a67345fb2c6e65b025ff676d7c7 # v6.0.7
             id: tag
             with:
                 change_path: "kontrakt/"

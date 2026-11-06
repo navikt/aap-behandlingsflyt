@@ -67,8 +67,6 @@ class LovvalgDelvurderingRepositoryImplTest {
             val grunnlag = requireNotNull(repository.hentHvisEksisterer(behandlingId))
             assertThat(grunnlag.vurdering()).isEqualTo(vurdering)
             assertThat(grunnlag.relevantDato).isEqualTo(startDato)
-            assertThat(grunnlag.delvurderingId).isPositive()
-            assertThat(repository.hentBasertPåDelvurderingId(grunnlag.delvurderingId)).isEqualTo(grunnlag)
             assertThat(historikk(connection, behandlingId)).containsExactly(true)
         }
     }
@@ -101,12 +99,10 @@ class LovvalgDelvurderingRepositoryImplTest {
                 }
             )
             repository.lagre(behandlingId, vurdering, startDato)
-            val opprinnelig = requireNotNull(repository.hentHvisEksisterer(behandlingId))
             repository.lagre(behandlingId, endret, startDato)
             repository.lagre(behandlingId, endret, startDato)
 
             assertThat(repository.hentHvisEksisterer(behandlingId)?.vurdering()).isEqualTo(endret)
-            assertThat(repository.hentBasertPåDelvurderingId(opprinnelig.delvurderingId)).isEqualTo(opprinnelig)
             assertThat(historikk(connection, behandlingId)).containsExactly(false, true)
             val gammelVurdering = connection.queryFirst(
                 """
@@ -157,8 +153,6 @@ class LovvalgDelvurderingRepositoryImplTest {
 
             val kopiert = requireNotNull(repository.hentHvisEksisterer(til))
             assertThat(kopiert.vurdering()).isEqualTo(vurdering)
-            assertThat(kopiert.delvurderingId)
-                .isEqualTo(repository.hentHvisEksisterer(fra)?.delvurderingId)
             assertThat(vurderingerId(connection, til)).isEqualTo(vurderingerId(connection, fra))
             assertThat(historikk(connection, til)).containsExactly(true)
             assertThat(innhold(connection, vurderingerId(connection, til))).containsExactly(fra)
@@ -179,8 +173,8 @@ class LovvalgDelvurderingRepositoryImplTest {
 
             assertThat(repository.hentHvisEksisterer(fra)?.vurdering()).isEqualTo(vurdering)
             assertThat(repository.hentHvisEksisterer(til)?.vurdering()).isEqualTo(endret)
-            assertThat(repository.hentHvisEksisterer(til)?.delvurderingId)
-                .isNotEqualTo(repository.hentHvisEksisterer(fra)?.delvurderingId)
+            assertThat(repository.hentHvisEksisterer(til))
+                .isNotEqualTo(repository.hentHvisEksisterer(fra))
             assertThat(historikk(connection, fra)).containsExactly(true)
             assertThat(historikk(connection, til)).containsExactly(false, true)
             assertThat(vurderingerId(connection, til)).isNotEqualTo(opprinneligSett)
@@ -205,14 +199,6 @@ class LovvalgDelvurderingRepositoryImplTest {
                 setRowMapper { it.getLong("id") }
             }
             assertThat(vurderingerIdEtterSletting).isNull()
-        }
-    }
-
-    @Test
-    fun `oppslag med ukjent delvurderingId returnerer null`() {
-        dataSource.transaction { connection ->
-            val repository = LovvalgDelvurderingRepositoryImpl(connection)
-            assertThat(repository.hentBasertPåDelvurderingId(-1L)).isNull()
         }
     }
 
