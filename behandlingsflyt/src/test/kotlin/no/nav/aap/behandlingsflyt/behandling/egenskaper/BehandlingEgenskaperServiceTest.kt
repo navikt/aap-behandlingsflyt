@@ -79,33 +79,33 @@ class BehandlingEgenskaperServiceTest {
         InMemoryKravRepository.lagre(behandling.id, setOf(krav))
         InMemoryStønadsperiodeRepository.lagre(
             behandling.id,
-            setOf(lagStønadsperiodeVurdering(behandling.id, krav.referanse, anvendtArenaMaksdato = null)),
+            setOf(lagStønadsperiodeVurdering(behandling.id, krav.referanse, erKantIKantMedArena = false)),
         )
 
         assertThat(hentEgenskaper(behandling).erKantIKantMedArena).isFalse()
     }
 
     @Test
-    fun `behandling med anvendt Arena-maksdato på gjeldende krav er kant i kant med Arena`() {
+    fun `behandling med kant i kant-vurdering på gjeldende krav er kant i kant med Arena`() {
         val (_, behandling) = opprettInMemorySakOgBehandling()
         val krav = lagRelevantKrav(behandling.id, Kravreferanse.ny())
         InMemoryKravRepository.lagre(behandling.id, setOf(krav))
         InMemoryStønadsperiodeRepository.lagre(
             behandling.id,
-            setOf(lagStønadsperiodeVurdering(behandling.id, krav.referanse, anvendtArenaMaksdato = ARENA_MAKSDATO)),
+            setOf(lagStønadsperiodeVurdering(behandling.id, krav.referanse, erKantIKantMedArena = true)),
         )
 
         assertThat(hentEgenskaper(behandling).erKantIKantMedArena).isTrue()
     }
 
     @Test
-    fun `anvendt Arena-maksdato på krav som ikke lenger er gjeldende gir ikke kant i kant`() {
+    fun `kant i kant-vurdering på krav som ikke lenger er gjeldende gir ikke kant i kant`() {
         val (_, behandling) = opprettInMemorySakOgBehandling()
         val krav = lagRelevantKrav(behandling.id, Kravreferanse.ny())
         InMemoryKravRepository.lagre(behandling.id, setOf(krav))
         InMemoryStønadsperiodeRepository.lagre(
             behandling.id,
-            setOf(lagStønadsperiodeVurdering(behandling.id, Kravreferanse.ny(), anvendtArenaMaksdato = ARENA_MAKSDATO)),
+            setOf(lagStønadsperiodeVurdering(behandling.id, Kravreferanse.ny(), erKantIKantMedArena = true)),
         )
 
         assertThat(hentEgenskaper(behandling).erKantIKantMedArena).isFalse()
@@ -156,22 +156,21 @@ class BehandlingEgenskaperServiceTest {
     private fun lagStønadsperiodeVurdering(
         behandlingId: BehandlingId,
         referanse: Kravreferanse,
-        anvendtArenaMaksdato: LocalDate?,
+        erKantIKantMedArena: Boolean,
     ) = StønadsperiodeVurdering(
         referanse = referanse,
         opprettet = Instant.now(),
         vurdertIBehandling = behandlingId,
         vurdertAv = SYSTEMBRUKER,
         begrunnelse = "Test",
-        harHattOrdinærSiste52Uker = anvendtArenaMaksdato != null,
+        harHattOrdinærSiste52Uker = erKantIKantMedArena,
         harGjenværendeKvote = false,
         relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
-        startDato = anvendtArenaMaksdato?.plusDays(1) ?: MULIG_RETT_FRA,
-        anvendtArenaMaksdato = anvendtArenaMaksdato,
+        startDato = MULIG_RETT_FRA,
+        erKantIKantMedArena = erKantIKantMedArena,
     )
 
     private companion object {
         val MULIG_RETT_FRA: LocalDate = LocalDate.of(2024, 1, 1)
-        val ARENA_MAKSDATO: LocalDate = LocalDate.of(2023, 12, 31)
     }
 }

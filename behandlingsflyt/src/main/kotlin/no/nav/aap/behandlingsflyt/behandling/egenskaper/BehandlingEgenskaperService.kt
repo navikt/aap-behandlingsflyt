@@ -54,7 +54,7 @@ class BehandlingEgenskaperGrunnlagService(
         return stønadsperiodeRepository.hentHvisEksisterer(behandling.id)
             ?.gjeldendeVurderinger()
             .orEmpty()
-            .any { it.referanse in gjeldendeKravreferanser && it.anvendtArenaMaksdato != null }
+            .any { it.referanse in gjeldendeKravreferanser && it.erKantIKantMedArena }
     }
 }
 

@@ -369,13 +369,13 @@ class AvklarStønadsperiodeStegTest {
     private fun assertKantIKant(vurdering: StønadsperiodeVurdering) {
         assertThat(vurdering.startDato).isEqualTo(DAGEN_ETTER_MAKSDATO)
         assertThat(vurdering.harHattOrdinærSiste52Uker).isTrue()
-        assertThat(vurdering.anvendtArenaMaksdato).isEqualTo(MAKSDATO)
+        assertThat(vurdering.erKantIKantMedArena).isTrue()
     }
 
     private fun assertVanligVurdering(vurdering: StønadsperiodeVurdering, startDato: LocalDate) {
         assertThat(vurdering.startDato).isEqualTo(startDato)
         assertThat(vurdering.harHattOrdinærSiste52Uker).isFalse()
-        assertThat(vurdering.anvendtArenaMaksdato).isNull()
+        assertThat(vurdering.erKantIKantMedArena).isFalse()
     }
 
     private fun assertStopperPåTidligereKrav(behandlingId: BehandlingId, kravVedOvergang: RelevantKrav) {

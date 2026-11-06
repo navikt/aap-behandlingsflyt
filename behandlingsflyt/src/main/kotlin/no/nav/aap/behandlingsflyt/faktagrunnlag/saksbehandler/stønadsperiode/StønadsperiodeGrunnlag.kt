@@ -41,10 +41,9 @@ data class StønadsperiodeVurdering(
     val relevantKravType: RelevantKravType,
     val startDato: LocalDate,
     /**
-     * Maksdato fra tilstøtende Arena-sak som ble lagt til grunn da kravet ble vurdert som kant i kant
-     * med Arena. Null betyr at vurderingen ikke er kant i kant.
+     * Startdatoen er satt til dagen etter maksdato i tilstøtende Arena-sak.
      */
-    val anvendtArenaMaksdato: LocalDate? = null,
+    val erKantIKantMedArena: Boolean = false,
 ) : VurderingForKrav {
     init {
 

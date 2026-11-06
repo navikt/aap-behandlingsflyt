@@ -105,7 +105,7 @@ class AvklarStønadsperiodeSteg(
                 harGjenværendeKvote = false,
                 relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
                 startDato = arenaMaksdato.maksdato.plusDays(1),
-                anvendtArenaMaksdato = arenaMaksdato.maksdato,
+                erKantIKantMedArena = true,
             )
         }
 

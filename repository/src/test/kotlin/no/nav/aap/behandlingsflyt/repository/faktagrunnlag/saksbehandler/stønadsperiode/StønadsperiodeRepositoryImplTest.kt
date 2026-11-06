@@ -197,9 +197,9 @@ class StønadsperiodeRepositoryImplTest {
     }
 
     @Test
-    fun `anvendt Arena-maksdato lagres og hentes`() {
+    fun `kant i kant med Arena lagres og hentes`() {
         val behandlingId = opprettBehandlingId()
-        val kantIKant = vurdering(behandlingId).copy(anvendtArenaMaksdato = 31 januar 2026)
+        val kantIKant = vurdering(behandlingId).copy(erKantIKantMedArena = true)
         val vanlig = vurdering(behandlingId)
 
         dataSource.transaction { connection ->
@@ -210,8 +210,8 @@ class StønadsperiodeRepositoryImplTest {
             StønadsperiodeRepositoryImpl(connection).hentHvisEksisterer(behandlingId)
         }!!.vurderinger.associateBy { it.referanse }
 
-        assertThat(vurderinger.getValue(kantIKant.referanse).anvendtArenaMaksdato).isEqualTo(31 januar 2026)
-        assertThat(vurderinger.getValue(vanlig.referanse).anvendtArenaMaksdato).isNull()
+        assertThat(vurderinger.getValue(kantIKant.referanse).erKantIKantMedArena).isTrue()
+        assertThat(vurderinger.getValue(vanlig.referanse).erKantIKantMedArena).isFalse()
     }
 
     val eksempelKravTyper = listOf(
