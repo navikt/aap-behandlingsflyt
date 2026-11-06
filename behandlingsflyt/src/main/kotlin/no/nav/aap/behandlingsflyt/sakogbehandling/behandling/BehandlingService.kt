@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDateTime
 
@@ -248,12 +249,14 @@ class BehandlingService(
         vurderingsbehov: Vurderingsbehov,
         opprettet: LocalDateTime = LocalDateTime.now(),
         beskrivelse: String? = null,
+        opprettetAv: Bruker? = null,
     ): Behandling {
         val vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
             vurderingsbehov = listOf(VurderingsbehovMedPeriode(vurderingsbehov)),
             årsak = årsak,
             opprettet = opprettet,
-            beskrivelse = beskrivelse
+            opprettetAv = opprettetAv,
+            beskrivelse = beskrivelse,
         )
 
         val behandlingstype = when (vurderingsbehov) {

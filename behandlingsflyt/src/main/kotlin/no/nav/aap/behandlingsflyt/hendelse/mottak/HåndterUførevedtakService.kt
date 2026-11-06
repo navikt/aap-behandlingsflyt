@@ -60,7 +60,8 @@ class HåndterUførevedtakService(
         sakId: SakId,
         referanse: InnsendingReferanse,
         uførevedtak: UførevedtakV0,
-        mottattTidspunkt: LocalDateTime
+        mottattTidspunkt: LocalDateTime,
+        opprettetAv: String? = null,
     ) {
         val sisteYtelsesBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId)
             ?: error("Finnes ingen ytelsesbehandling for sakId $sakId")
@@ -93,6 +94,7 @@ class HåndterUførevedtakService(
                         årsak = ÅrsakTilOpprettelse.UFØRE_VEDTAK_HENDELSE,
                         vurderingsbehov = listOf(VurderingsbehovMedPeriode(vurderingsbehov)),
                         opprettet = mottattTidspunkt,
+                        opprettetAv = MottattHendelseUtleder.utledOpprettetAv(uførevedtak, opprettetAv),
                         beskrivelse = uførevedtak.beskrivelseVurderingsbehov()
                     )
                 )
@@ -114,6 +116,7 @@ class HåndterUførevedtakService(
                             årsak = ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA,
                             vurderingsbehov = listOf(VurderingsbehovMedPeriode(vurderingsbehov)),
                             opprettet = mottattTidspunkt,
+                            opprettetAv = MottattHendelseUtleder.utledOpprettetAv(uførevedtak, opprettetAv),
                             beskrivelse = uførevedtak.beskrivelseVurderingsbehov()
                         )
                     ).åpenBehandling ?: error("Klarte ikke å finne eller opprette en behandling for sak $sakId")

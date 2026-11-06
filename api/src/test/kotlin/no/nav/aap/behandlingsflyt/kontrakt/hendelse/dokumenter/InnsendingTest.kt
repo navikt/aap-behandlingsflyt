@@ -7,10 +7,54 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.time.LocalDate
 
 
 class InnsendingTest {
+
+    @Test
+    fun `innsending bevarer nytt felt opprettetAv og legacy opprettetAv`() {
+        val json = """
+            {
+                "saksnummer": "123",
+                "referanse": {"type": "REVURDERING_ID", "verdi": "revurdering"},
+                "type": "MANUELL_REVURDERING",
+                "mottattTidspunkt": "2026-01-01T12:00:00",
+                "opprettetAv": "Z123456",
+                "melding": {
+                    "meldingType": "ManuellRevurderingV0",
+                    "årsakerTilBehandling": [],
+                    "beskrivelse": "Revurdering",
+                    "opprettetAv": "Z654321"
+                }
+            }
+        """
+        val innsending = DefaultJsonMapper.fromJson<Innsending>(json)
+        val roundtrip = DefaultJsonMapper.fromJson<Innsending>(DefaultJsonMapper.toJson(innsending))
+
+        assertThat(roundtrip.opprettetAv).isEqualTo("Z123456")
+        assertThat((roundtrip.melding as ManuellRevurderingV0).opprettetAv).isEqualTo("Z654321")
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["", ", \"opprettetAv\": null"])
+    fun `innsending tillater manglende og eksplisitt nullverdi på opprettetAv`(opprettetAv: String) {
+        val json = """
+            {
+                "saksnummer": "123",
+                "referanse": {"type": "JOURNALPOST", "verdi": "journalpost"},
+                "type": "DIALOGMELDING",
+                "mottattTidspunkt": "2026-01-01T12:00:00"
+                $opprettetAv
+            }
+        """
+        val innsending = DefaultJsonMapper.fromJson<Innsending>(json)
+        assertThat(innsending.opprettetAv).isNull()
+        assertThat(
+            DefaultJsonMapper.fromJson<Innsending>(DefaultJsonMapper.toJson(innsending)).opprettetAv
+        ).isNull()
+    }
 
     @Test
     fun `deserialisering - komplett Søknad`() {

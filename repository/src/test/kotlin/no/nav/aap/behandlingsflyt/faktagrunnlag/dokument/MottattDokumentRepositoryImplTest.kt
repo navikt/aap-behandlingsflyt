@@ -48,7 +48,8 @@ internal class MottattDokumentRepositoryImplTest {
             kanal = Kanal.PAPIR,
             status = Status.MOTTATT,
             strukturertDokument = null,
-            digitalisertAvPostmottak = true
+            digitalisertAvPostmottak = true,
+            opprettetAv = "Z123456"
         )
 
         // ACT
@@ -66,6 +67,7 @@ internal class MottattDokumentRepositoryImplTest {
             mottattDokument.behandlingId, mottattDokument.sakId, mottattDokument.kanal
         )
         assertThat(res.first().digitalisertAvPostmottak).isTrue()
+        assertThat(res.first().opprettetAv).isEqualTo("Z123456")
     }
 
     @Test
@@ -108,6 +110,7 @@ internal class MottattDokumentRepositoryImplTest {
 
         assertThat(hentetDokument.behandlingId).isEqualTo(behandling.id)
         assertThat(hentetDokument.status).isEqualTo(Status.BEHANDLET)
+        assertThat(hentetDokument.opprettetAv).isNull()
     }
 
     @Test

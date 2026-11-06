@@ -30,6 +30,8 @@ object InMemoryMottattDokumentRepository : MottattDokumentRepository {
                             kanal = it.kanal,
                             status = it.status,
                             strukturertDokument = it.strukturertDokument,
+                            digitalisertAvPostmottak = it.digitalisertAvPostmottak,
+                            opprettetAv = it.opprettetAv,
                         )
                     )
 
@@ -70,7 +72,9 @@ object InMemoryMottattDokumentRepository : MottattDokumentRepository {
                             type = it.type,
                             kanal = it.kanal,
                             status = status,
-                            strukturertDokument = it.strukturertDokument
+                            strukturertDokument = it.strukturertDokument,
+                            digitalisertAvPostmottak = it.digitalisertAvPostmottak,
+                            opprettetAv = it.opprettetAv
                         )
                     )
                 }
@@ -97,7 +101,9 @@ object InMemoryMottattDokumentRepository : MottattDokumentRepository {
                             type = it.type,
                             kanal = it.kanal,
                             status = it.status,
-                            strukturertDokument = it.strukturertDokument
+                            strukturertDokument = it.strukturertDokument,
+                            digitalisertAvPostmottak = it.digitalisertAvPostmottak,
+                            opprettetAv = it.opprettetAv
                         )
                     )
                 }

@@ -47,6 +47,7 @@ class HåndterKlageService(
         mottattTidspunkt: LocalDateTime,
         brevkategori: InnsendingType,
         melding: Klage,
+        opprettetAv: String? = null,
     ) {
         val vurderingsbehov = MottattHendelseUtleder.utledVurderingsbehov(brevkategori, melding)
         when (melding) {
@@ -61,7 +62,8 @@ class HåndterKlageService(
                             årsak = ÅrsakTilOpprettelse.KLAGE,
                             vurderingsbehov = vurderingsbehov,
                             beskrivelse = melding.beskrivelse,
-                            opprettet = mottattTidspunkt
+                            opprettet = mottattTidspunkt,
+                            opprettetAv = MottattHendelseUtleder.utledOpprettetAv(melding, opprettetAv)
                         )
                     ).åpenBehandling
                 } ?: error("Fant ikke behandling for å håndtere mottatt klage på sak $sakId")
@@ -82,6 +84,7 @@ class HåndterKlageService(
         mottattTidspunkt: LocalDateTime,
         melding: OmgjøringKlageRevurdering,
         brevkategori: InnsendingType,
+        opprettetAv: String? = null,
     ) {
         log.info("Håndterer mottatt omgjøring etter klage på sak-id $sakId, og referanse $referanse")
         val vurderingsbehov = MottattHendelseUtleder.utledVurderingsbehov(brevkategori, melding)
@@ -101,7 +104,8 @@ class HåndterKlageService(
                     årsakTilOpprettelse,
                     it,
                     mottattTidspunkt,
-                    beskrivelse
+                    beskrivelse,
+                    opprettetAv = MottattHendelseUtleder.utledOpprettetAv(melding, opprettetAv)
                 )
                 prosesserBehandling.triggProsesserBehandling(opprettet)
                 opprettet
@@ -119,6 +123,7 @@ class HåndterKlageService(
                 årsak = årsakTilOpprettelse,
                 vurderingsbehov = vurderingsbehovForYtelsesbehandling,
                 opprettet = mottattTidspunkt,
+                opprettetAv = MottattHendelseUtleder.utledOpprettetAv(melding, opprettetAv),
                 beskrivelse = melding.beskrivelse
             )
         )
@@ -142,5 +147,4 @@ class HåndterKlageService(
     }
 
 }
-
 

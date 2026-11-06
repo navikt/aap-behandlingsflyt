@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.meldekort
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.journalføring.JournalføringService
 import no.nav.aap.meldeplikt.MeldepliktStatus
@@ -196,6 +197,11 @@ class MeldekortServiceTest {
         val resultat = service().oppdaterMeldekort(oppdaterMeldekort)
 
         assertThat(resultat.journalpostId).isEqualTo(JournalpostId("journalpost-3"))
+        verify(exactly = 1) {
+            mottattHendelseService.registrerMottattHendelse(match {
+                it.opprettetAv == oppdaterMeldekort.bruker.ident
+            })
+        }
     }
 
     @Test
@@ -262,9 +268,15 @@ class MeldekortServiceTest {
             journalføringService.journalførMeldekort(any(), isNull(), any(), any(), any(), any(), any(), any())
         } returns JournalpostId("journalpost-4")
 
-        val resultat = service().registrerMeldedato(registrerMeldedato(20 januar 2025))
+        val registrering = registrerMeldedato(20 januar 2025)
+        val resultat = service().registrerMeldedato(registrering)
 
         assertThat(resultat.journalpostId).isEqualTo(JournalpostId("journalpost-4"))
+        verify(exactly = 1) {
+            mottattHendelseService.registrerMottattHendelse(match {
+                it.opprettetAv == registrering.bruker.ident
+            })
+        }
     }
 
     private fun registrerMeldedato(meldedato: LocalDate) = RegistrerMeldedato(

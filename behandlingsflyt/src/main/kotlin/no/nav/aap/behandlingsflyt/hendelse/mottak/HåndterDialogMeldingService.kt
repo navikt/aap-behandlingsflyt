@@ -32,6 +32,7 @@ class HåndterDialogMeldingService(
         referanse: InnsendingReferanse,
         brevkategori: InnsendingType,
         melding: Melding?,
+        opprettetAv: String? = null,
     ) {
         val sak = sakService.hent(sakId)
         val vurderingsbehov = MottattHendelseUtleder.utledVurderingsbehov(brevkategori, melding)
@@ -46,7 +47,11 @@ class HåndterDialogMeldingService(
             if (sisteYtelsesBehandling.status().erÅpen()) {
                 behandlingService.oppdaterVurderingsbehovOgÅrsak(
                     sisteYtelsesBehandling,
-                    VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse)
+                    VurderingsbehovOgÅrsak(
+                        vurderingsbehov,
+                        årsakTilOpprettelse,
+                        opprettetAv = MottattHendelseUtleder.utledOpprettetAv(melding, opprettetAv)
+                    )
                 )
                 prosesserBehandling.triggProsesserBehandling(sisteYtelsesBehandling)
                 log.info("Prosessert behandling etter mottatt dialogmelding ${sisteYtelsesBehandling.id}")
@@ -55,5 +60,4 @@ class HåndterDialogMeldingService(
         }
     }
 }
-
 

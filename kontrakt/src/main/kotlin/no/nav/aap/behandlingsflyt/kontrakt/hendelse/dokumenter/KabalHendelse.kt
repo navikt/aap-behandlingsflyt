@@ -39,7 +39,8 @@ public data class KabalHendelseKafkaMelding(
             type = InnsendingType.KABAL_HENDELSE,
             kanal = Kanal.DIGITAL,
             mottattTidspunkt = LocalDateTime.now(),
-            melding = this.tilKabalHendelseV0()
+            melding = this.tilKabalHendelseV0(),
+            opprettetAv = "Kelvin"
         )
     }
 }

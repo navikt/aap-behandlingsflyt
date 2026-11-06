@@ -42,6 +42,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.time.Instant
 import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicLong
@@ -116,6 +118,28 @@ class HåndterUførevedtakServiceTest {
         verify(exactly = 0) { behandlingService.finnEllerOpprettBehandling(sakId, any()) }
         assertThat(InMemoryMottattDokumentRepository.hent(sakId, referanse).status)
             .isEqualTo(BEHANDLET)
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `felt opprettetAv fra innsending brukes ved både automatisk og manuelt opphør`(automatisk: Boolean) {
+        flags[BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende] = automatisk
+        val forventetVurderingsbehov = if (automatisk) {
+            Vurderingsbehov.OVERGANG_UFORE_AUTOMATISK_STANS
+        } else {
+            Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
+        }
+
+        service.håndterMottattUførevedtakHendelse(
+            sakId, referanse, vedtak, dato.atTime(12, 0), opprettetAv = "Kelvin"
+        )
+
+        verify(exactly = 1) {
+            behandlingService.finnEllerOpprettBehandling(sakId, match {
+                it.opprettetAv == SYSTEMBRUKER &&
+                        it.vurderingsbehov.single().type == forventetVurderingsbehov
+            })
+        }
     }
 
     @Test

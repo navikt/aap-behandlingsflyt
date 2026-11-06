@@ -41,6 +41,7 @@ import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.server.auth.token
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -100,7 +101,8 @@ fun NormalOpenAPIRoute.saksApi(
                     val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
 
                     val behandling = behandlingService.opprettAktivitetspliktBehandling(
-                        sakId, ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE, body.vurderingsbehov.tilVurderingsbehov()
+                        sakId, ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE, body.vurderingsbehov.tilVurderingsbehov(),
+                        opprettetAv = bruker()
                     )
 
                     ProsesserBehandlingService(repositoryProvider, gatewayProvider).triggProsesserBehandling(behandling)
@@ -276,6 +278,7 @@ fun NormalOpenAPIRoute.saksApi(
                             type = InnsendingType.MIGRERING_FRA_ARENA,
                             mottattTidspunkt = LocalDateTime.now(),
                             melding = MigreringFraArenaV0("Migrering av Arenasak ${dto.saksnummerArena}"),
+                            opprettetAv = bruker().ident,
                         )
                     )
 

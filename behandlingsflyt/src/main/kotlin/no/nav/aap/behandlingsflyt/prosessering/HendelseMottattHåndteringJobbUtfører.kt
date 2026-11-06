@@ -40,6 +40,7 @@ private const val KANAL = "kanal"
 private const val MOTTATT_DOKUMENT_REFERANSE = "referanse"
 private const val MOTTATT_TIDSPUNKT = "mottattTidspunkt"
 private const val DIGITALISERT_AV_POSTMOTTAK = "digitalisertAvPostmottak"
+private const val OPPRETTET_AV = "opprettetAv"
 
 class HendelseMottattHåndteringJobbUtfører(
     private val låsRepository: TaSkriveLåsRepository,
@@ -76,6 +77,7 @@ class HendelseMottattHåndteringJobbUtfører(
         val digitalisertAvPostmottak = input.optionalParameter(DIGITALISERT_AV_POSTMOTTAK)?.let {
             DefaultJsonMapper.fromJson<Boolean?>(it)
         }
+        val opprettetAv = input.optionalParameter(OPPRETTET_AV)
 
         if (kjennerTilDokumentFraFør(referanse, innsendingType, sakId)) {
             log.warn("Allerede håndtert dokument med referanse {}", referanse)
@@ -90,10 +92,11 @@ class HendelseMottattHåndteringJobbUtfører(
             brevkategori = innsendingType,
             kanal = kanal,
             strukturertDokument = if (payloadAsString != null) UnparsedStrukturertDokument(payloadAsString) else null,
-            digitalisertAvPostmottak = digitalisertAvPostmottak
+            digitalisertAvPostmottak = digitalisertAvPostmottak,
+            opprettetAv = opprettetAv
         )
 
-        håndterMottattDokument(innsendingType, parsedMelding, sakId, referanse, mottattTidspunkt)
+        håndterMottattDokument(innsendingType, parsedMelding, sakId, referanse, mottattTidspunkt, opprettetAv)
 
         låsRepository.verifiserSkrivelås(sakSkrivelås)
     }
@@ -103,7 +106,8 @@ class HendelseMottattHåndteringJobbUtfører(
         parsedMelding: Melding?,
         sakId: SakId,
         referanse: InnsendingReferanse,
-        mottattTidspunkt: LocalDateTime
+        mottattTidspunkt: LocalDateTime,
+        opprettetAv: String?
     ) {
         when (innsendingType) {
             InnsendingType.NY_ÅRSAK_TIL_BEHANDLING -> {
@@ -113,7 +117,8 @@ class HendelseMottattHåndteringJobbUtfører(
                     behandlingsreferanse = BehandlingReferanse(UUID.fromString(parsedMelding.behandlingReferanse)),
                     innsendingType = innsendingType,
                     melding = parsedMelding,
-                    referanse = referanse
+                    referanse = referanse,
+                    opprettetAv = opprettetAv
                 )
             }
 
@@ -124,6 +129,7 @@ class HendelseMottattHåndteringJobbUtfører(
                     mottattTidspunkt = mottattTidspunkt,
                     brevkategori = innsendingType,
                     melding = parsedMelding as Klage,
+                    opprettetAv = opprettetAv,
                 )
             }
 
@@ -142,6 +148,7 @@ class HendelseMottattHåndteringJobbUtfører(
                     referanse = referanse,
                     brevkategori = innsendingType,
                     melding = parsedMelding,
+                    opprettetAv = opprettetAv,
                 )
             }
 
@@ -152,6 +159,7 @@ class HendelseMottattHåndteringJobbUtfører(
                     mottattTidspunkt = mottattTidspunkt,
                     brevkategori = innsendingType,
                     melding = parsedMelding as OmgjøringKlageRevurdering,
+                    opprettetAv = opprettetAv,
                 )
             }
 
@@ -175,6 +183,7 @@ class HendelseMottattHåndteringJobbUtfører(
                     referanse = referanse,
                     uførevedtak = parsedMelding as UførevedtakV0,
                     mottattTidspunkt = mottattTidspunkt,
+                    opprettetAv = opprettetAv,
                 )
             }
 
@@ -191,7 +200,8 @@ class HendelseMottattHåndteringJobbUtfører(
                     referanse,
                     mottattTidspunkt,
                     innsendingType,
-                    parsedMelding
+                    parsedMelding,
+                    opprettetAv = opprettetAv
                 )
             }
 
@@ -201,7 +211,8 @@ class HendelseMottattHåndteringJobbUtfører(
                     referanse,
                     mottattTidspunkt,
                     innsendingType,
-                    parsedMelding
+                    parsedMelding,
+                    opprettetAv = opprettetAv
                 )
             }
         }
@@ -225,7 +236,8 @@ class HendelseMottattHåndteringJobbUtfører(
             kanal: Kanal,
             melding: Melding? = null,
             mottattTidspunkt: LocalDateTime,
-            digitalisertAvPostmottak: Boolean? = null
+            digitalisertAvPostmottak: Boolean? = null,
+            opprettetAv: String? = null
         ) = JobbInput(HendelseMottattHåndteringJobbUtfører)
             .apply {
                 forSak(sakId.toLong())
@@ -235,6 +247,7 @@ class HendelseMottattHåndteringJobbUtfører(
                 medParameter(KANAL, kanal.name)
                 medParameter(MOTTATT_TIDSPUNKT, DefaultJsonMapper.toJson(mottattTidspunkt))
                 medParameter(DIGITALISERT_AV_POSTMOTTAK, DefaultJsonMapper.toJson(digitalisertAvPostmottak ?: false))
+                opprettetAv?.let { medParameter(OPPRETTET_AV, it) }
                 medPayload(melding)
                     .medPrioritet(utledPrioritet(brevkategori))
             }

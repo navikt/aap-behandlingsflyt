@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -69,6 +70,7 @@ class SendAutomatiskMeldekortJobbUtfører(
             kanal = Kanal.DIGITAL,
             melding = meldekort,
             mottattTidspunkt = LocalDateTime.now(clock),
+            opprettetAv = SYSTEMBRUKER.ident,
         )
 
         flytJobbRepository.leggTil(jobb)

@@ -202,8 +202,10 @@ class BehandlingHendelseServiceImpl(
             InnsendingType.MANUELL_REVURDERING
         ).minByOrNull { it.mottattTidspunkt }
 
-        val manuellVurdering = eldsteManuellVurderingDokument?.strukturerteData<ManuellRevurderingV0>()?.data
-        return manuellVurdering?.opprettetAv?.let(::Bruker)
+        val dokument = eldsteManuellVurderingDokument ?: return null
+        val opprettetAv = dokument.opprettetAv
+            ?: dokument.strukturerteData<ManuellRevurderingV0>()?.data?.opprettetAv
+        return opprettetAv?.let(::Bruker)
     }
 
     private fun finnReserverTilBrukerGittVurderingsbehov(
@@ -268,7 +270,8 @@ class BehandlingHendelseServiceImpl(
         MottattDokumentDto(
             type = this.type,
             referanse = this.referanse,
-            mottattTidspunkt = this.mottattTidspunkt
+            mottattTidspunkt = this.mottattTidspunkt,
+            opprettetAv = this.opprettetAv
         )
 }
 

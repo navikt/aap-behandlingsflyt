@@ -31,7 +31,8 @@ public data class SykepengevedtakKafkaMelding(
             type = InnsendingType.SYKEPENGE_VEDTAK_HENDELSE,
             kanal = Kanal.DIGITAL,
             mottattTidspunkt = LocalDateTime.now(),
-            melding = this.tilSykepengeSpleisVedtakV0()
+            melding = this.tilSykepengeSpleisVedtakV0(),
+            opprettetAv = "Kelvin"
         )
     }
 
@@ -47,4 +48,3 @@ public data class SykepengevedtakV0(
 public enum class SykepengevedtakKilde {
     SPLEIS,
 }
-

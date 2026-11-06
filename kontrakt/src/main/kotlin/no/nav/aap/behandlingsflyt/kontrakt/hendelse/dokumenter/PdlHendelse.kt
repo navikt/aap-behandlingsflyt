@@ -91,7 +91,8 @@ public fun PdlPersonHendelse.tilInnsendingDødsfallBruker(saksnummer: Saksnummer
     type = InnsendingType.PDL_HENDELSE_DODSFALL_BRUKER,
     kanal = Kanal.DIGITAL,
     mottattTidspunkt = LocalDateTime.now(),
-    melding = tilPdlHendelseDodsfallBrukerV0(navn, identer.filter { it.length == 11 && it.all { character -> character.isDigit() }})
+    melding = tilPdlHendelseDodsfallBrukerV0(navn, identer.filter { it.length == 11 && it.all { character -> character.isDigit() }}),
+    opprettetAv = "Kelvin",
 )
 
 public fun PdlPersonHendelse.tilInnsendingFolkeregisterIdentHendelse(saksnummer: Saksnummer, navn: Navn?, identer: List<String>): Innsending = Innsending(
@@ -100,7 +101,8 @@ public fun PdlPersonHendelse.tilInnsendingFolkeregisterIdentHendelse(saksnummer:
     type = InnsendingType.PDL_HENDELSE_FOLKEREGISTERIDENT,
     kanal = Kanal.DIGITAL,
     mottattTidspunkt = LocalDateTime.now(),
-    melding = tilPdlHendelseFolkeregisteridentV0(navn, identer.filter { it.length == 11 && it.all { character -> character.isDigit() }})
+    melding = tilPdlHendelseFolkeregisteridentV0(navn, identer.filter { it.length == 11 && it.all { character -> character.isDigit() }}),
+    opprettetAv = "Kelvin",
 )
 
 public fun PdlPersonHendelse.tilInnsendingDødsfallBarn(saksnummer: Saksnummer, navn: Navn?, identer: List<String>): Innsending = Innsending(
@@ -109,7 +111,7 @@ public fun PdlPersonHendelse.tilInnsendingDødsfallBarn(saksnummer: Saksnummer, 
     type = InnsendingType.PDL_HENDELSE_DODSFALL_BARN,
     kanal = Kanal.DIGITAL,
     mottattTidspunkt = LocalDateTime.now(),
-    melding = tilPdlHendelseDodsfallBarnV0(navn, identer.filter { it.length == 11 && it.all { character -> character.isDigit() }})
+    melding = tilPdlHendelseDodsfallBarnV0(navn, identer.filter { it.length == 11 && it.all { character -> character.isDigit() }}),
+    opprettetAv = "Kelvin",
 )
-
 

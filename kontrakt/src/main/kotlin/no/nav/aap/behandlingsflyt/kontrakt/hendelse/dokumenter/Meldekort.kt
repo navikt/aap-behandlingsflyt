@@ -14,6 +14,7 @@ public data class MeldekortV0(
     public val harDuArbeidet: Boolean?,
     public val timerArbeidPerPeriode: List<ArbeidIPeriodeV0>,
     public val begrunnelse: String? = null,
+    @Deprecated("Bruk opprettetAv på innsending i stedet")
     public val opprettetAv: String? = null,
 ) : Meldekort {
 

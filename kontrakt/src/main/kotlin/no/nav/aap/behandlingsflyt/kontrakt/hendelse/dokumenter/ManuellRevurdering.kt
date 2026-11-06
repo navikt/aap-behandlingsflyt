@@ -9,5 +9,6 @@ public sealed interface ManuellRevurdering : Melding
 public data class ManuellRevurderingV0(
     public val årsakerTilBehandling: List<Vurderingsbehov>,
     public val beskrivelse: String,
+    @Deprecated("Bruk opprettetAv på Innsending i stedet")
     public val opprettetAv: String? = null,
 ) : ManuellRevurdering
