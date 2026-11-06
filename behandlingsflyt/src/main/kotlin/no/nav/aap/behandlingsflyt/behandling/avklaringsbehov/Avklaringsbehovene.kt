@@ -377,7 +377,7 @@ class Avklaringsbehovene(
     }
 
     fun harAvklaringsbehovSomKreverToTrinnMenIkkeErGodkjent(): Boolean {
-        return alle().any { it.erIkkeAvbrutt() && it.erTotrinn() && !it.erTotrinnsVurdert() }
+        return avklaringsbehovSomKreverToTrinn().any{ !it.erTotrinnsVurdert() }
     }
 
     fun harAvklaringsbehovSomKreverKvalitetssikring(): Boolean {
