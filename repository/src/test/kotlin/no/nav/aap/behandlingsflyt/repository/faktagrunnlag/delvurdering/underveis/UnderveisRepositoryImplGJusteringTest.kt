@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
-import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
@@ -232,14 +231,12 @@ class UnderveisRepositoryImplGJusteringTest {
             // Tilkjent ytelse allerede beregnet med nytt grunnbeløp — saken trenger ikke G-regulering
             TilkjentYtelseRepositoryImpl(connection).lagre(
                 behandlingId = behandling.id,
-                tilkjent = tidslinjeOf(
+                resultat = tidslinjeOf(
                     tilkjentYtelsePeriode(
                         periode = Periode(LocalDate.of(2025, 4, 1), LocalDate.of(2025, 5, 31)),
                         grunnbeløp = nyttGrunnbeløp,
                     )
                 ),
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = "test",
             )
         }
 
@@ -269,14 +266,12 @@ class UnderveisRepositoryImplGJusteringTest {
             // Tilkjent ytelse beregnet med gammelt grunnbeløp — saken trenger G-regulering
             TilkjentYtelseRepositoryImpl(connection).lagre(
                 behandlingId = behandling.id,
-                tilkjent = tidslinjeOf(
+                resultat = tidslinjeOf(
                     tilkjentYtelsePeriode(
                         periode = Periode(LocalDate.of(2025, 4, 1), LocalDate.of(2025, 5, 31)),
                         grunnbeløp = gammeltGrunnbeløp,
                     )
                 ),
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = "test",
             )
         }
 
@@ -309,14 +304,12 @@ class UnderveisRepositoryImplGJusteringTest {
             // — perioden etter pausen har ingen TY ennå
             TilkjentYtelseRepositoryImpl(connection).lagre(
                 behandlingId = behandling.id,
-                tilkjent = tidslinjeOf(
+                resultat = tidslinjeOf(
                     tilkjentYtelsePeriode(
                         periode = Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 4, 30)),
                         grunnbeløp = gammeltGrunnbeløp,
                     )
                 ),
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = "test",
             )
         }
 
@@ -348,14 +341,12 @@ class UnderveisRepositoryImplGJusteringTest {
             // Tilkjent ytelse for perioden etter pausen er beregnet med gammelt grunnbeløp
             TilkjentYtelseRepositoryImpl(connection).lagre(
                 behandlingId = behandling.id,
-                tilkjent = tidslinjeOf(
+                resultat = tidslinjeOf(
                     tilkjentYtelsePeriode(
                         periode = Periode(LocalDate.of(2025, 6, 1), LocalDate.of(2025, 7, 31)),
                         grunnbeløp = gammeltGrunnbeløp,
                     )
                 ),
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = "test",
             )
         }
 
@@ -386,14 +377,12 @@ class UnderveisRepositoryImplGJusteringTest {
             // Tilkjent ytelse for perioden etter pausen er allerede beregnet med nytt grunnbeløp
             TilkjentYtelseRepositoryImpl(connection).lagre(
                 behandlingId = behandling.id,
-                tilkjent = tidslinjeOf(
+                resultat = tidslinjeOf(
                     tilkjentYtelsePeriode(
                         periode = Periode(LocalDate.of(2025, 6, 1), LocalDate.of(2025, 7, 31)),
                         grunnbeløp = nyttGrunnbeløp,
                     )
                 ),
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = "test",
             )
         }
 

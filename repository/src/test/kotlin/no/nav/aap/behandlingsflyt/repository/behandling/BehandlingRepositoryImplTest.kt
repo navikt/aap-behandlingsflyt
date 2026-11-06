@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettRevurdering
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.help.sak
-import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -676,7 +675,7 @@ internal class BehandlingRepositoryImplTest {
                 tilkjent.copy(dagsats = Beløp(999 + index * 100)),
             )
         })
-        TilkjentYtelseRepositoryImpl(connection).lagre(behandlingId, perioder, tomtTilkjentYtelseGrunnlag, "")
+        TilkjentYtelseRepositoryImpl(connection).lagre(behandlingId, perioder)
         if (manglerRedusertDagsats) {
             connection.execute(
                 """
