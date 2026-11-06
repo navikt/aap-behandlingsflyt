@@ -171,9 +171,8 @@ private fun beslutterVurdering(
     avklaringsbehovene: Avklaringsbehovene,
     flyt: BehandlingFlyt
 ): List<TotrinnsVurderingResponse> {
-    return avklaringsbehovene.alle()
-        .filter { it.aktivHistorikk.any { it.status.erAvsluttet() } }
-        .filter { it.erTotrinn() }
+    return avklaringsbehovene
+        .avklaringsbehovSomKreverToTrinn()
         .sortedWith(compareBy(flyt.stegComparator) { it.løsesISteg() })
         .map { tilTotrinnsVurderingResponse(it) }
 }
