@@ -13,7 +13,7 @@ import java.util.*
 import java.util.stream.Collectors
 
 /**
- * Brukes for å definere et [no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov].
+ * Brukes for å definere et [avklaringsbehov i flyten](https://github.com/navikt/aap-behandlingsflyt/blob/main/behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/behandling/avklaringsbehov/Avklaringsbehov.kt).
  *
  * @param løsesAv Hva slags roller som har lov til å løse dette avklaringsbehovet. Dette blir verifisert i tilgangsmodulen.
  */
