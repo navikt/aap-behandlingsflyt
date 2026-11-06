@@ -1,37 +1,35 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap
 
-import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.KanBehandlesAutomatiskVurdering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingerGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.lookup.repository.Factory
-import java.time.LocalDate
 
 class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : LovvalgDelvurderingRepository {
     companion object : Factory<LovvalgDelvurderingRepositoryImpl> {
         override fun konstruer(connection: DBConnection) = LovvalgDelvurderingRepositoryImpl(connection)
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): LovvalgDelvurderingerGrunnlag? {
-        return connection.queryFirstOrNull(
+    override fun hentAlle(behandlingId: BehandlingId): List<LovvalgDelvurderingerGrunnlag> {
+        val vurderingerId = connection.queryFirstOrNull(
             """
             SELECT vurderinger_id FROM LOVVALG_DELVURDERING_GRUNNLAG
             WHERE behandling_id = ? AND aktiv
             """.trimIndent()
         ) {
             setParams { setLong(1, behandlingId.toLong()) }
-            setRowMapper {
-                mapVurdering(it.getLong("vurderinger_id"))
-            }
+            setRowMapper { it.getLong("vurderinger_id") }
         }
+        return vurderingerId?.let(::mapVurderinger).orEmpty()
     }
 
-    private fun mapVurdering(vurderingerId: Long): LovvalgDelvurderingerGrunnlag =
-        connection.queryFirst(
+    private fun mapVurderinger(vurderingerId: Long): List<LovvalgDelvurderingerGrunnlag> =
+        connection.queryList(
             """
-            SELECT id, versjon, vurdering, relevant_dato FROM LOVVALG_DELVURDERING
+            SELECT versjon, vurdering, relevant_dato FROM LOVVALG_DELVURDERING
             WHERE vurderinger_id = ?
+            ORDER BY relevant_dato
             """.trimIndent()
         ) {
             setParams { setLong(1, vurderingerId) }
@@ -45,48 +43,49 @@ class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : 
             }
         }
 
-    override fun lagre(
-        behandlingId: BehandlingId,
-        vurdering: KanBehandlesAutomatiskVurdering,
-        relevantDato: LocalDate
-    ) {
-        val eksisterende = hentHvisEksisterer(behandlingId)
-        if (eksisterende?.vurdering() != vurdering || eksisterende.relevantDato != relevantDato) {
-            if (eksisterende != null) {
-                deaktiverGrunnlag(behandlingId)
+    override fun lagre(behandlingId: BehandlingId, delvurderinger: List<LovvalgDelvurderingerGrunnlag>) {
+        require(delvurderinger.isNotEmpty()) { "Må lagre minst én delvurdering" }
+        require(delvurderinger.map { it.relevantDato }.distinct().size == delvurderinger.size) {
+            "Kun én delvurdering per relevant dato"
+        }
+
+        val eksisterende = hentAlle(behandlingId)
+        if (eksisterende.toSet() == delvurderinger.toSet()) return
+
+        if (eksisterende.isNotEmpty()) {
+            deaktiverGrunnlag(behandlingId)
+        }
+
+        val vurderingerId = connection.executeReturnKey("INSERT INTO LOVVALG_DELVURDERINGER DEFAULT VALUES")
+
+        connection.execute(
+            "INSERT INTO LOVVALG_DELVURDERING_GRUNNLAG (behandling_id, vurderinger_id) VALUES (?, ?)"
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setLong(2, vurderingerId)
             }
+            setResultValidator { require(it == 1) }
+        }
 
-            val json = LovvalgDelvurderingJson.serialiser(vurdering)
-            val vurderingerId = connection.executeReturnKey("INSERT INTO LOVVALG_DELVURDERINGER DEFAULT VALUES")
-
-            connection.execute(
-                "INSERT INTO LOVVALG_DELVURDERING_GRUNNLAG (behandling_id, vurderinger_id) VALUES (?, ?)"
-            ) {
-                setParams {
-                    setLong(1, behandlingId.toLong())
-                    setLong(2, vurderingerId)
-                }
-                setResultValidator { require(it == 1) }
-            }
-
+        delvurderinger.forEach { delvurdering ->
             connection.execute(
                 """
-            INSERT INTO LOVVALG_DELVURDERING
-                (vurderinger_id, vurdert_i_behandling, versjon, vurdering, relevant_dato)
-            VALUES (?, ?, ?, ?::jsonb, ?)
-            """.trimIndent()
+                INSERT INTO LOVVALG_DELVURDERING
+                    (vurderinger_id, vurdert_i_behandling, versjon, vurdering, relevant_dato)
+                VALUES (?, ?, ?, ?::jsonb, ?)
+                """.trimIndent()
             ) {
                 setParams {
                     setLong(1, vurderingerId)
                     setLong(2, behandlingId.toLong())
                     setInt(3, LovvalgDelvurderingJson.versjon)
-                    setString(4, json)
-                    setLocalDate(5, relevantDato)
+                    setString(4, LovvalgDelvurderingJson.serialiser(delvurdering.vurdering()))
+                    setLocalDate(5, delvurdering.relevantDato)
                 }
                 setResultValidator { require(it == 1) }
             }
         }
-
     }
 
     override fun kopier(

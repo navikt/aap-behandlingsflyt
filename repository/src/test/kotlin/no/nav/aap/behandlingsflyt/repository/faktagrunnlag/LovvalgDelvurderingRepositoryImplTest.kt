@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.ArbeidInntektINo
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.Indikasjon
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.KanBehandlesAutomatiskVurdering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.Kilde
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingerGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.TilhørighetVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettSak
@@ -134,6 +135,27 @@ class LovvalgDelvurderingRepositoryImplTest {
             assertThat(repository.hentHvisEksisterer(andre)?.vurdering()).isEqualTo(vurdering)
             assertThat(historikk(connection, andre)).containsExactly(true)
 
+        }
+    }
+
+    @Test
+    fun `lagrer flere delvurderinger på samme behandling og henter nyeste som gjeldende`() {
+        dataSource.transaction { connection ->
+            val behandlingId = opprettBehandling(connection)
+            val repository = LovvalgDelvurderingRepositoryImpl(connection)
+            val eldre = LovvalgDelvurderingerGrunnlag(true, vurdering.tilhørighetVurdering, startDato)
+            val nyere = LovvalgDelvurderingerGrunnlag(false, vurdering.tilhørighetVurdering, startDato.plusMonths(6))
+
+            repository.lagre(behandlingId, listOf(nyere, eldre))
+            repository.lagre(behandlingId, listOf(eldre, nyere))
+
+            assertThat(repository.hentAlle(behandlingId)).containsExactly(eldre, nyere)
+            assertThat(repository.hentHvisEksisterer(behandlingId)).isEqualTo(nyere)
+            assertThat(historikk(connection, behandlingId)).containsExactly(true)
+
+            repository.lagre(behandlingId, listOf(eldre))
+            assertThat(repository.hentAlle(behandlingId)).containsExactly(eldre)
+            assertThat(historikk(connection, behandlingId)).containsExactly(false, true)
         }
     }
 
