@@ -10,6 +10,8 @@ fun helligdagsunntakFastsattMeldedag(): Map<LocalDate, LocalDate> = if (Miljø.e
     mapOf(
         LocalDate.of(2025, 12, 22) to LocalDate.of(2025, 12, 17)
     ) else mapOf(
+        LocalDate.of(2025, 12, 22) to LocalDate.of(2025, 12, 17),
+
         LocalDate.of(2026, 11, 30) to LocalDate.of(2026, 12, 25),
         LocalDate.of(2026, 12, 7) to LocalDate.of(2026, 12, 2),
         LocalDate.of(2026, 12, 21) to LocalDate.of(2026, 12, 16),
