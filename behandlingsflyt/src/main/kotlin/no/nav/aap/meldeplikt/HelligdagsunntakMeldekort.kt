@@ -22,7 +22,7 @@ val kommendeMeldedagUnntakIProd = mapOf(
 )
 
 fun helligdagsunntakFastsattMeldedag(erProd: Boolean = Miljø.erProd()): Map<LocalDate, LocalDate> =
-    eksisterendeMeldedagUnntakIProd + if (!erProd) testMeldedagUnntakIDev + kommendeMeldedagUnntakIProd else emptyMap()
+    eksisterendeMeldedagUnntakIProd + if (!erProd) (testMeldedagUnntakIDev + kommendeMeldedagUnntakIProd) else emptyMap()
 
 val eksisterndeFritaksUnntakIProd = mapOf(
     LocalDate.of(2025, 12, 17) to LocalDate.of(2025, 12, 15),
