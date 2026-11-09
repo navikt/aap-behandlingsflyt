@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-internal class KandidatForPåminnelseRepositoryTest {
+internal class KandidatForPåminnelseRepositoryImplTest {
     private val clockTreUkerOgEnDagFremITid = fixedClock(LocalDate.now().plusWeeks(3).plusDays(1))
 
     companion object {
