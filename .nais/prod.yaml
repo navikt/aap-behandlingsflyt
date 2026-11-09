@@ -48,16 +48,19 @@ spec:
           - name: "pgaudit.log_relation"
             value: "on"
   terminationGracePeriodSeconds: 30
+  startup:
+    path: /actuator/live
+    initialDelay: 25
+    periodSeconds: 5
+    failureThreshold: 8
   liveness:
     path: /actuator/live
-    initialDelay: 3
     periodSeconds: 3
-    failureThreshold: 21
+    failureThreshold: 3
   readiness:
     path: /actuator/ready
-    initialDelay: 3
     periodSeconds: 3
-    failureThreshold: 21
+    failureThreshold: 3
   prometheus:
     enabled: true
     path: /actuator/metrics
