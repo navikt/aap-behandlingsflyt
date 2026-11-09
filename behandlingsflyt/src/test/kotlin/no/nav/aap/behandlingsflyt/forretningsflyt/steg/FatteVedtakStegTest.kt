@@ -47,7 +47,6 @@ import java.time.LocalDateTime
 import kotlin.random.Random
 
 class FatteVedtakStegTest {
-
     val klageresultatUtleder = mockk<KlageresultatUtleder>(relaxed = true)
     val tidligereVurderinger = mockk<TidligereVurderinger>()
     val trekkKlageService = mockk<TrekkKlageService>()
@@ -98,7 +97,6 @@ class FatteVedtakStegTest {
         virkningstidspunktService = virkningstidspunktService,
         avbrytAktivitetspliktbehandlingService = avbrytAktivitetspliktbehandlingService,
         sykdomRepository = sykdomRepository,
-        unleashGateway = BeslutterFakeUnleash,
         behandlingService = behandlingService
     )
 
@@ -570,6 +568,5 @@ class FatteVedtakStegTest {
 object BeslutterFakeUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(
         BehandlingsflytFeature.IngenValidering, // Vi må ha på validering, slik oppførselen er i prod. Dette er egentlig for å støtte superbruker
-        BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom
     )
 )
