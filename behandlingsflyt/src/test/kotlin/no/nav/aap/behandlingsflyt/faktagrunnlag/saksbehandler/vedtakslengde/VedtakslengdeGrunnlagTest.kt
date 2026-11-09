@@ -261,6 +261,44 @@ class VedtakslengdeGrunnlagTest {
             assertThat(segmenter[2].fom()).isEqualTo(sluttdato2.plusDays(1))
             assertThat(segmenter[2].tom()).isEqualTo(sluttdato3)
         }
+        @Test
+        fun `tre behandlinger med kjedet tidslinje, men defekt startdato`() {
+            val behandling3 = BehandlingId(3)
+            val sluttdato1 = LocalDate.of(2025, 1, 1)
+            val sluttdato2 = LocalDate.of(2026, 1, 1)
+            val sluttdato3 = LocalDate.of(2027, 1, 1)
+            val virkningstidspunktEtterFørsteVedtakslengdevurdering = LocalDate.of(2025, 2, 1)
+
+            val vurdering1 = automatiskVurdering(
+                sluttdato = sluttdato1,
+                behandlingId = behandling1,
+                opprettet = Instant.parse("2024-01-01T12:00:00Z"),
+            )
+            val vurdering2 = automatiskVurdering(
+                sluttdato = sluttdato2,
+                behandlingId = behandling2,
+                opprettet = Instant.parse("2025-01-01T12:00:00Z"),
+            )
+            val vurdering3 = automatiskVurdering(
+                sluttdato = sluttdato3,
+                behandlingId = behandling3,
+                opprettet = Instant.parse("2026-01-01T12:00:00Z"),
+            )
+            val grunnlag = VedtakslengdeGrunnlag(listOf(vurdering1, vurdering2, vurdering3))
+
+
+            val segmenter = grunnlag.gjeldendeVurderinger(virkningstidspunktEtterFørsteVedtakslengdevurdering).segmenter().toList()
+            assertThat(segmenter).hasSize(3)
+
+            assertThat(segmenter[0].fom()).isEqualTo(sluttdato1)
+            assertThat(segmenter[0].tom()).isEqualTo(sluttdato1)
+
+            assertThat(segmenter[1].fom()).isEqualTo(sluttdato1.plusDays(1))
+            assertThat(segmenter[1].tom()).isEqualTo(sluttdato2)
+
+            assertThat(segmenter[2].fom()).isEqualTo(sluttdato2.plusDays(1))
+            assertThat(segmenter[2].tom()).isEqualTo(sluttdato3)
+        }
 
         @Test
         fun `prioriterer manuell i en behandling mens annen behandling har kun automatisk`() {

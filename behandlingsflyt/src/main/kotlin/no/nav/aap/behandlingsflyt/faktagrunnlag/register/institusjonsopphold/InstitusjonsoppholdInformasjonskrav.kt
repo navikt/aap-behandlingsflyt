@@ -76,11 +76,9 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
     ): Informasjonskrav.Endret {
         val eksisterendeGrunnlag = hentHvisEksisterer(kontekst.behandlingId)
         val institusjonsopphold = registerdata.opphold
-        logger.info("Har hentet instopphold " + institusjonsopphold.size)
         val institusjonsoppholdErEndret = erEndret(eksisterendeGrunnlag, institusjonsopphold)
         if (institusjonsoppholdErEndret) {
             institusjonsoppholdRepository.lagreOpphold(kontekst.behandlingId, institusjonsopphold)
-            logger.info("Har lagret instopphold ")
         }
         return if (institusjonsoppholdErEndret) ENDRET else IKKE_ENDRET
     }

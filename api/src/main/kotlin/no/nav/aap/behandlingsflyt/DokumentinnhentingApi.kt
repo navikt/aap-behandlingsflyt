@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.ForhåndsvisBrevReq
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentBehandlerDialogService
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentUbesvarteForespørslerLegeerklæringDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentStatusLegeerklæring
-import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.MeldingMedDokumenterDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.MeldingerResponse
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.PurringLegeerklæringRequest
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.UbesvarteForespørslerLegeerklæringResponse
@@ -165,34 +164,6 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
             }
 
             route("/dialogmeldinger/{saksnummer}") {
-                authorizedGet<HentStatusLegeerklæring, List<MeldingMedDokumenterDto>>(
-                    AuthorizationParamPathConfig(
-                        relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
-                        applicationsOnly = false,
-                        sakPathParam = SakPathParam("saksnummer")
-                    )
-                ) { params ->
-                    val meldinger = dataSource.transaction(readOnly = true) { connection ->
-                        val sakRepository = repositoryRegistry.provider(connection).provide<SakRepository>()
-                        val mottattDokumentRepository =
-                            repositoryRegistry.provider(connection).provide<MottattDokumentRepository>()
-                        val behandlingRepository =
-                            repositoryRegistry.provider(connection).provide<BehandlingRepository>()
-                        val service = HentBehandlerDialogService(
-                            dokumentinnhentingGateway,
-                            sakRepository,
-                            mottattDokumentRepository,
-                            behandlingRepository
-                        )
-
-                        service.hentDialogForSak(params.saksnummer, token()).meldinger
-                    }
-
-                    respond(meldinger)
-                }
-            }
-
-            route("/dialogmeldinger/{saksnummer}/v2") {
                 authorizedGet<HentStatusLegeerklæring, MeldingerResponse>(
                     AuthorizationParamPathConfig(
                         relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),

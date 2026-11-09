@@ -21,15 +21,10 @@ class InMemoryLovvalgDelvurderingRepositoryTest {
         repository.lagre(behandling.id, vurdering.copy(kanBehandlesAutomatisk = false), relevantDato)
         val ny = requireNotNull(repository.hentHvisEksisterer(behandling.id))
 
-        assertThat(ny.delvurderingId).isNotEqualTo(opprinnelig.delvurderingId)
-        assertThat(repository.hentBasertPåDelvurderingId(opprinnelig.delvurderingId)).isEqualTo(opprinnelig)
-        assertThat(repository.hentBasertPåDelvurderingId(ny.delvurderingId)).isEqualTo(ny)
-        assertThat(repository.hentBasertPåDelvurderingId(-1L)).isNull()
+        assertThat(ny).isNotEqualTo(opprinnelig)
 
         repository.slett(behandling.id)
         assertThat(repository.hentHvisEksisterer(behandling.id)).isNull()
-        assertThat(repository.hentBasertPåDelvurderingId(opprinnelig.delvurderingId)).isNull()
-        assertThat(repository.hentBasertPåDelvurderingId(ny.delvurderingId)).isNull()
     }
 
     @Test
@@ -44,10 +39,5 @@ class InMemoryLovvalgDelvurderingRepositoryTest {
 
         repository.lagre(til.id, vurdering.copy(kanBehandlesAutomatisk = false), relevantDato)
         assertThat(repository.hentHvisEksisterer(fra.id)).isEqualTo(opprinnelig)
-        repository.slett(fra.id)
-        assertThat(repository.hentBasertPåDelvurderingId(opprinnelig.delvurderingId)).isEqualTo(opprinnelig)
-
-        repository.slett(til.id)
-        assertThat(repository.hentBasertPåDelvurderingId(opprinnelig.delvurderingId)).isNull()
     }
 }

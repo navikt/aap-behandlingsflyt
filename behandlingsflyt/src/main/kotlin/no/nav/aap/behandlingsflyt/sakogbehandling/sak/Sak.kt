@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDateTime
 
@@ -9,21 +8,22 @@ class Sak(
     val id: SakId,
     val saksnummer: Saksnummer,
     val person: Person,
-    val rettighetsperiode: Periode,
-    private val status: Status = Status.OPPRETTET,
+    rettighetsperiode: Periode,
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now(),
 ) {
 
-    fun status(): Status {
-        return status
-    }
+    /** Selv om rettighetsperiode settes når den endres i databasen, så er det i dag veldig mange kopier
+     * av denne behandlingen som ikke blir mutert. Du burde derfor fortsatt lese fra databasen til vi
+     * kommer dit at behandlingen injectes over alt i flyten. */
+    var rettighetsperiode: Periode = rettighetsperiode
+        internal set
 
     fun rettighetsperiodeEttÅrFraStartDato(): Periode {
         return Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusYears(1).minusDays(1))
     }
 
     override fun toString(): String {
-        return "Sak(id=$id, saksnummer=$saksnummer, person=$person, rettighetsperiode=$rettighetsperiode, status=$status, opprettetTidspunkt=$opprettetTidspunkt)"
+        return "Sak(id=$id, saksnummer=$saksnummer, person=$person, rettighetsperiode=$rettighetsperiode, opprettetTidspunkt=$opprettetTidspunkt)"
     }
 
     override fun equals(other: Any?): Boolean {

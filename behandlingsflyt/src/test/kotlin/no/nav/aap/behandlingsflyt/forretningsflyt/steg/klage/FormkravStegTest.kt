@@ -197,7 +197,7 @@ class FormkravStegTest {
 
     @Test
     fun `FormkravSteg-utfører skal gi avklaringsbehov FULLFØRT om fristen ikke er overholdt, selv om man ikke har oppfylt formkravene`() {
-        every { behandlingRepositoryMock.hent(any<BehandlingId>()) } returns tomBehandling(BehandlingId(1L))
+        every { behandlingRepositoryMock.hentReferanse(any()) } returns tomBehandling(BehandlingId(1L)).referanse
         every { formkravRepositoryMock.lagreVarsel(any(), any()) } returns Unit
 
         val kontekst = flytKontekstMedPerioder {
@@ -263,7 +263,7 @@ class FormkravStegTest {
 
     @Test
     fun `FormkravSteg-utfører skal gi avklaringsbehov SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV og bestille brev om man har lagret en vurdering med ikke-oppfylte formkrav`() {
-        every { behandlingRepositoryMock.hent(any<BehandlingId>()) } returns tomBehandling(BehandlingId(1L))
+        every { behandlingRepositoryMock.hentReferanse(any()) } returns tomBehandling(BehandlingId(1L)).referanse
         every { brevbestillingServiceMock.bestill(any(), any(), any(), any()) } returns UUID.randomUUID()
         every { formkravRepositoryMock.lagreVarsel(any(), any()) } returns Unit
 

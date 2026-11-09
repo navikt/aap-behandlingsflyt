@@ -596,7 +596,7 @@ fun NormalOpenAPIRoute.driftApi(
                             personId = sak.person.id.id,
                             antallIdenter = sak.person.identer().size,
                         ),
-                        status = sak.status(),
+                        status = SakStatus.UTREDES,
                         rettighetsperiode = sak.rettighetsperiode,
                         opprettetTidspunkt = sak.opprettetTidspunkt,
                         behandlinger = behandlinger,
@@ -622,6 +622,7 @@ fun NormalOpenAPIRoute.driftApi(
 
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
 
                     val sak = sakRepository.hentHvisFinnes(Saksnummer(params.saksnummer))
                         ?: throw VerdiIkkeFunnetException("Sak med saksnummer ${params.saksnummer} finnes ikke")
@@ -633,7 +634,8 @@ fun NormalOpenAPIRoute.driftApi(
                                 mottattTidspunkt = dokument.mottattTidspunkt,
                                 type = dokument.type,
                                 kanal = dokument.kanal,
-                                status = dokument.status
+                                status = dokument.status,
+                                behandlingReferanse = dokument.behandlingId?.let { behandlingRepository.hentReferanse(it).referanse }
                             )
                         }
                         .sortedByDescending { it.mottattTidspunkt }
@@ -695,7 +697,6 @@ fun NormalOpenAPIRoute.driftApi(
                 respond(nyPeriode)
             }
         }
-
     }
 }
 
@@ -844,6 +845,7 @@ private data class MottattDokumentDriftsinfoDTO(
     val mottattTidspunkt: LocalDateTime,
     val type: InnsendingType,
     val kanal: Kanal,
+    val behandlingReferanse: UUID?,
     val status: MottattDokumentStatus = MottattDokumentStatus.MOTTATT,
 )
 

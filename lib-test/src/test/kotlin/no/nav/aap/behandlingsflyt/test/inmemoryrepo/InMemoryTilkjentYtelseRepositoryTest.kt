@@ -3,9 +3,9 @@ package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
-import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
@@ -41,15 +41,12 @@ class InMemoryTilkjentYtelseRepositoryTest {
             minsteSats = Minstesats.IKKE_MINSTESATS,
             redusertDagsats = null,
         )
-        val perioder = listOf(
-            TilkjentYtelsePeriode(Periode(dato, dato.plusDays(1)), tilkjent),
-            TilkjentYtelsePeriode(Periode(dato.plusDays(2), dato.plusDays(3)), tilkjent),
-            TilkjentYtelsePeriode(
-                Periode(dato.plusDays(4), dato.plusDays(5)),
-                tilkjent.copy(redusertDagsats = Beløp(419)),
-            ),
+        val perioder = tidslinjeOf(
+            Periode(dato, dato.plusDays(1)) to tilkjent,
+            Periode(dato.plusDays(2), dato.plusDays(3)) to tilkjent,
+            Periode(dato.plusDays(4), dato.plusDays(5)) to tilkjent.copy(redusertDagsats = Beløp(419))
         )
-        repository.lagre(behandling.id, perioder, tomtTilkjentYtelseGrunnlag, "")
+        repository.lagre(behandling.id, perioder)
 
         val kandidater = repository.hentTilkjentUtenRedusertDagsats(behandling.id)
         assertThat(kandidater).hasSize(2)
@@ -61,11 +58,14 @@ class InMemoryTilkjentYtelseRepositoryTest {
         assertThat(repository.hentHvisEksisterer(behandling.id)).isEqualTo(perioder)
         repository.backfillRedusertDagsats(kandidater)
 
+        val segmenter = perioder.segmenter().toList()
         assertThat(repository.hentHvisEksisterer(behandling.id)).isEqualTo(
-            listOf(
-                perioder[0].copy(tilkjent = tilkjent.copy(redusertDagsats = Beløp(321))),
-                perioder[1].copy(tilkjent = tilkjent.copy(redusertDagsats = Beløp(432))),
-                perioder[2],
+            Tidslinje(
+                listOf(
+                    segmenter[0].copy(verdi = tilkjent.copy(redusertDagsats = Beløp(321))),
+                    segmenter[1].copy(verdi = tilkjent.copy(redusertDagsats = Beløp(432))),
+                    segmenter[2],
+                )
             )
         )
         assertThat(repository.hentTilkjentUtenRedusertDagsats(behandling.id)).isEmpty()

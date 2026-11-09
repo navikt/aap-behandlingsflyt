@@ -4,11 +4,11 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentForRedusertDagsatsBackfill
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -27,7 +27,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
         }
     }
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): List<TilkjentYtelsePeriode>? {
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): Tidslinje<Tilkjent>? {
         val tilkjent = connection.queryList(
             """
             SELECT * FROM TILKJENT_PERIODE WHERE TILKJENT_YTELSE_ID IN (SELECT ID FROM TILKJENT_YTELSE WHERE BEHANDLING_ID=? AND AKTIV=TRUE)
@@ -37,9 +37,9 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                 setLong(1, behandlingId.toLong())
             }
             setRowMapper {
-                TilkjentYtelsePeriode(
+                Segment(
                     periode = it.getPeriode("PERIODE"),
-                    Tilkjent(
+                    verdi = Tilkjent(
                         dagsats = Beløp(it.getInt("DAGSATS")),
                         gradering = Prosent(it.getInt("GRADERING")),
                         graderingGrunnlag = GraderingGrunnlag(
@@ -74,19 +74,17 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
         if (tilkjent.isEmpty()) {
             return null
         }
-        return tilkjent
+        return Tidslinje(tilkjent)
     }
 
     override fun lagre(
         behandlingId: BehandlingId,
-        tilkjent: List<TilkjentYtelsePeriode>,
-        faktagrunnlag: TilkjentYtelseGrunnlag,
-        versjon: String,
+        resultat: Tidslinje<Tilkjent>,
     ) {
-        return lagre(behandlingId, tilkjent, faktagrunnlag.hent(), versjon)
+        return lagre(behandlingId, resultat, null, null)
     }
 
-    override fun backfillRedusertDagsats (
+    override fun backfillRedusertDagsats(
         tilkjentBackfillKandidater: List<TilkjentForRedusertDagsatsBackfill>
     ) {
         val sql = "UPDATE tilkjent_periode SET redusert_dagsats = ? WHERE id = ?"
@@ -103,7 +101,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
 
     private fun lagre(
         behandlingId: BehandlingId,
-        tilkjent: List<TilkjentYtelsePeriode>,
+        tilkjent: Tidslinje<Tilkjent>,
         faktagrunnlag: String?,
         versjon: String?
     ) {
@@ -159,7 +157,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
         log.info("Slettet $deletedRows rader fra tilkjent_periode")
     }
 
-    private fun lagrePerioder(tilkjentYtelseId: Long, perioder: List<TilkjentYtelsePeriode>) {
+    private fun lagrePerioder(tilkjentYtelseId: Long, perioder: Tidslinje<Tilkjent>) {
         connection.executeBatch(
             """
             INSERT INTO TILKJENT_PERIODE (TILKJENT_YTELSE_ID, PERIODE, DAGSATS, GRADERING, BARNETILLEGG,
@@ -169,7 +167,7 @@ class TilkjentYtelseRepositoryImpl(private val connection: DBConnection) :
                                            MELDEPLIKT_GRADERING, MINSTESATS, REDUSERT_DAGSATS, BARNEPENSJON_DAGSATS)
             VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent(),
-            perioder,
+            perioder.segmenter(),
         ) {
             setParams { (periode, tilkjent) ->
                 setLong(1, tilkjentYtelseId)

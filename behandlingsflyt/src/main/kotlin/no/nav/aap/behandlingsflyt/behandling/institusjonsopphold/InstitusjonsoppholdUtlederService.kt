@@ -1,8 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 
-import no.nav.aap.behandlingsflyt.behandling.barnetillegg.RettTilBarnetillegg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.tilTidslinje
+import no.nav.aap.barnetillegg.RettTilBarnetillegg
+import no.nav.aap.barnetillegg.BarnetilleggRepository
+import no.nav.aap.barnetillegg.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Helseoppholdvurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository

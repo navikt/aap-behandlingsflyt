@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.validerVurderingsperioder
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import org.junit.jupiter.api.Test
@@ -19,14 +20,14 @@ class AvklaringsbehovApiTest {
     @Test
     fun `ingen perioder er ok`() {
         assertDoesNotThrow {
-            validerPerioder(listOf<LøsningForPeriode>())
+            validerVurderingsperioder(listOf<LøsningForPeriode>())
         }
     }
 
     @Test
     fun `en periode på 1 dag med eksplisitt start og slutt er ok`() {
         assertDoesNotThrow {
-            validerPerioder(listOf(
+            validerVurderingsperioder(listOf(
                 P(1 januar 2025, 1 januar 2025)
             ))
         }
@@ -35,7 +36,7 @@ class AvklaringsbehovApiTest {
     @Test
     fun `en periode med implisitt slutt er ok`() {
         assertDoesNotThrow {
-            validerPerioder(listOf(
+            validerVurderingsperioder(listOf(
                 P(1 januar 2025, null)
             ))
         }
@@ -44,7 +45,7 @@ class AvklaringsbehovApiTest {
     @Test
     fun `to en-dags-perioder rett etter hverandre er ok`() {
         assertDoesNotThrow {
-            validerPerioder(listOf(
+            validerVurderingsperioder(listOf(
                 P(1 januar 2025, 1 januar 2025),
                 P(2 januar 2025, 2 januar 2025),
             ))
@@ -54,7 +55,7 @@ class AvklaringsbehovApiTest {
     @Test
     fun `hull mellom vurderingen er ok`() {
         assertDoesNotThrow {
-            validerPerioder(listOf(
+            validerVurderingsperioder(listOf(
                 P(1 januar 2025, 1 januar 2025),
                 P(10 januar 2025, 15 januar 2025),
             ))
@@ -64,7 +65,7 @@ class AvklaringsbehovApiTest {
     @Test
     fun `rekkefølge er ubetydelig ved eksplisitt slutt-dato`() {
         assertDoesNotThrow {
-            validerPerioder(listOf(
+            validerVurderingsperioder(listOf(
                 /* "baklengs" */
                 P(2 januar 2025, 2 januar 2025),
                 P(1 januar 2025, 1 januar 2025),
@@ -75,7 +76,7 @@ class AvklaringsbehovApiTest {
     @Test
     fun `to helt like perioder med implisitt slutt er ikke ok`() {
         assertThrows<UgyldigForespørselException> {
-            validerPerioder(listOf(
+            validerVurderingsperioder(listOf(
                 P(1 januar 2025, null),
                 P(1 januar 2025, null),
             ))
@@ -85,7 +86,7 @@ class AvklaringsbehovApiTest {
     @Test
     fun `to helt like perioder med eksplisitt slutt er ikke ok`() {
         assertThrows<UgyldigForespørselException> {
-            validerPerioder(listOf(
+            validerVurderingsperioder(listOf(
                 P(1 januar 2025, 1 januar 2025),
                 P(1 januar 2025, 1 januar 2025),
             ))
@@ -95,7 +96,7 @@ class AvklaringsbehovApiTest {
     @Test
     fun `flere implisitte slutt-datoer er ikke ok `() {
         assertThrows<UgyldigForespørselException> {
-            validerPerioder(listOf(
+            validerVurderingsperioder(listOf(
                 P(1 januar 2025, null),
                 P(2 januar 2025, null),
             ))
@@ -105,7 +106,7 @@ class AvklaringsbehovApiTest {
     @Test
     fun `blande implisitte og eksplisitte sluttdatoer er ok `() {
         assertDoesNotThrow {
-            validerPerioder(listOf(
+            validerVurderingsperioder(listOf(
                 P(3 januar 2022, 6 januar 2022),
                 P(1 januar 2025, null),
             ))

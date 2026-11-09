@@ -44,13 +44,11 @@ enum class BehandlingsflytFeature(
 
     // ------
     Avslag11_27,
-    MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling,
     BosattStatsborgerskapGjennomslipp,
     HoppOverBeslutterVedAvslagSykdom,
     KanVurdereRefusjonIRevurdering,
     KunEnAktivKlagebehandling,
     KlagePaaTilbakekreving,
-    NySoknadTilApiIntern,
     SammenhengendeInstitusjonsopphold,
     DatadelingBehandlingVisning,
     Helseinstitusjon1Manedsregel,

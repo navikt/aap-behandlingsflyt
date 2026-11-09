@@ -6,8 +6,8 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenlovgivning.SamordningAnnenLovgivningFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.samordning.annenlovgivning.SamordningAnnenLovgivningVilkår
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.skalVurdereStudent
+import no.nav.aap.student.StudentRepository
+import no.nav.aap.student.skalVurdereStudent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg

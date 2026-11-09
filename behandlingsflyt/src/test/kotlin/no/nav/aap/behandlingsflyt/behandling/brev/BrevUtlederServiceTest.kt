@@ -1,14 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
-import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
@@ -78,6 +75,8 @@ import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.test.september
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -822,14 +821,7 @@ class BrevUtlederServiceTest {
             val periode = Periode(virkningstidspunkt, 31 desember 2025)
             tilkjentYtelseRepository.lagre(
                 behandling.id,
-                listOf(
-                    TilkjentYtelsePeriode(
-                        periode,
-                        tilkjentYtelseDto(Beløp("1000.00"), periode.tom).copy(minsteSats = minstesats)
-                    )
-                ),
-                mockk<TilkjentYtelseGrunnlag>(),
-                ""
+                tidslinjeOf(periode to tilkjentYtelse(Beløp("1000.00"), periode.tom).copy(minsteSats = minstesats)),
             )
             return behandling
         }
@@ -974,8 +966,6 @@ class BrevUtlederServiceTest {
             tilkjentYtelseRepository.lagre(
                 behandling.id,
                 stubTilkjentYtelse(dagsats),
-                mockk<TilkjentYtelseGrunnlag>(),
-                ""
             )
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
@@ -1852,22 +1842,16 @@ class BrevUtlederServiceTest {
 
     private fun stubTilkjentYtelse(
         dagsats: Beløp = Beløp("1000.00")
-    ): List<TilkjentYtelsePeriode> {
+    ): Tidslinje<Tilkjent> {
         val førstePeriode = Periode(1 januar 2025, 30 juni 2025)
         val andrePeriode = Periode(1 juli 2025, 30 desember 2025)
-        return listOf(
-            TilkjentYtelsePeriode(
-                periode = førstePeriode,
-                tilkjent = tilkjentYtelseDto(dagsats, førstePeriode.tom)
-            ),
-            TilkjentYtelsePeriode(
-                periode = andrePeriode,
-                tilkjent = tilkjentYtelseDto(dagsats, andrePeriode.tom)
-            )
+        return tidslinjeOf(
+                førstePeriode to tilkjentYtelse(dagsats, førstePeriode.tom),
+                andrePeriode to tilkjentYtelse(dagsats, andrePeriode.tom),
         )
     }
 
-    private fun tilkjentYtelseDto(dagsats: Beløp, utbetalingsdato: LocalDate): Tilkjent {
+    private fun tilkjentYtelse(dagsats: Beløp, utbetalingsdato: LocalDate): Tilkjent {
         return Tilkjent(
             dagsats = dagsats,
             gradering = Prosent.`100_PROSENT`,
