@@ -76,7 +76,11 @@ class BeregnTilkjentYtelseTest {
         @AfterAll
         @JvmStatic
         fun afterAll() {
-            System.setProperty("NAIS_CLUSTER_NAME", naisClusterName)
+            if (naisClusterName == null) {
+                System.clearProperty("NAIS_CLUSTER_NAME")
+            } else {
+                System.setProperty("NAIS_CLUSTER_NAME", naisClusterName)
+            }
         }
     }
 
