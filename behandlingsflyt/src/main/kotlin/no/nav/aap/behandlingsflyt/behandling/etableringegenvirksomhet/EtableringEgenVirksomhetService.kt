@@ -153,7 +153,7 @@ class EtableringEgenVirksomhetService(
                 fase == null && !vurdering.erGrunnvilkårOppfylt() -> null
                 vurdering.jobberBrukerAktivMedVirksomheten == null ->
                     VirksomhetEtableringResultat.Ugyldig.MåOppgiOmBrukerJobberAktivt
-                fase == null && vurdering.jobberBrukerAktivMedVirksomheten == true ->
+                fase == null && vurdering.jobberBrukerAktivMedVirksomheten ->
                     VirksomhetEtableringResultat.Ugyldig.KreverPeriodeHvisVilkårOppfylt
                 fase == null -> null
                 else -> validerOppstartRegistrering(fase, vurdering)
