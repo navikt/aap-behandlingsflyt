@@ -50,6 +50,8 @@ import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -60,6 +62,23 @@ import java.time.LocalDate
 import java.time.YearMonth
 
 class BeregnTilkjentYtelseTest {
+
+    companion object {
+
+        var naisClusterName = System.getProperty("NAIS_CLUSTER_NAME")
+
+        @BeforeAll
+        @JvmStatic
+        fun beforeAll() {
+            System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun afterAll() {
+            System.setProperty("NAIS_CLUSTER_NAME", naisClusterName)
+        }
+    }
 
     @Test
     fun `årlig ytelse beregnes til 66 prosent av grunnlaget og dagsatsen er lik årlig ytelse delt på 260, og sjekker split av periode ved endring i Grunnbeløp`() {
@@ -343,6 +362,51 @@ class BeregnTilkjentYtelseTest {
         assertThat(beregnTilkjentYtelse.segmenter()).hasSize(2)
         assertThat(beregnTilkjentYtelse.segmenter().first().verdi.utbetalingsdato).isEqualTo(meldeDato)
         assertThat(beregnTilkjentYtelse.segmenter().last().verdi.utbetalingsdato).isEqualTo(sisteMuligeMeldedato)
+    }
+
+    @Test
+    fun `tidligere utbetalingsdato for fritak i desember 2026`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(4)),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+
+        val periode = Periode(LocalDate.of(2026, 12, 14), LocalDate.of(2026, 12, 27))
+
+        val underveisgrunnlag = UnderveisGrunnlag(
+            1L, perioder = listOf(
+                underveisperiode(
+                    periode = periode,
+                    meldePeriode = periode,
+                    gradering = Prosent.`100_PROSENT`,
+                    institusjonsOppholdReduksjon = Prosent.`0_PROSENT`,
+                    meldepliktStatus = MeldepliktStatus.FRITAK,
+                    opplysningerMottatt = null
+                ),
+            )
+        )
+
+
+
+        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                utenBarnetillegg(),
+                utenSamordningGrunnlag(),
+                utenSamordningUføre(),
+                utenSamordningArbeidsgiver(),
+                utenBarnepensjon(),
+            )
+        ).beregnTilkjentYtelse()
+
+        assertThat(beregnTilkjentYtelseService.segmenter()).hasSize(1)
+        assertThat(beregnTilkjentYtelseService.segmenter().first().verdi.utbetalingsdato)
+            .isEqualTo(LocalDate.of(2026, 12, 28))
     }
 
     @Test

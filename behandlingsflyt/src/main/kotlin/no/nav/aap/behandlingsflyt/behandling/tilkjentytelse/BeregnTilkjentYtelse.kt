@@ -266,7 +266,7 @@ object BeregnTilkjentYtelse : Sporbar<TilkjentYtelseGrunnlag, Tidslinje<Tilkjent
             opplysningerMottatt != null -> opplysningerMottatt
             underveisperiode.meldepliktStatus == MeldepliktStatus.FRITAK -> {
                 log.info("Traff sjekk for meldepliktstatus == FRITAK. Første meldedag for meldeperiode: $førsteMeldedagForMeldeperiode")
-                helligdagsunntakFritaksUtbetalingDato[førsteMeldedagForMeldeperiode]
+                helligdagsunntakFritaksUtbetalingDato()[førsteMeldedagForMeldeperiode]
                     ?: førsteMeldedagForMeldeperiode
             }
 
