@@ -35,7 +35,7 @@ og `repository` (konvensjon fra oktober 2026, se `no.nav.aap.meldeplikt`).
 ./gradlew :behandlingsflyt:test --tests "no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderAlderStegTest"
 ./gradlew :repository:test --tests "*SykdomRepositoryImplTest" # DB-test, krever Docker (Testcontainers)
 ./gradlew :behandlingsflyt:check                               # som CI gjør for modulen
-./gradlew :arkitektur:test                                     # strukturregler: registreringslister, lagdeling, aktiv-flagg (~10 s)
+./gradlew :arkitektur:test                                     # strukturregler: registreringslister, lagdeling, aktiv-flagg, pekere i instruksjonsfilene (~10 s)
 ./gradlew runTestApp                                           # app på :8080 med fakes; token: curl -s -XPOST http://localhost:8081/token
 ./gradlew detekt                                               # feiler aldri bygget; ikke rydd baseline-funn i urelaterte PR-er
 ```

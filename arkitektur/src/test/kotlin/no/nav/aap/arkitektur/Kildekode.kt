@@ -13,6 +13,8 @@ import kotlin.test.fail
  */
 object Kildekode {
     val produksjon by lazy { Konsist.scopeFromProduction() }
+    /** Også testkode. Brukes der instruksjonsfilene kan peke på testklasser og fakes. */
+    val prosjekt by lazy { Konsist.scopeFromProject() }
     val klasser by lazy { produksjon.classes(includeNested = true) }
     val objekter by lazy { produksjon.objects(includeNested = true) }
     val grensesnitt by lazy { produksjon.interfaces(includeNested = true) }

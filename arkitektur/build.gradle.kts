@@ -15,7 +15,8 @@ tasks.test {
     // byggecachen) selv om koden i en annen modul er endret, og regelbrudd slipper gjennom.
     inputs.files(
         fileTree(rootDir) {
-            include("*/src/main/**/*.kt", "repository/src/main/resources/flyway/*.sql")
+            include("*/src/main/**/*.kt", "*/src/test/**/*.kt", "repository/src/main/resources/flyway/*.sql")
+            include("AGENTS.md", ".github/**/*.md")
             exclude("arkitektur/**")
         }
     ).withPathSensitivity(PathSensitivity.RELATIVE).withPropertyName("kildekode")
