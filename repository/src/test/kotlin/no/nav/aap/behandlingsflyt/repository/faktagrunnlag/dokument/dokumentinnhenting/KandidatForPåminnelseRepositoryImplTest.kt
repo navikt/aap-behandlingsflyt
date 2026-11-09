@@ -159,4 +159,48 @@ internal class KandidatForPåminnelseRepositoryImplTest {
             assertThat(kandidaterTreUkerFraIDag).doesNotContain(behandling1.referanse)
         }
     }
+
+    @Test
+    fun `skal ikke plukke behandling hvis det har kommet dialogmelding i mellomtiden`() {
+        dataSource.transaction { connection ->
+            val sak1 = sak(connection)
+            val behandling1 = finnEllerOpprettBehandling(connection, sak1)
+            BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(
+                behandlingId = behandling1.id,
+                status = Status.UTREDES
+            )
+
+            // avklaringsbehov opprettes i dag
+            val avklaringsbehov1 = AvklaringsbehovRepositoryImpl(connection).hentAvklaringsbehovene(behandling1.id)
+            avklaringsbehov1.leggTil(
+                Definisjon.BESTILL_LEGEERKLÆRING,
+                StegType.AVKLAR_SYKDOM,
+                null,
+                null,
+                null,
+                frist = LocalDate.now(clockTreUkerOgEnDagFremITid).plusDays(14)
+            )
+
+            // mottatt dialogmelding er nyere enn bestilling
+            BehandlingRepositoryImpl(connection).oppdaterVurderingsbehovOgÅrsak(
+                behandling = behandling1,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(
+                        VurderingsbehovMedPeriode(
+                            type = Vurderingsbehov.MOTTATT_DIALOGMELDING,
+                            oppdatertTid = LocalDateTime.now().plusDays(4)
+                        )
+                    ), årsak = ÅrsakTilOpprettelse.HELSEOPPLYSNINGER,
+                    opprettet = LocalDateTime.now().plusDays(4)
+                )
+            )
+
+
+            // forespørsel er besvart, behandling skal ikke plukkes som kandidat
+            val kandidaterTreUkerFraIDag = KandidatForPåminnelseRepositoryImpl(connection).finnKandidaterForPåminnelse(
+                LocalDate.now()
+            )
+            assertThat(kandidaterTreUkerFraIDag).doesNotContain(behandling1.referanse)
+        }
+    }
 }

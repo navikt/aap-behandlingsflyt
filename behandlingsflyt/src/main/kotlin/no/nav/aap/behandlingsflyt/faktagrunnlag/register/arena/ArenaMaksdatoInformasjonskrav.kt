@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdagForBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -36,7 +37,9 @@ class ArenaMaksdatoInformasjonskrav(
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?,
     ): Boolean = unleashGateway.isEnabled(BehandlingsflytFeature.HandtereMaksdatoForKantTilKant)
-            && kontekst.erFørstegangsbehandlingEllerRevurdering()
+            // Kun førstegangsbehandling inntil det er gått opp hvordan endringer på maksdato i Arena skal håndteres
+            // for Kelvin-vedtak
+            && kontekst.behandlingType == TypeBehandling.Førstegangsbehandling
             && oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId)
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): Input {

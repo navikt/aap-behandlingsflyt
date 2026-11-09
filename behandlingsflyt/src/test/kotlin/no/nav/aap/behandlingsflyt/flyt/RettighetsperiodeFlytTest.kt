@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarPeriodisertLovvalgMedlemskapLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
@@ -389,7 +388,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                 Tid.MAKS
             )
         )
-        assertThat(uthentetTilkjentYtelse.tilTidslinje().helePerioden().fom).isEqualTo(nyStartDato)
+        assertThat(uthentetTilkjentYtelse.helePerioden().fom).isEqualTo(nyStartDato)
     }
 
     @Test
@@ -420,12 +419,12 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
         assertThat(underveisPeriodeForSøknadsdatoFørEndring.arbeidsgradering.gradering).isEqualTo(`100_PROSENT`)
 
         val tilkjentPeriodeForUkjentDatoFørEndring =
-            tilkjentYtelseFørEndring.find { it.periode.inneholder(justertDato) }
+            tilkjentYtelseFørEndring.segment(justertDato)
         val tilkjentPeriodeForSøknadsdatoFørEndring =
-            tilkjentYtelseFørEndring.find { it.periode.inneholder(søknadsdato) }
+            tilkjentYtelseFørEndring.segment(søknadsdato)
                 ?: error("Fant ikke tilkjentperiode for søknadstidspunkt")
         assertThat(tilkjentPeriodeForUkjentDatoFørEndring).isNull()
-        assertThat(tilkjentPeriodeForSøknadsdatoFørEndring.tilkjent.redusertDagsats().verdi).isGreaterThan(BigDecimal.ZERO)
+        assertThat(tilkjentPeriodeForSøknadsdatoFørEndring.verdi.redusertDagsats().verdi).isGreaterThan(BigDecimal.ZERO)
 
         val avklaringsbehovManuellRevurdering =
             listOf(Vurderingsbehov.VURDER_RETTIGHETSPERIODE)
@@ -462,12 +461,12 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
         assertThat(underveisPeriodeForSøknadsdato.arbeidsgradering.andelArbeid).isEqualTo(`0_PROSENT`)
         assertThat(underveisPeriodeForSøknadsdato.arbeidsgradering.gradering).isEqualTo(`100_PROSENT`)
 
-        val tilkjentPeriodeForUkjentDato = tilkjentYtelse.find { it.periode.inneholder(justertDato) }
+        val tilkjentPeriodeForUkjentDato = tilkjentYtelse.segment(justertDato)
             ?: error("Fant ikke tilkjentperiode for nytt starttidspunkt")
-        val tilkjentPeriodeForSøknadsdato = tilkjentYtelse.find { it.periode.inneholder(søknadsdato) }
+        val tilkjentPeriodeForSøknadsdato = tilkjentYtelse.segment(søknadsdato)
             ?: error("Fant ikke tilkjentperiode for søknadstidspunkt")
-        assertThat(tilkjentPeriodeForUkjentDato.tilkjent.redusertDagsats().verdi).isEqualTo(Beløp(0).verdi)
-        assertThat(tilkjentPeriodeForSøknadsdato.tilkjent.redusertDagsats().verdi).isGreaterThan(Beløp(0).verdi)
+        assertThat(tilkjentPeriodeForUkjentDato.verdi.redusertDagsats().verdi).isEqualTo(Beløp(0).verdi)
+        assertThat(tilkjentPeriodeForSøknadsdato.verdi.redusertDagsats().verdi).isGreaterThan(Beløp(0).verdi)
 
     }
 }

@@ -25,6 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.finnUgyldigRettighetsperiode
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -53,6 +54,7 @@ class Driftfunksjoner(
     private val meldekortGateway: MeldekortGateway,
     private val apiInternGateway: ApiInternGateway,
     private val trukketSøknadRepository: TrukketSøknadRepository,
+    private val sakService: SakService,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         flytJobbRepository = repositoryProvider.provide(),
@@ -73,6 +75,7 @@ class Driftfunksjoner(
         meldekortGateway = gatewayProvider.provide(),
         apiInternGateway = gatewayProvider.provide(),
         trukketSøknadRepository = repositoryProvider.provide(),
+        sakService = SakService(repositoryProvider, gatewayProvider),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -151,7 +154,7 @@ class Driftfunksjoner(
             validerGyldigTilstandFørUtvidelseAvRettighetsperiode(behandling, stegType)
 
             log.info("Utvider rettighetsperiode til Tid.MAKS og setter aktivt steg fra ${behandling.aktivtSteg()} til $stegType")
-            sakRepository.oppdaterRettighetsperiode(behandling.sakId, Periode(sak.rettighetsperiode.fom, Tid.MAKS))
+            sakService.overstyrRettighetsperioden(sak, sak.rettighetsperiode.fom, Tid.MAKS)
             behandlingRepository.leggTilNyttAktivtSteg(
                 behandling.id, StegTilstand(
                     stegType = stegType,
@@ -273,7 +276,7 @@ class Driftfunksjoner(
 
         val nyPeriode = sakRepository.finnUgyldigRettighetsperiode(sak.id)
         log.info("Tilbakestiller rettighetsperiode for trukket sak $saksnummer til $nyPeriode")
-        sakRepository.oppdaterRettighetsperiode(sak.id, nyPeriode)
+        sakService.overstyrRettighetsperioden(sak, nyPeriode)
         return nyPeriode
     }
 }

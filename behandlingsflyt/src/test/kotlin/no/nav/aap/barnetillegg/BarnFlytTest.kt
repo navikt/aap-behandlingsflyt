@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.FastsettBe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
@@ -40,8 +39,7 @@ import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Tid
@@ -122,7 +120,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) })
             { "Tilkjent ytelse skal være beregnet her." }
 
-        val barnetillegg = uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent.barnetillegg) }.let(::Tidslinje)
+        val barnetillegg = uthentetTilkjentYtelse.map { it.barnetillegg }
 
         val barnBlirAttenPå = barnfødseldato.plusYears(18)
 
@@ -141,7 +139,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             }
         )
 
-        val periodeBarnOverAtten = Periode(barnBlirAttenPå, uthentetTilkjentYtelse.maxOf { it.periode.tom })
+        val periodeBarnOverAtten = Periode(barnBlirAttenPå, uthentetTilkjentYtelse.perioder().maxOf { it.tom })
         val barnErOverAtten = barnetillegg.begrensetTil(periodeBarnOverAtten)
         assertThat(barnErOverAtten.segmenter()).isNotEmpty
         // Verifiser at barnetillegg er null etter fylte 18 år
@@ -255,18 +253,17 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                 )
             )
 
-        val uthentetTilkjentYtelse =
+        val tilkjentYtelse =
             requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) })
             { "Tilkjent ytelse skal være beregnet her." }
 
-        val barnetillegg = uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
-        val tilkjentYtelsePeriode = uthentetTilkjentYtelse.tilTidslinje().helePerioden()
+        val tilkjentYtelsePeriode = tilkjentYtelse.helePerioden()
 
-        assertThat(barnetillegg.segmenter()).isNotEmpty
+        assertThat(tilkjentYtelse.segmenter()).isNotEmpty
 
         // Skal kun gi barnetillegg for det unge barnet
         assertTidslinje(
-            barnetillegg,
+            tilkjentYtelse,
             Periode(fom = fom, tom = LocalDate.of(2025, 12, 31)) to {
                 assertThat(it.barnetillegg).isEqualTo(Beløp(37))
                 assertThat(it.antallBarn).isEqualTo(1)
@@ -394,7 +391,7 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
 
                 val tilkjentYtelse =
                     repositoryProvider.provide<TilkjentYtelseRepository>().hentHvisEksisterer(behandling.id)
-                        .orEmpty().map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
+                        .orEmpty()
 
                 val periodeMedBarneTilleggForToBarn =
                     tilkjentYtelse.filter { it.verdi.barnetillegg.verdi.toDouble() > 70 }.helePerioden()
@@ -565,30 +562,27 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             .løsUtenSamordning()
             .løsAndreStatligeYtelser()
             .medKontekst {
-                val tilkjentYtelseFraRepo = hentTilkjentYtelse(behandling.id)
+                val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
 
-                val tilkjentYtelseTidslinje =
-                    tilkjentYtelseFraRepo.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
-
-                assertThat(tilkjentYtelseTidslinje.isNotEmpty())
+                assertThat(tilkjentYtelse.isNotEmpty())
 
                 val periodeEttBarn = Periode(fraDatoOppgitteBarn, fraDatoRegisterBarn.minusDays(1))
-                val tilkjentYtelseEttBarn = tilkjentYtelseTidslinje.begrensetTil(periodeEttBarn)
+                val tilkjentYtelseEttBarn = tilkjentYtelse.begrensetTil(periodeEttBarn)
                 assertTidslinje(tilkjentYtelseEttBarn, periodeEttBarn to {
                     assertThat(it.barnetillegg).isEqualTo(Beløp(38))
                     assertThat(it.antallBarn).isEqualTo(1)
                 })
 
                 val periodeToBarn = Periode(fraDatoRegisterBarn, fraDatoSaksbehandlerOppgitteBarn.minusDays(1))
-                val tilkjentYtelseToBarn = tilkjentYtelseTidslinje.begrensetTil(periodeToBarn)
+                val tilkjentYtelseToBarn = tilkjentYtelse.begrensetTil(periodeToBarn)
                 assertTidslinje(tilkjentYtelseToBarn, periodeToBarn to {
                     assertThat(it.barnetillegg).isEqualTo(Beløp(76))
                     assertThat(it.antallBarn).isEqualTo(2)
                 })
 
                 val periodeTreBarn =
-                    Periode(fraDatoSaksbehandlerOppgitteBarn, tilkjentYtelseFraRepo.tilTidslinje().helePerioden().tom)
-                val tilkjentYtelseTreBarn = tilkjentYtelseTidslinje.begrensetTil(periodeTreBarn)
+                    Periode(fraDatoSaksbehandlerOppgitteBarn, tilkjentYtelse.helePerioden().tom)
+                val tilkjentYtelseTreBarn = tilkjentYtelse.begrensetTil(periodeTreBarn)
                 assertTidslinje(tilkjentYtelseTreBarn, periodeTreBarn to {
                     assertThat(it.barnetillegg).isEqualTo(Beløp(114))
                     assertThat(it.antallBarn).isEqualTo(3)
@@ -641,13 +635,12 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         )
             .løsAndreStatligeYtelser()
             .medKontekst {
-                val tilkjentYtelseFraRepo = hentTilkjentYtelse(behandling.id)
+                val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
 
-                val barnetillegg = tilkjentYtelseFraRepo.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
-                val tilkjentYtelsePeriode = tilkjentYtelseFraRepo.tilTidslinje().helePerioden()
+                val tilkjentYtelsePeriode = tilkjentYtelse.helePerioden()
 
-                assertTrue(barnetillegg.isNotEmpty())
-                assertTidslinje(barnetillegg, tilkjentYtelsePeriode to {
+                assertTrue(tilkjentYtelse.isNotEmpty())
+                assertTidslinje(tilkjentYtelse, tilkjentYtelsePeriode to {
                     assertThat(it.barnetillegg).isEqualTo(Beløp(38))
                     assertThat(it.antallBarn).isEqualTo(1)
                 })
@@ -728,31 +721,25 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                 assertThat(barn.saksbehandlerOppgitteBarn?.barn).hasSize(1)
                 assertThat(barn.vurderteBarn?.barn).hasSize(2)
 
-                val tilkjentYtelseFraRepo = hentTilkjentYtelse(revurdering.id)
-
-                val tilkjentYtelseTidslinje =
-                    tilkjentYtelseFraRepo.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
-
-                assertTrue(tilkjentYtelseTidslinje.isNotEmpty())
+                val tilkjentYtelse = hentTilkjentYtelse(revurdering.id)
+                assertTrue(tilkjentYtelse.isNotEmpty())
 
                 // Verifiser at barnetillegg øker når det andre barnet legges til
                 val periodeEttBarn = Periode(periode.fom, fomSaksbehandlerOppgitteBarn.minusDays(1))
-                val tilkjentYtelseEtBarn = tilkjentYtelseTidslinje.begrensetTil(periodeEttBarn)
+                val tilkjentYtelseEtBarn = tilkjentYtelse.begrensetTil(periodeEttBarn)
                 assertTidslinje(tilkjentYtelseEtBarn, periodeEttBarn to {
                     assertThat(it.barnetillegg).isEqualTo(Beløp(38))
                     assertThat(it.antallBarn).isEqualTo(1)
                 })
 
                 val periodeToBarn =
-                    Periode(fomSaksbehandlerOppgitteBarn, tilkjentYtelseFraRepo.tilTidslinje().helePerioden().tom)
-                val tilkjentYtelseToBarn = tilkjentYtelseTidslinje.begrensetTil(periodeToBarn)
+                    Periode(fomSaksbehandlerOppgitteBarn, tilkjentYtelse.helePerioden().tom)
+                val tilkjentYtelseToBarn = tilkjentYtelse.begrensetTil(periodeToBarn)
                 assertTidslinje(tilkjentYtelseToBarn, periodeToBarn to {
                     assertThat(it.barnetillegg).isEqualTo(Beløp(76))
                     assertThat(it.antallBarn).isEqualTo(2)
                 })
-
             }
-
     }
 
     @Test
@@ -799,16 +786,12 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             )
             .løsAndreStatligeYtelser()
             .medKontekst {
-                val tilkjentYtelseFraRepo = hentTilkjentYtelse(behandling.id)
-
-                val tilkjentYtelseTidslinje =
-                    tilkjentYtelseFraRepo.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
-
-                assertTrue(tilkjentYtelseTidslinje.isNotEmpty())
+                val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
+                assertTrue(tilkjentYtelse.isNotEmpty())
 
                 val periodeEttBarn =
-                    Periode(fraDatoOppgitteBarn, tilkjentYtelseFraRepo.tilTidslinje().helePerioden().tom)
-                val tilkjentYtelseEttBarn = tilkjentYtelseTidslinje.begrensetTil(periodeEttBarn)
+                    Periode(fraDatoOppgitteBarn, tilkjentYtelse.helePerioden().tom)
+                val tilkjentYtelseEttBarn = tilkjentYtelse.begrensetTil(periodeEttBarn)
                 assertTidslinje(tilkjentYtelseEttBarn, periodeEttBarn to {
                     assertThat(it.barnetillegg).isEqualTo(Beløp(38))
                     assertThat(it.antallBarn).isEqualTo(1)
@@ -819,16 +802,13 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
-                val tilkjentYtelseFraRepo = hentTilkjentYtelse(behandling.id)
+                val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
 
-                val tilkjentYtelseTidslinje =
-                    tilkjentYtelseFraRepo.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
-
-                assertTrue(tilkjentYtelseTidslinje.isNotEmpty())
+                assertTrue(tilkjentYtelse.isNotEmpty())
 
                 val periodeEttBarn =
-                    Periode(fraDatoOppgitteBarn, tilkjentYtelseFraRepo.tilTidslinje().helePerioden().tom)
-                val tilkjentYtelseEttBarn = tilkjentYtelseTidslinje.begrensetTil(periodeEttBarn)
+                    Periode(fraDatoOppgitteBarn, tilkjentYtelse.helePerioden().tom)
+                val tilkjentYtelseEttBarn = tilkjentYtelse.begrensetTil(periodeEttBarn)
                 assertTidslinje(tilkjentYtelseEttBarn, periodeEttBarn to {
                     assertThat(it.barnetillegg).isEqualTo(Beløp(0))
                     assertThat(it.barnetilleggsats).isEqualTo(Beløp(0))
@@ -860,13 +840,12 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
         behandling.løsBarnetillegg()
             .løsAndreStatligeYtelser()
             .medKontekst {
-                val tilkjentYtelseFraRepo = hentTilkjentYtelse(behandling.id)
+                val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
 
-                val barnetillegg = tilkjentYtelseFraRepo.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
-                val tilkjentYtelsePeriode = tilkjentYtelseFraRepo.tilTidslinje().helePerioden()
+                val tilkjentYtelsePeriode = tilkjentYtelse.helePerioden()
 
-                assertTrue(barnetillegg.isNotEmpty())
-                assertTidslinje(barnetillegg, tilkjentYtelsePeriode to {
+                assertTrue(tilkjentYtelse.isNotEmpty())
+                assertTidslinje(tilkjentYtelse, tilkjentYtelsePeriode to {
                     assertThat(it.barnetillegg).isEqualTo(Beløp(38))
                     assertThat(it.antallBarn).isEqualTo(1)
                 })
@@ -892,16 +871,13 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
             .bekreftVurderinger()
             .fattVedtak()
             .medKontekst {
-                val tilkjentYtelseFraRepo = hentTilkjentYtelse(revurdering.id)
+                val tilkjentYtelse = hentTilkjentYtelse(revurdering.id)
 
-                val tilkjentYtelseTidslinje =
-                    tilkjentYtelseFraRepo.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
-
-                assertTrue(tilkjentYtelseTidslinje.isNotEmpty())
+                assertTrue(tilkjentYtelse.isNotEmpty())
 
                 val periodeEttBarn =
-                    Periode(periode.fom, tilkjentYtelseFraRepo.tilTidslinje().helePerioden().tom)
-                val tilkjentYtelseEttBarn = tilkjentYtelseTidslinje.begrensetTil(periodeEttBarn)
+                    Periode(periode.fom, tilkjentYtelse.helePerioden().tom)
+                val tilkjentYtelseEttBarn = tilkjentYtelse.begrensetTil(periodeEttBarn)
                 assertTidslinje(tilkjentYtelseEttBarn, periodeEttBarn to {
                     assertThat(it.barnetillegg).isEqualTo(Beløp(0))
                     assertThat(it.barnetilleggsats).isEqualTo(Beløp(0))
@@ -960,15 +936,13 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                 assertThat(barn.saksbehandlerOppgitteBarn?.barn).hasSize(1)
                 assertThat(barn.registerbarn?.barn).hasSize(1)
 
-                val tilkjentYtelseFraRepo = hentTilkjentYtelse(behandling.id)
+                val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
 
-                val tilkjentYtelseTidslinje =
-                    tilkjentYtelseFraRepo.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
-                assertTrue(tilkjentYtelseTidslinje.isNotEmpty())
+                assertTrue(tilkjentYtelse.isNotEmpty())
 
-                val tilkjentYtelsePeriode = tilkjentYtelseFraRepo.tilTidslinje().helePerioden()
-                val barnetillegg = tilkjentYtelseTidslinje.begrensetTil(tilkjentYtelsePeriode)
+                val tilkjentYtelsePeriode = tilkjentYtelse.helePerioden()
+                val barnetillegg = tilkjentYtelse.begrensetTil(tilkjentYtelsePeriode)
                 assertTidslinje(barnetillegg, tilkjentYtelsePeriode to {
                     assertThat(it.barnetillegg).isEqualTo(Beløp(76))
                     assertThat(it.antallBarn).isEqualTo(2)
@@ -985,15 +959,12 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                 assertThat(barn.saksbehandlerOppgitteBarn).isNull()
                 assertThat(barn.registerbarn?.barn).hasSize(1)
 
-                val tilkjentYtelseFraRepo = hentTilkjentYtelse(behandling.id)
+                val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
 
-                val tilkjentYtelseTidslinje =
-                    tilkjentYtelseFraRepo.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
+                assertTrue(tilkjentYtelse.isNotEmpty())
 
-                assertTrue(tilkjentYtelseTidslinje.isNotEmpty())
-
-                val tilkjentYtelsePeriode = tilkjentYtelseFraRepo.tilTidslinje().helePerioden()
-                val barnetillegg = tilkjentYtelseTidslinje.begrensetTil(tilkjentYtelsePeriode)
+                val tilkjentYtelsePeriode = tilkjentYtelse.helePerioden()
+                val barnetillegg = tilkjentYtelse.begrensetTil(tilkjentYtelsePeriode)
                 assertTidslinje(barnetillegg, tilkjentYtelsePeriode to {
                     assertThat(it.barnetillegg).isEqualTo(Beløp(38))
                     assertThat(it.antallBarn).isEqualTo(1)
@@ -1027,15 +998,12 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                     assertThat(barn.saksbehandlerOppgitteBarn).isNull()
                     assertThat(barn.registerbarn?.barn).hasSize(1)
 
-                    val tilkjentYtelseFraRepo = hentTilkjentYtelse(behandling.id)
+                    val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
 
-                    val tilkjentYtelseTidslinje =
-                        tilkjentYtelseFraRepo.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
+                    assertTrue(tilkjentYtelse.isNotEmpty())
 
-                    assertTrue(tilkjentYtelseTidslinje.isNotEmpty())
-
-                    val tilkjentYtelsePeriode = tilkjentYtelseFraRepo.tilTidslinje().helePerioden()
-                    val barnetillegg = tilkjentYtelseTidslinje.begrensetTil(tilkjentYtelsePeriode)
+                    val tilkjentYtelsePeriode = tilkjentYtelse.helePerioden()
+                    val barnetillegg = tilkjentYtelse.begrensetTil(tilkjentYtelsePeriode)
                     assertTidslinje(barnetillegg, tilkjentYtelsePeriode to {
                         assertThat(it.barnetillegg).isEqualTo(Beløp(38))
                         assertThat(it.antallBarn).isEqualTo(1)
@@ -1075,15 +1043,12 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                 assertThat(barn.saksbehandlerOppgitteBarn?.barn).hasSize(1)
                 assertThat(barn.registerbarn?.barn).hasSize(1)
 
-                val tilkjentYtelseFraRepo = hentTilkjentYtelse(behandling.id)
+                val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
 
-                val tilkjentYtelseTidslinje =
-                    tilkjentYtelseFraRepo.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
+                assertTrue(tilkjentYtelse.isNotEmpty())
 
-                assertTrue(tilkjentYtelseTidslinje.isNotEmpty())
-
-                val tilkjentYtelsePeriode = tilkjentYtelseFraRepo.tilTidslinje().helePerioden()
-                val barnetillegg = tilkjentYtelseTidslinje.begrensetTil(tilkjentYtelsePeriode)
+                val tilkjentYtelsePeriode = tilkjentYtelse.helePerioden()
+                val barnetillegg = tilkjentYtelse.begrensetTil(tilkjentYtelsePeriode)
                 assertTidslinje(barnetillegg, tilkjentYtelsePeriode to {
                     assertThat(it.barnetillegg).isEqualTo(Beløp(76))
                     assertThat(it.antallBarn).isEqualTo(2)
@@ -1121,23 +1086,20 @@ class BarnFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
                 assertThat(barn.saksbehandlerOppgitteBarn).isNull()
                 assertThat(barn.registerbarn?.barn).hasSize(1)
 
-                val tilkjentYtelseFraRepo = hentTilkjentYtelse(behandling.id)
+                val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
 
-                val tilkjentYtelseTidslinje =
-                    tilkjentYtelseFraRepo.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
-
-                assertTrue(tilkjentYtelseTidslinje.isNotEmpty())
+                assertTrue(tilkjentYtelse.isNotEmpty())
 
                 val periodeMedBarnetillegg = Periode(fom, dødtBarnDødsdato.toLocalDate())
-                val tilkjentYtelseMedBarnetillegg = tilkjentYtelseTidslinje.begrensetTil(periodeMedBarnetillegg)
+                val tilkjentYtelseMedBarnetillegg = tilkjentYtelse.begrensetTil(periodeMedBarnetillegg)
                 assertTidslinje(tilkjentYtelseMedBarnetillegg, periodeMedBarnetillegg to {
                     assertThat(it.barnetillegg).isEqualTo(Beløp(38))
                     assertThat(it.antallBarn).isEqualTo(1)
                 })
 
                 val periodeUtenBarnetillegg =
-                    Periode(dødtBarnDødsdato.toLocalDate().plusDays(1), tilkjentYtelseTidslinje.maxDato())
-                val tilkjentYtelseUtenBarnetillegg = tilkjentYtelseTidslinje.begrensetTil(periodeUtenBarnetillegg)
+                    Periode(dødtBarnDødsdato.toLocalDate().plusDays(1), tilkjentYtelse.maxDato())
+                val tilkjentYtelseUtenBarnetillegg = tilkjentYtelse.begrensetTil(periodeUtenBarnetillegg)
                 assertTidslinje(tilkjentYtelseUtenBarnetillegg, periodeUtenBarnetillegg to {
                     assertThat(it.barnetillegg).isEqualTo(Beløp(0))
                     assertThat(it.antallBarn).isEqualTo(0)

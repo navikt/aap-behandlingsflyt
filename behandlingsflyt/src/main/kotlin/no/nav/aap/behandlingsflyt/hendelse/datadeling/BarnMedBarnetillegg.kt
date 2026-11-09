@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.hendelse.datadeling
 
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.barnetillegg.tilTidslinje
 import no.nav.aap.barnetillegg.BarnIdentifikator
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 
@@ -27,10 +27,9 @@ data class PeriodeMedBeløp(val periode: Periode, val beløp: Beløp, val sats: 
  * perioder).
  */
 fun utledBarnMedBarnetillegg(
-    tilkjentYtelse: List<TilkjentYtelsePeriode>,
+    tilkjentTidslinje: Tidslinje<Tilkjent>,
     barnetilleggGrunnlag: BarnetilleggGrunnlag?,
 ): List<BarnMedBarnetillegg> {
-    val tilkjentTidslinje = tilkjentYtelse.tilTidslinje()
     val rettTidslinje = barnetilleggGrunnlag?.perioder.tilTidslinje()
 
     val barnPerioder: List<Pair<BarnIdentifikator, PeriodeMedBeløp>> = tilkjentTidslinje

@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barnepensjon.Barne
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonPeriode
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
@@ -26,8 +25,6 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import org.assertj.core.api.Assertions.assertThat
@@ -129,12 +126,8 @@ class BarnepensjonFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
         val tilkjent =
             requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) })
             { "Tilkjent ytelse skal være beregnet her." }.map {
-                Segment(
-                    it.periode,
-                    Triple(it.tilkjent.dagsats, it.tilkjent.redusertDagsats(), it.tilkjent.barnepensjonDagsats)
-                )
+                Triple(it.dagsats, it.redusertDagsats(), it.barnepensjonDagsats)
             }
-                .let(::Tidslinje)
                 .komprimer()
         assertTidslinje(
             tilkjent,

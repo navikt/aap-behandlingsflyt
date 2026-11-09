@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student
+package no.nav.aap.student
 
 import java.time.LocalDate
 

@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.utils.FarligMutering
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
@@ -89,12 +90,13 @@ object InMemorySakRepository : SakRepository {
         TODO("Not yet implemented")
     }
 
+    @FarligMutering
     override fun oppdaterRettighetsperiode(
-        sakId: SakId,
+        sak: Sak,
         periode: Periode
     ) {
         synchronized(lock) {
-            val sak = memory.getValue(sakId)
+            val sak = memory.getValue(sak.id)
             val field = sak::class.java.getDeclaredField("rettighetsperiode")
             field.trySetAccessible()
             field.set(sak, periode)

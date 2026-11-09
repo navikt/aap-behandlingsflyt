@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.InntektsbortfallRe
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Repository
 import no.nav.aap.barnetillegg.BarnetilleggRepository
@@ -39,7 +38,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
+import no.nav.aap.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
@@ -178,15 +177,13 @@ class VedtakDokumentGenerator(
             behandling = behandling,
             behandlinger = behandlinger,
             vilkårsresultat = vilkårsresultatRepository.hent(behandlingId),
-            tilkjentYtelse = tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)
-                ?.tilTidslinje().orEmpty(),
+            tilkjentYtelse = tilkjentYtelseRepository.hentHvisEksisterer(behandlingId).orEmpty(),
             underveis = underveisRepository.hentHvisEksisterer(behandlingId)?.somTidslinje().orEmpty(),
             mottatteDokumenter = mottattDokumentRepository.hentDokumenterForSak(sakId).toList(),
             beregningsgrunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(behandlingId),
 
             forrigeTilkjentYtelse = forrigeBehandlingId
-                ?.let { tilkjentYtelseRepository.hentHvisEksisterer(it) }
-                ?.tilTidslinje().orEmpty(),
+                ?.let { tilkjentYtelseRepository.hentHvisEksisterer(it) }.orEmpty(),
             forrigeUnderveis = forrigeBehandlingId
                 ?.let { underveisRepository.hentHvisEksisterer(it) }
                 ?.somTidslinje().orEmpty(),

@@ -39,7 +39,15 @@ data class VedtakslengdeGrunnlag(
         // Utleder fom fra sluttdato til forrige vurdering, eller fraDato for første vurdering
         val segmenter = sortert.mapIndexed { index, vurdering ->
             val fom = if (index == 0) fraDato else sortert[index - 1].sluttdato.plusDays(1)
-            Segment(Periode(fom, vurdering.sluttdato), vurdering)
+            /**
+             * I noen sære tilfeller kan fraDato være etter sluttdato - da gir ikke disse periodene mening lenger. Setter de derfor til å løpe i 1 dag.
+             */
+            val vedtakslengdePeriode = if (fom > vurdering.sluttdato) {
+                Periode(vurdering.sluttdato, vurdering.sluttdato)
+            } else {
+                Periode(fom, vurdering.sluttdato)
+            }
+            Segment(vedtakslengdePeriode, vurdering)
         }
 
         return Tidslinje(segmenter)

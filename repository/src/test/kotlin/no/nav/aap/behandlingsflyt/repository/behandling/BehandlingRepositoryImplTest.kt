@@ -1,11 +1,10 @@
 package no.nav.aap.behandlingsflyt.repository.behandling
 
 import no.nav.aap.behandlingsflyt.behandling.BackfillRedusertDagsatsService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettRevurdering
 import no.nav.aap.behandlingsflyt.help.opprettSak
@@ -13,11 +12,11 @@ import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.behandling.brev.bestilling.BrevbestillingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.BarnetilleggRepositoryImpl
-import no.nav.aap.meldeplikt.MeldeperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningAndreStatligeYtelserRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningUføreRepositoryImpl
@@ -27,8 +26,8 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordni
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underveis.UnderveisRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.dokument.arbeid.MeldekortRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.forutgåendemedlemskap.ForutgåendeMedlemskapRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.FormkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap.LovvalgMedlemskapRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap.OppgittUtenlandsopplysningerRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
@@ -41,36 +40,41 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre.Ufør
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.yrkesskade.YrkesskadeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepositoryImpl
-import no.nav.aap.bistandsbehov.BistandRepositoryImpl
-import no.nav.aap.meldeplikt.MeldepliktRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.rettighetsperiode.VurderRettighetsperiodeRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
+import no.nav.aap.student.StudentRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.søknad.TrukketSøknadRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.log.ContextRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.pip.PipRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.PersonRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.SakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.bistandsbehov.BistandRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.DBConnection
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.meldeplikt.MeldeperiodeRepositoryImpl
+import no.nav.aap.meldeplikt.MeldepliktRepositoryImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -280,6 +284,7 @@ internal class BehandlingRepositoryImplTest {
         dataSource.transaction { connection ->
             val behandlingRepository = BehandlingRepositoryImpl(connection)
             val sakRepository = SakRepositoryImpl(connection)
+            val sakService = SakService(postgresRepositoryRegistry.provider(connection), minimalGatewayProvider {  })
 
             val sakFerdigMedOppfølgingsoppgave = sak(connection)
             val behandlingForSakMedOppfølgingsoppgave = finnEllerOpprettBehandling(connection, sakFerdigMedOppfølgingsoppgave)
@@ -304,10 +309,10 @@ internal class BehandlingRepositoryImplTest {
             val behandlingForSakTrukket = finnEllerOpprettBehandling(connection, sakTrukket)
             behandlingRepository.oppdaterBehandlingStatus(behandlingForSakTrukket.id, Status.AVSLUTTET)
 
-            sakRepository.oppdaterRettighetsperiode(sakFerdigMedOppfølgingsoppgave.id, Periode(LocalDate.now(), LocalDate.now().plusDays(5)))
-            sakRepository.oppdaterRettighetsperiode(sakFerdig.id, Periode(LocalDate.now(), LocalDate.now().plusDays(5)))
-            sakRepository.oppdaterRettighetsperiode(sakÅpen.id, Periode(LocalDate.now(), LocalDate.now().plusDays(5)))
-            sakRepository.oppdaterRettighetsperiode(sakTrukket.id, Periode(LocalDate.now(), LocalDate.now()))
+            sakService.overstyrRettighetsperioden(sakFerdigMedOppfølgingsoppgave, LocalDate.now(), LocalDate.now().plusDays(5))
+            sakService.overstyrRettighetsperioden(sakFerdig, LocalDate.now(), LocalDate.now().plusDays(5))
+            sakService.overstyrRettighetsperioden(sakÅpen, LocalDate.now(), LocalDate.now().plusDays(5))
+            sakService.overstyrRettighetsperioden(sakTrukket, LocalDate.now(), LocalDate.now())
 
 
             // Skal ikke hente saker med åpen ytelsesbehandling
@@ -620,7 +625,8 @@ internal class BehandlingRepositoryImplTest {
 
             BackfillRedusertDagsatsService(tilkjentYtelseRepository).backfillBehandling(behandling.id)
             val lagredeDagsatser = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)!!
-                .map { it.tilkjent.redusertDagsatsOrNull() }
+                .map { it.redusertDagsatsOrNull() }
+                .verdier().toList()
             assertThat(lagredeDagsatser)
                 .containsExactlyInAnyOrderElementsOf(perioderSomMangler.map { it.beregnRedusertDagsats() })
         }
@@ -643,36 +649,33 @@ internal class BehandlingRepositoryImplTest {
         manglerRedusertDagsats: Boolean,
         antallPerioder: Int = 1,
     ) {
-        val periode = TilkjentYtelsePeriode(
-            periode = Periode(LocalDate.now(), LocalDate.now().plusDays(1)),
-            tilkjent = Tilkjent(
-                dagsats = Beløp(999),
-                gradering = Prosent.`66_PROSENT`,
-                graderingGrunnlag = GraderingGrunnlag(
-                    Prosent.`0_PROSENT`,
-                    Prosent.`0_PROSENT`,
-                    Prosent.`0_PROSENT`,
-                    Prosent.`0_PROSENT`,
-                    Prosent.`0_PROSENT`,
-                    Prosent.`0_PROSENT`,
-                ),
-                barnetillegg = Beløp(999),
-                grunnlagsfaktor = GUnit("1.0"),
-                antallBarn = 1,
-                barnepensjonDagsats = Beløp(100),
-                barnetilleggsats = Beløp(999),
-                grunnbeløp = Beløp(1000),
-                utbetalingsdato = LocalDate.now().plusDays(14),
-                minsteSats = Minstesats.IKKE_MINSTESATS,
-                redusertDagsats = Beløp(63),
+        val tilkjent = Tilkjent(
+            dagsats = Beløp(999),
+            gradering = Prosent.`66_PROSENT`,
+            graderingGrunnlag = GraderingGrunnlag(
+                Prosent.`0_PROSENT`,
+                Prosent.`0_PROSENT`,
+                Prosent.`0_PROSENT`,
+                Prosent.`0_PROSENT`,
+                Prosent.`0_PROSENT`,
+                Prosent.`0_PROSENT`,
             ),
+            barnetillegg = Beløp(999),
+            grunnlagsfaktor = GUnit("1.0"),
+            antallBarn = 1,
+            barnepensjonDagsats = Beløp(100),
+            barnetilleggsats = Beløp(999),
+            grunnbeløp = Beløp(1000),
+            utbetalingsdato = LocalDate.now().plusDays(14),
+            minsteSats = Minstesats.IKKE_MINSTESATS,
+            redusertDagsats = Beløp(63),
         )
-        val perioder = (0 until antallPerioder).map { index ->
-            periode.copy(
-                periode = Periode(LocalDate.now().plusDays(index * 2L), LocalDate.now().plusDays(index * 2L + 1)),
-                tilkjent = periode.tilkjent.copy(dagsats = Beløp(999 + index * 100)),
+        val perioder = Tidslinje((0 until antallPerioder).map { index ->
+            Segment(
+                Periode(LocalDate.now().plusDays(index * 2L), LocalDate.now().plusDays(index * 2L + 1)),
+                tilkjent.copy(dagsats = Beløp(999 + index * 100)),
             )
-        }
+        })
         TilkjentYtelseRepositoryImpl(connection).lagre(behandlingId, perioder, tomtTilkjentYtelseGrunnlag, "")
         if (manglerRedusertDagsats) {
             connection.execute(
