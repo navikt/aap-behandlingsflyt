@@ -6,7 +6,7 @@ import java.time.LocalDate
 /**
  * Map fra ordinær fastsatt dag til justert dato for helligdager. Se [Confluence](https://confluence.adeo.no/x/uizUL) for dokumentasjon.
  */
-fun helligdagsunntakFastsattMeldedag(): Map<LocalDate, LocalDate> = if (Miljø.erProd())
+fun helligdagsunntakFastsattMeldedag(erProd: Boolean = Miljø.erProd()): Map<LocalDate, LocalDate> = if (erProd)
     mapOf(
         LocalDate.of(2025, 12, 22) to LocalDate.of(2025, 12, 17)
     ) else mapOf(
@@ -17,7 +17,7 @@ fun helligdagsunntakFastsattMeldedag(): Map<LocalDate, LocalDate> = if (Miljø.e
         LocalDate.of(2026, 12, 21) to LocalDate.of(2026, 12, 16),
     )
 
-fun helligdagsunntakFritaksUtbetalingDato(): Map<LocalDate, LocalDate> = if (Miljø.erProd())
+fun helligdagsunntakFritaksUtbetalingDato(erProd: Boolean = Miljø.erProd()): Map<LocalDate, LocalDate> = if (erProd)
     mapOf(
         LocalDate.of(2025, 12, 17) to LocalDate.of(2025, 12, 15),
         LocalDate.of(2025, 12, 24) to LocalDate.of(2025, 12, 22),
