@@ -108,9 +108,11 @@ class VarsleVedtakJobbUtfører(
 
         val tpYtelser by lazy { tjenestePensjonGateway.hentTjenestePensjon(ident.identifikator).flatMap { it.ytelser } }
 
+        val harRett = nåværendeUnderveisGrunnlag.rettighetstyper().isNotEmpty()
+
         val relevantEndring =
             listOf(
-                førstegangsbehandling,
+                førstegangsbehandling && harRett,
                 endringIRettighetsTypeTidslinje
             )
 
