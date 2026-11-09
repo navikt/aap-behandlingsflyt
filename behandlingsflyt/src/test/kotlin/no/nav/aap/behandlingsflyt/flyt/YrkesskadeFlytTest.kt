@@ -22,7 +22,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Arbeidsevne
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -81,7 +80,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
-            .fattVedtak()
 
         assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
     }
@@ -699,14 +697,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
-                // Saken står til To-trinnskontroll hos beslutter
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .fattVedtak()
-            .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
-
                 val vedtak = hentVedtak()
                 assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
             }
@@ -754,12 +745,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                     )
             }
             .kvalitetssikre()
-            .medKontekst {
-                // Saken står til To-trinnskontroll hos beslutter
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .fattVedtak()
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
