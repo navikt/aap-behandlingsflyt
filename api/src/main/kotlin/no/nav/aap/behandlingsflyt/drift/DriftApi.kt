@@ -622,6 +622,7 @@ fun NormalOpenAPIRoute.driftApi(
 
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
 
                     val sak = sakRepository.hentHvisFinnes(Saksnummer(params.saksnummer))
                         ?: throw VerdiIkkeFunnetException("Sak med saksnummer ${params.saksnummer} finnes ikke")
@@ -633,7 +634,8 @@ fun NormalOpenAPIRoute.driftApi(
                                 mottattTidspunkt = dokument.mottattTidspunkt,
                                 type = dokument.type,
                                 kanal = dokument.kanal,
-                                status = dokument.status
+                                status = dokument.status,
+                                behandlingReferanse = dokument.behandlingId?.let { behandlingRepository.hent(it).referanse.referanse }
                             )
                         }
                         .sortedByDescending { it.mottattTidspunkt }
@@ -843,6 +845,7 @@ private data class MottattDokumentDriftsinfoDTO(
     val mottattTidspunkt: LocalDateTime,
     val type: InnsendingType,
     val kanal: Kanal,
+    val behandlingReferanse: UUID?,
     val status: MottattDokumentStatus = MottattDokumentStatus.MOTTATT,
 )
 
