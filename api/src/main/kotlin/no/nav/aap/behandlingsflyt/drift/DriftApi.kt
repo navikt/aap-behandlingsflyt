@@ -635,7 +635,7 @@ fun NormalOpenAPIRoute.driftApi(
                                 type = dokument.type,
                                 kanal = dokument.kanal,
                                 status = dokument.status,
-                                behandlingReferanse = dokument.behandlingId?.let { behandlingRepository.hent(it).referanse.referanse }
+                                behandlingReferanse = dokument.behandlingId?.let { behandlingRepository.hentReferanse(it).referanse }
                             )
                         }
                         .sortedByDescending { it.mottattTidspunkt }

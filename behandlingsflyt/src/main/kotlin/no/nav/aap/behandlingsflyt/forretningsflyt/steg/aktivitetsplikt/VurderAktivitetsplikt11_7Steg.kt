@@ -195,8 +195,8 @@ class VurderAktivitetsplikt11_7Steg(
     }
 
     private fun bestillForhåndsvarselBrev(behandlingId: BehandlingId): BrevbestillingReferanse {
-        val behandling = behandlingRepository.hent(behandlingId)
-        val vårReferanse = "${behandling.referanse}-${brevBehov.typeBrev}"
+        val referanse = behandlingRepository.hentReferanse(behandlingId)
+        val vårReferanse = "$referanse-${brevBehov.typeBrev}"
 
         val brevReferanse = brevbestillingService.bestill(
             behandlingId,

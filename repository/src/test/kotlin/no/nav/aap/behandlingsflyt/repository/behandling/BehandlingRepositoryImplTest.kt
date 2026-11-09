@@ -99,6 +99,19 @@ internal class BehandlingRepositoryImplTest {
     }
 
     @Test
+    fun `Kan hente referanse med behandlingId`() {
+        val behandling = dataSource.transaction { connection ->
+            finnEllerOpprettBehandling(connection, sak(connection))
+        }
+
+        dataSource.transaction(readOnly = true) { connection ->
+            val referanse = BehandlingRepositoryImpl(connection).hentReferanse(behandling.id)
+
+            assertThat(referanse).isEqualTo(behandling.referanse)
+        }
+    }
+
+    @Test
     fun `Kan lagre og hente ut behandling med uuid`() {
         val skapt = dataSource.transaction { connection ->
             val sak = opprettSak(

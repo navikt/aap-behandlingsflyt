@@ -81,6 +81,10 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
+    override fun hentReferanse(behandlingId: BehandlingId): BehandlingReferanse {
+        return hent(behandlingId).referanse
+    }
+
     override fun hentStegHistorikk(behandlingId: BehandlingId): List<StegTilstand> {
         synchronized(lock) {
             return memoryStegHistorikk[behandlingId].orEmpty()

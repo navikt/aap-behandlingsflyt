@@ -498,6 +498,21 @@ class BehandlingRepositoryImpl(private val connection: DBConnection) : Behandlin
         }
     }
 
+    override fun hentReferanse(behandlingId: BehandlingId): BehandlingReferanse {
+        val query = """
+            SELECT referanse FROM behandling WHERE id = ?
+        """.trimIndent()
+
+        return connection.queryFirst(query) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+            setRowMapper { row ->
+                BehandlingReferanse(row.getUUID("referanse"))
+            }
+        }
+    }
+
     override fun hent(referanse: BehandlingReferanse): Behandling {
         val query = """
             SELECT b.*, sh.steg AS sh_steg, sh.status AS sh_status, sh.opprettet_tid AS sh_opprettet_tid,

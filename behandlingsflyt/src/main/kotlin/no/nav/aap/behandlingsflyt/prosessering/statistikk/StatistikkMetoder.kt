@@ -112,7 +112,7 @@ class StatistikkMetoder(
             TypeBehandling.Førstegangsbehandling -> null
             TypeBehandling.Revurdering ->
                 behandling.forrigeBehandlingId
-                    ?.let { behandlingRepository.hent(it).referanse.referanse }
+                    ?.let { behandlingRepository.hentReferanse(it).referanse }
 
             TypeBehandling.Tilbakekreving -> TODO()
             TypeBehandling.Klage -> {
