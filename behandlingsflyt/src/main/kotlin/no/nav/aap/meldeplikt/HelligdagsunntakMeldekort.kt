@@ -8,23 +8,23 @@ import kotlin.collections.mapOf
  * Map fra ordinær fastsatt dag til justert dato for helligdager. Se [Confluence](https://confluence.adeo.no/x/uizUL) for dokumentasjon.
  */
 
-var eksisterendeMeldedagUnntakIProd = mapOf(
+val eksisterendeMeldedagUnntakIProd = mapOf(
     LocalDate.of(2025, 12, 22) to LocalDate.of(2025, 12, 17)
 )
 
-var testMeldedagUnntakIDev = mapOf(
+val testMeldedagUnntakIDev = mapOf(
     LocalDate.of(2026, 11, 30) to LocalDate.of(2026, 11, 25),
     LocalDate.of(2026, 12, 7) to LocalDate.of(2026, 12, 2)
 )
 
-var kommendeMeldedagUnntakIProd = mapOf(
+val kommendeMeldedagUnntakIProd = mapOf(
     LocalDate.of(2026, 12, 21) to LocalDate.of(2026, 12, 16),
 )
 
 fun helligdagsunntakFastsattMeldedag(erProd: Boolean = Miljø.erProd()): Map<LocalDate, LocalDate> =
     eksisterendeMeldedagUnntakIProd + if (!erProd) testMeldedagUnntakIDev + kommendeMeldedagUnntakIProd else emptyMap()
 
-var eksisterndeFritaksUnntakIProd = mapOf(
+val eksisterndeFritaksUnntakIProd = mapOf(
     LocalDate.of(2025, 12, 17) to LocalDate.of(2025, 12, 15),
     LocalDate.of(2025, 12, 24) to LocalDate.of(2025, 12, 22),
     LocalDate.of(2025, 12, 31) to LocalDate.of(2025, 12, 29),
@@ -32,13 +32,13 @@ var eksisterndeFritaksUnntakIProd = mapOf(
     LocalDate.of(2026, 5, 13) to LocalDate.of(2026, 5, 12)
 )
 
-var testFritaksUnntakIDev = mapOf(
+val testFritaksUnntakIDev = mapOf(
     LocalDate.of(2026, 11, 25) to LocalDate.of(2026, 11, 23),
     LocalDate.of(2026, 12, 2) to LocalDate.of(2026, 11, 30),
     LocalDate.of(2026, 12, 9) to LocalDate.of(2026, 12, 7),
 )
 
-var kommendeFritaksUnntakIProd = mapOf(
+val kommendeFritaksUnntakIProd = mapOf(
     LocalDate.of(2026, 12, 16) to LocalDate.of(2026, 12, 14),
     LocalDate.of(2026, 12, 23) to LocalDate.of(2026, 12, 21),
     LocalDate.of(2026, 12, 30) to LocalDate.of(2026, 12, 28),
