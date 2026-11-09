@@ -2,34 +2,50 @@ package no.nav.aap.meldeplikt
 
 import no.nav.aap.komponenter.miljo.Miljø
 import java.time.LocalDate
+import kotlin.collections.mapOf
 
 /**
  * Map fra ordinær fastsatt dag til justert dato for helligdager. Se [Confluence](https://confluence.adeo.no/x/uizUL) for dokumentasjon.
  */
+
+var eksisterendeMeldedagUnntakIProd = mapOf(
+    LocalDate.of(2025, 12, 22) to LocalDate.of(2025, 12, 17)
+)
+
+var testMeldedagUnntakIDev = mapOf(
+    LocalDate.of(2026, 11, 30) to LocalDate.of(2026, 11, 25),
+    LocalDate.of(2026, 12, 7) to LocalDate.of(2026, 12, 2)
+)
+
+var kommendeMeldedagUnntakIProd = mapOf(
+    LocalDate.of(2026, 12, 21) to LocalDate.of(2026, 12, 16),
+)
+
 fun helligdagsunntakFastsattMeldedag(erProd: Boolean = Miljø.erProd()): Map<LocalDate, LocalDate> =
-    mapOf(
-        LocalDate.of(2025, 12, 22) to LocalDate.of(2025, 12, 17)
-    ) + if (!erProd) mapOf(
-        LocalDate.of(2026, 11, 30) to LocalDate.of(2026, 11, 25),
-        LocalDate.of(2026, 12, 7) to LocalDate.of(2026, 12, 2),
-        LocalDate.of(2026, 12, 21) to LocalDate.of(2026, 12, 16),
-    ) else emptyMap()
+    eksisterendeMeldedagUnntakIProd + if (!erProd) testMeldedagUnntakIDev + kommendeMeldedagUnntakIProd else emptyMap()
+
+var eksisterndeFritaksUnntakIProd = mapOf(
+    LocalDate.of(2025, 12, 17) to LocalDate.of(2025, 12, 15),
+    LocalDate.of(2025, 12, 24) to LocalDate.of(2025, 12, 22),
+    LocalDate.of(2025, 12, 31) to LocalDate.of(2025, 12, 29),
+    LocalDate.of(2026, 4, 1) to LocalDate.of(2026, 3, 30),
+    LocalDate.of(2026, 5, 13) to LocalDate.of(2026, 5, 12)
+)
+
+var testFritaksUnntakIDev = mapOf(
+    LocalDate.of(2026, 11, 25) to LocalDate.of(2026, 11, 23),
+    LocalDate.of(2026, 12, 2) to LocalDate.of(2026, 11, 30),
+    LocalDate.of(2026, 12, 9) to LocalDate.of(2026, 12, 7),
+)
+
+var kommendeFritaksUnntakIProd = mapOf(
+    LocalDate.of(2026, 12, 16) to LocalDate.of(2026, 12, 14),
+    LocalDate.of(2026, 12, 23) to LocalDate.of(2026, 12, 21),
+    LocalDate.of(2026, 12, 30) to LocalDate.of(2026, 12, 28),
+)
 
 fun helligdagsunntakFritaksUtbetalingDato(erProd: Boolean = Miljø.erProd()): Map<LocalDate, LocalDate> =
-    mapOf(
-        LocalDate.of(2025, 12, 17) to LocalDate.of(2025, 12, 15),
-        LocalDate.of(2025, 12, 24) to LocalDate.of(2025, 12, 22),
-        LocalDate.of(2025, 12, 31) to LocalDate.of(2025, 12, 29),
-        LocalDate.of(2026, 4, 1) to LocalDate.of(2026, 3, 30),
-        LocalDate.of(2026, 5, 13) to LocalDate.of(2026, 5, 12)
-    ) + if (!erProd) mapOf(
-        LocalDate.of(2026, 11, 25) to LocalDate.of(2026, 11, 23),
-        LocalDate.of(2026, 12, 2) to LocalDate.of(2026, 11, 30),
-        LocalDate.of(2026, 12, 9) to LocalDate.of(2026, 12, 7),
-        LocalDate.of(2026, 12, 16) to LocalDate.of(2026, 12, 14),
-        LocalDate.of(2026, 12, 23) to LocalDate.of(2026, 12, 21),
-        LocalDate.of(2026, 12, 30) to LocalDate.of(2026, 12, 28),
-    ) else emptyMap()
+    eksisterndeFritaksUnntakIProd + if (!erProd) testFritaksUnntakIDev + kommendeFritaksUnntakIProd else emptyMap()
 
 /**
  * Sjekker om en meldeperiode inneholder et helligdagsunntak for å
