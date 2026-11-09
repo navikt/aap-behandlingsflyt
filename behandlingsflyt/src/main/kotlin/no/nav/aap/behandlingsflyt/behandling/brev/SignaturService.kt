@@ -63,9 +63,9 @@ class SignaturService(
         val behandlingId = brevbestilling.behandlingId
 
         return if (brevbestilling.typeBrev.erVedtak()) {
-            val behandling = behandlingRepository.hent(behandlingId)
+            val referanse = behandlingRepository.hentReferanse(behandlingId)
             val oppgaveEnhetListe =
-                oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse).oppgaver
+                oppgavestyringGateway.hentOppgaveEnhet(referanse).oppgaver
             val avklaringsbehovene =
                 avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 
@@ -93,9 +93,9 @@ class SignaturService(
             return emptyList()
         }
 
-        val behandling = behandlingRepository.hent(behandlingId)
+        val referanse = behandlingRepository.hentReferanse(behandlingId)
         val oppgaveEnhetListe =
-            oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse).oppgaver
+            oppgavestyringGateway.hentOppgaveEnhet(referanse).oppgaver
         val avklaringsbehovene =
             avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 
@@ -171,11 +171,11 @@ class SignaturService(
         behandlingId: BehandlingId,
         innloggetBruker: Bruker,
     ): SignaturGrunnlag {
-        val behandling = behandlingRepository.hent(behandlingId)
+        val referanse = behandlingRepository.hentReferanse(behandlingId)
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
         val avklaringsbehov = avklaringsbehovene.måLøses().sistEndret()
         val enhet = if (avklaringsbehov != null) {
-            val oppgaveEnhetListe = oppgavestyringGateway.hentOppgaveEnhet(behandling.referanse).oppgaver
+            val oppgaveEnhetListe = oppgavestyringGateway.hentOppgaveEnhet(referanse).oppgaver
             enhetForDefinisjon(avklaringsbehov.definisjon, oppgaveEnhetListe)
         } else {
             null
