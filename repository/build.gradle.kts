@@ -22,6 +22,8 @@ dependencies {
     implementation(libs.bekk.nocommons)
 
     testImplementation(project(":lib-test"))
+    testImplementation(libs.archunit)
+    testRuntimeOnly(project(":app"))
     testImplementation(libs.dbtest)
     testImplementation(kelvinLibs.mockk)
 
