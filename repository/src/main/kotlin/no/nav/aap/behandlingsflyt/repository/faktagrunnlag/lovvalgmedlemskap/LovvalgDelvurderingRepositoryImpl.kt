@@ -27,7 +27,7 @@ class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : 
     private fun mapVurderinger(vurderingerId: Long): List<LovvalgDelvurderingerGrunnlag> =
         connection.queryList(
             """
-            SELECT versjon, vurdering, relevant_dato FROM LOVVALG_DELVURDERING
+            SELECT versjon, vurdering, relevant_dato, vurdert_i_behandling FROM LOVVALG_DELVURDERING
             WHERE vurderinger_id = ?
             ORDER BY relevant_dato
             """.trimIndent()
@@ -39,6 +39,7 @@ class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : 
                     kanBehandlesAutomatisk = vurdering.kanBehandlesAutomatisk,
                     tilhørighetVurdering = vurdering.tilhørighetVurdering,
                     relevantDato = row.getLocalDate("relevant_dato"),
+                    vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling")),
                 )
             }
         }
@@ -78,7 +79,7 @@ class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : 
             ) {
                 setParams {
                     setLong(1, vurderingerId)
-                    setLong(2, behandlingId.toLong())
+                    setLong(2, delvurdering.vurdertIBehandling.toLong())
                     setInt(3, LovvalgDelvurderingJson.versjon)
                     setString(4, LovvalgDelvurderingJson.serialiser(delvurdering.vurdering()))
                     setLocalDate(5, delvurdering.relevantDato)

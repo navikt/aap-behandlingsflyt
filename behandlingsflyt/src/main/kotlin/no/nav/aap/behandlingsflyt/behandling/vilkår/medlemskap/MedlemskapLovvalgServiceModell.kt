@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.Fartsomraade
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipsregister
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Yrke
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
@@ -18,6 +19,7 @@ data class LovvalgDelvurderingerGrunnlag(
     val kanBehandlesAutomatisk: Boolean,
     val tilhørighetVurdering: List<TilhørighetVurdering>,
     val relevantDato: LocalDate,
+    val vurdertIBehandling: BehandlingId,
 ) {
     fun vurdering(): KanBehandlesAutomatiskVurdering = KanBehandlesAutomatiskVurdering(kanBehandlesAutomatisk, tilhørighetVurdering)
 

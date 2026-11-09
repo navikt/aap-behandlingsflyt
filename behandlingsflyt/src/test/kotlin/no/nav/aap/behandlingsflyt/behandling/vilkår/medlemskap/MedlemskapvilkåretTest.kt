@@ -98,6 +98,7 @@ class MedlemskapvilkåretTest {
         kanBehandlesAutomatisk = kanBehandlesAutomatisk,
         tilhørighetVurdering = emptyList(),
         relevantDato = rettighetsperiode.fom,
+        vurdertIBehandling = BehandlingId(1L),
     )
 
     private fun manuellVurdering(medlem: Boolean) = ManuellVurderingForLovvalgMedlemskap(

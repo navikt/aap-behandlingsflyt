@@ -15,6 +15,7 @@ import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -62,8 +63,8 @@ class LovvalgDelvurderingRepositoryImplTest {
             val repository = LovvalgDelvurderingRepositoryImpl(connection)
             assertThat(repository.hentHvisEksisterer(behandlingId)).isNull()
 
-            repository.lagre(behandlingId, vurdering, startDato)
-            repository.lagre(behandlingId, vurdering.copy(), startDato)
+            repository.lagre(behandlingId, listOf(delvurdering(behandlingId, vurdering, startDato)))
+            repository.lagre(behandlingId, listOf(delvurdering(behandlingId, vurdering.copy(), startDato)))
 
             val grunnlag = requireNotNull(repository.hentHvisEksisterer(behandlingId))
             assertThat(grunnlag.vurdering()).isEqualTo(vurdering)
@@ -79,8 +80,8 @@ class LovvalgDelvurderingRepositoryImplTest {
             val repository = LovvalgDelvurderingRepositoryImpl(connection)
             val nyDato = startDato.plusDays(1)
 
-            repository.lagre(behandlingId, vurdering, startDato)
-            repository.lagre(behandlingId, vurdering, nyDato)
+            repository.lagre(behandlingId, listOf(delvurdering(behandlingId, vurdering, startDato)))
+            repository.lagre(behandlingId, listOf(delvurdering(behandlingId, vurdering, nyDato)))
 
             assertThat(repository.hentHvisEksisterer(behandlingId)?.relevantDato).isEqualTo(nyDato)
             assertThat(historikk(connection, behandlingId)).containsExactly(false, true)
@@ -99,9 +100,9 @@ class LovvalgDelvurderingRepositoryImplTest {
                     })
                 }
             )
-            repository.lagre(behandlingId, vurdering, startDato)
-            repository.lagre(behandlingId, endret, startDato)
-            repository.lagre(behandlingId, endret, startDato)
+            repository.lagre(behandlingId, listOf(delvurdering(behandlingId, vurdering, startDato)))
+            repository.lagre(behandlingId, listOf(delvurdering(behandlingId, endret, startDato)))
+            repository.lagre(behandlingId, listOf(delvurdering(behandlingId, endret, startDato)))
 
             assertThat(repository.hentHvisEksisterer(behandlingId)?.vurdering()).isEqualTo(endret)
             assertThat(historikk(connection, behandlingId)).containsExactly(false, true)
@@ -127,9 +128,9 @@ class LovvalgDelvurderingRepositoryImplTest {
             val repository = LovvalgDelvurderingRepositoryImpl(connection)
             val endret = vurdering.copy(kanBehandlesAutomatisk = false)
 
-            repository.lagre(første, vurdering, startDato)
-            repository.lagre(andre, vurdering, startDato)
-            repository.lagre(første, endret, startDato)
+            repository.lagre(første, listOf(delvurdering(første, vurdering, startDato)))
+            repository.lagre(andre, listOf(delvurdering(andre, vurdering, startDato)))
+            repository.lagre(første, listOf(delvurdering(første, endret, startDato)))
 
             assertThat(repository.hentHvisEksisterer(første)?.vurdering()).isEqualTo(endret)
             assertThat(repository.hentHvisEksisterer(andre)?.vurdering()).isEqualTo(vurdering)
@@ -142,15 +143,18 @@ class LovvalgDelvurderingRepositoryImplTest {
     fun `lagrer flere delvurderinger på samme behandling og henter nyeste som gjeldende`() {
         dataSource.transaction { connection ->
             val behandlingId = opprettBehandling(connection)
+            val annen = opprettBehandling(connection)
             val repository = LovvalgDelvurderingRepositoryImpl(connection)
-            val eldre = LovvalgDelvurderingerGrunnlag(true, vurdering.tilhørighetVurdering, startDato)
-            val nyere = LovvalgDelvurderingerGrunnlag(false, vurdering.tilhørighetVurdering, startDato.plusMonths(6))
+            val eldre = LovvalgDelvurderingerGrunnlag(true, vurdering.tilhørighetVurdering, startDato, behandlingId)
+            val nyere = LovvalgDelvurderingerGrunnlag(false, vurdering.tilhørighetVurdering, startDato.plusMonths(6), annen)
 
             repository.lagre(behandlingId, listOf(nyere, eldre))
             repository.lagre(behandlingId, listOf(eldre, nyere))
 
             assertThat(repository.hentAlle(behandlingId)).containsExactly(eldre, nyere)
             assertThat(repository.hentHvisEksisterer(behandlingId)).isEqualTo(nyere)
+            assertThat(repository.hentAlle(behandlingId).map { it.vurdertIBehandling })
+                .containsExactly(behandlingId, annen)
             assertThat(historikk(connection, behandlingId)).containsExactly(true)
 
             repository.lagre(behandlingId, listOf(eldre))
@@ -158,6 +162,14 @@ class LovvalgDelvurderingRepositoryImplTest {
             assertThat(historikk(connection, behandlingId)).containsExactly(false, true)
         }
     }
+
+    private fun delvurdering(behandlingId: BehandlingId, vurdering: KanBehandlesAutomatiskVurdering, relevantDato: LocalDate) =
+        LovvalgDelvurderingerGrunnlag(
+            kanBehandlesAutomatisk = vurdering.kanBehandlesAutomatisk,
+            tilhørighetVurdering = vurdering.tilhørighetVurdering,
+            relevantDato = relevantDato,
+            vurdertIBehandling = behandlingId,
+        )
 
     private fun opprettBehandling(connection: DBConnection): BehandlingId {
         return finnEllerOpprettBehandling(connection, opprettSak(connection, startDato)).id
@@ -169,9 +181,9 @@ class LovvalgDelvurderingRepositoryImplTest {
             val fra = opprettBehandling(connection)
             val til = opprettBehandling(connection)
             val repository = LovvalgDelvurderingRepositoryImpl(connection)
-            repository.lagre(fra, vurdering, startDato)
+            repository.lagre(fra, listOf(delvurdering(fra, vurdering, startDato)))
             repository.kopier(fra, til)
-            repository.lagre(til, vurdering, startDato)
+            repository.lagre(til, listOf(delvurdering(fra, vurdering, startDato)))
 
             val kopiert = requireNotNull(repository.hentHvisEksisterer(til))
             assertThat(kopiert.vurdering()).isEqualTo(vurdering)
@@ -187,11 +199,11 @@ class LovvalgDelvurderingRepositoryImplTest {
             val fra = opprettBehandling(connection)
             val til = opprettBehandling(connection)
             val repository = LovvalgDelvurderingRepositoryImpl(connection)
-            repository.lagre(fra, vurdering, startDato)
+            repository.lagre(fra, listOf(delvurdering(fra, vurdering, startDato)))
             val opprinneligSett = vurderingerId(connection, fra)
             repository.kopier(fra, til)
             val endret = vurdering.copy(kanBehandlesAutomatisk = false)
-            repository.lagre(til, endret, startDato)
+            repository.lagre(til, listOf(delvurdering(til, endret, startDato)))
 
             assertThat(repository.hentHvisEksisterer(fra)?.vurdering()).isEqualTo(vurdering)
             assertThat(repository.hentHvisEksisterer(til)?.vurdering()).isEqualTo(endret)
@@ -210,7 +222,7 @@ class LovvalgDelvurderingRepositoryImplTest {
         dataSource.transaction { connection ->
             val behandling = opprettBehandling(connection)
             val repository = LovvalgDelvurderingRepositoryImpl(connection)
-            repository.lagre(behandling, vurdering, startDato)
+            repository.lagre(behandling, listOf(delvurdering(behandling, vurdering, startDato)))
             val vurderingerId = vurderingerId(connection, behandling)
 
             repository.slett(behandling)

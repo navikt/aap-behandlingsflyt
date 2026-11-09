@@ -135,37 +135,43 @@ class VurderLovvalgSteg private constructor(
         kontekst: FlytKontekstMedPerioder,
         registerGrunnlag: Lazy<MedlemskapLovvalgRegisterGrunnlag>
     ) {
-        val relevanteDatoer = relevanteDatoer(kontekst)
+        val relevanteDatoer = utledRelevanteDatoer(kontekst).sorted()
+        val nyesteDato = relevanteDatoer.last()
         val eksisterende = lovvalgDelvurderingRepository.hentAlle(kontekst.behandlingId)
-            .filter { it.relevantDato in relevanteDatoer }
             .associateBy { it.relevantDato }
 
-        val datoerSomSkalBeregnes = relevanteDatoer.filter { it !in eksisterende } + relevanteDatoer.max()
+        val delvurderinger = relevanteDatoer.map { dato ->
+            val eksisterendeForDato = eksisterende[dato]
+            if (eksisterendeForDato != null && dato != nyesteDato) {
+                return@map eksisterendeForDato
+            }
 
-        val beregnet = datoerSomSkalBeregnes.toSet().associateWith { dato ->
             val vurdering = LovvalgMedlemskapVurderingService().vurderTilhørighet(
                 registerGrunnlag.value,
                 Periode(dato, maxOf(dato, kontekst.rettighetsperiode.tom)),
                 kontekst.vurderingType
             )
-            LovvalgDelvurderingerGrunnlag(
-                kanBehandlesAutomatisk = vurdering.kanBehandlesAutomatisk,
-                tilhørighetVurdering = vurdering.tilhørighetVurdering,
-                relevantDato = dato,
-            )
+
+            if (eksisterendeForDato?.vurdering() == vurdering) {
+                eksisterendeForDato
+            } else {
+                LovvalgDelvurderingerGrunnlag(
+                    kanBehandlesAutomatisk = vurdering.kanBehandlesAutomatisk,
+                    tilhørighetVurdering = vurdering.tilhørighetVurdering,
+                    relevantDato = dato,
+                    vurdertIBehandling = kontekst.behandlingId,
+                )
+            }
         }
 
-        lovvalgDelvurderingRepository.lagre(
-            kontekst.behandlingId,
-            (eksisterende + beregnet).values.sortedBy { it.relevantDato }
-        )
+        lovvalgDelvurderingRepository.lagre(kontekst.behandlingId, delvurderinger)
     }
 
     /**
      * Startdatoene til gjeldende stønadsperioder. Faller tilbake til rettighetsperiodens start
      * når ingen stønadsperioder er vurdert.
      */
-    private fun relevanteDatoer(kontekst: FlytKontekstMedPerioder): Set<LocalDate> {
+    private fun utledRelevanteDatoer(kontekst: FlytKontekstMedPerioder): Set<LocalDate> {
         val fraStønadsperioder = stønadsperiodeRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.gjeldendeVurderinger()
             .orEmpty()
