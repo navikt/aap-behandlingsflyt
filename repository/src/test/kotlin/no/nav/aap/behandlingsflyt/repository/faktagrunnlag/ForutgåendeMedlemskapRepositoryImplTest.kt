@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidAnsettelsesdetaljGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Fartsomraade
@@ -14,10 +14,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Virksomhet
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -31,7 +27,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
@@ -45,12 +40,11 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 
-internal class ForutgåendeMedlemskapRepositoryImplTest {
+class ForutgåendeMedlemskapRepositoryImplTest {
     companion object {
         private lateinit var dataSource: TestDataSource
 
@@ -71,7 +65,7 @@ internal class ForutgåendeMedlemskapRepositoryImplTest {
             val behandlingRepo = BehandlingRepositoryImpl(connection)
             val medlemskapArbeidInntektForutgåendeRepo = ForutgåendeMedlemskapRepositoryImpl(connection)
 
-            val sak = opprettSak(connection,LocalDate.now())
+            val sak = opprettSak(connection, LocalDate.now())
 
             val behandling =
                 behandlingRepo.opprettBehandling(
@@ -90,10 +84,10 @@ internal class ForutgåendeMedlemskapRepositoryImplTest {
             val inntekt1 = lagretInntekt.inntekterINorgeGrunnlag.first { it.identifikator == "1234" }
             val inntekt2 = lagretInntekt.inntekterINorgeGrunnlag.first { it.identifikator == "4321" }
 
-            assertEquals(inntekt1.organisasjonsNavn, "Bepis AS")
-            assertEquals(inntekt1.identifikator, "1234")
-            assertEquals(inntekt2.organisasjonsNavn, "Rotte AS")
-            assertEquals(inntekt2.identifikator, "4321")
+            assertEquals("Bepis AS", inntekt1.organisasjonsNavn)
+            assertEquals("1234", inntekt1.identifikator)
+            assertEquals("Rotte AS", inntekt2.organisasjonsNavn)
+            assertEquals("4321", inntekt2.identifikator)
         }
     }
 
@@ -140,11 +134,11 @@ internal class ForutgåendeMedlemskapRepositoryImplTest {
     @Test
     fun `kan hente siste relevante utenlandsopplysning`() {
         val sak = dataSource.transaction { connection ->
-            opprettSak(connection,LocalDate.now())
+            opprettSak(connection, LocalDate.now())
         }
 
         val sak2 = dataSource.transaction { connection ->
-            opprettSak(connection,LocalDate.now())
+            opprettSak(connection, LocalDate.now())
         }
 
         dataSource.transaction { connection ->
@@ -187,7 +181,7 @@ internal class ForutgåendeMedlemskapRepositoryImplTest {
 
             val sisteUtenlandsOppholdData =
                 oppgittUtenlandsopplysningerRepo.hentSistRelevanteOppgitteUtenlandsOppholdHvisEksisterer(sak.id)
-            assertEquals(sisteUtenlandsOppholdData?.harBoddINorgeSiste5År, true)
+            assertEquals(true, sisteUtenlandsOppholdData?.harBoddINorgeSiste5År)
         }
     }
 
@@ -195,7 +189,7 @@ internal class ForutgåendeMedlemskapRepositoryImplTest {
     fun `skal kunne lagre og hente manuelle vurderinger over flere perioder`() {
         dataSource.transaction { connection ->
             val medlemskapArbeidInntektForutgåendeRepo = ForutgåendeMedlemskapRepositoryImpl(connection)
-            val sak = opprettSak(connection,LocalDate.now())
+            val sak = opprettSak(connection, LocalDate.now())
             val behandling = finnEllerOpprettBehandling(connection, sak)
 
             medlemskapArbeidInntektForutgåendeRepo.lagreVurderinger(
@@ -214,190 +208,19 @@ internal class ForutgåendeMedlemskapRepositoryImplTest {
                 )
             )
 
-            val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektForutgåendeRepo.hentHvisEksisterer(behandling.id)
+            val medlemskapArbeidInntektGrunnlag =
+                medlemskapArbeidInntektForutgåendeRepo.hentHvisEksisterer(behandling.id)
 
             assertThat(medlemskapArbeidInntektGrunnlag?.vurderinger?.size).isEqualTo(2)
         }
     }
 
-    @Test
-    fun `skal ta med manuelle vurderinger i grunnlag når arbeid og inntekt oppdateres`() {
-        dataSource.transaction { connection ->
-            val medlemskapArbeidInntektForutgåendeRepo = ForutgåendeMedlemskapRepositoryImpl(connection)
-            val sak = opprettSak(connection,LocalDate.now())
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-            val medlemskapRepository = MedlemskapUnntakForutgåendeRepositoryImpl(connection)
-
-            medlemskapArbeidInntektForutgåendeRepo.lagreVurderinger(
-                behandling.id,
-                listOf(
-                    manuellVurdering(
-                        fom = 1 mai 2025,
-                        tom = 31 oktober 2025,
-                        vurdertIBehandling = behandling.id
-                    ),
-                    manuellVurdering(
-                        fom = 1 november 2025,
-                        tom = null,
-                        vurdertIBehandling = behandling.id
-                    ),
-                )
-            )
-
-            val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektForutgåendeRepo.hentHvisEksisterer(behandling.id)
-
-            assertThat(medlemskapArbeidInntektGrunnlag?.vurderinger?.size).isEqualTo(2)
-
-            val medlId = medlemskapRepository.lagreUnntakMedlemskap(
-                behandlingId = behandling.id,
-                unntak = listOf(medlemskapData())
-            )
-
-            medlemskapArbeidInntektForutgåendeRepo.lagreArbeidsforholdOgInntektINorge(
-                behandlingId = behandling.id,
-                arbeidGrunnlag = arbeidGrunnlag(),
-                inntektGrunnlag = inntektGrunnlag(),
-                medlId = medlId,
-                enhetGrunnlag = enhetGrunnlags()
-            )
-
-            val medlemskapArbeidInntektGrunnlagOppdatert = medlemskapArbeidInntektForutgåendeRepo.hentHvisEksisterer(behandling.id)
-
-            assertThat(medlemskapArbeidInntektGrunnlagOppdatert?.vurderinger?.size).isEqualTo(2)
-        }
-    }
-
-    @Test
-    fun `skal kopiere grunnlag fra forrige behandling ved revurdering og ta med tidligere vurderinger når nye opprettes`() {
-        val behandling = dataSource.transaction { connection ->
-            val medlemskapArbeidInntektForutgåendeRepo = ForutgåendeMedlemskapRepositoryImpl(connection)
-            val medlemskapRepository = MedlemskapUnntakForutgåendeRepositoryImpl(connection)
-
-            val sak = opprettSak(connection,LocalDate.now())
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-            val vurderinger = listOf(
-                manuellVurdering(
-                    fom = 1 mai 2025,
-                    tom = 31 oktober 2025,
-                    vurdertIBehandling = behandling.id
-                ),
-                manuellVurdering(
-                    fom = 1 november 2025,
-                    tom = null,
-                    vurdertIBehandling = behandling.id
-                ),
-            )
-
-            val medlId = medlemskapRepository.lagreUnntakMedlemskap(
-                behandlingId = behandling.id,
-                unntak = listOf(medlemskapData())
-            )
-
-            medlemskapArbeidInntektForutgåendeRepo.lagreArbeidsforholdOgInntektINorge(
-                behandlingId = behandling.id,
-                arbeidGrunnlag = arbeidGrunnlag(),
-                inntektGrunnlag = inntektGrunnlag(),
-                medlId = medlId,
-                enhetGrunnlag = enhetGrunnlags()
-            )
-
-            medlemskapArbeidInntektForutgåendeRepo.lagreVurderinger(
-                behandling.id,
-                vurderinger
-            )
-
-            behandling
-        }
-
-        // Revurdering
-        dataSource.transaction { connection ->
-            val behandlingRepo = BehandlingRepositoryImpl(connection)
-            val medlemskapArbeidInntektForutgåendeRepo = ForutgåendeMedlemskapRepositoryImpl(connection)
-
-            val revurdering =
-                behandlingRepo.opprettBehandling(
-                    behandling.sakId,
-                    TypeBehandling.Revurdering,
-                    behandling.id,
-                    VurderingsbehovOgÅrsak(
-                        listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-                        ÅrsakTilOpprettelse.SØKNAD
-                    )
-                )
-
-            medlemskapArbeidInntektForutgåendeRepo.kopier(behandling.id, revurdering.id)
-
-            val eksisterendeVurderinger = medlemskapArbeidInntektForutgåendeRepo.hentHvisEksisterer(revurdering.id)
-            val vurderinger = listOf(
-                manuellVurdering(
-                    fom = 15 desember  2025,
-                    tom = null,
-                    vurdertIBehandling = revurdering.id
-                )
-            ) + (eksisterendeVurderinger?.vurderinger ?: emptyList())
-
-            medlemskapArbeidInntektForutgåendeRepo.lagreVurderinger(revurdering.id, vurderinger)
-
-            val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektForutgåendeRepo.hentHvisEksisterer(revurdering.id)
-
-            assertThat(medlemskapArbeidInntektGrunnlag?.inntekterINorgeGrunnlag?.size).isEqualTo(2)
-            assertThat(medlemskapArbeidInntektGrunnlag?.arbeiderINorgeGrunnlag?.size).isEqualTo(1)
-            assertThat(medlemskapArbeidInntektGrunnlag?.medlemskapUnntakGrunnlag).isNotNull
-            assertThat(medlemskapArbeidInntektGrunnlag?.vurderinger?.size).isEqualTo(3)
-        }
-    }
-
-    @Test
-    fun `test sletting`() {
-        dataSource.transaction { connection ->
-            val medlemskapArbeidInntektForutgåendeRepo = ForutgåendeMedlemskapRepositoryImpl(connection)
-            val sak = opprettSak(connection,LocalDate.now())
-            val behandling = finnEllerOpprettBehandling(connection, sak)
-            val medlemskapRepository = MedlemskapUnntakForutgåendeRepositoryImpl(connection)
-
-            medlemskapArbeidInntektForutgåendeRepo.lagreVurderinger(
-                behandling.id,
-                listOf(
-                    manuellVurdering(
-                        fom = 1 mai 2025,
-                        tom = 31 oktober 2025,
-                        vurdertIBehandling = behandling.id
-                    ),
-                    manuellVurdering(
-                        fom = 1 november 2025,
-                        tom = null,
-                        vurdertIBehandling = behandling.id
-                    ),
-                )
-            )
-
-            val medlemskapArbeidInntektGrunnlag = medlemskapArbeidInntektForutgåendeRepo.hentHvisEksisterer(behandling.id)
-
-            assertThat(medlemskapArbeidInntektGrunnlag?.vurderinger?.size).isEqualTo(2)
-
-            val medlId = medlemskapRepository.lagreUnntakMedlemskap(
-                behandlingId = behandling.id,
-                unntak = listOf(medlemskapData())
-            )
-
-            medlemskapArbeidInntektForutgåendeRepo.lagreArbeidsforholdOgInntektINorge(
-                behandlingId = behandling.id,
-                arbeidGrunnlag = arbeidGrunnlag(),
-                inntektGrunnlag = inntektGrunnlag(),
-                medlId = medlId,
-                enhetGrunnlag = enhetGrunnlags()
-            )
-
-            val medlemskapArbeidInntektGrunnlagOppdatert = medlemskapArbeidInntektForutgåendeRepo.hentHvisEksisterer(behandling.id)
-
-            assertThat(medlemskapArbeidInntektGrunnlagOppdatert?.vurderinger?.size).isEqualTo(2)
-
-            assertDoesNotThrow { medlemskapArbeidInntektForutgåendeRepo.slett(behandling.id) }
-        }
-    }
-
-
-    private fun manuellVurdering(fom: LocalDate, tom: LocalDate?, vurdertIBehandling: BehandlingId, begrunnelse: String = "begrunnelse"): ManuellVurderingForForutgåendeMedlemskap =
+    private fun manuellVurdering(
+        fom: LocalDate,
+        tom: LocalDate?,
+        vurdertIBehandling: BehandlingId,
+        begrunnelse: String = "begrunnelse"
+    ): ManuellVurderingForForutgåendeMedlemskap =
         ManuellVurderingForForutgåendeMedlemskap(
             fom = fom,
             tom = tom,
@@ -410,66 +233,7 @@ internal class ForutgåendeMedlemskapRepositoryImplTest {
             vurdertIBehandling = vurdertIBehandling
         )
 
-    private fun arbeidGrunnlag(): List<ArbeidINorgeGrunnlag> = listOf(
-        ArbeidINorgeGrunnlag(
-            identifikator = "1234",
-            arbeidsforholdKode = Arbeidsforholdtype.ORDINAERT_ARBEIDSFORHOLD,
-            startdato = 1 mai 2020,
-            sluttdato = null
-        )
-    )
 
-    private fun inntektGrunnlag(): List<ArbeidsInntektMåned> = listOf(
-        ArbeidsInntektMåned(
-            årMåned = YearMonth.now(),
-            arbeidsInntektInformasjon = ArbeidsInntektInformasjon(
-                listOf(
-                    Inntekt(
-                        beløp = 1.0,
-                        opptjeningsland = null,
-                        skattemessigBosattLand = null,
-                        opptjeningsperiodeFom = null,
-                        opptjeningsperiodeTom = null,
-                        virksomhet = Virksomhet(
-                            identifikator = "1234"
-                        ),
-                        beskrivelse = null
-                    ),
-                    Inntekt(
-                        beløp = 1.0,
-                        opptjeningsland = null,
-                        skattemessigBosattLand = null,
-                        opptjeningsperiodeFom = null,
-                        opptjeningsperiodeTom = null,
-                        virksomhet = Virksomhet(
-                            identifikator = "4321"
-                        ),
-                        beskrivelse = null
-                    ),
-                )
-            )
-        ),
-    )
-
-    private fun enhetGrunnlags(): List<EnhetGrunnlag> = listOf(
-        EnhetGrunnlag("1234", "Bepis AS"),
-        EnhetGrunnlag("4321", "Rotte AS")
-    )
-
-    private fun medlemskapData(): MedlemskapDataIntern = MedlemskapDataIntern(
-        unntakId = 1234,
-        ident = "13028911111",
-        fraOgMed = "1989-02-13",
-        tilOgMed = "1999-02-14",
-        status = "GYLD",
-        statusaarsak = null,
-        medlem = true,
-        grunnlag = "FLK-TRGD",
-        lovvalg = "FLK_TRGD",
-        helsedel = true,
-        lovvalgsland = "NOR",
-        kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
-    )
 
     private fun opprettBehandlingMedVurdering(
         typeBehandling: TypeBehandling,

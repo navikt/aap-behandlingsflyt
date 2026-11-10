@@ -9,22 +9,19 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrke
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadeSakDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.bistandsbehov.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.bistandsbehov.BistandLøsningDto
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -72,21 +69,9 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
             .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
-                if (toggleForHoppOverBeslutter()) {
-
-                    assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
-                } else {
-                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
-                    assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-                }
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }
-        val behandlingMedFattetVedtak =
-            if (toggleForHoppOverBeslutter()) {
-                behandling
-            } else {
-                behandling.fattVedtak()
-            }
-        behandlingMedFattetVedtak
+        behandling
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
 
@@ -431,10 +416,5 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
 
             }
 
-    }
-
-    private fun toggleForHoppOverBeslutter(): Boolean {
-        return gatewayProvider.provide<UnleashGateway>()
-            .isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)
     }
 }

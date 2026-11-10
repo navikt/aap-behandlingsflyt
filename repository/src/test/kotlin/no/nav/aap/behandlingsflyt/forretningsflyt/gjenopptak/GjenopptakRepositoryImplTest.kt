@@ -15,7 +15,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-internal class GjenopptakRepositoryTest {
+internal class GjenopptakRepositoryImplTest {
     companion object {
         private lateinit var dataSource: TestDataSource
 

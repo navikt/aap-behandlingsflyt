@@ -71,6 +71,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.MOTTATT_M
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.UTVID_VEDTAKSLENGDE
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.miljo.Miljø
@@ -199,8 +200,11 @@ class BrevUtlederService(
                         val harUføretrygd =
                             perioder.any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
 
+                        // Nytt brev takler at bruker kan ha en periode med ordinær aap før overgang jmf 11-18
                         if (harUføretrygd && !harOrdinærAAP) {
                             brevBehovVurderesForUføretrygd(behandling)
+                        } else if (harUføretrygd && unleashGateway.isEnabled(BehandlingsflytFeature.OvergangUfoereBrevbygger)) {
+                            brevBehovVurderesForUføretrygdV2(behandling, erRevurdering = false)
                         } else {
                             brevBehovInnvilgelse(behandling)
                         }
@@ -271,7 +275,11 @@ class BrevUtlederService(
                         RettighetsType.VURDERES_FOR_UFØRETRYGD
                     )
                 ) {
-                    return brevBehovVurderesForUføretrygd(behandling)
+                    if (unleashGateway.isEnabled(BehandlingsflytFeature.OvergangUfoereBrevbygger)) {
+                        return brevBehovVurderesForUføretrygdV2(behandling, erRevurdering = true)
+                    } else {
+                        return brevBehovVurderesForUføretrygd(behandling)
+                    }
                 }
                 if (harRettighetsType(behandling.id, RettighetsType.ARBEIDSSØKER) &&
                     forrigeBehandlingId != null &&
@@ -549,6 +557,50 @@ class BrevUtlederService(
             sisteDagMedYtelse = underveisGrunnlag.sisteDagMedYtelse(),
             grunnlagBeregning = grunnlagBeregning,
             tilkjentYtelse = tilkjentYtelse
+        )
+    }
+
+    private fun brevBehovVurderesForUføretrygdV2(
+        behandling: Behandling,
+        erRevurdering: Boolean = false
+    ): VurderesForUføretrygdV2 {
+        val overgangUføreGrunnlag = overgangUføreRepository.hentHvisEksisterer(behandling.id)
+        checkNotNull(overgangUføreGrunnlag) {
+            "Vedtak vurdert for uføretrygd mangler grunnlag"
+        }
+
+        val kravdatoUføretrygd = overgangUføreGrunnlag.kravdatoUføretrygd()
+        val maksDatoOvergangUføre =
+            overgangUføreGrunnlag.somOvergangUforevurderingstidslinje().segmenter().maxOfOrNull() { it.periode.tom }
+        checkNotNull(kravdatoUføretrygd) {
+            "Vedtak godkjent etter 11-18 mangler kravdato"
+        }
+        checkNotNull(maksDatoOvergangUføre) {
+            "Vedtak godkjent etter 11-18 mangler maksdato"
+        }
+
+        val innvilgelse = brevBehovInnvilgelse(behandling)
+
+        return VurderesForUføretrygdV2(
+            uføreVurdering = UføreVurdering(
+                kravdatoUføretrygd = kravdatoUføretrygd,
+                sisteDagMedYtelse = maksDatoOvergangUføre
+            ),
+            ordinærAAP = when (erRevurdering) {
+                true -> null
+                false -> OrdinærInnvilgelse(
+                    virkningstidspunkt = innvilgelse.virkningstidspunkt,
+                    sisteDagMedYtelse = innvilgelse.sisteDagMedYtelse,
+                    grunnlagBeregning = innvilgelse.grunnlagBeregning,
+                    tilkjentYtelse = innvilgelse.tilkjentYtelse,
+                    sykdomsvurdering = innvilgelse.sykdomsvurdering,
+                    forholdTilAndreYtelser = innvilgelse.forholdTilAndreYtelser,
+                    yrkesskadeBeregning = innvilgelse.yrkesskadeBeregning,
+                    foreldreansvarVurderinger = innvilgelse.foreldreansvarVurderinger,
+                    meldepliktGrunnlag = innvilgelse.meldepliktGrunnlag,
+                    yrkesSkadeISøknadIkkeIRegister = innvilgelse.yrkesSkadeISøknadIkkeIRegister
+                )
+            }
         )
     }
 
@@ -913,7 +965,7 @@ class BrevUtlederService(
         }
 
         if (Miljø.erDev()) {
-            
+
             log.info(
                 "TP-overlapp for behandling {}: harOverlapp={}, underveisperioder={}, tpPerioder={}",
                 behandlingId,
