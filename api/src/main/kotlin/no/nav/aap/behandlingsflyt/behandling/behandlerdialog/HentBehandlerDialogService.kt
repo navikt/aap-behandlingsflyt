@@ -262,7 +262,8 @@ class HentBehandlerDialogService(
             tekst = this.tekst,
             meldingStatus = this.meldingStatus?.tilResponseDto(),
             journalpostId = this.journalpostId,
-            påminnelseAvbrutt = this.automatiskPåminnelse?.let { !it }
+            påminnelseAvbrutt = this.automatiskPåminnelse?.let { !it },
+            bestillerNavIdent = this.bestillerNavIdent,
         )
     }
 }

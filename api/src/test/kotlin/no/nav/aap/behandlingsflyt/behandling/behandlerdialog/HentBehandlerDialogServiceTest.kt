@@ -77,7 +77,8 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
                 dokumentasjonsType = DokumentasjonType.MELDING_FRA_NAV,
                 tekst = tekstFørsteMelding,
                 meldingStatus = MeldingStatusDto.LEVERT,
-                journalpostId = journalpostIdSendtMelding1
+                journalpostId = journalpostIdSendtMelding1,
+                bestillerNavIdent = "Z123456"
             ),
             FellesDialogmeldingDto(
                 dialogmeldingReferanse = null,
@@ -120,6 +121,10 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
         assertThat(result.meldinger[1].melding.journalpostId).isEqualTo(journalpostIdSendtMelding2)
         assertThat(result.meldinger[2].melding.journalpostId).isEqualTo(journalpostIdMottattMelding)
         assertThat(result.meldinger[0].melding.tekst).isEqualTo(tekstFørsteMelding)
+        assertThat(result.meldinger[0].melding.bestillerNavIdent).isEqualTo("Z123456")
+        assertThat(result.meldinger[0].melding.bestillerNavn).isNull()
+        assertThat(result.meldinger[1].melding.bestillerNavIdent).isNull()
+        assertThat(result.meldinger[2].melding.bestillerNavIdent).isNull()
         assertThat(result.meldinger[2].dokumentIdListe.size).isEqualTo(1)
         assertThat(result.meldinger[2].dokumentIdListe[0].tittel).isEqualTo("Legeerklæring")
     }
