@@ -26,6 +26,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapGa
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.tilDomene
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
@@ -56,6 +58,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
     private val enhetsregisteretGateway: EnhetsregisteretGateway,
     private val inntektskomponentenGateway: InntektkomponentenGateway,
     private val stønadsperiodeRepository: StønadsperiodeRepository,
+    private val kravRepository: KravRepository,
     private val unleashGateway: UnleashGateway,
 ) : Informasjonskrav<LovvalgMedlemskapInformasjonskrav.LovvalgInput, LovvalgMedlemskapInformasjonskrav.LovvalgRegisterData> {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -98,8 +101,11 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         val eksisterendeData = lovvalgMedlemskapRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         val gjeldendeStønadsperiodeGrunnlag = stønadsperiodeRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val gjeldendeKravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
         requireNotNull(gjeldendeStønadsperiodeGrunnlag)
-        val relevanteKrav = utledKravViKreverVurderingerFor(gjeldendeStønadsperiodeGrunnlag)
+        requireNotNull(gjeldendeKravGrunnlag)
+        
+        val relevanteKrav = utledKravViKreverVurderingerFor(gjeldendeStønadsperiodeGrunnlag, gjeldendeKravGrunnlag)
 
         return LovvalgInput(
             sak = sak,
@@ -117,7 +123,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         )
     }
 
-    private fun utledKravViKreverVurderingerFor(stønadsperiodeGrunnlag: StønadsperiodeGrunnlag): List<StønadsperiodeVurdering> {
+    private fun utledKravViKreverVurderingerFor(stønadsperiodeGrunnlag: StønadsperiodeGrunnlag, kravGrunnlag: KravGrunnlag): List<StønadsperiodeVurdering> {
         val skalVurdereLovvalgVed =
             listOf(
                 RelevantKravType.NY_STØNADSPERIODE,
@@ -126,8 +132,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
             )
 
         return stønadsperiodeGrunnlag
-            .gjeldendeVurderinger()
-            .toList()
+            .gjeldendeVurderingerForGjeldendeKrav(kravGrunnlag)
             .filter { it.relevantKravType in skalVurdereLovvalgVed }
     }
 
@@ -314,6 +319,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
                 inntektskomponentenGateway = gatewayProvider.provide(),
                 unleashGateway = gatewayProvider.provide(),
                 stønadsperiodeRepository = repositoryProvider.provide(),
+                kravRepository = repositoryProvider.provide()
             )
         }
     }

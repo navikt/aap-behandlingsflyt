@@ -27,6 +27,9 @@ data class StønadsperiodeGrunnlag(
             .sortedBy { it.startDato }
             .somTidslinje { Periode(it.startDato, Tid.MAKS) }
     }
+
+    fun gjeldendeVurderingerForGjeldendeKrav(kravGrunnlag: KravGrunnlag) =
+        this.tilTidslinje(kravGrunnlag).segmenter().map { it.verdi }
 }
 
 data class StønadsperiodeVurdering(
