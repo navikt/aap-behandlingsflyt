@@ -10,15 +10,12 @@ import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.ApiException
-import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedPost
 
-const val GJENSTAENDE_SYKEDAGER_PATH = "/api/person/gjenstaende-sykedager"
-
 fun NormalOpenAPIRoute.gjenståendeSykedagerApi(gatewayProvider: GatewayProvider) {
-    route(GJENSTAENDE_SYKEDAGER_PATH) {
+    route("/api/person/gjenstaende-sykedager") {
         authorizedPost<Unit, GjenståendeSykedagerDTO, GjenståendeSykedagerRequest>(
             AuthorizationBodyPathConfig(operasjon = Operasjon.SE)
         ) { _, request ->
