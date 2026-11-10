@@ -167,7 +167,8 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
     private fun lagreArbeidsInntektGrunnlag(
         inntekter: InntekterINorgeRegisterGrunnlag?,
     ): Long? {
-        // TODO: Nå lagrer vi ikke ned at vi har hentet for enn dato, men at listen er tom
+        if (inntekter?.inntekterForKrav.orEmpty().all { it.inntekter.isEmpty() }) return null
+
         if (inntekter == null || inntekter.inntekterForKrav.flatMap { it.inntekter }.isEmpty()) return null
 
         val inntekterINorgeQuery = """
@@ -179,23 +180,23 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
             INSERT INTO INNTEKT_I_NORGE (identifikator, beloep, skattemessig_bosatt_land, opptjenings_land, inntekt_type, inntekter_i_norge_id, periode, organisasjonsnavn, relevant_dato) VALUES (?, ?, ?, ?, ?, ?, ?::daterange, ?, ?)
         """.trimIndent()
 
-        val inntekterMedDatoFlateUt =
+        val inntekterMedDato =
             inntekter.inntekterForKrav.flatMap { forKrav -> forKrav.inntekter.map { Pair(forKrav.relevantDato, it) } }
 
         connection.executeBatch(
             inntektQuery,
-            inntekterMedDatoFlateUt
+            inntekterMedDato
         ) {
-            setParams { inntekt ->
-                setString(1, inntekt.second.identifikator)
-                setDouble(2, inntekt.second.beloep)
-                setString(3, inntekt.second.skattemessigBosattLand)
-                setString(4, inntekt.second.opptjeningsLand)
-                setString(5, inntekt.second.inntektType)
+            setParams { (relevantDato, inntekt) ->
+                setString(1, inntekt.identifikator)
+                setDouble(2, inntekt.beloep)
+                setString(3, inntekt.skattemessigBosattLand)
+                setString(4, inntekt.opptjeningsLand)
+                setString(5, inntekt.inntektType)
                 setLong(6, inntekterINorgeId)
-                setPeriode(7, inntekt.second.periode)
-                setString(8, inntekt.second.organisasjonsNavn)
-                setLocalDate(9, inntekt.first)
+                setPeriode(7, inntekt.periode)
+                setString(8, inntekt.organisasjonsNavn)
+                setLocalDate(9, relevantDato)
             }
         }
 

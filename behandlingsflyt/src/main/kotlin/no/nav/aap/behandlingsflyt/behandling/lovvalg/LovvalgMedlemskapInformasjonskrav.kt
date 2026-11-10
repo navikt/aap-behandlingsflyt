@@ -65,7 +65,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
 
     data class LovvalgInput(
         val sak: Sak,
-        val datoerViSkalHenteInnForNå: Set<LocalDate>,
+        val datoerSomInformasjonskravSkalHentesFor: Set<LocalDate>,
         val kravViKreverVurderingFor: List<StønadsperiodeVurdering>,
         val eksisterendeData: LovvalgMedlemskapGrunnlag?,
         val skalHentePerKrav: Boolean
@@ -104,12 +104,12 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         val gjeldendeKravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
         requireNotNull(gjeldendeStønadsperiodeGrunnlag)
         requireNotNull(gjeldendeKravGrunnlag)
-        
+
         val relevanteKrav = utledKravViKreverVurderingerFor(gjeldendeStønadsperiodeGrunnlag, gjeldendeKravGrunnlag)
 
         return LovvalgInput(
             sak = sak,
-            datoerViSkalHenteInnForNå = utledDatoerDetSkalInnhentesNyRegisterdataFor(
+            datoerSomInformasjonskravSkalHentesFor = utledDatoerDetSkalInnhentesNyRegisterdataFor(
                 eksisterendeData?.registerGrunnlag?.inntekterINorgeGrunnlag,
                 relevanteKrav
             ),
@@ -123,7 +123,10 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         )
     }
 
-    private fun utledKravViKreverVurderingerFor(stønadsperiodeGrunnlag: StønadsperiodeGrunnlag, kravGrunnlag: KravGrunnlag): List<StønadsperiodeVurdering> {
+    private fun utledKravViKreverVurderingerFor(
+        stønadsperiodeGrunnlag: StønadsperiodeGrunnlag,
+        kravGrunnlag: KravGrunnlag
+    ): List<StønadsperiodeVurdering> {
         val skalVurdereLovvalgVed =
             listOf(
                 RelevantKravType.NY_STØNADSPERIODE,
@@ -140,10 +143,9 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         ekisterndeInntektData: InntekterINorgeRegisterGrunnlag?,
         kravViKreverVurderingerFor: List<StønadsperiodeVurdering>
     ): Set<LocalDate> {
-        val datoerViHar = ekisterndeInntektData?.inntekterForKrav?.mapNotNull { it.relevantDato }?.toSet().orEmpty()
+        val datoerViHar = ekisterndeInntektData?.inntekterForKrav?.map { it.relevantDato }?.toSet().orEmpty()
         val nyeDatoer: Set<LocalDate> =
-            kravViKreverVurderingerFor.map { it.startDato }
-                .filterNot { dato -> dato in datoerViHar }.toSet()
+            kravViKreverVurderingerFor.map { it.startDato }.toSet() - datoerViHar
 
         // Vi skal alltid hente inn siste uansett (med mindre vi støtter eksplisitt revurdering av tidligere stønadsperiode)
         val siste = kravViKreverVurderingerFor.maxOf { krav -> krav.startDato }
@@ -153,7 +155,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
 
     override fun hentData(input: LovvalgInput): LovvalgRegisterData {
         val sak = input.sak
-        val datoerViSkalHenteInnForNå = input.datoerViSkalHenteInnForNå
+        val datoerSomInformasjonskravSkalHentesFor = input.datoerSomInformasjonskravSkalHentesFor
 
         val executor = informasjonskravExecutor
         val medlemskapPerioderFuture = CompletableFuture
@@ -162,7 +164,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
             .supplyAsync(withMdc { innhentAARegisterGrunnlag(sak) }, executor)
 
         val inntektGrunnlagFutures = if (input.skalHentePerKrav) {
-            datoerViSkalHenteInnForNå.map { dato ->
+            datoerSomInformasjonskravSkalHentesFor.map { dato ->
                 Pair(dato, CompletableFuture.supplyAsync(withMdc {
                     innhentAInntekt(
                         årMånedFom = YearMonth.from(dato.minusMonths(2)),
@@ -203,12 +205,12 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
 
         val eksisterendeData = input.eksisterendeData
 
+        val datoerViKreverVurderingFor = input.kravViKreverVurderingFor.map { it.startDato }
+
         val eksisterndeRelevanteInntekter =
             eksisterendeData?.registerGrunnlag?.inntekterINorgeGrunnlag?.inntekterForKrav.orEmpty()
-                .filter { inntekter ->
-                    inntekter.relevantDato in input.kravViKreverVurderingFor.map { it.startDato }
-                }
-                .filterNot { inntekter -> inntekter.relevantDato in input.datoerViSkalHenteInnForNå }
+                .filter { inntekter -> inntekter.relevantDato in datoerViKreverVurderingFor }
+                .filterNot { inntekter -> inntekter.relevantDato in input.datoerSomInformasjonskravSkalHentesFor }
                 .toSet()
 
 

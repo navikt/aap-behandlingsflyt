@@ -72,7 +72,7 @@ class LovvalgMedlemskapInformasjonskravTest {
         )
 
         val input = informasjonskrav.klargjør(kontekst)
-        assertThat(input.datoerViSkalHenteInnForNå).isEqualTo(
+        assertThat(input.datoerSomInformasjonskravSkalHentesFor).isEqualTo(
             setOf(1 mars 2025, 1 januar 2026)
         )
         assertThat(oppdater(informasjonskrav, input, kontekst)).isEqualTo(Informasjonskrav.Endret.ENDRET)
@@ -97,7 +97,7 @@ class LovvalgMedlemskapInformasjonskravTest {
             this.rettighetsperiode = sak.rettighetsperiode
         }
         val input1 = informasjonskrav.klargjør(kontekst1)
-        assertThat(input1.datoerViSkalHenteInnForNå).isEqualTo(setOf(1 mars 2025))
+        assertThat(input1.datoerSomInformasjonskravSkalHentesFor).isEqualTo(setOf(1 mars 2025))
         assertThat(oppdater(informasjonskrav, input1, kontekst1)).isEqualTo(Informasjonskrav.Endret.ENDRET)
 
 
@@ -123,7 +123,7 @@ class LovvalgMedlemskapInformasjonskravTest {
             this.rettighetsperiode = sak.rettighetsperiode
         }
         val input2 = informasjonskrav.klargjør(kontekst2)
-        assertThat(input2.datoerViSkalHenteInnForNå).isEqualTo(
+        assertThat(input2.datoerSomInformasjonskravSkalHentesFor).isEqualTo(
             setOf(1 januar 2026)
         )
         assertThat(oppdater(informasjonskrav, input2, kontekst2)).isEqualTo(Informasjonskrav.Endret.ENDRET)
@@ -149,7 +149,7 @@ class LovvalgMedlemskapInformasjonskravTest {
 
         val input3 = informasjonskrav.klargjør(kontekst3)
 
-        assertThat(input3.datoerViSkalHenteInnForNå).isEqualTo(
+        assertThat(input3.datoerSomInformasjonskravSkalHentesFor).isEqualTo(
             setOf(1 januar 2026)
         )
         assertThat(oppdater(informasjonskrav, input3, kontekst3)).isEqualTo(Informasjonskrav.Endret.IKKE_ENDRET)
@@ -206,7 +206,7 @@ class LovvalgMedlemskapInformasjonskravTest {
 
         val input = informasjonskrav.klargjør(kontekst)
 
-        assertThat(input.datoerViSkalHenteInnForNå).isEqualTo(
+        assertThat(input.datoerSomInformasjonskravSkalHentesFor).isEqualTo(
             setOf(1 februar 2025, 1 januar 2026)
         )
 
@@ -238,7 +238,7 @@ class LovvalgMedlemskapInformasjonskravTest {
 
         val input = informasjonskrav.klargjør(kontekst)
 
-        assertThat(input.datoerViSkalHenteInnForNå)
+        assertThat(input.datoerSomInformasjonskravSkalHentesFor)
             .describedAs { "Det skal ikke hentes inn data for gjenopptak etter stans" }.isEqualTo(
                 setOf(1 mars 2025)
             )
@@ -323,7 +323,7 @@ class LovvalgMedlemskapInformasjonskravTest {
             input, LovvalgMedlemskapInformasjonskrav.LovvalgRegisterData(
                 medlemskapPerioder = emptyList(),
                 arbeidGrunnlag = emptyList(),
-                inntektPerDato = input.datoerViSkalHenteInnForNå.associate { dato ->
+                inntektPerDato = input.datoerSomInformasjonskravSkalHentesFor.associate { dato ->
                     dato to listOf(
                         ArbeidsInntektMåned(
                             årMåned = YearMonth.from(dato),
