@@ -14,6 +14,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.finnUgyldigRettighetsperiode
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.Repository
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -32,6 +33,7 @@ class SøknadSteg(
     private val sakRepository: SakRepository,
     private val repositoryProvider: RepositoryProvider,
     private val avklaringsbehovService: AvklaringsbehovService,
+    private val sakService: SakService,
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -60,7 +62,8 @@ class SøknadSteg(
              * Det er ikke uvanlig at saker blir trukket ved en feil, og at det så opprettes
              * en ny sak som ville ha overlappet med den trukne saken. Vi setter derfor
              * en fiktiv rettighetsperiode på den trukne saken. */
-            sakRepository.oppdaterRettighetsperiode(kontekst.sakId, sakRepository.finnUgyldigRettighetsperiode(kontekst.sakId))
+            val sak = sakRepository.hent(kontekst.sakId)
+            sakService.overstyrRettighetsperioden(sak, sakRepository.finnUgyldigRettighetsperiode(kontekst.sakId))
             slettVurderingerOgRegisterdata(kontekst.behandlingId)
         }
 
@@ -85,7 +88,8 @@ class SøknadSteg(
                 trukketSøknadRepository = repositoryProvider.provide(),
                 repositoryProvider = repositoryProvider,
                 sakRepository = repositoryProvider.provide(),
-                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider)
+                avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
+                sakService = SakService(repositoryProvider, gatewayProvider),
             )
         }
 

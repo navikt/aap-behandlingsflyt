@@ -4,7 +4,7 @@ import no.nav.aap.api.intern.behandlingsflyt.NySøknadDto
 import no.nav.aap.api.intern.behandlingsflyt.OppdaterIdenterDto
 import no.nav.aap.api.intern.behandlingsflyt.SakStatusKelvin
 import no.nav.aap.api.intern.behandlingsflyt.SakstatusFraKelvin
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdOgTpNr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
@@ -117,7 +117,7 @@ class ApiInternGatewayImpl : ApiInternGateway {
         behandling: Behandling,
         vedtakId: Long,
         samId: List<SamIdOgTpNr>,
-        tilkjent: List<TilkjentYtelsePeriode>,
+        tilkjent: Tidslinje<Tilkjent>,
         beregningsgrunnlag: BigDecimal?,
         vedtaksDato: LocalDate,
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>,
@@ -145,22 +145,22 @@ class ApiInternGatewayImpl : ApiInternGateway {
                         fnr = sak.person.identer().map { ident -> ident.identifikator },
                         opprettetTidspunkt = sak.opprettetTidspunkt
                     ),
-                    tilkjent = tilkjent.map { tilkjentPeriode ->
+                    tilkjent = tilkjent.map { periode, tilkjent ->
                         TilkjentDTO(
-                            tilkjentFom = tilkjentPeriode.periode.fom,
-                            tilkjentTom = tilkjentPeriode.periode.tom,
-                            dagsats = tilkjentPeriode.tilkjent.dagsats.verdi.toInt(),
-                            effektivDagsats = tilkjentPeriode.tilkjent.redusertDagsats().verdi.toInt(),
+                            tilkjentFom = periode.fom,
+                            tilkjentTom = periode.tom,
+                            dagsats = tilkjent.dagsats.verdi.toInt(),
+                            effektivDagsats = tilkjent.redusertDagsats().verdi.toInt(),
                             // legg til redusert dagsats
-                            gradering = tilkjentPeriode.tilkjent.gradering.prosentverdi(),
-                            samordningUføregradering = tilkjentPeriode.tilkjent.graderingGrunnlag.samordningUføregradering.prosentverdi(),
-                            grunnlagsfaktor = tilkjentPeriode.tilkjent.grunnlagsfaktor.verdi(),
-                            grunnbeløp = tilkjentPeriode.tilkjent.grunnbeløp.verdi,
-                            antallBarn = tilkjentPeriode.tilkjent.antallBarn,
-                            barnetilleggsats = tilkjentPeriode.tilkjent.barnetilleggsats.verdi,
-                            barnetillegg = tilkjentPeriode.tilkjent.barnetillegg.verdi,
+                            gradering = tilkjent.gradering.prosentverdi(),
+                            samordningUføregradering = tilkjent.graderingGrunnlag.samordningUføregradering.prosentverdi(),
+                            grunnlagsfaktor = tilkjent.grunnlagsfaktor.verdi(),
+                            grunnbeløp = tilkjent.grunnbeløp.verdi,
+                            antallBarn = tilkjent.antallBarn,
+                            barnetilleggsats = tilkjent.barnetilleggsats.verdi,
+                            barnetillegg = tilkjent.barnetillegg.verdi,
                         )
-                    },
+                    }.verdier().toList(),
                     rettighetsTypeTidsLinje = rettighetsTypeTidslinje.segmenter().map { segment ->
                         RettighetsTypePeriode(
                             segment.periode.fom,

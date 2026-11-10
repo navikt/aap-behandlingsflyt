@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -53,8 +52,9 @@ class VurderKravLøser(
 
         // Midlertidig hack for å overstyre startdato. På sikt burde kravet i seg selv være nok til å sette datoen
         nyeVurderinger.filterIsInstance<MigrertKrav>().singleOrNull()?.let {
+            val sak = sakService.hent(kontekst.sakId())
             sakService.overstyrRettighetsperioden(
-                sakId = kontekst.sakId(),
+                sak = sak,
                 startDato = it.muligRettFra,
                 sluttDato = Tid.MAKS
             )

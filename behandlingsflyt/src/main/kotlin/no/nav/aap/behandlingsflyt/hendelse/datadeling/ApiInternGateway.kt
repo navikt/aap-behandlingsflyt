@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.hendelse.datadeling
 
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.datadeling.SakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.samid.SamIdOgTpNr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.GjeldendeStansEllerOpphør
@@ -34,7 +34,7 @@ interface ApiInternGateway : Gateway {
         behandling: Behandling,
         vedtakId: Long,
         samId: List<SamIdOgTpNr>,
-        tilkjent: List<TilkjentYtelsePeriode>,
+        tilkjent: Tidslinje<Tilkjent>,
         beregningsgrunnlag: BigDecimal?,
         vedtaksDato: LocalDate,
         rettighetsTypeTidslinje: Tidslinje<RettighetsType>,

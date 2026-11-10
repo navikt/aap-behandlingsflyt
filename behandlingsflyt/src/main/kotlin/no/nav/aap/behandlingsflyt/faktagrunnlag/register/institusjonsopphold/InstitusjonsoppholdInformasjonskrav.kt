@@ -76,11 +76,9 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
     ): Informasjonskrav.Endret {
         val eksisterendeGrunnlag = hentHvisEksisterer(kontekst.behandlingId)
         val institusjonsopphold = registerdata.opphold
-        logger.info("Har hentet instopphold " + institusjonsopphold.size)
         val institusjonsoppholdErEndret = erEndret(eksisterendeGrunnlag, institusjonsopphold)
         if (institusjonsoppholdErEndret) {
             institusjonsoppholdRepository.lagreOpphold(kontekst.behandlingId, institusjonsopphold)
-            logger.info("Har lagret instopphold ")
         }
         return if (institusjonsoppholdErEndret) ENDRET else IKKE_ENDRET
     }
@@ -88,6 +86,7 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
     private fun hentInstitusjonsopphold(sak: Sak): List<Institusjonsopphold> {
         val gyldigeOpphold = institusjonsoppholdRegisterGateway
             .innhent(sak.person)
+            .filter { it.institusjonstype == Institusjonstype.HS || it.institusjonstype == Institusjonstype.FO }
             .filter {
                 try {
                     it.periode()
@@ -116,8 +115,14 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val sak = sakService.hentSakFor(behandlingId)
         val institusjonsopphold = hentInstitusjonsopphold(sak)
+        val eksisterendeRelevantGrunnlag = InstitusjonsoppholdGrunnlag(
+            oppholdene = Oppholdene(
+                eksisterendeGrunnlag?.oppholdene?.opphold.orEmpty()
+                    .filter { it.verdi.type == Institusjonstype.HS || it.verdi.type == Institusjonstype.FO }
+            )
+        )
 
-        return if (erEndret(eksisterendeGrunnlag, institusjonsopphold))
+        return if (erEndret(eksisterendeRelevantGrunnlag, institusjonsopphold))
             listOf(VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD))
         else
             emptyList()

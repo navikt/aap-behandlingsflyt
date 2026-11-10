@@ -27,7 +27,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypesTilAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.barnepensjon.barnepensjonGrunnlagApi
-import no.nav.aap.behandlingsflyt.behandling.barnetillegg.barnetilleggApi
+import no.nav.aap.barnetillegg.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.bekreftvurderingeroppfølging.bekreftVurderingerOppfølgingApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.aldersGrunnlagApi
@@ -71,7 +71,7 @@ import no.nav.aap.behandlingsflyt.behandling.rettighet.rettighetsinfoApi
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringApi
-import no.nav.aap.behandlingsflyt.behandling.student.studentgrunnlagApi
+import no.nav.aap.student.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.student.sykestipend.sykestipendGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.stønadsperiode.stønadsperiodeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi

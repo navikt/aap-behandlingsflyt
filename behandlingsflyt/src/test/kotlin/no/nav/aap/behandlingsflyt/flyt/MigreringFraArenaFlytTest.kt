@@ -30,6 +30,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MigreringFraArena
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
@@ -107,6 +108,59 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
                 behandling.assertRettighetstype(
                     Periode(startDato, startDato.plusMonths(6)) to RettighetsType.BISTANDSBEHOV
                 )
+            }
+    }
+
+    @Test
+    fun `revurdering etter migrering skal ikke utvide vedtakslengde ved fortsatt bistandsbehov`() {
+        val (sak, migreringsbehandling) = migrerFraArena()
+        val startDato = sak.rettighetsperiode.fom
+        val migrertSluttdato = startDato.plusMonths(8)
+
+        migreringsbehandling
+            .løsAvklaringsBehov(
+                VurderKravLøsning(
+                    kravVurderinger = setOf(
+                        MigrertKravLøsningDto(
+                            begrunnelse = "en begrunnelse",
+                            virkningstidspunktArena = startDato.minusMonths(5),
+                            muligRettFra = startDato,
+                            arenaSaksnummer = "2016-123456",
+                            rettighetstype = MigrertRettighetstype.ORDINÆR,
+                            resterendeKvoteOrdinær = 300,
+                        )
+                    )
+                )
+            )
+            .løsLovvalg(startDato, medlem = true)
+            .løsSykdom(startDato, erOppfylt = true)
+            .løsBistand(startDato, erOppfylt = true)
+            .løsRefusjonskrav()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsBeregningstidspunkt(startDato)
+            .løsFastsettManuellInntekt()
+            .løsForutgåendeMedlemskap(startDato)
+            .løsOppholdskrav(startDato)
+            .løsBarnetillegg()
+            .løsAndreStatligeYtelser()
+            .løsVedtakslengde(startDato, migrertSluttdato)
+            .løsForeslåVedtak()
+            .fattVedtak()
+            .medKontekst {
+                assertThat(behandling.status()).isEqualTo(AVSLUTTET)
+            }
+
+        val endringsdato = startDato.plusMonths(3)
+        sak.opprettManuellRevurdering(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+            .løsSykdom(vurderingGjelderFra = endringsdato, erOppfylt = true)
+            .løsBistand(endringsdato, erOppfylt = true)
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .medKontekst {
+                val vedtakslengdeRepository: VedtakslengdeRepository = repositoryProvider.provide()
+                val vurdering = vedtakslengdeRepository.hentHvisEksisterer(behandling.id)!!.gjeldendeVurdering()!!
+                assertThat(vurdering.sluttdato).isEqualTo(migrertSluttdato)
             }
     }
 

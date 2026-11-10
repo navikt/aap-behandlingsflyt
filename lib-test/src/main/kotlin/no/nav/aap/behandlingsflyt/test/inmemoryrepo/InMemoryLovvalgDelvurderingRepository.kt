@@ -17,9 +17,6 @@ object InMemoryLovvalgDelvurderingRepository : LovvalgDelvurderingRepository {
             grunnlag[behandlingId]?.lastOrNull()?.let { vurderinger.getValue(it) }
         }
 
-    override fun hentBasertPåDelvurderingId(delvurderingId: Long): LovvalgDelvurderingerGrunnlag? =
-        synchronized(lock) { vurderinger[delvurderingId] }
-
     override fun lagre(
         behandlingId: BehandlingId,
         vurdering: KanBehandlesAutomatiskVurdering,
@@ -34,7 +31,6 @@ object InMemoryLovvalgDelvurderingRepository : LovvalgDelvurderingRepository {
                 kanBehandlesAutomatisk = vurdering.kanBehandlesAutomatisk,
                 tilhørighetVurdering = vurdering.tilhørighetVurdering,
                 relevantDato = relevantDato,
-                delvurderingId = id
             )
             grunnlag[behandlingId] = grunnlag[behandlingId].orEmpty() + id
         }

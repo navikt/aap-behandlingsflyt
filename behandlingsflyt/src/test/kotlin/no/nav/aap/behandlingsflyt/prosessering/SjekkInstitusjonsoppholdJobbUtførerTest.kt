@@ -58,6 +58,31 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
     private val sakId = SakId(123L)
 
     @Test
+    fun `Skal ikke opprette revurdering for tidligere lagret aldershjem`() {
+        val grunnlag = InstitusjonsoppholdGrunnlag(
+            Oppholdene(
+                listOf(
+                    Institusjonsopphold(
+                        Institusjonstype.AS,
+                        Oppholdstype.A,
+                        LocalDate.now().minusMonths(2),
+                        LocalDate.now().plusMonths(2),
+                        orgnr = "123",
+                        institusjonsnavn = "Aldershjem",
+                    ).tilInstitusjonSegment()
+                )
+            )
+        )
+        val (utfører, behandlingService) = mockAvhengigheterForInstitusjonsoppholdJobbUtfører(
+            hentInstitusjonsoppholdReturn = grunnlag
+        )
+
+        utfører.utfør(JobbInput(SjekkInstitusjonsOppholdJobbUtfører).forSak(sakId.id))
+
+        verify(exactly = 0) { behandlingService.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) }
+    }
+
+    @Test
     fun `Skal opprette revurdering pga institusjonsopphold som har vart i to måneder`() {
         val (utfører, sakOgBehandlingServiceMock) =
             mockAvhengigheterForInstitusjonsoppholdJobbUtfører(
@@ -126,7 +151,6 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
             saksnummer = Saksnummer("DUMMYSAKSNR"),
             person = person(),
             rettighetsperiode = Periode(LocalDate.now().minusDays(14), LocalDate.now().plusDays(14)),
-            status = no.nav.aap.behandlingsflyt.kontrakt.sak.Status.OPPRETTET,
             opprettetTidspunkt = LocalDateTime.now(),
         )
 
@@ -231,7 +255,6 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
                     saksnummer = Saksnummer("DUMMYSAKSNR"),
                     person = person(),
                     rettighetsperiode = Periode(LocalDate.now().minusDays(14), LocalDate.now().plusDays(14)),
-                    status = no.nav.aap.behandlingsflyt.kontrakt.sak.Status.OPPRETTET,
                     opprettetTidspunkt = LocalDateTime.now(),
                 )
 
@@ -242,7 +265,6 @@ class SjekkInstitusjonsoppholdJobbUtførerTest {
                         saksnummer = Saksnummer("DUMMYSAKSNR"),
                         person = person(),
                         rettighetsperiode = Periode(LocalDate.now().minusDays(14), LocalDate.now().plusDays(14)),
-                        status = no.nav.aap.behandlingsflyt.kontrakt.sak.Status.OPPRETTET,
                         opprettetTidspunkt = LocalDateTime.now(),
                     )
                 )

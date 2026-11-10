@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag
 import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.KanBehandlesAutomatiskVurdering
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
@@ -20,7 +21,8 @@ data class PeriodisertLovvalgMedlemskapGrunnlagResponse(
     override val kanVurderes: List<Periode>,
     override val ikkeRelevantePerioder: List<Periode>,
     override val behøverVurderinger: List<Periode>,
-    val overstyrt: Boolean = false
+    val overstyrt: Boolean = false,
+    val delvurderinger: KanBehandlesAutomatiskVurdering
 ): PeriodiserteVurderingerDto<PeriodisertManuellVurderingForLovvalgMedlemskapResponse>
 
 data class PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
@@ -30,6 +32,8 @@ data class PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
     val lovvalg: LovvalgResponse,
     val medlemskap: MedlemskapResponse?,
     val overstyrt: Boolean = false,
+    // Delvurderingene som var gjeldende i behandlingen den manuelle vurderingen ble gjort
+    val delvurderinger: KanBehandlesAutomatiskVurdering? = null,
 ): VurderingDto
 
 data class LovvalgResponse(
@@ -46,6 +50,7 @@ fun ManuellVurderingForLovvalgMedlemskap.toResponse(
     vurdertAvService: VurdertAvService,
     fom: LocalDate = this.fom,
     tom: LocalDate? = this.tom,
+    delvurderinger: KanBehandlesAutomatiskVurdering? = null,
 ) =
     PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
         fom = fom,
@@ -57,7 +62,8 @@ fun ManuellVurderingForLovvalgMedlemskap.toResponse(
         ),
         lovvalg = lovvalg.toResponse(),
         medlemskap = medlemskap?.toResponse(),
-        overstyrt = overstyrt
+        overstyrt = overstyrt,
+        delvurderinger = delvurderinger,
     )
 
 fun MedlemskapDto.toResponse() =

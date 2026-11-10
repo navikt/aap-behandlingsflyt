@@ -61,7 +61,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -298,10 +297,12 @@ class AvsluttetBehandlingTilStatistikk(
                 Fritakvurdering(data.harFritak, periode.fom, periode.tom)
             }.verdier()
 
-    private fun mapTilkjentYtelse(behandling: Behandling): List<TilkjentYtelsePeriodeDTO>? =
-        tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
-            ?.map { Segment(it.periode, it.tilkjent) }
-            ?.let(::Tidslinje)?.mapValue { it }?.komprimer()?.segmenter()?.map {
+    private fun mapTilkjentYtelse(behandling: Behandling): List<TilkjentYtelsePeriodeDTO>? {
+        val tilkjentYtelse = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id) ?: return null
+        return tilkjentYtelse
+            .komprimer()
+            .segmenter()
+            .map {
                 val verdi = it.verdi
                 TilkjentYtelsePeriodeDTO(
                     fraDato = it.periode.fom,
@@ -325,6 +326,7 @@ class AvsluttetBehandlingTilStatistikk(
                     meldepliktGradering = verdi.graderingGrunnlag.meldepliktGradering.prosentverdi().toDouble(),
                 )
             }
+    }
 
     private fun hentDiagnose(behandling: Behandling): List<DiagnoserMedPeriode> {
         val sykdomsvurdering = sykdomRepository.hentHvisEksisterer(behandling.id)

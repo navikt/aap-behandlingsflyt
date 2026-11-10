@@ -10,6 +10,8 @@ import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.behandling.egenskaper.BehandlingEgenskaperGrunnlagService
+import no.nav.aap.behandlingsflyt.behandling.egenskaper.BehandlingEgenskaperService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
@@ -150,6 +152,30 @@ fun NormalOpenAPIRoute.behandlingApi(
                     )
                 }
                 respond(dto)
+            }
+        }
+        route("/{referanse}/egenskaper") {
+            authorizedGet<BehandlingReferanse, BehandlingEgenskaperDTO>(
+                AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                    behandlingPathParam = BehandlingPathParam(
+                        "referanse"
+                    )
+                )
+            ) { req ->
+                val grunnlag = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val behandling = behandling(repositoryProvider.provide(), req)
+                    BehandlingEgenskaperGrunnlagService(repositoryProvider).hentGrunnlag(behandling)
+                }
+                val egenskaper = BehandlingEgenskaperService(gatewayProvider).hentEgenskaper(grunnlag)
+                respond(
+                    BehandlingEgenskaperDTO(
+                        erMigrertFraArena = egenskaper.erMigrertFraArena,
+                        harArenaHistorikk = egenskaper.harArenaHistorikk,
+                        erKantIKantMedArena = egenskaper.erKantIKantMedArena,
+                    )
+                )
             }
         }
         route("/{referanse}/forbered") {

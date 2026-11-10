@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArenaMeldeperiod
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadInformasjonskrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnInformasjonskrav
+import no.nav.aap.barnetillegg.BarnInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapInformasjonskrav
@@ -28,9 +28,9 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ArbeidsopptrappingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvbrytRevurderingSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvklarStudentStegV2
+import no.nav.aap.student.AvklarStudentStegV2
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvklarStønadsperiodeSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BarnetilleggSteg
+import no.nav.aap.barnetillegg.BarnetilleggSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BekreftVurderingerOppfølgingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregnTilkjentYtelseSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregningAvklarFaktaSteg
@@ -78,7 +78,7 @@ import no.nav.aap.bistandsbehov.VurderBistandsbehovSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderForutgåendeMedlemskapSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderLovvalgSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderOppholdskravSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
+import no.nav.aap.student.VurderStudentSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
@@ -162,6 +162,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING,
                     Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.DØDSFALL_BRUKER,
@@ -500,4 +501,3 @@ object Revurdering : BehandlingType {
     }
 
 }
-

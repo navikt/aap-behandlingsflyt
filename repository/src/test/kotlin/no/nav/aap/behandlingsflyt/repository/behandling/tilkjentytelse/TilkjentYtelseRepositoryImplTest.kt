@@ -3,12 +3,11 @@ package no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
-import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
@@ -44,64 +43,58 @@ class TilkjentYtelseRepositoryImplTest {
 
             val tilkjentYtelseRepository = TilkjentYtelseRepositoryImpl(connection)
             val tilkjentYtelse =
-                listOf(
-                    TilkjentYtelsePeriode(
-                        periode = Periode(
-                            LocalDate.now(),
-                            LocalDate.now().plusDays(1)
+                tidslinjeOf(
+                    Periode(
+                        LocalDate.now(),
+                        LocalDate.now().plusDays(1)
+                    ) to Tilkjent(
+                        dagsats = Beløp(999),
+                        gradering = Prosent.`66_PROSENT`,
+                        graderingGrunnlag = GraderingGrunnlag(
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
                         ),
-                        tilkjent = Tilkjent(
-                            dagsats = Beløp(999),
-                            gradering = Prosent.`66_PROSENT`,
-                            graderingGrunnlag = GraderingGrunnlag(
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                            ),
-                            barnetillegg = Beløp(999),
-                            grunnlagsfaktor = GUnit("1.0"),
-                            antallBarn = 1,
-                            barnepensjonDagsats = Beløp(100),
-                            barnetilleggsats = Beløp(999),
-                            grunnbeløp = Beløp(1000),
-                            utbetalingsdato = LocalDate.now().plusDays(14),
-                            minsteSats = Minstesats.IKKE_MINSTESATS,
-                            redusertDagsats = null
-                        )
+                        barnetillegg = Beløp(999),
+                        grunnlagsfaktor = GUnit("1.0"),
+                        antallBarn = 1,
+                        barnepensjonDagsats = Beløp(100),
+                        barnetilleggsats = Beløp(999),
+                        grunnbeløp = Beløp(1000),
+                        utbetalingsdato = LocalDate.now().plusDays(14),
+                        minsteSats = Minstesats.IKKE_MINSTESATS,
+                        redusertDagsats = null
                     ),
-                    TilkjentYtelsePeriode(
-                        periode = Periode(
-                            LocalDate.now().plusDays(2),
-                            LocalDate.now().plusDays(3)
+                    Periode(
+                        LocalDate.now().plusDays(2),
+                        LocalDate.now().plusDays(3)
+                    ) to Tilkjent(
+                        dagsats = Beløp(1000),
+                        gradering = Prosent.`50_PROSENT`,
+                        graderingGrunnlag = GraderingGrunnlag(
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
                         ),
-                        tilkjent = Tilkjent(
-                            dagsats = Beløp(1000),
-                            gradering = Prosent.`50_PROSENT`,
-                            graderingGrunnlag = GraderingGrunnlag(
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                            ),
-                            barnetillegg = Beløp(1000),
-                            grunnlagsfaktor = GUnit("1.0"),
-                            antallBarn = 1,
-                            barnepensjonDagsats = Beløp(100),
-                            barnetilleggsats = Beløp(1000),
-                            grunnbeløp = Beløp(1000),
-                            utbetalingsdato = LocalDate.now().plusDays(14),
-                            minsteSats = Minstesats.IKKE_MINSTESATS,
-                            redusertDagsats = Beløp(63)
-                        )
-                    ),
+                        barnetillegg = Beløp(1000),
+                        grunnlagsfaktor = GUnit("1.0"),
+                        antallBarn = 1,
+                        barnepensjonDagsats = Beløp(100),
+                        barnetilleggsats = Beløp(1000),
+                        grunnbeløp = Beløp(1000),
+                        utbetalingsdato = LocalDate.now().plusDays(14),
+                        minsteSats = Minstesats.IKKE_MINSTESATS,
+                        redusertDagsats = Beløp(63)
+                    )
                 )
 
-            tilkjentYtelseRepository.lagre(behandling.id, tilkjentYtelse, tomtTilkjentYtelseGrunnlag, "")
+            tilkjentYtelseRepository.lagre(behandling.id, tilkjentYtelse)
             val tilkjentYtelseHentet = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
             assertNotNull(tilkjentYtelseHentet)
             assertThat(tilkjentYtelseHentet)
@@ -109,7 +102,7 @@ class TilkjentYtelseRepositoryImplTest {
                 .ignoringExpectedNullFields()
                 .isEqualTo(tilkjentYtelse)
             // Dobbeltsjekke at vi avrunder redusert dagsats til nærmeste heltall
-            assertThat(tilkjentYtelse.first().tilkjent.redusertDagsats()).isEqualTo(Beløp(BigDecimal("1219")))
+            assertThat(tilkjentYtelse.verdier().first().redusertDagsats()).isEqualTo(Beløp(BigDecimal("1219")))
         }
 
     }
@@ -133,124 +126,110 @@ class TilkjentYtelseRepositoryImplTest {
             val behandling = finnEllerOpprettBehandling(connection, sak)
             val tilkjentYtelseRepository = TilkjentYtelseRepositoryImpl(connection)
             tilkjentYtelseRepository.lagre(
-                behandling.id, listOf(
-                    TilkjentYtelsePeriode(
-                        periode = Periode(
-                            LocalDate.now(),
-                            LocalDate.now().plusDays(1)
+                behandling.id,
+                tidslinjeOf(
+                    Periode(
+                        LocalDate.now(),
+                        LocalDate.now().plusDays(1)
+                    ) to Tilkjent(
+                        dagsats = Beløp(999),
+                        gradering = Prosent.`66_PROSENT`,
+                        graderingGrunnlag = GraderingGrunnlag(
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
                         ),
-                        tilkjent = Tilkjent(
-                            dagsats = Beløp(999),
-                            gradering = Prosent.`66_PROSENT`,
-                            graderingGrunnlag = GraderingGrunnlag(
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                            ),
-                            barnetillegg = Beløp(999),
-                            grunnlagsfaktor = GUnit("1.0"),
-                            antallBarn = 1,
-                            barnetilleggsats = Beløp(999),
-                            barnepensjonDagsats = Beløp(100),
-                            grunnbeløp = Beløp(1000),
-                            utbetalingsdato = LocalDate.now().plusDays(14),
-                            minsteSats = Minstesats.MINSTESATS_UNDER_25,
-                            redusertDagsats = Beløp(643)
-                        )
+                        barnetillegg = Beløp(999),
+                        grunnlagsfaktor = GUnit("1.0"),
+                        antallBarn = 1,
+                        barnetilleggsats = Beløp(999),
+                        barnepensjonDagsats = Beløp(100),
+                        grunnbeløp = Beløp(1000),
+                        utbetalingsdato = LocalDate.now().plusDays(14),
+                        minsteSats = Minstesats.MINSTESATS_UNDER_25,
+                        redusertDagsats = Beløp(643)
                     ),
-                    TilkjentYtelsePeriode(
-                        periode = Periode(
-                            LocalDate.now().plusDays(2),
-                            LocalDate.now().plusDays(3)
+                    Periode(
+                        LocalDate.now().plusDays(2),
+                        LocalDate.now().plusDays(3)
+                    ) to Tilkjent(
+                        dagsats = Beløp(1000),
+                        gradering = Prosent.`50_PROSENT`,
+                        graderingGrunnlag = GraderingGrunnlag(
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
                         ),
-                        tilkjent = Tilkjent(
-                            dagsats = Beløp(1000),
-                            gradering = Prosent.`50_PROSENT`,
-                            graderingGrunnlag = GraderingGrunnlag(
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                            ),
-                            barnetillegg = Beløp(1000),
-                            grunnlagsfaktor = GUnit("1.0"),
-                            antallBarn = 1,
-                            barnepensjonDagsats = Beløp(100),
-                            barnetilleggsats = Beløp(1000),
-                            grunnbeløp = Beløp(1000),
-                            utbetalingsdato = LocalDate.now().plusDays(14),
-                            minsteSats = Minstesats.MINSTESATS_OVER_25,
-                            redusertDagsats = null
-                        )
-                    ),
+                        barnetillegg = Beløp(1000),
+                        grunnlagsfaktor = GUnit("1.0"),
+                        antallBarn = 1,
+                        barnepensjonDagsats = Beløp(100),
+                        barnetilleggsats = Beløp(1000),
+                        grunnbeløp = Beløp(1000),
+                        utbetalingsdato = LocalDate.now().plusDays(14),
+                        minsteSats = Minstesats.MINSTESATS_OVER_25,
+                        redusertDagsats = null
+                    )
                 ),
-                tomtTilkjentYtelseGrunnlag,
-                ""
             )
             tilkjentYtelseRepository.lagre(
-                behandling.id, listOf(
-                    TilkjentYtelsePeriode(
-                        periode = Periode(
-                            LocalDate.now(),
-                            LocalDate.now().plusDays(1)
+                behandling.id,
+                tidslinjeOf(
+                    Periode(
+                        LocalDate.now(),
+                        LocalDate.now().plusDays(1)
+                    ) to Tilkjent(
+                        dagsats = Beløp(999),
+                        gradering = Prosent.`66_PROSENT`,
+                        graderingGrunnlag = GraderingGrunnlag(
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
                         ),
-                        tilkjent = Tilkjent(
-                            dagsats = Beløp(999),
-                            gradering = Prosent.`66_PROSENT`,
-                            graderingGrunnlag = GraderingGrunnlag(
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                            ),
-                            barnetillegg = Beløp(999),
-                            grunnlagsfaktor = GUnit("1.0"),
-                            antallBarn = 1,
-                            barnepensjonDagsats = Beløp(100),
-                            barnetilleggsats = Beløp(999),
-                            grunnbeløp = Beløp(1000),
-                            utbetalingsdato = LocalDate.now().plusDays(14),
-                            minsteSats = Minstesats.MINSTESATS_UNDER_25,
-                            redusertDagsats = null
-                        )
+                        barnetillegg = Beløp(999),
+                        grunnlagsfaktor = GUnit("1.0"),
+                        antallBarn = 1,
+                        barnepensjonDagsats = Beløp(100),
+                        barnetilleggsats = Beløp(999),
+                        grunnbeløp = Beløp(1000),
+                        utbetalingsdato = LocalDate.now().plusDays(14),
+                        minsteSats = Minstesats.MINSTESATS_UNDER_25,
+                        redusertDagsats = null
                     ),
-                    TilkjentYtelsePeriode(
-                        periode = Periode(
-                            LocalDate.now().plusDays(4),
-                            LocalDate.now().plusDays(5)
+                    Periode(
+                        LocalDate.now().plusDays(4),
+                        LocalDate.now().plusDays(5)
+                    ) to Tilkjent(
+                        dagsats = Beløp(1000),
+                        gradering = Prosent.`50_PROSENT`,
+                        graderingGrunnlag = GraderingGrunnlag(
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
+                            Prosent.`0_PROSENT`,
                         ),
-                        tilkjent = Tilkjent(
-                            dagsats = Beløp(1000),
-                            gradering = Prosent.`50_PROSENT`,
-                            graderingGrunnlag = GraderingGrunnlag(
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                                Prosent.`0_PROSENT`,
-                            ),
-                            barnetillegg = Beløp(1000),
-                            grunnlagsfaktor = GUnit("1.0"),
-                            barnepensjonDagsats = Beløp(100),
-                            antallBarn = 1,
-                            barnetilleggsats = Beløp(1000),
-                            grunnbeløp = Beløp(1000),
-                            utbetalingsdato = LocalDate.now().plusDays(14),
-                            minsteSats = Minstesats.IKKE_MINSTESATS,
-                            redusertDagsats = Beløp(65432)
-                        )
-                    ),
+                        barnetillegg = Beløp(1000),
+                        grunnlagsfaktor = GUnit("1.0"),
+                        barnepensjonDagsats = Beløp(100),
+                        antallBarn = 1,
+                        barnetilleggsats = Beløp(1000),
+                        grunnbeløp = Beløp(1000),
+                        utbetalingsdato = LocalDate.now().plusDays(14),
+                        minsteSats = Minstesats.IKKE_MINSTESATS,
+                        redusertDagsats = Beløp(65432)
+                    )
                 ),
-                tomtTilkjentYtelseGrunnlag,
-                ""
             )
             assertDoesNotThrow { tilkjentYtelseRepository.slett(behandling.id) }
             assertThat(tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)).isNull()

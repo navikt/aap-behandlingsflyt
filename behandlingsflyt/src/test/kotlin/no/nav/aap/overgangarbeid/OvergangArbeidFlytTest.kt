@@ -73,6 +73,8 @@ class OvergangArbeidFlytTest : AbstraktFlytOrkestratorSnapshotTest() {
             .løsOvergangArbeid(Utfall.IKKE_OPPFYLT, fom = endringsdato)
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
+            .løsVedtakslengde(endringsdato, endringsdato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR))
+            .foreslåVedtak()
             .fattVedtak()
             .also {
                 assertThat(it.status()).isEqualTo(Status.IVERKSETTES)

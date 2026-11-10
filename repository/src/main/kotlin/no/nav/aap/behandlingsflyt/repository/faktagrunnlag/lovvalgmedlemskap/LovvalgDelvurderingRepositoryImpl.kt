@@ -13,18 +13,6 @@ class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : 
         override fun konstruer(connection: DBConnection) = LovvalgDelvurderingRepositoryImpl(connection)
     }
 
-    override fun hentBasertPåDelvurderingId(delvurderingId: Long): LovvalgDelvurderingerGrunnlag? {
-        return connection.queryFirstOrNull(
-            """
-            SELECT vurderinger_id FROM LOVVALG_DELVURDERING WHERE id = ?
-            """.trimIndent()
-        ) {
-            setParams { setLong(1, delvurderingId) }
-            setRowMapper {
-                mapVurdering(it.getLong("vurderinger_id"))
-            }
-        }
-    }
     override fun hentHvisEksisterer(behandlingId: BehandlingId): LovvalgDelvurderingerGrunnlag? {
         return connection.queryFirstOrNull(
             """
@@ -53,7 +41,6 @@ class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : 
                     kanBehandlesAutomatisk = vurdering.kanBehandlesAutomatisk,
                     tilhørighetVurdering = vurdering.tilhørighetVurdering,
                     relevantDato = row.getLocalDate("relevant_dato"),
-                    delvurderingId = row.getLong("id")
                 )
             }
         }

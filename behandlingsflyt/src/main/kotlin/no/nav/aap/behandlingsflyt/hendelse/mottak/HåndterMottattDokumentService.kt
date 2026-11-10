@@ -21,7 +21,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.tilVurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -61,7 +60,7 @@ class HåndterMottattDokumentService(
         melding: Melding?,
     ) {
         log.info("Mottok dokument på sak-id $sakId, og referanse $referanse, med brevkategori $brevkategori.")
-        if (brevkategori === InnsendingType.SØKNAD && unleashGateway.isEnabled(BehandlingsflytFeature.NySoknadTilApiIntern)) {
+        if (brevkategori === InnsendingType.SØKNAD) {
             flytJobbRepository.leggTil(
                 DatadelingNySøknadJobbUtfører.nyJobb(
                     sakService.hent(sakId).person.aktivIdent(),
@@ -89,7 +88,7 @@ class HåndterMottattDokumentService(
             låsRepository.låsBehandling(it.id)
         }
 
-        sakService.oppdaterRettighetsperioden(sakId, brevkategori, mottattTidspunkt.toLocalDate())
+        sakService.oppdaterRettighetsperioden(sak, brevkategori, mottattTidspunkt.toLocalDate())
 
         if (skalMarkereDokumentSomBehandlet(melding)) {
             require(opprettetBehandling is BehandlingService.Ordinær) {
