@@ -596,7 +596,7 @@ fun NormalOpenAPIRoute.driftApi(
                             personId = sak.person.id.id,
                             antallIdenter = sak.person.identer().size,
                         ),
-                        status = sak.status(),
+                        status = SakStatus.UTREDES,
                         rettighetsperiode = sak.rettighetsperiode,
                         opprettetTidspunkt = sak.opprettetTidspunkt,
                         behandlinger = behandlinger,

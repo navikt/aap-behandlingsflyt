@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.hendelse.kafka.inst2
 
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Inst2KafkaDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppholdHendelseKafkaMelding
@@ -52,6 +53,10 @@ class InstitusjonsOppholdService(
                     }
                 }
                 val institusjonsopphold = institusjonsoppholdKlient.hentDataForHendelse(meldingVerdi.oppholdId)
+                if (institusjonsopphold.institusjonstype != Institusjonstype.HS && institusjonsopphold.institusjonstype != Institusjonstype.FO) {
+                    log.info("Ignorerer hendelse som ikke er helseinstitusjon eller soningsopphold")
+                    continue
+                }
                 val beriketInstitusjonsopphold = Inst2KafkaDto(
                     startdato = institusjonsopphold.startdato,
                     sluttdato = institusjonsopphold.sluttdato,

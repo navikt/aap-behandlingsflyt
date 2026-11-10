@@ -28,8 +28,6 @@ interface SakRepository : Repository {
     @FarligMutering
     fun oppdaterRettighetsperiode(sak: Sak, periode: Periode)
 
-    fun oppdaterSakStatus(sakId: SakId, status: Status)
-
     fun finnSakerMedFritakMeldeplikt(): List<SakId>
 
     fun finnSakerMedInstitusjonsOpphold(): List<Sak>

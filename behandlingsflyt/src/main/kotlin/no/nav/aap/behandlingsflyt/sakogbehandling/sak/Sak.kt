@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.sakogbehandling.sak
 
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDateTime
 
@@ -10,7 +9,6 @@ class Sak(
     val saksnummer: Saksnummer,
     val person: Person,
     rettighetsperiode: Periode,
-    private val status: Status = Status.OPPRETTET,
     val opprettetTidspunkt: LocalDateTime = LocalDateTime.now(),
 ) {
 
@@ -20,16 +18,12 @@ class Sak(
     var rettighetsperiode: Periode = rettighetsperiode
         internal set
 
-    fun status(): Status {
-        return status
-    }
-
     fun rettighetsperiodeEttÅrFraStartDato(): Periode {
         return Periode(rettighetsperiode.fom, rettighetsperiode.fom.plusYears(1).minusDays(1))
     }
 
     override fun toString(): String {
-        return "Sak(id=$id, saksnummer=$saksnummer, person=$person, rettighetsperiode=$rettighetsperiode, status=$status, opprettetTidspunkt=$opprettetTidspunkt)"
+        return "Sak(id=$id, saksnummer=$saksnummer, person=$person, rettighetsperiode=$rettighetsperiode, opprettetTidspunkt=$opprettetTidspunkt)"
     }
 
     override fun equals(other: Any?): Boolean {

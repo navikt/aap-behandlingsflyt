@@ -45,7 +45,6 @@ enum class BehandlingsflytFeature(
     // ------
     Avslag11_27,
     BosattStatsborgerskapGjennomslipp,
-    HoppOverBeslutterVedAvslagSykdom,
     KanVurdereRefusjonIRevurdering,
     KunEnAktivKlagebehandling,
     KlagePaaTilbakekreving,

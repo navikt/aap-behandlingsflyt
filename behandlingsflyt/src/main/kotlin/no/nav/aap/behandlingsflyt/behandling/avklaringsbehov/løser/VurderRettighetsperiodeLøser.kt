@@ -53,9 +53,6 @@ class VurderRettighetsperiodeLøser(
         if (behandling.status().erAvsluttet()) {
             throw UgyldigForespørselException("Kan ikke oppdatere rettighetsperioden etter at behandlingen er avsluttet")
         }
-        if (sak.status() == Status.AVSLUTTET) {
-            throw UgyldigForespørselException("Kan ikke oppdatere rettighetsperioden etter at saken er avsluttet")
-        }
         val nyStartDato = løsning.rettighetsperiodeVurdering.startDato
         if (innskrenkerTilEtterSøknadstidspunkt(nyStartDato, sak.id)) {
             throw UgyldigForespørselException("Kan ikke endre starttidspunkt til å gjelde ETTER søknadstidspunkt")
