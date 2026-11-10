@@ -24,7 +24,7 @@ val KOMMENDE_MELDEDAGUNNTAK_I_PROD = mapOf(
 fun helligdagsunntakFastsattMeldedag(erProd: Boolean = Miljø.erProd()): Map<LocalDate, LocalDate> =
     EKSISTERENDE_MELDEDAGUNNTAK_I_PROD + if (!erProd) (TEST_MELDEDAGUNNTAK_I_DEV + KOMMENDE_MELDEDAGUNNTAK_I_PROD) else emptyMap()
 
-val eksisterndeFritaksUnntakIProd = mapOf(
+val EKSISTERNDE_FRITAKSUNNTAK_I_PROD = mapOf(
     LocalDate.of(2025, 12, 17) to LocalDate.of(2025, 12, 15),
     LocalDate.of(2025, 12, 24) to LocalDate.of(2025, 12, 22),
     LocalDate.of(2025, 12, 31) to LocalDate.of(2025, 12, 29),
@@ -32,20 +32,20 @@ val eksisterndeFritaksUnntakIProd = mapOf(
     LocalDate.of(2026, 5, 13) to LocalDate.of(2026, 5, 12)
 )
 
-val testFritaksUnntakIDev = mapOf(
+val TEST_FRITAKSUNNTAK_I_DEV = mapOf(
     LocalDate.of(2026, 11, 25) to LocalDate.of(2026, 11, 23),
     LocalDate.of(2026, 12, 2) to LocalDate.of(2026, 11, 30),
     LocalDate.of(2026, 12, 9) to LocalDate.of(2026, 12, 7),
 )
 
-val kommendeFritaksUnntakIProd = mapOf(
+val KOMMENDE_FRITAKSUNNTAK_I_PROD = mapOf(
     LocalDate.of(2026, 12, 16) to LocalDate.of(2026, 12, 14),
     LocalDate.of(2026, 12, 23) to LocalDate.of(2026, 12, 21),
     LocalDate.of(2026, 12, 30) to LocalDate.of(2026, 12, 28),
 )
 
 fun helligdagsunntakFritaksUtbetalingDato(erProd: Boolean = Miljø.erProd()): Map<LocalDate, LocalDate> =
-    eksisterndeFritaksUnntakIProd + if (!erProd) testFritaksUnntakIDev + kommendeFritaksUnntakIProd else emptyMap()
+    EKSISTERNDE_FRITAKSUNNTAK_I_PROD + if (!erProd) (TEST_FRITAKSUNNTAK_I_DEV + KOMMENDE_FRITAKSUNNTAK_I_PROD) else emptyMap()
 
 /**
  * Sjekker om en meldeperiode inneholder et helligdagsunntak for å
