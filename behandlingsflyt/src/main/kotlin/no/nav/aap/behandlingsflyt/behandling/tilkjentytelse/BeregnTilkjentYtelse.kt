@@ -31,7 +31,7 @@ import no.nav.aap.komponenter.verdityper.Prosent.Companion.`100_PROSENT`
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`66_PROSENT`
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.meldeplikt.MeldepliktStatus
-import no.nav.aap.meldeplikt.helligdagsunntakFritaksUtbetalingDato
+import no.nav.aap.meldeplikt.aktiveHelligdagsunntakForFritaksutbetalingDatoer
 import org.slf4j.LoggerFactory
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -266,7 +266,7 @@ object BeregnTilkjentYtelse : Sporbar<TilkjentYtelseGrunnlag, Tidslinje<Tilkjent
             opplysningerMottatt != null -> opplysningerMottatt
             underveisperiode.meldepliktStatus == MeldepliktStatus.FRITAK -> {
                 log.info("Traff sjekk for meldepliktstatus == FRITAK. Første meldedag for meldeperiode: $førsteMeldedagForMeldeperiode")
-                helligdagsunntakFritaksUtbetalingDato()[førsteMeldedagForMeldeperiode]
+                aktiveHelligdagsunntakForFritaksutbetalingDatoer[førsteMeldedagForMeldeperiode]
                     ?: førsteMeldedagForMeldeperiode
             }
 

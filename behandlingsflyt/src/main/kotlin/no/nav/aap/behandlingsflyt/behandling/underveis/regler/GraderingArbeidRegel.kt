@@ -11,7 +11,7 @@ import no.nav.aap.komponenter.verdityper.TimerArbeid
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
-import no.nav.aap.meldeplikt.helligdagsunntakFritaksUtbetalingDato
+import no.nav.aap.meldeplikt.aktiveHelligdagsunntakForFritaksutbetalingDatoer
 
 /*
 
@@ -139,7 +139,7 @@ class GraderingArbeidRegel : UnderveisRegel {
             if (fritaksvurdering?.harFritak == true && harPassertMeldeperiodeITid) {
                 OpplysningerOmArbeid(
                     timerArbeid = TimerArbeid(BigDecimal.ZERO),
-                    opplysningerFørstMottatt = helligdagsunntakFritaksUtbetalingDato()[meldeperiode.tom.plusDays(3)]
+                    opplysningerFørstMottatt = aktiveHelligdagsunntakForFritaksutbetalingDatoer[meldeperiode.tom.plusDays(3)]
                         ?: meldeperiode.tom.plusDays(3)
                 )
             } else {

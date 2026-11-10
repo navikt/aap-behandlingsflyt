@@ -174,7 +174,7 @@ class MeldepliktRegel: UnderveisRegel {
         dataForMeldeperiode: Tidslinje<MeldepliktData>,
         dataForForrigeMeldeperiode: Tidslinje<MeldepliktData>?,
     ): Tidslinje<MeldepliktVurdering> {
-        val potensieltTidligDokument = helligdagsunntakFastsattMeldedag()[meldeperiode.fom]?.let { nyTidligereFrist ->
+        val potensieltTidligDokument = aktiveHelligdagsunntakForFastsatteMeldedager[meldeperiode.fom]?.let { nyTidligereFrist ->
             val begrensetForrigePeriode =
                 dataForForrigeMeldeperiode?.begrensetTil(Periode(nyTidligereFrist, LocalDate.MAX)).orEmpty()
 
