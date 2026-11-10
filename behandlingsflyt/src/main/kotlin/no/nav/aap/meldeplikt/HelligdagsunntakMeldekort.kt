@@ -24,9 +24,9 @@ val KOMMENDE_MELDEDAGUNNTAK_I_PROD = mapOf(
 fun helligdagsunntakFastsattMeldedag(erProd: Boolean): Map<LocalDate, LocalDate> =
     EKSISTERENDE_MELDEDAGUNNTAK_I_PROD +
             if (erProd)
-                    emptyMap()
+                emptyMap()
             else
-                    (TEST_MELDEDAGUNNTAK_I_DEV + KOMMENDE_MELDEDAGUNNTAK_I_PROD)
+                (TEST_MELDEDAGUNNTAK_I_DEV + KOMMENDE_MELDEDAGUNNTAK_I_PROD)
 
 val EKSISTERNDE_FRITAKSUNNTAK_I_PROD = mapOf(
     LocalDate.of(2025, 12, 17) to LocalDate.of(2025, 12, 15),
@@ -51,9 +51,9 @@ val KOMMENDE_FRITAKSUNNTAK_I_PROD = mapOf(
 fun helligdagsunntakFritaksUtbetalingDato(erProd: Boolean): Map<LocalDate, LocalDate> =
     EKSISTERNDE_FRITAKSUNNTAK_I_PROD +
             if (erProd)
-                    emptyMap()
+                emptyMap()
             else
-                    (TEST_FRITAKSUNNTAK_I_DEV + KOMMENDE_FRITAKSUNNTAK_I_PROD)
+                (TEST_FRITAKSUNNTAK_I_DEV + KOMMENDE_FRITAKSUNNTAK_I_PROD)
 
 private val erProd = Miljø.erProd()
 
