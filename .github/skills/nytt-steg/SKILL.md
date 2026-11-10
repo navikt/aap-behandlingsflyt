@@ -7,7 +7,9 @@ description: Oppskrift for å legge til et nytt steg i behandlingsflyten (StegTy
 Før du starter: les `.github/instructions/steg.instructions.md`. Et nytt steg endrer publisert kontrakt (`StegType`)
 og flytrekkefølgen, som brekker åpne behandlinger hvis det gjøres feil. Avklar med mennesket:
 1. Hvilken flyt (Revurdering/Klage/…) og **hvor** i rekkefølgen? Hvilke `Vurderingsbehov` gjør steget relevant?
-2. Skal steget vises i frontend (steggruppe)? Trenger det eget grunnlag-API?
+2. Skal steget vises i frontend, og i så fall på samme side som et eksisterende steg? `StegGruppe` grupperer steg
+   for visningen: steg som vises på samme side, deler gruppe, så ikke lag en ny gruppe per steg uten å spørre.
+   Trenger steget eget grunnlag-API?
 3. Finnes det et lignende steg å kopiere? (Finn det med `grep -l "companion object : FlytSteg"` og velg ett som
    bruker `AvklaringsbehovService.oppdaterAvklaringsbehov` riktig, f.eks. `VurderAvslag11_27Steg`.)
 
@@ -29,6 +31,8 @@ skillene `nytt-avklaringsbehov` og `nytt-grunnlag`. Selve steget er `StegType`, 
 5. API: `api/.../<feature>/XxxGrunnlagApi.kt` + `XxxGrunnlagResponse.kt`, monter i `app/.../App.kt`. Bruk
    `getGrunnlag<BehandlingReferanse, XxxGrunnlagDto>(..., påkrevdRolle = Definisjon.XXX.løsesAv)`, ikke `authorizedGet`:
    eksempelcommiten brukte `authorizedGet` og ble rettet i `da1aaee0b` fordi `kanSaksbehandle()` ellers ikke hentes riktig.
+   Respons med vurderinger får `vurderingerMeta` bygd med `VurdertAvService.byggVurderingerMeta` (navn, enhet,
+   kvalitetssikrer og beslutter), ikke `vurdertAv` som streng. Forbilde: `RettighetsperiodeGrunnlagDto`.
 6. Tester: `XxxStegTest` (kjør `utfør` to ganger; ingen duplikater, og tilbakestilling henter fra `forrigeBehandlingId`).
    Eksempelcommiten mangler denne testen; skriv den likevel. Oppdater `EnklereFlytOrkestratorTest`/`KlageFlytTest` eller
    tilsvarende sekvenstester, test visningsutlederen, og én scenariotest hvis steget stopper flyten.
