@@ -37,7 +37,7 @@ fun NormalOpenAPIRoute.gjenståendeSykedagerApi(gatewayProvider: GatewayProvider
             val resultat = gatewayProvider.provide<SykepengerGateway>().hentGjenståendeSykedager(request.personident)
             respond(
                 GjenståendeSykedagerDTO(
-                    grunnlag = resultat.status.name,
+                    grunnlag = resultat.grunnlag.name,
                     gjenståendeDager = resultat.gjenståendeDager,
                     vurdertTilOgMed = resultat.vurdertTilOgMed,
                 )
