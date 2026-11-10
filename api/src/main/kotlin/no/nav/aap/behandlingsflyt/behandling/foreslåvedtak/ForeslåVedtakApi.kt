@@ -67,6 +67,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                         .associate { it.id to it.referanse }
                     val visPeriodeEndringer = gatewayProvider.provide<UnleashGateway>()
                         .isEnabled(BehandlingsflytFeature.VedtaksperiodeBeslutter)
+                    val erFørstegangsbehandling = behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling
 
                     val stansOgOpphørDto = stansOgOpphør.map { (fom, historikk) ->
 
@@ -84,7 +85,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                                     behandlingReferanse = requireNotNull(referanseOppslag[vurdering.vurdertIBehandling]) {
                                         "Finner ikke ytelsesbehandling i sak med behandlingsid"
                                     }.referanse,
-                                    erNy = visPeriodeEndringer && vurdering.vurdertIBehandling == behandling.id
+                                    erNy = visPeriodeEndringer && !erFørstegangsbehandling && vurdering.vurdertIBehandling == behandling.id
                                 )
                             }
                         )
@@ -124,17 +125,15 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                                 }
                                 .komprimer()
 
-                        val tidligereTidslinjer: List<Tidslinje<ForeslåVedtakData>> =
-                            if (!visPeriodeEndringer) emptyList() else
-                                generateSequence(behandling.forrigeBehandlingId) { behandlingRepository.hent(it).forrigeBehandlingId }
-                                    .toList()
-                                    .reversed()
-                                    .mapNotNull {
-                                        underveisRepository.hentHvisEksisterer(it)?.tilForeslåVedtakDataTidslinje()
-                                    }
+                        val forrigeTidslinje: Tidslinje<ForeslåVedtakData>? =
+                            if (!visPeriodeEndringer) null else
+                                behandling.forrigeBehandlingId?.let { forrigeId ->
+                                    underveisRepository.hentHvisEksisterer(forrigeId)
+                                        ?.tilForeslåVedtakDataTidslinje()
+                                        ?: Tidslinje()
+                                }
 
-                        val forrigeHelePeriode =
-                            tidligereTidslinjer.lastOrNull()?.takeIf { !it.isEmpty() }?.helePerioden()
+                        val forrigeHelePeriode = forrigeTidslinje?.takeIf { !it.isEmpty() }?.helePerioden()
                         val gjeldendeHelePeriode = foreslåVedtakData.takeIf { !it.isEmpty() }?.helePerioden()
 
                         val endretRettighetsperiode =
@@ -145,7 +144,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                             }
 
                         val forrigeSegmenter: List<Segment<ForeslåVedtakData>>? =
-                            tidligereTidslinjer.lastOrNull()?.segmenter()?.toList()
+                            forrigeTidslinje?.segmenter()?.toList()
 
                         val oppfyltPerioderNå = foreslåVedtakData.segmenter()
                             .filter { it.verdi.first.utfall == Utfall.OPPFYLT }
@@ -202,7 +201,7 @@ internal fun utledEndringFraForrige(
     oppfyltIndex: Int,
     forrigeSegmenter: List<Segment<ForeslåVedtakData>>?,
 ): EndringFraForrige {
-    if (forrigeSegmenter == null) {
+    if (forrigeSegmenter.isNullOrEmpty()) {
         return EndringFraForrige(erNy = false, tidligerePerioder = emptyList(), tidligereVarÅpen = false)
     }
 
@@ -212,20 +211,20 @@ internal fun utledEndringFraForrige(
             .map { it.periode }
             .getOrNull(oppfyltIndex)
         EndringFraForrige(
-            erNy = forrigePeriode != segment,
+            erNy = forrigePeriode == null,
             tidligerePerioder = listOfNotNull(forrigePeriode?.takeIf { it != segment }),
             tidligereVarÅpen = false,
         )
     } else {
         val forrigeIndex = forrigeSegmenter.indexOfFirst {
-            it.verdi.utfall == Utfall.IKKE_OPPFYLT && it.periode.fom == segment.fom
+            it.verdi.utfall == Utfall.IKKE_OPPFYLT && it.periode.overlapper(segment)
         }
         val forrige = forrigeSegmenter.getOrNull(forrigeIndex)
-        val tomEndret = forrige != null && forrige.periode.tom != segment.tom
+        val endret = forrige != null && forrige.periode != segment
         EndringFraForrige(
-            erNy = false,
-            tidligerePerioder = listOfNotNull(forrige?.periode?.takeIf { tomEndret }),
-            tidligereVarÅpen = tomEndret &&
+            erNy = forrige == null,
+            tidligerePerioder = listOfNotNull(forrige?.periode?.takeIf { endret }),
+            tidligereVarÅpen = endret &&
                     forrigeIndex > forrigeSegmenter.indexOfLast { it.verdi.utfall == Utfall.OPPFYLT },
         )
     }

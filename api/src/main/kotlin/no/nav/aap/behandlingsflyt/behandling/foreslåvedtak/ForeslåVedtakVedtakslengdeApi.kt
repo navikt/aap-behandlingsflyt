@@ -20,7 +20,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -30,7 +33,8 @@ import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.foreslaaVedtakVedtakslengdeApi(
     dataSource: DataSource,
-    repositoryRegistry: RepositoryRegistry
+    repositoryRegistry: RepositoryRegistry,
+    gatewayProvider: GatewayProvider
 ) {
     route("/api/behandling") {
         route("/{referanse}/grunnlag/foreslaa-vedtak-vedtakslengde")
@@ -61,6 +65,10 @@ fun NormalOpenAPIRoute.foreslaaVedtakVedtakslengdeApi(
                         val referanseOppslag = behandlingRepository
                             .hentAlleFor(behandling.sakId, TypeBehandling.ytelseBehandlingstyper())
                             .associate { it.id to it.referanse }
+                        val visPeriodeEndringer = gatewayProvider.provide<UnleashGateway>()
+                            .isEnabled(BehandlingsflytFeature.VedtaksperiodeBeslutter)
+                        val erFørstegangsbehandling =
+                            behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling
 
                         val stansOgOpphørDto = stansOgOpphør.map { (fom, historikk) ->
                             StansOpphørDto(
@@ -88,7 +96,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakVedtakslengdeApi(
                                         behandlingReferanse = requireNotNull(referanseOppslag[vurdering.vurdertIBehandling]) {
                                             "Finner ikke ytelsesbehandling i sak med behandlingsid"
                                         }.referanse,
-                                        erNy = vurdering.vurdertIBehandling == behandling.id
+                                        erNy = visPeriodeEndringer && !erFørstegangsbehandling && vurdering.vurdertIBehandling == behandling.id
                                     )
                                 }
                             )
