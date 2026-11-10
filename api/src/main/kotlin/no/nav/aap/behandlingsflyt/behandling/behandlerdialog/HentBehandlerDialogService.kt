@@ -17,6 +17,7 @@ import no.nav.aap.dokumentinnhenting.kontrakt.HentLegeerklæringForespørslerFor
 import no.nav.aap.dokumentinnhenting.kontrakt.MeldingStatusDto
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.miljo.Miljø
+import java.time.Clock
 import java.time.LocalDate
 import java.util.*
 
@@ -28,6 +29,7 @@ class HentBehandlerDialogService(
     private val sakRepository: SakRepository,
     private val mottattDokumentRepository: MottattDokumentRepository,
     private val behandlingRepository: BehandlingRepository,
+    private val clock: Clock = Clock.systemDefaultZone()
 ) {
     fun hentDialogForSak(saksnummer: String, token: OidcToken): MeldingerResponse {
         val dialogmeldinger = hentDialogmeldingerFraDokumentinnhenting(saksnummer)
@@ -90,7 +92,7 @@ class HentBehandlerDialogService(
                         && it.innkommendeUtgående == InnkommendeUtgående.UTGÅENDE
                         && it.dialogmeldingId != null
                         && it.opprettetTidspunkt.toLocalDate()
-                    .plusDays(DAGER_TIL_PÅMINNELSE) > LocalDate.now()
+                    .plusDays(DAGER_TIL_PÅMINNELSE) > LocalDate.now(clock)
             }
 
         return kandidaterForPåminnelse.filter { melding ->

@@ -15,10 +15,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository.opprettBehandling
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.dokumentinnhenting.kontrakt.AvsenderMottakerDto
 import no.nav.aap.dokumentinnhenting.kontrakt.BegrensetDokumentInfoDto
 import no.nav.aap.dokumentinnhenting.kontrakt.BegrensetJournalpostDto
@@ -31,18 +33,23 @@ import no.nav.aap.dokumentinnhenting.kontrakt.MeldingStatusDto
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
 @Fakes
 class HentBehandlerDialogServiceTest : BaseApiTest() {
 
+    private val dagensDato = 1 juni 2026
+    private val clock = fixedClock(dagensDato)
+
     private val dokumentinnhentingGateway = mockk<DokumentinnhentingGateway>()
     private val service = HentBehandlerDialogService(
         dokumentinnhentingGateway,
         InMemorySakRepository,
         InMemoryMottattDokumentRepository,
-        InMemoryBehandlingRepository
+        InMemoryBehandlingRepository,
+        clock
     )
 
     @Test
