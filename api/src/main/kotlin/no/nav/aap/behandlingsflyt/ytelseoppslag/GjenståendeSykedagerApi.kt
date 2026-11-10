@@ -29,10 +29,6 @@ fun NormalOpenAPIRoute.gjenståendeSykedagerApi(gatewayProvider: GatewayProvider
                 )
                 return@authorizedPost pipeline.call.respond(feil.status, feil.tilApiErrorResponse())
             }
-            if (!request.personident.matches(Regex("[0-9]{11}"))) {
-                val feil = UgyldigForespørselException("Personident må bestå av 11 siffer")
-                return@authorizedPost pipeline.call.respond(feil.status, feil.tilApiErrorResponse())
-            }
 
             val resultat = gatewayProvider.provide<SykepengerGateway>().hentGjenståendeSykedager(request.personident)
             respond(

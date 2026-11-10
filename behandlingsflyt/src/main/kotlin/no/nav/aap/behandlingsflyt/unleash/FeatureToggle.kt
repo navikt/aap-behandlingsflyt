@@ -56,8 +56,5 @@ enum class BehandlingsflytFeature(
     BackfillRedusertDagsats,
     ;
 
-    override fun key(): String = when (this) {
-        HentSykepengerMaksdato -> "hentSykepengerMaksdato"
-        else -> name
-    }
+    override fun key(): String = name
 }
