@@ -7,6 +7,38 @@ import java.time.LocalDate
 
 class HelligdagsunntakMeldekortTest {
 
+    /** Sikkerhetsnett for å forsøke å redusere single point of failure for tilbakekreving
+     * grunnet unntaksfeil i HelligdagsunntakMeldekort.kt
+     */
+    @Test
+    fun `dagens prod miljø har kun fritaksunntak for desember 2025`() {
+        val prod = helligdagsunntakFritaksUtbetalingDato(erProd = true)
+
+        val forventetProd = mapOf(
+            LocalDate.of(2025, 12, 17) to LocalDate.of(2025, 12, 15),
+            LocalDate.of(2025, 12, 24) to LocalDate.of(2025, 12, 22),
+            LocalDate.of(2025, 12, 31) to LocalDate.of(2025, 12, 29),
+            LocalDate.of(2026, 4, 1) to LocalDate.of(2026, 3, 30),
+            LocalDate.of(2026, 5, 13) to LocalDate.of(2026, 5, 12)
+        )
+
+        assertThat(prod).isEqualTo(forventetProd)
+    }
+
+    /** Sikkerhetsnett for å forsøke å redusere single point of failure for tilbakekreving
+     * grunnet unntaksfeil i HelligdagsunntakMeldekort.kt
+     */
+    @Test
+    fun `dagens prod miljø har kun meldedagsunntak for desember 2025`() {
+        val prod = helligdagsunntakFastsattMeldedag(erProd = true)
+
+        val forventetProd = mapOf(
+            LocalDate.of(2025, 12, 22) to LocalDate.of(2025, 12, 17)
+        )
+
+        assertThat(prod).isEqualTo(forventetProd)
+    }
+
     @Test
     fun `fritaksdatoer har forventede verdier i prod og tillegg utenfor prod`() {
 
