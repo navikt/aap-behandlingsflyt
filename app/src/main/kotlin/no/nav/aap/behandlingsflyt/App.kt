@@ -16,6 +16,7 @@ import io.ktor.server.routing.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import no.nav.aap.barnetillegg.barnetilleggApi
 import no.nav.aap.behandlingsflyt.api.actuator.actuator
 import no.nav.aap.behandlingsflyt.auditlog.auditlogApi
 import no.nav.aap.behandlingsflyt.behandling.aktivitetsplikt.avbrytaktivitetspliktbehandling.avbrytAktivitetspliktbehandlingGrunnlagApi
@@ -27,14 +28,10 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.avklaringsbehovApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.fatteVedtakGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.utledSubtypesTilAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.behandling.barnepensjon.barnepensjonGrunnlagApi
-import no.nav.aap.barnetillegg.barnetilleggApi
 import no.nav.aap.behandlingsflyt.behandling.bekreftvurderingeroppfølging.bekreftVurderingerOppfølgingApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.beregningsGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.alder.aldersGrunnlagApi
-import no.nav.aap.meldeplikt.meldepliktsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.refusjon.refusjonGrunnlagApi
-import no.nav.aap.bistandsbehov.bistandsgrunnlagApi
-import no.nav.aap.overgangarbeid.overgangArbeidGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.overgangufore.overgangUforeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykdom.sykdomsgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.beregning.grunnlag.sykdom.sykepengergrunnlag.sykepengerGrunnlagApi
@@ -44,6 +41,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.sykdomsvurderingForBrevApi
 import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.etableringEgenVirksomhetApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakApi
 import no.nav.aap.behandlingsflyt.behandling.foreslåvedtak.foreslaaVedtakVedtakslengdeApi
+import no.nav.aap.behandlingsflyt.behandling.forutgåendemedlemskap.grunnlag.forutgåendeMedlemskapApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.avslag_11_27.avslag11_27GrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.inntektsbortfallGrunnlagApi
@@ -59,7 +57,6 @@ import no.nav.aap.behandlingsflyt.behandling.klage.trekk.trekkKlageGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.krav.kravGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringApi
 import no.nav.aap.behandlingsflyt.behandling.kvalitetssikring.kvalitetssikringTilgangApi
-import no.nav.aap.behandlingsflyt.behandling.forutgåendemedlemskap.grunnlag.forutgåendeMedlemskapApi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.grunnlag.lovvalgMedlemskapGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.lovvalgmedlemskap.medlemskapTilhørighetsvurderingApi
 import no.nav.aap.behandlingsflyt.behandling.meldekort.meldekortApi
@@ -71,14 +68,12 @@ import no.nav.aap.behandlingsflyt.behandling.rettighet.rettighetsinfoApi
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.rettighetsperiodeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.revurdering.avbrytRevurderingGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.simulering.simuleringApi
-import no.nav.aap.student.studentgrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.student.sykestipend.sykestipendGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.stønadsperiode.stønadsperiodeGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.svarfraandreinstans.svarfraandreinstans.svarFraAndreinstansGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.søknad.trukketSøknadGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.tidligereVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilkjentYtelseApi
-import no.nav.aap.meldeplikt.meldepliktOverstyringGrunnlagApi
 import no.nav.aap.behandlingsflyt.behandling.underveis.underveisVurderingerApi
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.vedtakslengdeGrunnlagApi
 import no.nav.aap.behandlingsflyt.drift.driftApi
@@ -108,6 +103,7 @@ import no.nav.aap.behandlingsflyt.test.fullførBehandlingApi
 import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
 import no.nav.aap.behandlingsflyt.ytelseoppslag.foreldrepengeperioderApi
 import no.nav.aap.behandlingsflyt.ytelseoppslag.sykepengeperioderApi
+import no.nav.aap.bistandsbehov.bistandsgrunnlagApi
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -118,21 +114,24 @@ import no.nav.aap.komponenter.server.auth.IdentityProvider
 import no.nav.aap.komponenter.server.commonKtorModule
 import no.nav.aap.komponenter.server.plugins.NavIdentInterceptor
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.meldeplikt.meldepliktOverstyringGrunnlagApi
+import no.nav.aap.meldeplikt.meldepliktsgrunnlagApi
 import no.nav.aap.motor.Motor
 import no.nav.aap.motor.api.motorApi
 import no.nav.aap.motor.retry.RetryService
+import no.nav.aap.overgangarbeid.overgangArbeidGrunnlagApi
+import no.nav.aap.student.studentgrunnlagApi
 import no.nav.aap.tilgang.DriftLes
 import no.nav.aap.tilgang.TeamAap
 import no.nav.aap.tilgang.TilgangGateway
 import org.apache.kafka.common.serialization.Deserializer
 import org.slf4j.LoggerFactory
-import org.slf4j.Logger as Slf4jLogger
 import org.slf4j.bridge.SLF4JBridgeHandler
 import java.time.ZoneId
 import java.util.*
-import java.util.logging.Level
-import java.util.logging.Logger
+import java.util.logging.*
 import kotlin.time.Duration.Companion.seconds
+import org.slf4j.Logger as Slf4jLogger
 
 fun utledSubtypesTilMottattHendelseDTO(): List<Class<*>> {
     return Innsending::class.sealedSubclasses.map { it.java }.toList()
@@ -272,7 +271,7 @@ internal fun Application.server(
     }
     verifiserTidssone(fellesDataSource)
     val påkrevdeRollerMotor = if (Miljø.erProd()) listOf(TeamAap.id) else emptyList()
-    val motorLeseRoller=  if (Miljø.erProd()) listOf(DriftLes.id) else emptyList()
+    val motorLeseRoller = if (Miljø.erProd()) listOf(DriftLes.id) else emptyList()
 
     routing {
         authenticate(IdentityProvider.ENTRA_ID.value) {
@@ -307,7 +306,7 @@ internal fun Application.server(
                 avklaringsbehovApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 tilkjentYtelseApi(fellesDataSource, repositoryRegistry)
                 foreslaaVedtakApi(fellesDataSource, repositoryRegistry, gatewayProvider)
-                foreslaaVedtakVedtakslengdeApi(fellesDataSource, repositoryRegistry, gatewayProvider)
+                foreslaaVedtakVedtakslengdeApi(fellesDataSource, repositoryRegistry)
                 trukketSøknadGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 avbrytRevurderingGrunnlagApi(fellesDataSource, repositoryRegistry)
                 rettighetsperiodeGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)

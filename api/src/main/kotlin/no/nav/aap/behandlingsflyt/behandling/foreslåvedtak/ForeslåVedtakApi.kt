@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.Stans
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.stansopphør.StansOpphørRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -70,7 +71,6 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                     val erFørstegangsbehandling = behandling.typeBehandling() == TypeBehandling.Førstegangsbehandling
 
                     val stansOgOpphørDto = stansOgOpphør.map { (fom, historikk) ->
-
                         StansOpphørDto(
                             stansOpphørFraOgMed = fom,
                             historikk = historikk.map { vurdering ->
@@ -98,21 +98,7 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                         StegType.FORESLÅ_VEDTAK
                     )
 
-                    val uunngåeligAvslagTidslinje: Tidslinje<VilkårsavslagDto> = tidslinjeTidligereVurdering
-                        .mapNotNull { utfall -> utfall as? TidligereVurderinger.UunngåeligAvslag }
-                        .map { uunngåeligAvslag ->
-                            val avslagsårsak = vilkårsresultat
-                                .tidslinjeFor(uunngåeligAvslag.vilkårtype)
-                                .segmenter()
-                                .firstOrNull()
-                                ?.verdi
-                                ?.avslagsårsak
-
-                            VilkårsavslagDto(
-                                vilkår = uunngåeligAvslag.vilkårtype.hjemmel,
-                                avslagsårsak = avslagsårsak
-                            )
-                        }
+                    val uunngåeligAvslagTidslinje = utledUunngåeligAvslagTidslinje(tidslinjeTidligereVurdering, vilkårsresultat)
 
                     if (underveisGrunnlag == null) {
                         ForeslåVedtakResponse(emptyList(), stansOgOpphørDto, kanSaksbehandle())
@@ -146,10 +132,6 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                         val forrigeSegmenter: List<Segment<ForeslåVedtakData>>? =
                             forrigeTidslinje?.segmenter()?.toList()
 
-                        val oppfyltPerioderNå = foreslåVedtakData.segmenter()
-                            .filter { it.verdi.first.utfall == Utfall.OPPFYLT }
-                            .map { it.periode }
-
                         val foreslåVedtakPerioder =
                             foreslåVedtakData
                                 .segmenter()
@@ -158,7 +140,6 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                                     val endring = utledEndringFraForrige(
                                         segment = segment.periode,
                                         utfall = data.utfall,
-                                        oppfyltIndex = oppfyltPerioderNå.indexOf(segment.periode),
                                         forrigeSegmenter = forrigeSegmenter,
                                     )
 
@@ -198,7 +179,6 @@ internal data class EndringFraForrige(
 internal fun utledEndringFraForrige(
     segment: Periode,
     utfall: Utfall,
-    oppfyltIndex: Int,
     forrigeSegmenter: List<Segment<ForeslåVedtakData>>?,
 ): EndringFraForrige {
     if (forrigeSegmenter.isNullOrEmpty()) {
@@ -207,9 +187,8 @@ internal fun utledEndringFraForrige(
 
     return if (utfall == Utfall.OPPFYLT) {
         val forrigePeriode = forrigeSegmenter
-            .filter { it.verdi.utfall == Utfall.OPPFYLT }
-            .map { it.periode }
-            .getOrNull(oppfyltIndex)
+            .firstOrNull { it.verdi.utfall == Utfall.OPPFYLT && it.periode.overlapper(segment) }
+            ?.periode
         EndringFraForrige(
             erNy = forrigePeriode == null,
             tidligerePerioder = listOfNotNull(forrigePeriode?.takeIf { it != segment }),
@@ -229,5 +208,30 @@ internal fun utledEndringFraForrige(
         )
     }
 }
+
+internal fun utledUunngåeligAvslagTidslinje(
+    tidligereVurdering: Tidslinje<TidligereVurderinger.Behandlingsutfall>,
+    vilkårsresultat: Vilkårsresultat,
+): Tidslinje<VilkårsavslagDto> {
+    val segmenter = tidligereVurdering.segmenter().mapNotNull { segment ->
+        val uunngåeligAvslag = segment.verdi as? TidligereVurderinger.UunngåeligAvslag
+            ?: return@mapNotNull null
+
+        val avslagsårsak = vilkårsresultat
+            .tidslinjeFor(uunngåeligAvslag.vilkårtype)
+            .begrensetTil(segment.periode)
+            .segmenter()
+            .firstOrNull { it.verdi.utfall == Utfall.IKKE_OPPFYLT && it.verdi.avslagsårsak != null }
+            ?.verdi
+            ?.avslagsårsak
+
+        Segment(
+            segment.periode,
+            VilkårsavslagDto(vilkår = uunngåeligAvslag.vilkårtype.hjemmel, avslagsårsak = avslagsårsak)
+        )
+    }
+    return Tidslinje(segmenter)
+}
+
 
 

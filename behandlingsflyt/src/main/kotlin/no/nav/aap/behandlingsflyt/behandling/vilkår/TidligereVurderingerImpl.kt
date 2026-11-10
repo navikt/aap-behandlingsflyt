@@ -84,7 +84,7 @@ class TidligereVurderingerImpl(
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.ALDERSVILKÅRET, vilkårsresultat)
             },
 
-            Sjekk(StegType.VURDER_AVSLAG_11_27) { _, kontekst, _ ->
+            Sjekk(StegType.VURDER_AVSLAG_11_27) { _, kontekst, tidligereVurderinger ->
                 val avslag11_27Grunnlag = avslag11_27repository.hentHvisEksisterer(kontekst.behandlingId)
                 val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
                     ?: return@Sjekk Tidslinje.empty()

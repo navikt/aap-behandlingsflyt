@@ -35,7 +35,6 @@ class ForeslåVedtakEndringTest {
         val resultat = utledEndringFraForrige(
             segment = Periode(start, dato(12, 31)),
             utfall = Utfall.OPPFYLT,
-            oppfyltIndex = 0,
             forrigeSegmenter = null,
         )
 
@@ -51,7 +50,6 @@ class ForeslåVedtakEndringTest {
         val resultat = utledEndringFraForrige(
             segment = periode,
             utfall = Utfall.OPPFYLT,
-            oppfyltIndex = 0,
             forrigeSegmenter = listOf(oppfylt(periode.fom, periode.tom)),
         )
 
@@ -64,7 +62,6 @@ class ForeslåVedtakEndringTest {
         val resultat = utledEndringFraForrige(
             segment = Periode(start, dato(3, 14)),
             utfall = Utfall.OPPFYLT,
-            oppfyltIndex = 0,
             forrigeSegmenter = listOf(oppfylt(start, dato(12, 31))),
         )
 
@@ -80,7 +77,7 @@ class ForeslåVedtakEndringTest {
             oppfylt(gjenopptattFom, dato(12, 31)),
         )
 
-        val rad1 = utledEndringFraForrige(Periode(start, dato(3, 14)), Utfall.OPPFYLT, 0, forrige)
+        val rad1 = utledEndringFraForrige(Periode(start, dato(3, 14)), Utfall.OPPFYLT, forrige)
 
         assertThat(rad1.erNy).isFalse()
         assertThat(rad1.tidligerePerioder).isEmpty()
@@ -96,7 +93,6 @@ class ForeslåVedtakEndringTest {
         val resultat = utledEndringFraForrige(
             segment = Periode(gjenopptattFom, dato(12, 31)),
             utfall = Utfall.OPPFYLT,
-            oppfyltIndex = 1,
             forrigeSegmenter = forrige,
         )
 
@@ -115,7 +111,6 @@ class ForeslåVedtakEndringTest {
         val resultat = utledEndringFraForrige(
             segment = Periode(gjenopptattFom, dato(8, 14)),
             utfall = Utfall.OPPFYLT,
-            oppfyltIndex = 1,
             forrigeSegmenter = forrige,
         )
 
@@ -133,7 +128,6 @@ class ForeslåVedtakEndringTest {
         val resultat = utledEndringFraForrige(
             segment = Periode(stansFom, Tid.MAKS),
             utfall = Utfall.IKKE_OPPFYLT,
-            oppfyltIndex = -1,
             forrigeSegmenter = forrige,
         )
 
@@ -153,7 +147,6 @@ class ForeslåVedtakEndringTest {
         val resultat = utledEndringFraForrige(
             segment = Periode(andreStansFom, dato(9, 12)),
             utfall = Utfall.IKKE_OPPFYLT,
-            oppfyltIndex = -1,
             forrigeSegmenter = forrige,
         )
 
@@ -173,7 +166,6 @@ class ForeslåVedtakEndringTest {
         val resultat = utledEndringFraForrige(
             segment = Periode(stansFom, dato(4, 10)),
             utfall = Utfall.IKKE_OPPFYLT,
-            oppfyltIndex = -1,
             forrigeSegmenter = forrige,
         )
 
@@ -188,7 +180,6 @@ class ForeslåVedtakEndringTest {
         val resultat = utledEndringFraForrige(
             segment = Periode(stansFom, Tid.MAKS),
             utfall = Utfall.IKKE_OPPFYLT,
-            oppfyltIndex = -1,
             forrigeSegmenter = forrige,
         )
 
@@ -201,7 +192,6 @@ class ForeslåVedtakEndringTest {
         val resultat = utledEndringFraForrige(
             segment = Periode(stansFom, Tid.MAKS),
             utfall = Utfall.IKKE_OPPFYLT,
-            oppfyltIndex = -1,
             forrigeSegmenter = listOf(oppfylt(start, dato(12, 31))),
         )
 
@@ -213,7 +203,6 @@ class ForeslåVedtakEndringTest {
         val resultat = utledEndringFraForrige(
             segment = Periode(dato(3, 20), dato(3, 30)),
             utfall = Utfall.IKKE_OPPFYLT,
-            oppfyltIndex = -1,
             forrigeSegmenter = listOf(oppfylt(start, dato(3, 14)), ikkeOppfylt(stansFom, dato(3, 30))),
         )
 
@@ -226,11 +215,94 @@ class ForeslåVedtakEndringTest {
         val resultat = utledEndringFraForrige(
             segment = Periode(start, dato(12, 31)),
             utfall = Utfall.OPPFYLT,
-            oppfyltIndex = 0,
             forrigeSegmenter = emptyList(),
         )
 
         assertThat(resultat.erNy).isFalse()
+        assertThat(resultat.tidligerePerioder).isEmpty()
+    }
+
+    @Test
+    fun `innvilget periode som deles i to er endret og peker på forrige hele periode`() {
+        val forrige = listOf(oppfylt(start, dato(12, 31)))
+
+        val rad1 = utledEndringFraForrige(Periode(start, dato(6, 30)), Utfall.OPPFYLT, forrige)
+        val rad3 = utledEndringFraForrige(Periode(dato(10, 1), dato(12, 31)), Utfall.OPPFYLT, forrige)
+
+        assertThat(rad1.erNy).isFalse()
+        assertThat(rad1.tidligerePerioder).containsExactly(Periode(start, dato(12, 31)))
+        assertThat(rad3.erNy).isFalse()
+        assertThat(rad3.tidligerePerioder).containsExactly(Periode(start, dato(12, 31)))
+    }
+
+    @Test
+    fun `ny innvilget periode foran eksisterende er ny og den eksisterende er uendret`() {
+        val forrige = listOf(oppfylt(dato(6, 1), dato(12, 31)))
+
+        val ny = utledEndringFraForrige(Periode(start, dato(3, 31)), Utfall.OPPFYLT, forrige)
+        val eksisterende = utledEndringFraForrige(Periode(dato(6, 1), dato(12, 31)), Utfall.OPPFYLT, forrige)
+
+        assertThat(ny.erNy).isTrue()
+        assertThat(ny.tidligerePerioder).isEmpty()
+        assertThat(eksisterende.erNy).isFalse()
+        assertThat(eksisterende.tidligerePerioder).isEmpty()
+    }
+
+    @Test
+    fun `innvilget periode matches på overlapp også når antall perioder er endret`() {
+        val forrige = listOf(
+            oppfylt(start, dato(2, 28)),
+            ikkeOppfylt(dato(3, 1), dato(5, 31)),
+            oppfylt(dato(6, 1), dato(12, 31)),
+        )
+
+        val resultat = utledEndringFraForrige(Periode(dato(6, 1), dato(11, 30)), Utfall.OPPFYLT, forrige)
+
+        assertThat(resultat.erNy).isFalse()
+        assertThat(resultat.tidligerePerioder).containsExactly(Periode(dato(6, 1), dato(12, 31)))
+    }
+
+    @Test
+    fun `avslag som overlapper flere forrige avslag matches mot det første`() {
+        val forrige = listOf(
+            oppfylt(start, dato(2, 28)),
+            ikkeOppfylt(dato(3, 1), dato(5, 31)),
+            oppfylt(dato(6, 1), dato(8, 31)),
+            ikkeOppfylt(dato(9, 1)),
+        )
+
+        val resultat = utledEndringFraForrige(Periode(dato(3, 1), dato(12, 31)), Utfall.IKKE_OPPFYLT, forrige)
+
+        assertThat(resultat.erNy).isFalse()
+        assertThat(resultat.tidligerePerioder).containsExactly(Periode(dato(3, 1), dato(5, 31)))
+        assertThat(resultat.tidligereVarÅpen).isFalse()
+    }
+
+    @Test
+    fun `avslag som kun overlapper siste åpne avslag er endret og tidligere var åpen`() {
+        val forrige = listOf(
+            oppfylt(start, dato(2, 28)),
+            ikkeOppfylt(dato(3, 1), dato(5, 31)),
+            oppfylt(dato(6, 1), dato(8, 31)),
+            ikkeOppfylt(dato(9, 1)),
+        )
+
+        val resultat = utledEndringFraForrige(Periode(dato(10, 1), Tid.MAKS), Utfall.IKKE_OPPFYLT, forrige)
+
+        assertThat(resultat.erNy).isFalse()
+        assertThat(resultat.tidligerePerioder).containsExactly(Periode(dato(9, 1), Tid.MAKS))
+        assertThat(resultat.tidligereVarÅpen).isTrue()
+    }
+
+    @Test
+    fun `avslag uten overlapp med forrige avslag er ny`() {
+        val forrige = listOf(
+            oppfylt(start, dato(12, 31)),
+        )
+
+        val resultat = utledEndringFraForrige(Periode(dato(7, 1), dato(12, 31)), Utfall.IKKE_OPPFYLT, forrige)
+
+        assertThat(resultat.erNy).isTrue()
         assertThat(resultat.tidligerePerioder).isEmpty()
     }
 }
