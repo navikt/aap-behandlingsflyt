@@ -78,7 +78,9 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
                 tekst = tekstFørsteMelding,
                 meldingStatus = MeldingStatusDto.LEVERT,
                 journalpostId = journalpostIdSendtMelding1,
-                bestillerNavIdent = "Z123456"
+                bestillerNavIdent = "Z123456",
+                kanSendeManuellPåminnelse = false,
+                sisteForespørselSendt = null,
             ),
             FellesDialogmeldingDto(
                 dialogmeldingReferanse = null,
@@ -88,7 +90,9 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
                 dokumentasjonsType = DokumentasjonType.PURRING,
                 tekst = null,
                 meldingStatus = MeldingStatusDto.LEVERT,
-                journalpostId = journalpostIdSendtMelding2
+                journalpostId = journalpostIdSendtMelding2,
+                kanSendeManuellPåminnelse = false,
+                sisteForespørselSendt = null,
             )
         )
         val hentDokumentlisteResponse = HentDokumentoversiktJournalpostListeResponse(
@@ -144,7 +148,9 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
                 dokumentasjonsType = DokumentasjonType.L40,
                 tekst = "Hei, kan dere sende over legeerklæring for bruker?",
                 meldingStatus = MeldingStatusDto.LEVERT,
-                journalpostId = "123"
+                journalpostId = "123",
+                kanSendeManuellPåminnelse = false,
+                sisteForespørselSendt = null,
             ),
             FellesDialogmeldingDto(
                 dialogmeldingReferanse = bestillingId2,
@@ -154,7 +160,9 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
                 dokumentasjonsType = DokumentasjonType.L40,
                 tekst = "Hei, kan dere sende over legeerklæring for bruker igjen?",
                 meldingStatus = MeldingStatusDto.LEVERT,
-                journalpostId = "123"
+                journalpostId = "123",
+                kanSendeManuellPåminnelse = false,
+                sisteForespørselSendt = null,
             )
         )
         val token = getToken()
@@ -196,7 +204,9 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
                 dokumentasjonsType = DokumentasjonType.L40,
                 tekst = "Hei, kan dere sende over legeerklæring for bruker?",
                 meldingStatus = MeldingStatusDto.LEVERT,
-                journalpostId = journalpostIdFørSisteLegeerklæring
+                journalpostId = journalpostIdFørSisteLegeerklæring,
+                kanSendeManuellPåminnelse = false,
+                sisteForespørselSendt = null,
             ),
             FellesDialogmeldingDto(
                 dialogmeldingReferanse = riktigBestillingId,
@@ -206,7 +216,9 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
                 dokumentasjonsType = DokumentasjonType.L40,
                 tekst = "Hei, kan du som vikarlege sende på legeerklæring for bruker?",
                 meldingStatus = MeldingStatusDto.LEVERT,
-                journalpostId = journalpostIdEtterSisteLegeerklæring
+                journalpostId = journalpostIdEtterSisteLegeerklæring,
+                kanSendeManuellPåminnelse = false,
+                sisteForespørselSendt = null,
             )
         )
 
