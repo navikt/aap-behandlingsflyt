@@ -100,7 +100,6 @@ object LokalUnleash : FakeUnleashBase(
         // ------
         BehandlingsflytFeature.Avslag11_27 to true,
         BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp to true,
-        BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom to true,
         BehandlingsflytFeature.KanVurdereRefusjonIRevurdering to false,
         BehandlingsflytFeature.KunEnAktivKlagebehandling to true,
         BehandlingsflytFeature.KlagePaaTilbakekreving to true,
