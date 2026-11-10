@@ -24,6 +24,7 @@ enum class BehandlingsflytFeature(
     SynkroniserArenaMeldeperiodesyklus,
     HandtereMaksdatoForKantTilKant,
     DynamiskFrivilligSykestipend,
+    HentSykepengerMaksdato,
 
     // --- Krav ---
     KravSteg, // Visning
@@ -55,5 +56,8 @@ enum class BehandlingsflytFeature(
     BackfillRedusertDagsats,
     ;
 
-    override fun key(): String = name
+    override fun key(): String = when (this) {
+        HentSykepengerMaksdato -> "hentSykepengerMaksdato"
+        else -> name
+    }
 }

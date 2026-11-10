@@ -23,6 +23,16 @@ data class SykepengeperiodeDTO(
     val organisasjonsnummer: String?,
 )
 
+data class GjenståendeSykedagerRequest(val personident: String) : Personreferanse {
+    override fun hentPersonreferanse(): String = personident
+}
+
+data class GjenståendeSykedagerDTO(
+    val grunnlag: String,
+    val gjenståendeDager: Int?,
+    val vurdertTilOgMed: LocalDate?,
+)
+
 data class ForeldrepengeperiodeDTO(
     val fom: LocalDate,
     val tom: LocalDate,
