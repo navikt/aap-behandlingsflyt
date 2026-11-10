@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingRepository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingerGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgMedlemskapVurderingService
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.kanVurderesAutomatiskTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.Medlemskapvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -85,7 +86,7 @@ class VurderLovvalgSteg private constructor(
                 // Manuelle vurderinger hentes på nytt da de kan ha blitt tilbakestilt
                 val faktagrunnlag = MedlemskapLovvalgFaktagrunnlag(
                     register = registerGrunnlag.value,
-                    delvurdering = lovvalgDelvurderingRepository.hentHvisEksisterer(kontekst.behandlingId),
+                    delvurderinger = lovvalgDelvurderingRepository.hentAlle(kontekst.behandlingId),
                     manuelleVurderinger = hentManuelleVurderinger(kontekst.behandlingId),
                 )
                 Medlemskapvilkåret(vilkårsresultat, kontekst.rettighetsperiode)
@@ -192,7 +193,7 @@ class VurderLovvalgSteg private constructor(
         kontekst: FlytKontekstMedPerioder,
     ): Set<Periode> {
         val relevantTidslinje = nårVurderingErRelevant(kontekst)
-        val kanVurderesAutomatiskTidslinje = lovvalgDelvurderingRepository.hentHvisEksisterer(kontekst.behandlingId)?.kanVurderesAutomatiskTidslinje() ?: Tidslinje.empty()
+        val kanVurderesAutomatiskTidslinje = lovvalgDelvurderingRepository.hentAlle(kontekst.behandlingId).kanVurderesAutomatiskTidslinje()
         val manuelleVurderinger = hentManuelleVurderinger(kontekst.behandlingId).gjeldendeVurderinger()
 
         return Tidslinje.map3(relevantTidslinje, manuelleVurderinger, kanVurderesAutomatiskTidslinje) { relevant, manuellVurdering, automatiskVurdering ->
@@ -202,7 +203,7 @@ class VurderLovvalgSteg private constructor(
 
     override fun nårVurderingErRelevant(kontekst: FlytKontekstMedPerioder): Tidslinje<Boolean> {
         val tidligereVurderingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type())
-        val kanVurderesAutomatiskTidslinje = lovvalgDelvurderingRepository.hentHvisEksisterer(kontekst.behandlingId)?.kanVurderesAutomatiskTidslinje() ?: Tidslinje.empty()
+        val kanVurderesAutomatiskTidslinje = lovvalgDelvurderingRepository.hentAlle(kontekst.behandlingId).kanVurderesAutomatiskTidslinje()
 
         val forrigeHaddeAvslagPåLovvalg = kontekst.forrigeBehandlingId?.let { forrigeId ->
             vilkårsresultatRepository.hent(forrigeId)
