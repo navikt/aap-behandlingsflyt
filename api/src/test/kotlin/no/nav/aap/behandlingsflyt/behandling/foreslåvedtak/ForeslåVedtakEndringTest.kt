@@ -60,7 +60,7 @@ class ForeslåVedtakEndringTest {
     }
 
     @Test
-    fun `innvilget periode med endret tom viser kun forrige behandlings tom`() {
+    fun `innvilget periode med endret tom er endret og viser kun forrige behandlings tom`() {
         val resultat = utledEndringFraForrige(
             segment = Periode(start, dato(3, 14)),
             utfall = Utfall.OPPFYLT,
@@ -68,7 +68,7 @@ class ForeslåVedtakEndringTest {
             forrigeSegmenter = listOf(oppfylt(start, dato(12, 31))),
         )
 
-        assertThat(resultat.erNy).isTrue()
+        assertThat(resultat.erNy).isFalse()
         assertThat(resultat.tidligerePerioder).containsExactly(Periode(start, dato(12, 31)))
     }
 
@@ -105,7 +105,7 @@ class ForeslåVedtakEndringTest {
     }
 
     @Test
-    fun `endret tom på senere innvilget periode viser forrige tom`() {
+    fun `endret tom på senere innvilget periode er endret og viser forrige tom`() {
         val forrige = listOf(
             oppfylt(start, dato(3, 14)),
             ikkeOppfylt(stansFom, dato(3, 30)),
@@ -119,7 +119,7 @@ class ForeslåVedtakEndringTest {
             forrigeSegmenter = forrige,
         )
 
-        assertThat(resultat.erNy).isTrue()
+        assertThat(resultat.erNy).isFalse()
         assertThat(resultat.tidligerePerioder).containsExactly(Periode(gjenopptattFom, dato(12, 31)))
     }
 
@@ -194,5 +194,43 @@ class ForeslåVedtakEndringTest {
 
         assertThat(resultat.tidligerePerioder).isEmpty()
         assertThat(resultat.tidligereVarÅpen).isFalse()
+    }
+
+    @Test
+    fun `ikke oppfylt periode uten forrige er ny`() {
+        val resultat = utledEndringFraForrige(
+            segment = Periode(stansFom, Tid.MAKS),
+            utfall = Utfall.IKKE_OPPFYLT,
+            oppfyltIndex = -1,
+            forrigeSegmenter = listOf(oppfylt(start, dato(12, 31))),
+        )
+
+        assertThat(resultat.erNy).isTrue()
+    }
+
+    @Test
+    fun `ikke oppfylt periode med endret fom er endret og viser forrige periode`() {
+        val resultat = utledEndringFraForrige(
+            segment = Periode(dato(3, 20), dato(3, 30)),
+            utfall = Utfall.IKKE_OPPFYLT,
+            oppfyltIndex = -1,
+            forrigeSegmenter = listOf(oppfylt(start, dato(3, 14)), ikkeOppfylt(stansFom, dato(3, 30))),
+        )
+
+        assertThat(resultat.erNy).isFalse()
+        assertThat(resultat.tidligerePerioder).containsExactly(Periode(stansFom, dato(3, 30)))
+    }
+
+    @Test
+    fun `tom forrige liste gir ingen endring`() {
+        val resultat = utledEndringFraForrige(
+            segment = Periode(start, dato(12, 31)),
+            utfall = Utfall.OPPFYLT,
+            oppfyltIndex = 0,
+            forrigeSegmenter = emptyList(),
+        )
+
+        assertThat(resultat.erNy).isFalse()
+        assertThat(resultat.tidligerePerioder).isEmpty()
     }
 }

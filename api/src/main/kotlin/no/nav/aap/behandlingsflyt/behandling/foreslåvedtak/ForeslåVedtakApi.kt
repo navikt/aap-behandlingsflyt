@@ -133,8 +133,8 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                                         ?: Tidslinje()
                                 }
 
-                        val forrigeHelePeriode = forrigeTidslinje?.takeIf { !it.isEmpty() }?.helePerioden()
-                        val gjeldendeHelePeriode = foreslåVedtakData.takeIf { !it.isEmpty() }?.helePerioden()
+                        val forrigeHelePeriode = forrigeTidslinje?.helePeriodenOrNull()
+                        val gjeldendeHelePeriode = foreslåVedtakData.helePeriodenOrNull()
 
                         val endretRettighetsperiode =
                             if (visPeriodeEndringer && forrigeHelePeriode != null && gjeldendeHelePeriode != null && forrigeHelePeriode != gjeldendeHelePeriode) {
