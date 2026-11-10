@@ -207,14 +207,14 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
 
         val datoerViKreverVurderingFor = input.kravViKreverVurderingFor.map { it.startDato }
 
-        val eksisterndeRelevanteInntekter =
+        val eksisterendeRelevanteInntekter =
             eksisterendeData?.registerGrunnlag?.inntekterINorgeGrunnlag?.inntekterForKrav.orEmpty()
                 .filter { inntekter -> inntekter.relevantDato in datoerViKreverVurderingFor }
                 .filterNot { inntekter -> inntekter.relevantDato in input.datoerSomInformasjonskravSkalHentesFor }
                 .toSet()
 
 
-        val gjeldendeInntekter = eksisterndeRelevanteInntekter + inntektGrunnlag.tilDomene(enhetGrunnlag).toSet()
+        val gjeldendeInntekter = eksisterendeRelevanteInntekter + inntektGrunnlag.tilDomene(enhetGrunnlag).toSet()
 
         val nyRegisterdata = LovvalgMedlemskapRegisterGrunnlag(
             inntekterINorgeGrunnlag = InntekterINorgeRegisterGrunnlag(gjeldendeInntekter),
