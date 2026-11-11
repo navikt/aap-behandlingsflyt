@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarYrke
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadeSakDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.YrkesskadevurderingDto
+import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
@@ -237,7 +238,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .medKontekst {
-                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
 
                 assertThat(hentVedtak().vedtakstidspunkt.toLocalDate()).isToday
 
@@ -248,6 +249,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
 
                 assertThat(resultat).isEqualTo(Resultat.AVSLAG)
             }
+            .løsVedtaksbrev(TypeBrev.VEDTAK_AVSLAG)
             .medKontekst {
                 assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET)
 

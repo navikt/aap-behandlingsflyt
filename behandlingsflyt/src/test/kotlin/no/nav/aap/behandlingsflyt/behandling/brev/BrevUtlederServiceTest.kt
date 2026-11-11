@@ -48,6 +48,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
@@ -85,6 +87,8 @@ import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
+import no.nav.aap.student.StudentRepository
+import no.nav.aap.student.StudentVurdering
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
@@ -96,6 +100,7 @@ import org.junit.jupiter.api.util.ReadsSystemProperty
 import org.junit.jupiter.api.util.RestoreSystemProperties
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.time.Instant
@@ -1625,6 +1630,108 @@ class BrevUtlederServiceTest {
         }
 
         @Test
+        fun `skal velge generelt avslagsbrev når student er vurdert selv om sykdomsvilkåret også gir avslag`() {
+            val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
+            gittUnderveisgrunnlagAvslag(behandling.id)
+            sykdomsvurderingForBrevRepository.lagre(behandling.id, sykdomsvurderingForBrevGrunnlag())
+            repositoryProvider.provide<StudentRepository>().lagre(
+                behandling.id,
+                setOf(
+                    StudentVurdering(
+                        fom = 1 januar 2025,
+                        begrunnelse = "Studentvurdering",
+                        harAvbruttStudie = false,
+                        godkjentStudieAvLånekassen = null,
+                        avbruttPgaSykdomEllerSkade = null,
+                        harBehovForBehandling = null,
+                        avbruttStudieDato = null,
+                        avbruddMerEnn6Måneder = null,
+                        vurdertAv = Bruker("Veileder"),
+                        vurdertIBehandling = behandling.id,
+                    ),
+                ),
+            )
+            val periode = Periode(1 januar 2025, 31 desember 2025)
+            repositoryProvider.provide<VilkårsresultatRepository>().lagre(
+                behandling.id,
+                Vilkårsresultat(
+                    vilkår = listOf(
+                        vilkårAvslag(Vilkårtype.SYKDOMSVILKÅRET, Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE, periode),
+                    ),
+                ),
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<AvslagBrev.Avslag>(resultat)
+            assertEquals(TypeBrev.VEDTAK_AVSLAG, resultat.typeBrev)
+            assertEquals(Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE, resultat.avslagsårsak)
+            assertEquals(setOf(Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE), resultat.avslagsårsaker)
+            assertEquals("Vurdering av sykdom", resultat.sykdomsvurdering)
+        }
+
+        @Test
+        fun `skal velge generelt avslagsbrev når yrkesskade er vurdert`() {
+            val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
+            gittUnderveisgrunnlagAvslag(behandling.id)
+            sykdomsvurderingForBrevRepository.lagre(behandling.id, sykdomsvurderingForBrevGrunnlag())
+            repositoryProvider.provide<SykdomRepository>().lagre(
+                behandling.id,
+                Yrkesskadevurdering(
+                    begrunnelse = "Ingen årsakssammenheng",
+                    relevanteSaker = emptyList(),
+                    erÅrsakssammenheng = false,
+                    andelAvNedsettelsen = Prosent(0),
+                    vurdertAv = Bruker("Veileder"),
+                    vurdertTidspunkt = LocalDateTime.now() // nødvendig pga. in-memory repo som ikke setter default
+                ),
+            )
+            repositoryProvider.provide<VilkårsresultatRepository>().lagre(
+                behandling.id,
+                Vilkårsresultat(
+                    vilkår = listOf(
+                        vilkårAvslag(
+                            Vilkårtype.SYKDOMSVILKÅRET,
+                            Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE,
+                        ),
+                    ),
+                ),
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<AvslagBrev.Avslag>(resultat)
+            assertEquals(TypeBrev.VEDTAK_AVSLAG, resultat.typeBrev)
+            assertEquals(Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE, resultat.avslagsårsak)
+            assertEquals(setOf(Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE), resultat.avslagsårsaker)
+            assertEquals("Vurdering av sykdom", resultat.sykdomsvurdering)
+        }
+
+        @Test
+        fun `skal velge sykdomsvilkårsavslagsbrev når student eller yrkesskade ikke er vurdert`() {
+            val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
+            gittUnderveisgrunnlagAvslag(behandling.id)
+            sykdomsvurderingForBrevRepository.lagre(behandling.id, sykdomsvurderingForBrevGrunnlag())
+            repositoryProvider.provide<VilkårsresultatRepository>().lagre(
+                behandling.id,
+                Vilkårsresultat(
+                    vilkår = listOf(
+                        vilkårAvslag(
+                            Vilkårtype.SYKDOMSVILKÅRET,
+                            Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE,
+                        ),
+                    ),
+                ),
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<AvslagBrev.AvslagSykdomsvilkåret>(resultat)
+            assertEquals(TypeBrev.VEDTAK_AVSLAG_11_5, resultat.typeBrev)
+            assertEquals("Vurdering av sykdom", resultat.sykdomsvurdering)
+        }
+
+        @Test
         fun `skal hente ut sykdomsvurdering ved avslag`() {
             val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
             gittUnderveisgrunnlagAvslag(behandling.id)
@@ -2027,6 +2134,22 @@ class BrevUtlederServiceTest {
             redusertDagsats = dagsats
         )
     }
+
+    private fun vilkårAvslag(
+        type: Vilkårtype,
+        avslagsårsak: Avslagsårsak? = null,
+        periode: Periode = Periode(1 januar 2025, 31 desember 2025)
+    ) = Vilkår(
+        type = type,
+        vilkårsperioder = setOf(
+            Vilkårsperiode(
+                periode = periode,
+                utfall = Utfall.IKKE_OPPFYLT,
+                begrunnelse = "Generisk begrunnelse",
+                avslagsårsak = avslagsårsak,
+            ),
+        ),
+    )
 
     companion object {
         @JvmStatic
