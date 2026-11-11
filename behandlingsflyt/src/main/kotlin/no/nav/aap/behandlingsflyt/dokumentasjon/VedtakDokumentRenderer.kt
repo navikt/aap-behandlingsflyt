@@ -24,6 +24,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.utils.Diff
 import no.nav.aap.behandlingsflyt.utils.Endret
 import no.nav.aap.behandlingsflyt.utils.Fjernet
@@ -39,6 +40,11 @@ internal fun vilkårsvurderingOppsummeringTittel(
     vedtaksdato: String,
 ) = "Oppsummering av vilkårsvurderinger for sak $saksnummer – $vedtaksdato"
 
+internal fun vilkårsvurderingOppsummeringTittelForMigrertSak(
+    saksnummer: Saksnummer,
+    vedtaksdato: String,
+) = "Oppsummering av vedtaksfakta innhentet fra gammelt fagsystem (Arena) til nytt fagsystem (Kelvin) for sak $saksnummer – $vedtaksdato"
+
 internal object VedtakDokumentRenderer {
     fun render(grunnlag: VedtakDokumentGrunnlag): PdfDokument = grunnlag.tilDokument()
 
@@ -48,15 +54,17 @@ internal object VedtakDokumentRenderer {
             vedtak = behandlinger,
         )
         val vedtaksdato = formaterVedtaksdato(behandling.id, kontekst)
+        val tittel = if(erMigrertVedtak()) vilkårsvurderingOppsummeringTittelForMigrertSak(saksnummer, vedtaksdato) else vilkårsvurderingOppsummeringTittel(saksnummer, vedtaksdato)
+
         return PdfDokument(
-            tittel = vilkårsvurderingOppsummeringTittel(saksnummer, vedtaksdato),
+            tittel = tittel,
             body = tilSeksjon().render(kontekst),
         )
     }
 
     private fun VedtakDokumentGrunnlag.tilSeksjon(): Seksjon {
         return Seksjon(
-            tittel = Tekst("Vedtak"),
+            tittel = Tekst(if(erMigrertVedtak()) "Migreringsbehandling" else "Vedtak"),
             subseksjoner = listOfNotNull(
                 opplysningerOmBehandlingenSub(),
                 kravSub(),
@@ -1258,26 +1266,31 @@ internal object VedtakDokumentRenderer {
         )
     }
 
-    private fun VedtakDokumentGrunnlag.opplysningerOmBehandlingenSub(): Seksjon = Seksjon(
-        tittel = Tekst("Opplysninger om behandlingen"),
-        blokker = listOf(
-            Dict(
-                "Referanse" to Tekst(behandling.referanse.toString()),
-                "Opprettet" to Tidspunkt(behandling.opprettetTidspunkt),
-                "Årsak til opprettelse" to PrettyEnum(behandling.årsakTilOpprettelse),
-                "Vurderingsbehov" to
-                        behandling.vurderingsbehov().join(separator = " ") {
-                            Span(
-                                PrettyEnum(it.type),
-                                Tekst(", sist oppdatert "),
-                                Tidspunkt(it.oppdatertTid),
-                                Tekst("."),
-                            )
-                        },
-                "Vedtakstidspunkt" to Tidspunkt(behandlinger.single { it.id == behandling.id }.vedtakstidspunkt),
-            )
-        ),
-    )
+    private fun VedtakDokumentGrunnlag.opplysningerOmBehandlingenSub(): Seksjon {
+        val vedtakstidspunktEtikett = if (erMigrertVedtak()) "Migreringstidspunkt" else "Vedtakstidspunkt"
+        val vedtakstidspunkt = behandlinger.single { it.id == behandling.id }.vedtakstidspunkt
+
+        return Seksjon(
+            tittel = Tekst("Opplysninger om behandlingen"),
+            blokker = listOf(
+                Dict(
+                    "Referanse" to Tekst(behandling.referanse.toString()),
+                    "Opprettet" to Tidspunkt(behandling.opprettetTidspunkt),
+                    "Årsak til opprettelse" to PrettyEnum(behandling.årsakTilOpprettelse),
+                    "Vurderingsbehov" to
+                            behandling.vurderingsbehov().join(separator = " ") {
+                                Span(
+                                    PrettyEnum(it.type),
+                                    Tekst(", sist oppdatert "),
+                                    Tidspunkt(it.oppdatertTid),
+                                    Tekst("."),
+                                )
+                            },
+                    vedtakstidspunktEtikett to Tidspunkt(vedtakstidspunkt),
+                )
+            ),
+        )
+    }
 
     private fun VedtakDokumentGrunnlag.vedleggTidligereBehandlingerSub(): Seksjon {
         val tidligereBehandlinger = behandlinger.filter { it.id != behandling.id }
@@ -1389,4 +1402,8 @@ internal object VedtakDokumentRenderer {
         ),
         yrkesskadeBegrunnelse?.let { Fritekstfelt("Begrunnelse for vurdering av yrkesskade", it) }
     )
+}
+
+private fun VedtakDokumentGrunnlag.erMigrertVedtak(): Boolean {
+    return behandling.årsakTilOpprettelse == ÅrsakTilOpprettelse.MIGRERING_FRA_ARENA
 }
