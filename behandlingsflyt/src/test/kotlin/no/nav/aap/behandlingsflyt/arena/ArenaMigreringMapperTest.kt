@@ -43,6 +43,7 @@ class ArenaMigreringMapperTest {
 
     private val behandlingId = BehandlingId(1)
     private val fom: LocalDate = 1 januar 2024
+    private val virkningstidspunkt: LocalDate = LocalDate.of(2023, 6, 15)
 
     @Test
     fun `oppholdskrav godtar oppfylt og ikke vurdert fra Arena`() {
@@ -165,9 +166,14 @@ class ArenaMigreringMapperTest {
             fraArena = fraArena,
             behandlingId = behandlingId,
             vurderingenGjelderFra = fom,
+            virkningstidspunkt = virkningstidspunkt,
         )
 
-        assertThat(vurdering.begrunnelse).isEqualTo(fraArena.begrunnelse)
+        assertThat(vurdering.begrunnelse).isEqualTo(
+            "Migrert fra Arena. Vurderingen gjelder fra virkningstidspunktet 15.06.2023 i Arena. " +
+                    "Teksten under er overført fra vedtaksbegrunnelsen i Arena:\n\n" +
+                    "Bruker oppfyller vilkåret for 11-5"
+        )
         assertThat(vurdering.vurderingenGjelderFra).isEqualTo(fom)
         assertThat(vurdering.vurderingenGjelderTil).isNull()
         assertThat(vurdering.diagnose?.kodeverk).isEqualTo("ICD10")
@@ -186,13 +192,27 @@ class ArenaMigreringMapperTest {
     }
 
     @Test
+    fun `sykdomsvurdering uten begrunnelse fra Arena får kun innledning`() {
+        val vurdering = ArenaMigreringMapper.tilOppfyltOrdinærSykdomsvurdering(
+            fraArena = fraArena.copy(begrunnelse = null),
+            behandlingId = behandlingId,
+            vurderingenGjelderFra = fom,
+            virkningstidspunkt = virkningstidspunkt,
+        )
+
+        assertThat(vurdering.begrunnelse).isEqualTo(
+            "Migrert fra Arena. Vurderingen gjelder fra virkningstidspunktet 15.06.2023 i Arena."
+        )
+    }
+
+    @Test
     fun `mapSykdomsvurdering feiler med tydelig melding når Arena mangler hoveddiagnose`() {
         val utenHoveddiagnose = fraArena.copy(
             diagnoser = fraArena.diagnoser.filter { it.type == "BI" }
         )
 
         assertThatThrownBy {
-            ArenaMigreringMapper.tilOppfyltOrdinærSykdomsvurdering(utenHoveddiagnose, behandlingId, fom)
+            ArenaMigreringMapper.tilOppfyltOrdinærSykdomsvurdering(utenHoveddiagnose, behandlingId, fom, virkningstidspunkt)
         }
             .isInstanceOf(IllegalArgumentException::class.java)
             .hasMessageContaining("hoveddiagnose")
@@ -210,7 +230,7 @@ class ArenaMigreringMapperTest {
         )
 
         assertThatThrownBy {
-            ArenaMigreringMapper.tilOppfyltOrdinærSykdomsvurdering(medAvvikendeBidiagnose, behandlingId, fom)
+            ArenaMigreringMapper.tilOppfyltOrdinærSykdomsvurdering(medAvvikendeBidiagnose, behandlingId, fom, virkningstidspunkt)
         }
             .isInstanceOf(IllegalArgumentException::class.java)
             .hasMessageContaining("Bidiagnoser har ikke samme kodeverk")
@@ -228,7 +248,7 @@ class ArenaMigreringMapperTest {
         )
 
         assertThatThrownBy {
-            ArenaMigreringMapper.tilOppfyltOrdinærSykdomsvurdering(medAvvikendeBidiagnose, behandlingId, fom)
+            ArenaMigreringMapper.tilOppfyltOrdinærSykdomsvurdering(medAvvikendeBidiagnose, behandlingId, fom, virkningstidspunkt)
         }
             .isInstanceOf(IllegalArgumentException::class.java)
             .hasMessageContaining("Hoveddiagnose har ikke støttet kodeverk i sykdomsvurdering fra Arena, støtter kun ICPC-2 og ICD-10")

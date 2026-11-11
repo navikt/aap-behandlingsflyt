@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.utils.tilNorskFormat
 import no.nav.aap.bistandsbehov.Bistandsvurdering
 import java.time.Instant
 import java.time.LocalDate
@@ -88,6 +89,7 @@ object ArenaMigreringMapper {
         fraArena: ArenaSykdomsvurdering,
         behandlingId: BehandlingId,
         vurderingenGjelderFra: LocalDate,
+        virkningstidspunkt: LocalDate,
     ): Sykdomsvurdering {
         // TODO denne mappingen er ikke landet
         val hoveddiagnose = requireNotNull(
@@ -107,7 +109,11 @@ object ArenaMigreringMapper {
         // Kodeverk i Kelvin har ikke bindestrek, men Arena har det. F.eks. "ICPC-2" vs "ICPC2"
         val kodeverk = hoveddiagnose.kodeverk.replace("-", "")
 
-        val begrunnelse = fraArena.begrunnelse ?: "Automatisk migrert fra Arena"
+        val innledning = "Migrert fra Arena. Vurderingen gjelder fra virkningstidspunktet " +
+                "${virkningstidspunkt.tilNorskFormat()} i Arena."
+        val begrunnelse = fraArena.begrunnelse?.let {
+            "$innledning Teksten under er overført fra vedtaksbegrunnelsen i Arena:\n\n$it"
+        } ?: innledning
 
         return Sykdomsvurdering(
             begrunnelse = begrunnelse,
