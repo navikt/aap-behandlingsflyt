@@ -107,6 +107,7 @@ class ArenaMigreringMapperTest {
             fraArena = forutgåendeMedlemskap("J"),
             behandlingId = behandlingId,
             fom = fom,
+            virkningstidspunkt = virkningstidspunkt,
         )
 
         assertThat(vurdering.harForutgåendeMedlemskap).isTrue()
@@ -116,8 +117,11 @@ class ArenaMigreringMapperTest {
         assertThat(vurdering.vurdertIBehandling).isEqualTo(behandlingId)
         assertThat(vurdering.fom).isEqualTo(fom)
         assertThat(vurdering.tom).isNull()
-        assertThat(vurdering.begrunnelse).contains("oppfylt i Arena")
-        assertThat(vurdering.begrunnelse).doesNotContain("fritekst fra Arena")
+        assertThat(vurdering.begrunnelse).isEqualTo(
+            "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet 15.06.2023 i Arena. " +
+                    "Vilkår om forutgående medlemskap er huket av som oppfylt etter § 11-2 første ledd. " +
+                    "Dette er gjort for at saken skal kunne bytte fagsystem og endrer ikke vurderingen gjort i Arena."
+        )
     }
 
     @Test
@@ -128,6 +132,7 @@ class ArenaMigreringMapperTest {
                     fraArena = forutgåendeMedlemskap(status),
                     behandlingId = behandlingId,
                     fom = fom,
+                    virkningstidspunkt = virkningstidspunkt,
                 )
             }.isInstanceOf(IllegalArgumentException::class.java)
                 .hasMessageContaining("MEDLSKAP5")

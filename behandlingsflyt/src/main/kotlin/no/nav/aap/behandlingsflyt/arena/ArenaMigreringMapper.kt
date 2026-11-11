@@ -179,12 +179,16 @@ object ArenaMigreringMapper {
         fraArena: ArenaForutgåendeMedlemskap,
         behandlingId: BehandlingId,
         fom: LocalDate,
+        virkningstidspunkt: LocalDate,
     ): ManuellVurderingForForutgåendeMedlemskap {
         require(fraArena.erOppfylt()) {
             "Kan ikke mappe forutgående medlemskap med vilkårkode ${fraArena.vilkår?.kode} og status ${fraArena.vilkår?.status}"
         }
         return ManuellVurderingForForutgåendeMedlemskap(
-            begrunnelse = "Forutgående medlemskap er oppfylt i Arena",
+            begrunnelse = "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet " +
+                    "${virkningstidspunkt.tilNorskFormat()} i Arena. " +
+                    "Vilkår om forutgående medlemskap er huket av som oppfylt etter § 11-2 første ledd. " +
+                    "Dette er gjort for at saken skal kunne bytte fagsystem og endrer ikke vurderingen gjort i Arena.",
             harForutgåendeMedlemskap = true,
             varMedlemMedNedsattArbeidsevne = null,
             medlemMedUnntakAvMaksFemAar = null,

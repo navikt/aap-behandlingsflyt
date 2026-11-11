@@ -255,6 +255,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             fraArena = forutgåendeMedlemskap,
             behandlingId = kontekst.behandlingId,
             fom = kontekst.rettighetsperiode.fom,
+            virkningstidspunkt = arenaMigreringService.hentVirkningstidspunkt(kontekst.behandlingId),
         )
 
         forutgåendeMedlemskapRepository.lagreVurderinger(kontekst.behandlingId, listOf(vurdering))
