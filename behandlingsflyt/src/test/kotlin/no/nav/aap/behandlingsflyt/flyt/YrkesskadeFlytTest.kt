@@ -87,7 +87,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
     }
 
     @Test
-    fun `skal gi yrkesskadeavslag med generelt avslagsbrev ved manglende årsakssammenheng`() {
+    fun `skal gi generelt avslagsbrev når yrkesskade er vurdert uten årsakssammenheng`() {
         val søknadsdato = LocalDate.now()
         val person = TestPersoner.PERSON_MED_YRKESSKADE()
         val (_, behandling) = sendInnFørsteSøknad(
@@ -129,7 +129,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
 
                 assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1).allSatisfy {
                     assertThat(it.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
-                    assertThat(it.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_ÅRSAKSSAMMENHENG_YRKESSKADE)
+                    assertThat(it.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE)
                     assertThat(it.innvilgelsesårsak).isNull()
                 }
             }

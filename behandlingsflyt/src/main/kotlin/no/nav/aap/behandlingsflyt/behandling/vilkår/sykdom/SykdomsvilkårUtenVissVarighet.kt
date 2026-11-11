@@ -130,9 +130,6 @@ object SykdomsvilkårUtenVissVarighet : Vilkårsvurderer<SykdomsFaktagrunnlag> {
             utfall = Utfall.IKKE_OPPFYLT
 
             avslagsårsak = when {
-                yrkesskadeVurdering?.erÅrsakssammenheng == false ->
-                    Avslagsårsak.IKKE_ÅRSAKSSAMMENHENG_YRKESSKADE
-
                 sykdomVurdering?.harSkadeSykdomEllerLyte == false ->
                     Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE
 

@@ -49,7 +49,6 @@ enum class Vilkårtype(
             Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE,
             Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
-            Avslagsårsak.IKKE_ÅRSAKSSAMMENHENG_YRKESSKADE,
         ),
         hjemmel = "§ 11-5",
         kontraktversjon = no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vilkårtype.SYKDOMSVILKÅRET,

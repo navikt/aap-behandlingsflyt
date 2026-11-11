@@ -86,6 +86,7 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.meldeplikt.MeldepliktRepository
+import no.nav.aap.student.StudentRepository
 import org.slf4j.LoggerFactory
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -115,6 +116,7 @@ class BrevUtlederService(
     private val barnepensjonRepository: BarnepensjonRepository,
     private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
     private val sykdomRepository: SykdomRepository,
+    private val studentRepository: StudentRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val barnRepository: BarnRepository,
     private val meldepliktRepository: MeldepliktRepository,
@@ -149,6 +151,7 @@ class BrevUtlederService(
         barnepensjonRepository = repositoryProvider.provide(),
         samordningAndreStatligeYtelserRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
+        studentRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
         barnRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
@@ -405,9 +408,6 @@ class BrevUtlederService(
     private fun prioriterAvslagsårsakAvslagsBrevType(avslagsårsaker: Set<Avslagsårsak>): Avslagsårsak? {
         val prioritertRekkefølge = listOf(
             Avslagsårsak.BRUKER_UNDER_18,
-            Avslagsårsak.IKKE_ÅRSAKSSAMMENHENG_YRKESSKADE,
-            Avslagsårsak.IKKE_RETT_PA_STUDENT,
-            Avslagsårsak.VARIGHET_OVERSKREDET_STUDENT,
             Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
@@ -495,6 +495,9 @@ class BrevUtlederService(
     }
 
     private fun brevBehovAvslag(behandling: Behandling): AvslagBrev {
+        val sykdomGrunnlag by lazy { sykdomRepository.hentHvisEksisterer(behandling.id) }
+        val studentGrunnlag by lazy { studentRepository.hentHvisEksisterer(behandling.id) }
+
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
         val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
         val vedtaksdato = checkNotNull(vedtakRepository.hent(behandling.id)?.vedtakstidspunkt) {
@@ -519,15 +522,10 @@ class BrevUtlederService(
                 Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
             )
 
-            val erIkkeAvslagYrkesskadeEllerStudent = alleAvslagsårsaker.none {
-                it in setOf(
-                    Avslagsårsak.IKKE_RETT_PA_STUDENT,
-                    Avslagsårsak.VARIGHET_OVERSKREDET_STUDENT,
-                    Avslagsårsak.IKKE_ÅRSAKSSAMMENHENG_YRKESSKADE
-                )
-            }
+            val studentEllerYrkesskadeErVurdert =
+                sykdomGrunnlag?.yrkesskadevurdering != null || !studentGrunnlag?.vurderinger.isNullOrEmpty()
 
-            if (erAvslag11_5 && erIkkeAvslagYrkesskadeEllerStudent) {
+            if (erAvslag11_5 && !studentEllerYrkesskadeErVurdert) {
                 return AvslagBrev.AvslagSykdomsvilkåret(
                     sykdomsvurdering = sykdomsvurdering,
                     yrkesSkadeISøknadIkkeIRegister = yrkesSkadeISøknadIkkeIRegister
