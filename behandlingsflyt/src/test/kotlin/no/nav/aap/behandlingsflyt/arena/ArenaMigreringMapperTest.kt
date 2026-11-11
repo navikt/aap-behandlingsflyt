@@ -67,24 +67,20 @@ class ArenaMigreringMapperTest {
     }
 
     @Test
-    fun `tilOppfyltOppholdskravVurdering skiller mellom oppfylt og ikke vurdert`() {
-        val oppfylt = ArenaMigreringMapper.tilOppfyltOppholdskravVurdering(
-            fraArena = oppholdskrav("J"),
-            behandlingId = behandlingId,
-            fom = fom,
-        )
-        val ikkeVurdert = ArenaMigreringMapper.tilOppfyltOppholdskravVurdering(
-            fraArena = oppholdskrav("V"),
-            behandlingId = behandlingId,
-            fom = fom,
-        )
+    fun `tilOppfyltOppholdskravVurdering gir samme begrunnelse for oppfylt og ikke vurdert`() {
+        val forventetBegrunnelse = "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet 15.06.2023 i Arena."
 
-        assertThat(oppfylt.perioder.single().oppfylt).isTrue()
-        assertThat(oppfylt.perioder.single().begrunnelse).contains("oppfylt i Arena")
-        assertThat(ikkeVurdert.perioder.single().oppfylt).isTrue()
-        assertThat(ikkeVurdert.perioder.single().begrunnelse).contains("ikke vurdert i Arena")
-        assertThat(oppfylt.perioder.single().begrunnelse).doesNotContain("fritekst fra Arena")
-        assertThat(ikkeVurdert.perioder.single().begrunnelse).doesNotContain("fritekst fra Arena")
+        listOf("J", "V").forEach { status ->
+            val vurdering = ArenaMigreringMapper.tilOppfyltOppholdskravVurdering(
+                fraArena = oppholdskrav(status),
+                behandlingId = behandlingId,
+                fom = fom,
+                virkningstidspunkt = virkningstidspunkt,
+            )
+
+            assertThat(vurdering.perioder.single().oppfylt).isTrue()
+            assertThat(vurdering.perioder.single().begrunnelse).isEqualTo(forventetBegrunnelse)
+        }
     }
 
     @Test

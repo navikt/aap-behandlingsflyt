@@ -144,17 +144,13 @@ object ArenaMigreringMapper {
         fraArena: ArenaOppholdskrav,
         behandlingId: BehandlingId,
         fom: LocalDate,
+        virkningstidspunkt: LocalDate,
     ): OppholdskravVurdering {
         require(fraArena.erOppfyltEllerIkkeVurdert()) {
             "Kan ikke mappe oppholdskrav med vilkårkode ${fraArena.vilkår?.kode} og status ${fraArena.vilkår?.status}"
         }
-        val status = fraArena.vilkår?.status
-        val begrunnelse = when (status) {
-            "J" -> "Oppholdskravet er oppfylt i Arena"
-            "V" -> "Oppholdskravet er ikke vurdert i Arena, " +
-                    "men oppfylles automatisk fordi det må være oppfylt for at vedtaket skal være innvilget i Arena"
-            else -> error("Uventet status etter validering: $status")
-        }
+        val begrunnelse = "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet " +
+                "${virkningstidspunkt.tilNorskFormat()} i Arena."
 
         return OppholdskravVurdering(
             vurdertAv = ARENA_MIGRERING_BRUKER,
