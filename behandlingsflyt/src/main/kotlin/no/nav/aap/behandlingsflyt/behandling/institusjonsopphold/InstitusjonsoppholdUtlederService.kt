@@ -209,8 +209,7 @@ class InstitusjonsoppholdUtlederService(
         val periodiserteVurderinger =
             if (enManedsregelEnabled) alleVurderinger.filterNot { it.erHistoriskUtenReduksjonsberegning } else alleVurderinger
 
-        val vurderingTidslinje = periodiserteVurderinger
-            .let { Tidslinje(it.map { v -> Segment(v.periode, v) }) }
+        val vurderingTidslinje = Tidslinje(periodiserteVurderinger.map { v -> Segment(v.periode, v) })
             .map {
                 HelseOpphold(
                     if (it.giReduksjon()) {

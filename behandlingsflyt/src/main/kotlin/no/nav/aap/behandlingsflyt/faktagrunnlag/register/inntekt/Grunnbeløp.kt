@@ -149,13 +149,13 @@ object Grunnbeløp {
             }
             fun finnGrunnbeløpForÅr(år: Year): GrunnbeløpMedDato? {
                 val grunnbeløpElement = grunnbeløpene.find { Year.of(it.dato.year) == år }
-                if (grunnbeløpElement != null) {
-                    return GrunnbeløpMedDato(
+                return if (grunnbeløpElement != null) {
+                    GrunnbeløpMedDato(
                         dato = grunnbeløpElement.dato,
                         beløp = grunnbeløpElement.beløp
                     )
                 } else {
-                    return null
+                    null
                 }
             }
         }
