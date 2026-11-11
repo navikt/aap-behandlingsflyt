@@ -84,6 +84,7 @@ class KravStegTest {
             },
             arenaMigreringsdataRepository = InMemoryArenaMigreringsdataRepository,
             arenaOppslagGateway = FakeArenaOppslagGateway(),
+            kravRepository = InMemoryKravRepository,
         )
         steg = KravSteg(
             unleashGateway = AlleAvskruddUnleash,
@@ -403,6 +404,7 @@ class KravStegTest {
                 },
                 arenaMigreringsdataRepository = InMemoryArenaMigreringsdataRepository,
                 arenaOppslagGateway = it,
+                kravRepository = kravRepository,
             )
         } ?: arenaMigreringService,
     )
