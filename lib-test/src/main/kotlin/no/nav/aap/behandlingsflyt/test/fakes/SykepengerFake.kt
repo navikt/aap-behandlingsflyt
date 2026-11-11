@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.test.TestPersonService
+import java.time.LocalDate
 
 data class SykepengerRequest(val personidentifikatorer: Set<String>)
 
@@ -36,7 +37,8 @@ class SykepengerFake(private val fakePersoner: () -> TestPersonService) : FakeSe
         installerStatusPages("SYKEPENGER")
         routing {
             post("/gjenstaende-sykedager") {
-                call.respond(GjenståendeSykedager(grunnlag = GjenståendeSykedagerGrunnlag.INGEN_SYKEPENGER_SISTE_26_UKER))
+                call.respond(GjenståendeSykedager(grunnlag = GjenståendeSykedagerGrunnlag.VEDTAK_I_NY_LØSNING, 21,
+                    LocalDate.now() ))
             }
             post("/utbetalte-perioder-aap") {
                 val request = call.receive<SykepengerRequest>()

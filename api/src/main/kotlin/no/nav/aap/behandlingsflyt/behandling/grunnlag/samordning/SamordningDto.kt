@@ -17,6 +17,7 @@ import java.time.LocalDate
  * @param mottarSykepenger Oppgitt i søknaden, svar på "Mottar du sykepenger?".
  * @param feriePerioder Oppgitt i søknaden, svar på "Skal du ta ferie?" når søker har oppgitt konkrete fra-/tildatoer.
  * @param ferieDager Oppgitt i søknaden, svar på "Skal du ta ferie?" når søker har oppgitt antall dager i stedet for perioder.
+ * @param gjenståendeSykedager Gjenstående sykedager slik de ble oppgitt av sykepengeregisteret. Null hvis ikke hentet.
  */
 data class SamordningYtelseVurderingGrunnlagDTO(
     val harTilgangTilÅSaksbehandle: Boolean,
@@ -27,6 +28,16 @@ data class SamordningYtelseVurderingGrunnlagDTO(
     val mottarSykepenger: Boolean? = null,
     val feriePerioder: List<Periode> = emptyList(),
     val ferieDager: Int? = null,
+    val gjenståendeSykedager: GjenståendeSykedagerDTO? = null,
+)
+
+/**
+ * @param grunnlag Hva beregningen av gjenstående sykedager bygger på (navn på enum i sykepengeregisteret).
+ */
+data class GjenståendeSykedagerDTO(
+    val grunnlag: String,
+    val gjenståendeDager: Int?,
+    val vurdertTilOgMed: LocalDate?,
 )
 
 data class SamordningYtelseVurderingDTO(

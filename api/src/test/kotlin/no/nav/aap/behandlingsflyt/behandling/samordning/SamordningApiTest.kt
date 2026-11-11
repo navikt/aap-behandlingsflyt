@@ -6,7 +6,11 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.aap.behandlingsflyt.BaseApiTest
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.SamordningYtelseDTO
+import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.GjenståendeSykedagerDTO
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.SamordningYtelseVurderingGrunnlagDTO
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedagerGrunnlag
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryGjenståendeSykedagerRepository
 import no.nav.aap.behandlingsflyt.behandling.grunnlag.samordning.samordningGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelsePeriode
@@ -50,6 +54,15 @@ class SamordningApiKtTest : BaseApiTest() {
                     kilde = "kilde",
                     saksRef = "saksref",
                 ),
+            ),
+        )
+
+        InMemoryGjenståendeSykedagerRepository.lagre(
+            behandling.id,
+            GjenståendeSykedager(
+                grunnlag = GjenståendeSykedagerGrunnlag.VEDTAK_I_NY_LØSNING,
+                gjenståendeDager = 42,
+                vurdertTilOgMed = LocalDate.now(),
             ),
         )
 
@@ -98,6 +111,11 @@ class SamordningApiKtTest : BaseApiTest() {
                     mottarSykepenger = true,
                     feriePerioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusDays(6))),
                     ferieDager = null,
+                    gjenståendeSykedager = GjenståendeSykedagerDTO(
+                        grunnlag = "VEDTAK_I_NY_LØSNING",
+                        gjenståendeDager = 42,
+                        vurdertTilOgMed = LocalDate.now(),
+                    ),
                 )
             )
         }

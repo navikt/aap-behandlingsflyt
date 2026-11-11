@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andresta
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.GjenståendeSykedagerRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.dagpenger.DagpengerRepository
@@ -132,6 +133,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                     val tjenestePensjonRepository = repositoryProvider.provide<TjenestePensjonRepository>()
                     val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
                     val sykepengerOgFerieRepository = repositoryProvider.provide<SykepengerOgFerieOppgittISøknadRepository>()
+                    val gjenståendeSykedagerRepository = repositoryProvider.provide<GjenståendeSykedagerRepository>()
                     val vurdertAvService = VurdertAvService(repositoryProvider, gatewayProvider)
 
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
@@ -153,6 +155,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 
                     val tp = tjenestePensjonRepository.hentHvisEksisterer(behandling.id)
                     val sykepengerOgFerie = sykepengerOgFerieRepository.hentHvisEksisterer(behandling.id)
+                    val gjenståendeSykedager = gjenståendeSykedagerRepository.hentHvisEksisterer(behandling.id)
 
                     SamordningYtelseVurderingGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
@@ -177,6 +180,13 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                         mottarSykepenger = sykepengerOgFerie?.mottarSykepenger,
                         feriePerioder = sykepengerOgFerie?.feriePerioder.orEmpty(),
                         ferieDager = sykepengerOgFerie?.ferieDager,
+                        gjenståendeSykedager = gjenståendeSykedager?.let {
+                            GjenståendeSykedagerDTO(
+                                grunnlag = it.grunnlag.name,
+                                gjenståendeDager = it.gjenståendeDager,
+                                vurdertTilOgMed = it.vurdertTilOgMed,
+                            )
+                        },
                     )
                 }
 
