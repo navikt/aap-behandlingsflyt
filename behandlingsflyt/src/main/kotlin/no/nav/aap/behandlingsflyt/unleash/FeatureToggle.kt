@@ -39,9 +39,6 @@ enum class BehandlingsflytFeature(
     MigrererVedtakslengdeFraArenaAutomatisk,
     MigrererBeregningstidspunktFraArenaAutomatisk,
 
-    // --- Utbetaling ---
-    FjerneAvventUtbetalingForSamordningArbeidsgiver,
-
     // ------
     Avslag11_27,
     BosattStatsborgerskapGjennomslipp,
