@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGat
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.GjenståendeSykedagerRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -90,6 +91,7 @@ class SamordningYtelseVurderingServiceTest {
             val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
                 SamordningYtelseRepositoryImpl(connection),
                 SamordningVurderingRepositoryImpl(connection),
+                GjenståendeSykedagerRepositoryImpl(connection),
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
@@ -138,6 +140,7 @@ class SamordningYtelseVurderingServiceTest {
             val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
                 SamordningYtelseRepositoryImpl(connection),
                 SamordningVurderingRepositoryImpl(connection),
+                GjenståendeSykedagerRepositoryImpl(connection),
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
@@ -178,6 +181,7 @@ class SamordningYtelseVurderingServiceTest {
             val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
                 SamordningYtelseRepositoryImpl(connection),
                 SamordningVurderingRepositoryImpl(connection),
+                GjenståendeSykedagerRepositoryImpl(connection),
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
@@ -210,6 +214,7 @@ class SamordningYtelseVurderingServiceTest {
             val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
                 SamordningYtelseRepositoryImpl(connection),
                 SamordningVurderingRepositoryImpl(connection),
+                GjenståendeSykedagerRepositoryImpl(connection),
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),

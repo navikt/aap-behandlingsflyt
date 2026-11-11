@@ -24,6 +24,7 @@ import no.nav.aap.meldeplikt.MeldeperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningAndreStatligeYtelserRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.GjenståendeSykedagerRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningUføreRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurderingRepositoryImpl
@@ -133,6 +134,7 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<SykepengerErstatningRepositoryImpl>()
     .register<SamordningVurderingRepositoryImpl>()
     .register<SamordningYtelseRepositoryImpl>()
+    .register<GjenståendeSykedagerRepositoryImpl>()
     .register<SamordningUføreRepositoryImpl>()
     .register<SamordningAndreStatligeYtelserRepositoryImpl>()
     .register<SamordningArbeidsgiverRepositoryImpl>()
