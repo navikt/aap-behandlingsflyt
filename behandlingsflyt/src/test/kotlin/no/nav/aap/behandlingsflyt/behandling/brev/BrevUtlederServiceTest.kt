@@ -1683,6 +1683,7 @@ class BrevUtlederServiceTest {
                     erÅrsakssammenheng = false,
                     andelAvNedsettelsen = Prosent(0),
                     vurdertAv = Bruker("Veileder"),
+                    vurdertTidspunkt = LocalDateTime.now() // nødvendig pga. in-memory repo som ikke setter default
                 ),
             )
             repositoryProvider.provide<VilkårsresultatRepository>().lagre(

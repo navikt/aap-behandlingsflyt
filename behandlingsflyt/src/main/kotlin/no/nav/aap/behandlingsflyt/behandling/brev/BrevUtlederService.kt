@@ -522,10 +522,12 @@ class BrevUtlederService(
                 Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
             )
 
-            val studentEllerYrkesskadeErVurdert =
-                sykdomGrunnlag?.yrkesskadevurdering != null || !studentGrunnlag?.vurderinger.isNullOrEmpty()
+            val yrkesskadeVurdert = sykdomGrunnlag?.yrkesskadevurdering?.vurdertTidspunkt
+                ?.let { it >= behandling.opprettetTidspunkt }
+                ?: false
+            val studentVurdert = studentGrunnlag?.vurderinger?.any { it.vurdertIBehandling == behandling.id } ?: false
 
-            if (erAvslag11_5 && !studentEllerYrkesskadeErVurdert) {
+            if (erAvslag11_5 && !yrkesskadeVurdert && !studentVurdert) {
                 return AvslagBrev.AvslagSykdomsvilkåret(
                     sykdomsvurdering = sykdomsvurdering,
                     yrkesSkadeISøknadIkkeIRegister = yrkesSkadeISøknadIkkeIRegister
