@@ -380,12 +380,16 @@ class ArenaMigreringMapperTest {
     @Test
     fun `tilBeregningstidspunktVurdering mapper dato, årsak ANNET og begrunnelse`() {
         val vurdering = ArenaMigreringMapper.tilBeregningstidspunktVurdering(
-            ArenaBeregningstidspunkt(beregningstidspunkt = 1 januar 2023)
+            fraArena = ArenaBeregningstidspunkt(beregningstidspunkt = 1 januar 2023),
+            virkningstidspunkt = virkningstidspunkt,
         )
 
         assertThat(vurdering.nedsattArbeidsevneEllerStudieevneDato).isEqualTo(1 januar 2023)
         assertThat(vurdering.årsak).isEqualTo(ÅrsakBeregningstidspunkt.ANNET)
-        assertThat(vurdering.begrunnelse).isEqualTo("Migrert fra Arena")
+        assertThat(vurdering.begrunnelse).isEqualTo(
+            "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet 15.06.2023 i Arena. " +
+                    "Forvaltningsnotat finnes i Gosys."
+        )
         assertThat(vurdering.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
         assertThat(vurdering.ytterligereNedsattArbeidsevneDato).isNull()
         assertThat(vurdering.ytterligereNedsattÅrsak).isNull()

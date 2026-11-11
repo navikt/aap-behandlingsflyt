@@ -246,9 +246,13 @@ object ArenaMigreringMapper {
         )
     }
 
-    fun tilBeregningstidspunktVurdering(fraArena: ArenaBeregningstidspunkt): BeregningstidspunktVurdering {
+    fun tilBeregningstidspunktVurdering(
+        fraArena: ArenaBeregningstidspunkt,
+        virkningstidspunkt: LocalDate,
+    ): BeregningstidspunktVurdering {
         return BeregningstidspunktVurdering(
-            begrunnelse = "Migrert fra Arena",
+            begrunnelse = "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet " +
+                    "${virkningstidspunkt.tilNorskFormat()} i Arena. Forvaltningsnotat finnes i Gosys.",
             nedsattArbeidsevneEllerStudieevneDato = fraArena.beregningstidspunkt,
             ytterligereNedsattBegrunnelse = null,
             ytterligereNedsattArbeidsevneDato = null,
