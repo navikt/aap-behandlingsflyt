@@ -204,8 +204,12 @@ object ArenaMigreringMapper {
     fun tilOppfyltBistandsvurdering(
         behandlingId: BehandlingId,
         fom: LocalDate,
+        virkningstidspunkt: LocalDate,
     ): Bistandsvurdering {
-        val begrunnelse = "Ikke vurdert i Arena, men oppfylles automatisk ved at bruker har ordinær AAP i Arena på migreringstidspunktet"
+        val begrunnelse = "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet " +
+                "${virkningstidspunkt.tilNorskFormat()} i Arena. " +
+                "I Kelvin er vilkårene huket av som oppfylt på § 11-6 bokstav a og b. " +
+                "Dette er gjort for at saken skal kunne bytte fagsystem og endrer ikke vurderingen gjort i Arena."
 
         return Bistandsvurdering(
             begrunnelse = begrunnelse,

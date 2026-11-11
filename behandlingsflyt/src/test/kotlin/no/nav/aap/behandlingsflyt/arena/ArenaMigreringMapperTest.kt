@@ -259,9 +259,14 @@ class ArenaMigreringMapperTest {
         val vurdering = ArenaMigreringMapper.tilOppfyltBistandsvurdering(
             behandlingId = behandlingId,
             fom = fom,
+            virkningstidspunkt = virkningstidspunkt,
         )
 
-        assertThat(vurdering.begrunnelse).isEqualTo("Ikke vurdert i Arena, men oppfylles automatisk ved at bruker har ordinær AAP i Arena på migreringstidspunktet")
+        assertThat(vurdering.begrunnelse).isEqualTo(
+            "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet 15.06.2023 i Arena. " +
+                    "I Kelvin er vilkårene huket av som oppfylt på § 11-6 bokstav a og b. " +
+                    "Dette er gjort for at saken skal kunne bytte fagsystem og endrer ikke vurderingen gjort i Arena."
+        )
         assertThat(vurdering.fom).isEqualTo(fom)
         assertThat(vurdering.tom).isNull()
         assertThat(vurdering.erBehovForAktivBehandling).isTrue()
