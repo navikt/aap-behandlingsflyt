@@ -50,7 +50,7 @@ class HelligdagsunntakMeldekortTest {
     }
 
     @Test
-    fun `prodmiljø har et forventet unntaksutvalg for fritaksdatoer`() {
+    fun `prodmiljø har forventet unntaksutvalg for fritaksdatoer`() {
         val prodUnntak = helligdagsunntakFritaksUtbetalingDato(erProd = true)
 
         val forventetUtvalg = mapOf(
@@ -65,7 +65,7 @@ class HelligdagsunntakMeldekortTest {
     }
 
     @Test
-    fun `testmiljø har et forventet unntaksutvalg for fritaksdatoer`() {
+    fun `testmiljø har forventet unntaksutvalg for fritaksdatoer`() {
         val testUnntak = helligdagsunntakFritaksUtbetalingDato(erProd = false)
 
         val forventetUtvalg = mapOf(
@@ -87,7 +87,7 @@ class HelligdagsunntakMeldekortTest {
     }
 
     @Test
-    fun `prodmiljø har et forventet unntaksutvalg for meldedager`() {
+    fun `prodmiljø har forventet unntaksutvalg for meldedager`() {
         val prodUnntak = helligdagsunntakFastsattMeldedag(erProd = true)
 
         val forventetUtvalg = mapOf(
@@ -98,7 +98,7 @@ class HelligdagsunntakMeldekortTest {
     }
 
     @Test
-    fun `testmiljø har et forventet unntaksutvalg for meldedager`() {
+    fun `testmiljø har forventet unntaksutvalg for meldedager`() {
         val testUnntak = helligdagsunntakFastsattMeldedag(erProd = false)
 
         val forventetUnntak = mapOf(

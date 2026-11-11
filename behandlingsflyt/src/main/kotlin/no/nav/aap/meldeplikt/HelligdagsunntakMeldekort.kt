@@ -3,6 +3,7 @@ package no.nav.aap.meldeplikt
 import no.nav.aap.komponenter.miljo.Miljø
 import java.time.LocalDate
 import kotlin.collections.mapOf
+import org.jetbrains.annotations.VisibleForTesting
 
 /**
  * Map fra ordinær fastsatt dag til justert dato for helligdager. Se [Confluence](https://confluence.adeo.no/x/uizUL) for dokumentasjon.
@@ -21,7 +22,8 @@ val KOMMENDE_MELDEDAGUNNTAK_I_PROD = mapOf(
     LocalDate.of(2026, 12, 21) to LocalDate.of(2026, 12, 16),
 )
 
-fun helligdagsunntakFastsattMeldedag(erProd: Boolean): Map<LocalDate, LocalDate> =
+@VisibleForTesting
+internal fun helligdagsunntakFastsattMeldedag(erProd: Boolean): Map<LocalDate, LocalDate> =
     EKSISTERENDE_MELDEDAGUNNTAK_I_PROD +
             if (erProd)
                 emptyMap()
@@ -48,7 +50,8 @@ val KOMMENDE_FRITAKSUNNTAK_I_PROD = mapOf(
     LocalDate.of(2026, 12, 30) to LocalDate.of(2026, 12, 28),
 )
 
-fun helligdagsunntakFritaksUtbetalingDato(erProd: Boolean): Map<LocalDate, LocalDate> =
+@VisibleForTesting
+internal fun helligdagsunntakFritaksUtbetalingDato(erProd: Boolean): Map<LocalDate, LocalDate> =
     EKSISTERNDE_FRITAKSUNNTAK_I_PROD +
             if (erProd)
                 emptyMap()
