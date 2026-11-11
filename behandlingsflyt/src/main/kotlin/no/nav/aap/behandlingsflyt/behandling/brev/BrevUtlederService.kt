@@ -406,6 +406,7 @@ class BrevUtlederService(
         val prioritertRekkefølge = listOf(
             Avslagsårsak.BRUKER_UNDER_18,
             Avslagsårsak.IKKE_ÅRSAKSSAMMENHENG_YRKESSKADE,
+            Avslagsårsak.IKKE_RETT_PA_STUDENT,
             Avslagsårsak.VARIGHET_OVERSKREDET_STUDENT,
             Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
