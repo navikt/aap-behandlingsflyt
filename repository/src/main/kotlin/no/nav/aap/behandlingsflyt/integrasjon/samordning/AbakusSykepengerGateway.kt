@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.samordning
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
@@ -16,6 +17,7 @@ import java.net.URI
 import java.time.LocalDate
 
 class AbakusSykepengerGateway : SykepengerGateway {
+    private val gjenståendeSykedagerUrl = URI.create(requiredConfigForKey("INTEGRASJON_SYKEPENGER_URL") + "/gjenstaende-sykedager")
     private val url = URI.create(requiredConfigForKey("INTEGRASJON_SYKEPENGER_URL") + "/utbetalte-perioder-aap")
     private val config = ClientConfig(scope = requiredConfigForKey("INTEGRASJON_SYKEPENGER_SCOPE"))
 
@@ -29,6 +31,17 @@ class AbakusSykepengerGateway : SykepengerGateway {
         config = config, tokenProvider = AzureM2MTokenProvider, prometheus = prometheus
     )
 
+    override fun hentGjenståendeSykedager(fødselsnummer: String): GjenståendeSykedager {
+        val response: GjenståendeSykedager? = client.post(
+            uri = gjenståendeSykedagerUrl,
+            request = PostRequest(
+                body = GjenståendeSykedagerRequest(fødselsnummer),
+                additionalHeaders = listOf(Header("Accept", "application/json"))
+            )
+        )
+        return requireNotNull(response) { "Fikk ikke gyldig svar fra /gjenstaende-sykedager" }
+    }
+
     private fun query(request: SykepengerRequest): SykepengerResponse {
         val httpRequest = PostRequest(
             body = request, additionalHeaders = listOf(
@@ -39,6 +52,8 @@ class AbakusSykepengerGateway : SykepengerGateway {
         val response: SykepengerResponse? = client.post(uri = url, request = httpRequest)
         return requireNotNull(response)
     }
+
+    private data class GjenståendeSykedagerRequest(val fødselsnummer: String)
 
     override fun hentYtelseSykepenger(
         personidentifikatorer: Set<String>,

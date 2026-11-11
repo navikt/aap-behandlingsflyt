@@ -20,7 +20,7 @@ class TjenestePensjonFake(private val fakePersoner: () -> TestPersonService) : F
                 val ident = call.request.headers["fnr"] ?: ""
                 val fakePerson = fakePersoner().hentPerson(ident)
 
-                if (fakePerson != null && fakePerson.tjenestePensjon != null) {
+                if (fakePerson?.tjenestePensjon != null) {
                     call.respond(fakePerson.tjenestePensjon)
                 } else {
                     call.respond(TjenestePensjonRespons(ident))
