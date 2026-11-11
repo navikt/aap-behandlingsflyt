@@ -9,6 +9,7 @@ dokumentinnhenting = "0.0.9"
 arenaoppslag = "0.7.30"
 
 [libraries]
+archunit = { module = "com.tngtech.archunit:archunit", version = "1.5.1" }
 json = { module = "no.nav.aap.kelvin:json", version.ref = "komponenter" }
 dbconnect = { module = "no.nav.aap.kelvin:dbconnect", version.ref = "komponenter" }
 verdityper = { module = "no.nav.aap.kelvin:verdityper", version.ref = "komponenter" }
