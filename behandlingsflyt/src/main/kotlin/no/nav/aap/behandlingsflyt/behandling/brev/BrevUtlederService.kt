@@ -644,7 +644,7 @@ class BrevUtlederService(
 
     private fun hentSykdomsvurdering(behandlingId: BehandlingId): String? {
         val grunnlag = sykdomsvurderingForBrevRepository.hent(behandlingId)
-        return grunnlag?.vurdering
+        return grunnlag?.let(SykdomsvurderingForBrevFormatter::formater)
     }
 
     private fun utledGrunnlagBeregning11_9(

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.Dokumentkilde
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -23,6 +24,8 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.time.LocalDate
 
 class SykdomsvurderingBrevStegTest {
@@ -81,6 +84,57 @@ class SykdomsvurderingBrevStegTest {
         val behov = hentBrevBehov(behandling)
 
         assertThat(behov).isNotNull
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [false, true])
+    fun `begrunnelse er tilstrekkelig med og uten kilder`(medKilder: Boolean) {
+        val behandling = behandling(TypeBehandling.Førstegangsbehandling)
+        val kontekst = flytKontekstMedPerioder(behandling)
+        opprettOgLøsSykdombehov(behandling)
+        opprettOgLøsBrevbehov(behandling, kontekst)
+        InMemorySykdomsvurderingForBrevRepository.lagre(
+            behandling.id,
+            SykdomsvurderingForBrev(
+                behandling.id, "En vurdering", Bruker("Veileder"), kilder = kilder(medKilder)
+            )
+        )
+
+        steg.utfør(kontekst)
+
+        assertThat(hentBrevBehov(behandling)?.erÅpent()).isFalse()
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [false, true])
+    fun `kilder gjør ikke blank begrunnelse tilstrekkelig`(medKilder: Boolean) {
+        val behandling = behandling(TypeBehandling.Førstegangsbehandling)
+        val kontekst = flytKontekstMedPerioder(behandling)
+        opprettOgLøsSykdombehov(behandling)
+        opprettOgLøsBrevbehov(behandling, kontekst)
+        InMemorySykdomsvurderingForBrevRepository.lagre(
+            behandling.id,
+            SykdomsvurderingForBrev(
+                behandling.id, " ", Bruker("Veileder"), kilder = kilder(medKilder)
+            )
+        )
+
+        steg.utfør(kontekst)
+
+        assertThat(hentBrevBehov(behandling)?.erÅpent()).isTrue()
+    }
+
+    private fun kilder(medKilder: Boolean): List<Dokumentkilde> =
+        if (medKilder) {
+            listOf(Dokumentkilde("123", "456", "Legeerklæring", LocalDate.of(2026, 1, 20)))
+        } else {
+            emptyList()
+        }
+
+    private fun opprettOgLøsBrevbehov(behandling: Behandling, kontekst: FlytKontekstMedPerioder) {
+        steg.utfør(kontekst)
+        InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
+            .løsAvklaringsbehov(Definisjon.SKRIV_SYKDOMSVURDERING_BREV, "...", Bruker("Veileder"))
     }
 
     private fun hentBrevBehov(behandling: Behandling): Avklaringsbehov? =

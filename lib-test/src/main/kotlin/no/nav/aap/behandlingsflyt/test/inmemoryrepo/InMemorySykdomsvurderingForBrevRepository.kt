@@ -9,12 +9,15 @@ import java.util.concurrent.ConcurrentHashMap
 
 object InMemorySykdomsvurderingForBrevRepository : SykdomsvurderingForBrevRepository {
     private val grunnlag = ConcurrentHashMap<BehandlingId, SykdomsvurderingForBrev>()
+    private val historikk = ConcurrentHashMap<BehandlingId, List<SykdomsvurderingForBrev>>()
 
     override fun lagre(
         behandlingId: BehandlingId,
         vurdering: SykdomsvurderingForBrev
     ) {
-        grunnlag[behandlingId] = vurdering
+        val nyVurdering = vurdering.copy(behandlingId = behandlingId)
+        grunnlag[behandlingId] = nyVurdering
+        historikk.compute(behandlingId) { _, tidligere -> tidligere.orEmpty() + nyVurdering }
     }
 
     override fun hent(behandlingId: BehandlingId): SykdomsvurderingForBrev? {
@@ -25,15 +28,18 @@ object InMemorySykdomsvurderingForBrevRepository : SykdomsvurderingForBrevReposi
         behandlingId: BehandlingId,
         tidspunkt: LocalDateTime
     ): SykdomsvurderingForBrev? {
-        return null
+        return historikk[behandlingId]
+            ?.asReversed()
+            ?.filter { it.vurdertTidspunkt <= tidspunkt }
+            ?.maxByOrNull { it.vurdertTidspunkt }
     }
 
     override fun hent(sakId: SakId): List<SykdomsvurderingForBrev> {
-        return emptyList()
+        return grunnlag.values.filter { InMemoryBehandlingRepository.hent(it.behandlingId).sakId == sakId }
     }
 
     override fun deaktiverEksisterende(behandlingId: BehandlingId) {
-        TODO("Not yet implemented")
+        grunnlag.remove(behandlingId)
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
@@ -41,5 +47,6 @@ object InMemorySykdomsvurderingForBrevRepository : SykdomsvurderingForBrevReposi
 
     override fun slett(behandlingId: BehandlingId) {
         grunnlag.remove(behandlingId)
+        historikk.remove(behandlingId)
     }
 }

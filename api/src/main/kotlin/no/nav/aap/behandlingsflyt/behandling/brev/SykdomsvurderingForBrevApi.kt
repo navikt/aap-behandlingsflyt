@@ -94,6 +94,7 @@ private fun SykdomsvurderingForBrev.toDto(
 ): SykdomsvurderingForBrevVurderingDto {
     return SykdomsvurderingForBrevVurderingDto(
         vurdering = vurdering,
+        kilder = kilder,
         vurderingerMeta = vurdertAvService.byggVurderingerMeta(
             definisjon = Definisjon.SKRIV_SYKDOMSVURDERING_BREV,
             behandlingId = behandling.id,

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.SykdomsvurderingForBrevLøser
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.Dokumentkilde
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.SKRIV_SYKDOMSVURDERING_BREV_KODE
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -15,6 +16,7 @@ class SykdomsvurderingForBrevLøsning(
     @param:JsonProperty("behovstype", required = true, defaultValue = SKRIV_SYKDOMSVURDERING_BREV_KODE)
     val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5053`,
     @param:JsonProperty("vurdering") val vurdering: String?,
+    @param:JsonProperty("kilder") val kilder: List<Dokumentkilde>? = null,
 ) : EnkeltAvklaringsbehovLøsning {
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return SykdomsvurderingForBrevLøser(repositoryProvider).løs(kontekst, this)

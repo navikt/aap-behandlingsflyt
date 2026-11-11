@@ -51,6 +51,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.Dokumentkilde
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -98,6 +99,7 @@ import org.junit.jupiter.api.util.RestoreSystemProperties
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
@@ -994,8 +996,9 @@ class BrevUtlederServiceTest {
             assertEquals(forventetMinsteÅrligYtelseUnder25, resultat.tilkjentYtelse.minsteÅrligYtelseUnder25)
         }
 
-        @Test
-        fun `skal hente ut sykdomsvurdering ved innvilgelse`() {
+        @ParameterizedTest
+        @ValueSource(booleans = [false, true])
+        fun `skal hente ut sykdomsvurdering med eventuelle kilder ved innvilgelse`(medKilder: Boolean) {
             val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
             gittUnderveisGrunnlag(
                 behandling.id,
@@ -1005,12 +1008,12 @@ class BrevUtlederServiceTest {
                     utfall = Utfall.OPPFYLT,
                 ),
             )
-            sykdomsvurderingForBrevRepository.lagre(behandling.id, sykdomsvurderingForBrevGrunnlag())
+            sykdomsvurderingForBrevRepository.lagre(behandling.id, sykdomsvurderingForBrevGrunnlag(medKilder))
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
 
             assertIs<Innvilgelse>(resultat, "brevbehov er av type Innvilgelse")
-            assertEquals(resultat.sykdomsvurdering, "Vurdering av sykdom")
+            assertEquals(forventetSykdomsvurdering(medKilder), resultat.sykdomsvurdering)
         }
 
         @Test
@@ -1447,7 +1450,7 @@ class BrevUtlederServiceTest {
                 vurderingsbehov = listOf(vurderingsbehov),
             )
             gittUnderveisgrunnlagAvslag(revurdering.id)
-            sykdomsvurderingForBrevRepository.lagre(revurdering.id, sykdomsvurderingForBrevGrunnlag())
+            sykdomsvurderingForBrevRepository.lagre(revurdering.id, sykdomsvurderingForBrevGrunnlag(medKilder = true))
             repositoryProvider.provide<VilkårsresultatRepository>().lagre(
                 revurdering.id,
                 Vilkårsresultat(
@@ -1473,20 +1476,21 @@ class BrevUtlederServiceTest {
             assertEquals(forventetBrevtype, resultat.typeBrev)
             if (forventetBrevtype == TypeBrev.VEDTAK_AVSLAG_11_5) {
                 assertIs<AvslagBrev.AvslagSykdomsvilkåret>(resultat)
-                assertEquals("Vurdering av sykdom", resultat.sykdomsvurdering)
+                assertEquals(forventetSykdomsvurdering(medKilder = true), resultat.sykdomsvurdering)
             }
         }
 
-        @Test
-        fun `skal hente ut sykdomsvurdering ved avslag`() {
+        @ParameterizedTest
+        @ValueSource(booleans = [false, true])
+        fun `skal hente ut sykdomsvurdering med eventuelle kilder ved avslag`(medKilder: Boolean) {
             val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
             gittUnderveisgrunnlagAvslag(behandling.id)
-            sykdomsvurderingForBrevRepository.lagre(behandling.id, sykdomsvurderingForBrevGrunnlag())
+            sykdomsvurderingForBrevRepository.lagre(behandling.id, sykdomsvurderingForBrevGrunnlag(medKilder))
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
 
             assertIs<AvslagBrev.Avslag>(resultat, "brevbehov er av type Avslag")
-            assertEquals(resultat.sykdomsvurdering, "Vurdering av sykdom")
+            assertEquals(forventetSykdomsvurdering(medKilder), resultat.sykdomsvurdering)
         }
 
         @Test
@@ -1826,14 +1830,26 @@ class BrevUtlederServiceTest {
         )
     }
 
-    private fun sykdomsvurderingForBrevGrunnlag(): SykdomsvurderingForBrev {
+    private fun sykdomsvurderingForBrevGrunnlag(medKilder: Boolean = false): SykdomsvurderingForBrev {
         return SykdomsvurderingForBrev(
             behandlingId = BehandlingId(Random.nextLong()),
             vurdering = "Vurdering av sykdom",
             vurdertAv = Bruker("Veileder"),
             vurdertTidspunkt = LocalDateTime.now(),
+            kilder = if (medKilder) {
+                listOf(Dokumentkilde("123", "456", "Legeerklæring", LocalDate.of(2026, 1, 20)))
+            } else {
+                emptyList()
+            },
         )
     }
+
+    private fun forventetSykdomsvurdering(medKilder: Boolean): String =
+        if (medKilder) {
+            "Vurdering av sykdom\n\nVi har lagt vekt på følgende dokumenter i vurderingen:\n- Legeerklæring (20.01.2026)"
+        } else {
+            "Vurdering av sykdom"
+        }
 
     private fun gittUnderveisgrunnlagAvslag(behandlingId: BehandlingId) {
         gittUnderveisGrunnlag(

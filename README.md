@@ -7,6 +7,8 @@ Behandlingsflyt for Arbeidsavklaringspenger (AAP). Definerer flyten for ulike be
 
 APIene er dokumentert med Swagger: https://aap-behandlingsflyt.intern.dev.nav.no/swagger-ui/index.html
 
+Kontrakt og frontendkobling for [dokumentkilder i individuell begrunnelse](docs/dokumentkilder.md).
+
 ## Publiserte artefakter
 
 Gjennom Gradle sin publish task produserer prosjektets Github Workflow artefakter som lastes opp til Github Packages.

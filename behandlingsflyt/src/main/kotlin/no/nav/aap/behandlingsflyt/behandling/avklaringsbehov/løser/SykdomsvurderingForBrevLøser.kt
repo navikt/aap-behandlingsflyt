@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class SykdomsvurderingForBrevLøser(
@@ -23,7 +24,19 @@ class SykdomsvurderingForBrevLøser(
         løsning: SykdomsvurderingForBrevLøsning
     ): LøsningsResultat {
         val behandling = behandlingRepository.hent(kontekst.behandlingId())
-        val sykdomsvurderingForBrev = SykdomsvurderingForBrev(kontekst.behandlingId(), løsning.vurdering, kontekst.bruker)
+        val kilder = løsning.kilder ?: sykdomsvurderingForBrevRepository.hent(behandling.id)?.kilder.orEmpty()
+        if (kilder.any { it.journalpostId.isBlank() || it.dokumentInfoId.isBlank() || it.dokumentnavn.isBlank() }) {
+            throw UgyldigForespørselException("Dokumentkilder må ha journalpost-ID, dokument-ID, dokumentnavn og journalføringsdato.")
+        }
+        if (kilder.distinctBy { it.journalpostId to it.dokumentInfoId }.size != kilder.size) {
+            throw UgyldigForespørselException("Samme dokument kan ikke legges til som kilde flere ganger.")
+        }
+        val sykdomsvurderingForBrev = SykdomsvurderingForBrev(
+            behandlingId = kontekst.behandlingId(),
+            vurdering = løsning.vurdering,
+            vurdertAv = kontekst.bruker,
+            kilder = kilder,
+        )
         sykdomsvurderingForBrevRepository.lagre(behandling.id, sykdomsvurderingForBrev)
 
         return LøsningsResultat("Skrevet sykdomsvurdering for brev")

@@ -10,8 +10,9 @@ data class SykdomsvurderingForBrev(
     val vurdering: String?,
     val vurdertAv: Bruker,
     val vurdertTidspunkt: LocalDateTime = LocalDateTime.now(),
+    val kilder: List<Dokumentkilde> = emptyList(),
 ) {
     fun erFunksjoneltLik(annenVurdering: SykdomsvurderingForBrev): Boolean {
-        return annenVurdering.vurdering == this.vurdering
+        return annenVurdering.vurdering == this.vurdering && annenVurdering.kilder == this.kilder
     }
 }

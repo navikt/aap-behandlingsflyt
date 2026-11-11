@@ -37,6 +37,7 @@ import no.nav.aap.behandlingsflyt.test.fakes.UtbetalFake
 import no.nav.aap.behandlingsflyt.test.fakes.YrkesskadeFake
 import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentingBestillingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingStatusTilBehandslingsflytDto
+import no.nav.aap.brev.kontrakt.BestillBrevV2Request
 import org.slf4j.LoggerFactory
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
@@ -98,6 +99,8 @@ object FakeServers : AutoCloseable {
     // Forwarded state
     internal val statistikkHendelser: MutableList<StoppetBehandling> get() = statistikk.hendelser
     internal val legeerklæringStatuser: MutableList<Pair<BehandlingsflytToDokumentInnhentingBestillingDto, DialogmeldingStatusTilBehandslingsflytDto>> get() = dokumentinnhenting.statuser
+
+    fun hentBrevbestilling(unikReferanse: String): BestillBrevV2Request? = brev.bestillinger[unikReferanse]
 
     fun start(testPersonService: TestPersonService = FakePersoner) {
         if (!started.compareAndSet(false, true)) {

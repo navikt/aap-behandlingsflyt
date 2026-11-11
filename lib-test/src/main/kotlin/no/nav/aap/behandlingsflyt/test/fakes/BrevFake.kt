@@ -30,9 +30,11 @@ import no.nav.aap.brev.kontrakt.Tekstbolk
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import java.time.LocalDateTime
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 class BrevFake : FakeServer() {
     private val brevStore = mutableMapOf<String, BrevbestillingResponse>()
+    val bestillinger = ConcurrentHashMap<String, BestillBrevV2Request>()
     private val mutex = Any()
 
     override val server = embeddedServer(Netty, port = 0, module = module())
@@ -54,6 +56,7 @@ class BrevFake : FakeServer() {
             route("/api") {
                 post("/v2/bestill") {
                     val request = call.receive<BestillBrevV2Request>()
+                    bestillinger[request.unikReferanse] = request
                     val eksisterende = brevStore[request.unikReferanse]
                     if (eksisterende != null) {
                         call.respond(status = HttpStatusCode.Conflict, BestillBrevResponse(eksisterende.referanse))
@@ -100,6 +103,7 @@ class BrevFake : FakeServer() {
                 }
                 post("/v3/bestill") {
                     val request = call.receive<BestillBrevV2Request>()
+                    bestillinger[request.unikReferanse] = request
                     val eksisterende = brevStore[request.unikReferanse]
                     if (eksisterende != null) {
                         call.respond(status = HttpStatusCode.Conflict, BestillBrevResponse(eksisterende.referanse))
