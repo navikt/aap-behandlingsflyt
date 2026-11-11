@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.integrasjon.datadeling
 
 import com.fasterxml.jackson.annotation.JsonFormat
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamGateway
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamIdOgTpNr
 import no.nav.aap.behandlingsflyt.datadeling.sam.SamordneVedtakRequest
@@ -53,9 +54,9 @@ class SamGatewayImpl : SamGateway {
         )
     }
 
-    override fun hentSamId(ident: Ident, sakId: Long, vedtakId: Long): List<SamIdOgTpNr> {
+    override fun hentSamId(ident: Ident, sakId: Long, vedtakId: VedtakId): List<SamIdOgTpNr> {
         return restClient.get(
-            uri = uri.resolve("/api/vedtak?sakId=$sakId&vedtakId=$vedtakId&fagomrade=AAP"),
+            uri = uri.resolve("/api/vedtak?sakId=$sakId&vedtakId=${vedtakId.id}&fagomrade=AAP"),
             request = GetRequest(
                 additionalHeaders = listOf(Header("pid", ident.identifikator))
             ),
