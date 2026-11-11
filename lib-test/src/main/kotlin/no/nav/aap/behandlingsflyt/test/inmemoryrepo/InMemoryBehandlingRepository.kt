@@ -219,7 +219,7 @@ object InMemoryBehandlingRepository : BehandlingRepository {
 
     override fun finnGjeldendeVedtattBehandlingForSak(sakId: SakId): SakOgBehandling? {
         return hentAlleMedVedtakFor(sakId, TypeBehandling.ytelseBehandlingstyper())
-            .filter { it.status == Status.AVSLUTTET || it.status == Status.IVERKSETTES }
+            .filter { it.status.erAvsluttet() }
             .maxByOrNull { it.vedtakstidspunkt }
             ?.let { SakOgBehandling(sakId, it.id) }
     }
