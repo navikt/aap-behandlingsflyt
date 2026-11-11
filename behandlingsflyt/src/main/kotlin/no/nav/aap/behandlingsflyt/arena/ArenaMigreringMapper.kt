@@ -109,7 +109,7 @@ object ArenaMigreringMapper {
         // Kodeverk i Kelvin har ikke bindestrek, men Arena har det. F.eks. "ICPC-2" vs "ICPC2"
         val kodeverk = hoveddiagnose.kodeverk.replace("-", "")
 
-        val innledning = "Migrert fra Arena. Vurderingen gjelder fra virkningstidspunktet " +
+        val innledning = "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet " +
                 "${virkningstidspunkt.tilNorskFormat()} i Arena."
         val begrunnelse = fraArena.begrunnelse?.let {
             "$innledning Teksten under er overført fra vedtaksbegrunnelsen i Arena:\n\n$it"

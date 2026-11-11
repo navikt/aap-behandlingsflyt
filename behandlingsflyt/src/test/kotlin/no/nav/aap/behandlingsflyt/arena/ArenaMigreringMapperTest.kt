@@ -171,7 +171,7 @@ class ArenaMigreringMapperTest {
         )
 
         assertThat(vurdering.begrunnelse).isEqualTo(
-            "Migrert fra Arena. Vurderingen gjelder fra virkningstidspunktet 15.06.2023 i Arena. " +
+            "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet 15.06.2023 i Arena. " +
                     "Teksten under er overført fra vedtaksbegrunnelsen i Arena:\n\n" +
                     "Bruker oppfyller vilkåret for 11-5"
         )
@@ -202,7 +202,7 @@ class ArenaMigreringMapperTest {
         )
 
         assertThat(vurdering.begrunnelse).isEqualTo(
-            "Migrert fra Arena. Vurderingen gjelder fra virkningstidspunktet 15.06.2023 i Arena."
+            "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet 15.06.2023 i Arena."
         )
     }
 
