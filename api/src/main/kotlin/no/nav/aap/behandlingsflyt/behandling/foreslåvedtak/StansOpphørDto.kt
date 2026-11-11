@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.`foreslåvedtak`
+package no.nav.aap.behandlingsflyt.behandling.foreslåvedtak
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import java.time.LocalDate
