@@ -201,10 +201,10 @@ class BrevUtlederService(
                             perioder.any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
 
                         // Nytt brev takler at bruker kan ha en periode med ordinær aap før overgang jmf 11-18
-                        if (harUføretrygd && !harOrdinærAAP) {
-                            brevBehovVurderesForUføretrygd(behandling)
-                        } else if (harUføretrygd && unleashGateway.isEnabled(BehandlingsflytFeature.OvergangUfoereBrevbygger)) {
+                        if (harUføretrygd && unleashGateway.isEnabled(BehandlingsflytFeature.OvergangUfoereBrevbygger)) {
                             brevBehovVurderesForUføretrygdV2(behandling, erRevurdering = false)
+                        } else if (harUføretrygd && !harOrdinærAAP) {
+                            brevBehovVurderesForUføretrygd(behandling)
                         } else {
                             brevBehovInnvilgelse(behandling)
                         }
@@ -586,7 +586,7 @@ class BrevUtlederService(
                 kravdatoUføretrygd = kravdatoUføretrygd,
                 sisteDagMedYtelse = maksDatoOvergangUføre
             ),
-            ordinærAAP = when (erRevurdering) {
+            ordinærAAP = when (erRevurdering || !harRettighetsType(behandling.id, RettighetsType.BISTANDSBEHOV)) {
                 true -> null
                 false -> OrdinærInnvilgelse(
                     virkningstidspunkt = innvilgelse.virkningstidspunkt,
