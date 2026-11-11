@@ -21,27 +21,25 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVedtakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
-import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
-import no.nav.aap.komponenter.verdityper.TimerArbeid
-import java.math.BigDecimal
 import no.nav.aap.komponenter.verdityper.Prosent
-import no.nav.aap.motor.Jobb
+import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.motor.JobbInput
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -66,20 +64,24 @@ class VarsleVedtakJobbUtførerTest {
         val tpForIdent = mutableMapOf<String, List<TjenestePensjonForhold>>()
 
         fun leggTilTpForhold(ident: String) {
-            tpForIdent[ident] = listOf(TjenestePensjonForhold(
-                ordning = TjenestePensjonOrdning(
-                    navn = "tp",
-                    tpNr = "1234",
-                    orgNr = "543"
-                ),
-                ytelser = setOf(TjenestePensjonYtelse(
-                    innmeldtYtelseFom = LocalDate.now(),
-                    ytelseType = YtelseTypeCode.BETINGET_TP,
-                    ytelseIverksattFom = LocalDate.now(),
-                    ytelseIverksattTom = null,
-                    ytelseId = 1234L
-                ))
-            ))
+            tpForIdent[ident] = listOf(
+                TjenestePensjonForhold(
+                    ordning = TjenestePensjonOrdning(
+                        navn = "tp",
+                        tpNr = "1234",
+                        orgNr = "543"
+                    ),
+                    ytelser = setOf(
+                        TjenestePensjonYtelse(
+                            innmeldtYtelseFom = LocalDate.now(),
+                            ytelseType = YtelseTypeCode.BETINGET_TP,
+                            ytelseIverksattFom = LocalDate.now(),
+                            ytelseIverksattTom = null,
+                            ytelseId = 1234L
+                        )
+                    )
+                )
+            )
         }
 
         override fun hentTjenestePensjon(ident: String): List<TjenestePensjonForhold> = tpForIdent[ident] ?: emptyList()
@@ -105,6 +107,10 @@ class VarsleVedtakJobbUtførerTest {
 
         val input = JobbInput(VarsleVedtakJobbUtfører.Companion).medPayload(behandling.id)
         utfører.utfør(input)
+
+        assertThat(SamGateWayFake.varslinger.filter { it.pid == sak.person.aktivIdent().identifikator }.size).isEqualTo(
+            1
+        )
     }
 
     @Test
