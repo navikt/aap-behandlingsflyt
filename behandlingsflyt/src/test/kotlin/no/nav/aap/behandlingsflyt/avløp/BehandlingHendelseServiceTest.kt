@@ -11,12 +11,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedagerGrunnlag
 import no.nav.aap.behandlingsflyt.help.person
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.GjenståendeSykedagerDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.GjenståendeSykedagerGrunnlagDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
@@ -42,6 +46,8 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.dokument.Kanal
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryGjenståendeSykedagerRepository
+import no.nav.aap.behandlingsflyt.test.januar
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -60,6 +66,7 @@ class BehandlingHendelseServiceTest {
 
     @BeforeEach
     fun beforeEach() {
+        InMemoryGjenståendeSykedagerRepository.slett(BehandlingId(0))
         every { avklaringsbehovService.finnAktivtAvklaringsbehov(any()) } returns null
     }
 
@@ -115,6 +122,43 @@ class BehandlingHendelseServiceTest {
 
         val hendelse = DefaultJsonMapper.fromJson<BehandlingFlytStoppetHendelse>(calls.first().payload())
         assertThat(hendelse.referanse.referanse).isEqualTo(behandling.referanse.referanse)
+    }
+
+    @Test
+    fun `sender gjenstående sykedager til oppgave for førstegangsbehandling`() {
+        val (behandlingHendelseService, behandling) = settOppFlyt()
+        InMemoryGjenståendeSykedagerRepository.lagre(
+            behandling.id,
+            GjenståendeSykedager(GjenståendeSykedagerGrunnlag.MAKSDATO_I_INFOTRYGD, 42, 1 januar 2026)
+        )
+
+        behandlingHendelseService.stoppet(behandling, avklaringsbehoveneMedÉttÅpent())
+
+        assertThat(oppgaveHendelse().gjenståendeSykedager).isEqualTo(
+            GjenståendeSykedagerDto(GjenståendeSykedagerGrunnlagDto.MAKSDATO_I_INFOTRYGD, 42, 1 januar 2026)
+        )
+    }
+
+    @Test
+    fun `sender ikke gjenstående sykedager til oppgave for revurdering`() {
+        val (behandlingHendelseService, behandling) = settOppFlyt(TypeBehandling.Revurdering)
+        InMemoryGjenståendeSykedagerRepository.lagre(
+            behandling.id,
+            GjenståendeSykedager(GjenståendeSykedagerGrunnlag.MAKSDATO_I_INFOTRYGD, 42, 1 januar 2026)
+        )
+
+        behandlingHendelseService.stoppet(behandling, avklaringsbehoveneMedÉttÅpent())
+
+        assertThat(oppgaveHendelse().gjenståendeSykedager).isNull()
+    }
+
+    @Test
+    fun `sender null til oppgave når førstegangsbehandling mangler gjenstående sykedager`() {
+        val (behandlingHendelseService, behandling) = settOppFlyt()
+
+        behandlingHendelseService.stoppet(behandling, avklaringsbehoveneMedÉttÅpent())
+
+        assertThat(oppgaveHendelse().gjenståendeSykedager).isNull()
     }
 
     @Test
@@ -239,7 +283,25 @@ class BehandlingHendelseServiceTest {
 
     }
 
-    private fun settOppFlyt(): Pair<BehandlingHendelseServiceImpl, Behandling> {
+    private fun avklaringsbehoveneMedÉttÅpent(): Avklaringsbehovene {
+        val avklaringsbehovene = mockk<Avklaringsbehovene>()
+        every { avklaringsbehovene.alle() } returns listOf(
+            Avklaringsbehov(1L, Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, emptyList(), StegType.VURDER_LOVVALG, true)
+        )
+        every { avklaringsbehovene.hentÅpneVentebehov() } returns emptyList()
+        return avklaringsbehovene
+    }
+
+    private fun oppgaveHendelse(): BehandlingFlytStoppetHendelse {
+        val calls = mutableListOf<JobbInput>()
+        verify { flytJobbRepository.leggTil(capture(calls)) }
+        val jobb = calls.first { it.type() == VarsleOppgaveOmHendelseJobbUtFører.type }
+        return DefaultJsonMapper.fromJson<BehandlingFlytStoppetHendelse>(jobb.payload())
+    }
+
+    private fun settOppFlyt(
+        typeBehandling: TypeBehandling = TypeBehandling.Førstegangsbehandling
+    ): Pair<BehandlingHendelseServiceImpl, Behandling> {
         every { flytJobbRepository.leggTil(any()) } returns Unit
 
         every {
@@ -284,12 +346,13 @@ class BehandlingHendelseServiceTest {
                 behandlingService,
                 avklaringsbehovService,
                 unleashGateway,
+                InMemoryGjenståendeSykedagerRepository,
             )
 
         val behandling = Behandling(
             BehandlingId(0),
             sakId = SakId(1),
-            typeBehandling = TypeBehandling.Førstegangsbehandling,
+            typeBehandling = typeBehandling,
             årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
             forrigeBehandlingId = null,
             versjon = 1

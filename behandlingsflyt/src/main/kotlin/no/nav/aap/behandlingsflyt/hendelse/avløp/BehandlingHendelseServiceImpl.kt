@@ -2,12 +2,17 @@ package no.nav.aap.behandlingsflyt.hendelse.avløp
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.GjenståendeSykedagerRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.ApplikasjonsVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.GjenståendeSykedagerDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.GjenståendeSykedagerGrunnlagDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattDokumentDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.UførevedtakDto
@@ -50,7 +55,8 @@ class BehandlingHendelseServiceImpl(
     private val pipService: PipService,
     private val behandlingService: BehandlingService,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val unleashGateway: UnleashGateway
+    private val unleashGateway: UnleashGateway,
+    private val gjenståendeSykedagerRepository: GjenståendeSykedagerRepository,
 ) : BehandlingHendelseService {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         flytJobbRepository = repositoryProvider.provide(),
@@ -59,7 +65,8 @@ class BehandlingHendelseServiceImpl(
         pipService = PipService(repositoryProvider),
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
-        unleashGateway = gatewayProvider.provide()
+        unleashGateway = gatewayProvider.provide(),
+        gjenståendeSykedagerRepository = repositoryProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -96,6 +103,7 @@ class BehandlingHendelseServiceImpl(
             opprettetTidspunkt = behandling.opprettetTidspunkt,
             hendelsesTidspunkt = LocalDateTime.now(),
             versjon = ApplikasjonsVersjon.versjon,
+            gjenståendeSykedager = hentGjenståendeSykedager(behandling),
         ).copy(behandlingType = behandlingService.utledFaktiskBehandlingstype(behandling))
 
         log.info("Legger til flytjobber til statistikk og stoppethendelse for behandling: ${behandling.id}")
@@ -145,6 +153,17 @@ class BehandlingHendelseServiceImpl(
             )
         }
     }
+
+    private fun hentGjenståendeSykedager(behandling: Behandling): GjenståendeSykedagerDto? {
+        if (behandling.typeBehandling() != TypeBehandling.Førstegangsbehandling) return null
+        return gjenståendeSykedagerRepository.hentHvisEksisterer(behandling.id)?.tilDto()
+    }
+
+    private fun GjenståendeSykedager.tilDto() = GjenståendeSykedagerDto(
+        grunnlag = GjenståendeSykedagerGrunnlagDto.valueOf(grunnlag.name),
+        gjenståendeDager = gjenståendeDager,
+        vurdertTilOgMed = vurdertTilOgMed,
+    )
 
     private fun hentReservertTil(behandlingId: BehandlingId): Bruker? {
         val oppfølgingsoppgavedokument =
