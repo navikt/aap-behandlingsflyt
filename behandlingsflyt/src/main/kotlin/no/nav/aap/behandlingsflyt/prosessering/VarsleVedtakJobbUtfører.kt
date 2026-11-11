@@ -75,7 +75,7 @@ class VarsleVedtakJobbUtfører(
 
         val request = SamordneVedtakRequest(
             pid = sak.person.aktivIdent().identifikator,
-            vedtakId = vedtakId.toString(),
+            vedtakId = vedtakId.id.toString(),
             sakId = sak.id.id,
             virkFom = virkFom,
             virkTom = sak.rettighetsperiode.tom, // alltid 01-01-2999
