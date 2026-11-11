@@ -96,6 +96,7 @@ import org.junit.jupiter.api.util.ReadsSystemProperty
 import org.junit.jupiter.api.util.RestoreSystemProperties
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.time.Instant
@@ -1624,6 +1625,63 @@ class BrevUtlederServiceTest {
             }
         }
 
+        @ParameterizedTest
+        @EnumSource(
+            value = Avslagsårsak::class,
+            names = ["IKKE_RETT_PA_STUDENT", "VARIGHET_OVERSKREDET_STUDENT"],
+        )
+        fun `skal velge generelt avslagsbrev ved studentavslag selv om sykdomsvilkåret også gir avslag`(
+            avslagsårsak: Avslagsårsak,
+        ) {
+            val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
+            gittUnderveisgrunnlagAvslag(behandling.id)
+            sykdomsvurderingForBrevRepository.lagre(behandling.id, sykdomsvurderingForBrevGrunnlag())
+            val periode = Periode(1 januar 2025, 31 desember 2025)
+            repositoryProvider.provide<VilkårsresultatRepository>().lagre(
+                behandling.id,
+                Vilkårsresultat(
+                    vilkår = listOf(
+                        vilkårAvslag(Vilkårtype.SYKDOMSVILKÅRET, Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE, periode),
+                        vilkårAvslag(Vilkårtype.STUDENT, avslagsårsak, periode),
+                    ),
+                ),
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<AvslagBrev.Avslag>(resultat)
+            assertEquals(TypeBrev.VEDTAK_AVSLAG, resultat.typeBrev)
+            assertEquals(avslagsårsak, resultat.avslagsårsak)
+            assertEquals(
+                setOf(avslagsårsak, Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE),
+                resultat.avslagsårsaker,
+            )
+            assertEquals("Vurdering av sykdom", resultat.sykdomsvurdering)
+        }
+
+        @Test
+        fun `skal velge generelt avslagsbrev ved manglende årsakssammenheng for yrkesskade`() {
+            val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
+            gittUnderveisgrunnlagAvslag(behandling.id)
+            sykdomsvurderingForBrevRepository.lagre(behandling.id, sykdomsvurderingForBrevGrunnlag())
+            repositoryProvider.provide<VilkårsresultatRepository>().lagre(
+                behandling.id,
+                Vilkårsresultat(
+                    vilkår = listOf(
+                        vilkårAvslag(Vilkårtype.SYKDOMSVILKÅRET, Avslagsårsak.IKKE_ÅRSAKSSAMMENHENG_YRKESSKADE),
+                    ),
+                ),
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<AvslagBrev.Avslag>(resultat)
+            assertEquals(TypeBrev.VEDTAK_AVSLAG, resultat.typeBrev)
+            assertEquals(Avslagsårsak.IKKE_ÅRSAKSSAMMENHENG_YRKESSKADE, resultat.avslagsårsak)
+            assertEquals(setOf(Avslagsårsak.IKKE_ÅRSAKSSAMMENHENG_YRKESSKADE), resultat.avslagsårsaker)
+            assertEquals("Vurdering av sykdom", resultat.sykdomsvurdering)
+        }
+
         @Test
         fun `skal hente ut sykdomsvurdering ved avslag`() {
             val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
@@ -2027,6 +2085,22 @@ class BrevUtlederServiceTest {
             redusertDagsats = dagsats
         )
     }
+
+    private fun vilkårAvslag(
+        type: Vilkårtype,
+        avslagsårsak: Avslagsårsak? = null,
+        periode: Periode = Periode(1 januar 2025, 31 desember 2025)
+    ) = Vilkår(
+        type = type,
+        vilkårsperioder = setOf(
+            Vilkårsperiode(
+                periode = periode,
+                utfall = Utfall.IKKE_OPPFYLT,
+                begrunnelse = "Generisk begrunnelse",
+                avslagsårsak = avslagsårsak,
+            ),
+        ),
+    )
 
     companion object {
         @JvmStatic
