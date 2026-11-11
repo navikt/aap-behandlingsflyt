@@ -405,6 +405,8 @@ class BrevUtlederService(
     private fun prioriterAvslagsårsakAvslagsBrevType(avslagsårsaker: Set<Avslagsårsak>): Avslagsårsak? {
         val prioritertRekkefølge = listOf(
             Avslagsårsak.BRUKER_UNDER_18,
+            Avslagsårsak.IKKE_ÅRSAKSSAMMENHENG_YRKESSKADE,
+            Avslagsårsak.VARIGHET_OVERSKREDET_STUDENT,
             Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
@@ -509,14 +511,22 @@ class BrevUtlederService(
             avslagsårsak
         )
         if (avslagsårsak != null && !sykdomsvurdering.isNullOrBlank()) {
-            /*if (avslagsårsak == Avslagsårsak.BRUKER_UNDER_18) {
-                return AvslagBrev.AvslagUnder17År9Måneder(sykdomsvurdering = sykdomsvurdering)
-            }*/
-            if (avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET ||
-                avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE ||
-                avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL ||
-                avslagsårsak == Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
-            ) {
+            val erAvslag11_5 = avslagsårsak in setOf(
+                Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
+                Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
+                Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
+                Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
+            )
+
+            val erIkkeAvslagYrkesskadeEllerStudent = alleAvslagsårsaker.none {
+                it in setOf(
+                    Avslagsårsak.IKKE_RETT_PA_STUDENT,
+                    Avslagsårsak.VARIGHET_OVERSKREDET_STUDENT,
+                    Avslagsårsak.IKKE_ÅRSAKSSAMMENHENG_YRKESSKADE
+                )
+            }
+
+            if (erAvslag11_5 && erIkkeAvslagYrkesskadeEllerStudent) {
                 return AvslagBrev.AvslagSykdomsvilkåret(
                     sykdomsvurdering = sykdomsvurdering,
                     yrkesSkadeISøknadIkkeIRegister = yrkesSkadeISøknadIkkeIRegister

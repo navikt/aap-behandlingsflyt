@@ -485,6 +485,7 @@ class AvsluttetBehandlingTilStatistikk(
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE -> AvslagsårsakDTO.IKKE_SYKDOM_SKADE_LYTE
             Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL -> AvslagsårsakDTO.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL
             Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE -> AvslagsårsakDTO.IKKE_NOK_REDUSERT_ARBEIDSEVNE
+            Avslagsårsak.IKKE_ÅRSAKSSAMMENHENG_YRKESSKADE -> AvslagsårsakDTO.IKKE_ÅRSAKSSAMMENHENG_YRKESSKADE
             Avslagsårsak.IKKE_BEHOV_FOR_OPPFOLGING -> AvslagsårsakDTO.IKKE_BEHOV_FOR_OPPFOLGING
             Avslagsårsak.IKKE_MEDLEM_FORUTGÅENDE -> AvslagsårsakDTO.IKKE_MEDLEM_FORUTGÅENDE
             Avslagsårsak.IKKE_MEDLEM -> AvslagsårsakDTO.IKKE_MEDLEM

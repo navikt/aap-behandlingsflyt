@@ -18,6 +18,7 @@ enum class Avslagsårsak(
     IKKE_SYKDOM_SKADE_LYTE(kode = "11-5-1", hjemmel = "§ 11-5", Avslagstype.OPPHØR),
     IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL(kode = "11-5-1", "§ 11-5", Avslagstype.OPPHØR),
     IKKE_NOK_REDUSERT_ARBEIDSEVNE(kode = "11-5-1", "§ 11-5", Avslagstype.OPPHØR),
+    IKKE_ÅRSAKSSAMMENHENG_YRKESSKADE(kode = "11-5-1", "§ 11-22", Avslagstype.OPPHØR),
     IKKE_BEHOV_FOR_OPPFOLGING(kode = "11-6-1", "§ 11-6", Avslagstype.OPPHØR),
     IKKE_MEDLEM_FORUTGÅENDE(kode= "11-2", hjemmel = "§ 11-2", Avslagstype.KUN_INNGANGSVILKÅR),
     IKKE_MEDLEM(kode= "2-1", hjemmel = "§ 2-1", Avslagstype.OPPHØR),
