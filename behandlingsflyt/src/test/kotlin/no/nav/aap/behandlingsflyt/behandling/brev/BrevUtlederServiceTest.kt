@@ -1141,7 +1141,7 @@ class BrevUtlederServiceTest {
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
 
             assertIs<Innvilgelse>(resultat, "brevbehov er av type Innvilgelse")
-            assertEquals(resultat.sykdomsvurdering, "Vurdering av sykdom")
+            assertEquals("Vurdering av sykdom", resultat.sykdomsvurdering)
         }
 
         @Test
@@ -1633,7 +1633,7 @@ class BrevUtlederServiceTest {
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
 
             assertIs<AvslagBrev.Avslag>(resultat, "brevbehov er av type Avslag")
-            assertEquals(resultat.sykdomsvurdering, "Vurdering av sykdom")
+            assertEquals("Vurdering av sykdom", resultat.sykdomsvurdering)
         }
 
         @Test
