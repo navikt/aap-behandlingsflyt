@@ -1,12 +1,12 @@
-# repository — supplements the root AGENTS.md (read that too)
+# repository — tillegg til AGENTS.md i rota (les den også)
 
-Load skill `repository-og-migrering` before changing SQL, tables, repositories or gateways.
+Last inn skillen `repository-og-migrering` før du endrer SQL, tabeller, repositories eller gatewayer.
 
-- Flyway migrations: `src/main/resources/flyway/V1.<n>__<beskrivelse>.sql`. Next number:
-  `python3 .agents/skills/repository-og-migrering/scripts/repo.py neste-migrering --navn <beskrivelse>`. Never edit a merged
-  migration; write migrations that work while the previous app version still runs (rolling deploy, several pods).
-- New repository impl: `companion object : Factory<…>`, register in `PostgresRepositoryRegistry.kt`, implement `kopier`
-  (shallow: new grunnlag row pointing at the same child rows) and an idempotent `slett`. Check wiring with `repo.py sjekk <Navn>`.
-- Grunnlag child rows are shared between behandlinger after `kopier`: insert new rows, never UPDATE them in place.
-- New gateway impl (`integrasjon/`): register in `defaultGatewayProvider()` and in lib-test `testGatewayProvider()`, add env
-  vars to `.nais/dev.yaml` / `.nais/prod.yaml` and a fake in lib-test `FakeServers`.
+- Flyway-migreringer: `src/main/resources/flyway/V1.<n>__<beskrivelse>.sql`. Neste nummer:
+  `python3 .agents/skills/repository-og-migrering/scripts/repo.py neste-migrering --navn <beskrivelse>`. Ikke endre en merg’et
+  migrering. Skriv migreringer som fungerer mens forrige app-versjon fortsatt kjører (rolling deploy, flere pods).
+- Ny repository-implementasjon: `companion object : Factory<…>`, registrer i `PostgresRepositoryRegistry.kt`, implementer `kopier`
+  (grunt: ny grunnlagsrad som peker på de samme underordnede radene) og en idempotent `slett`. Kontroller koblingen med `repo.py sjekk <Navn>`.
+- Underordnede grunnlagsrader deles mellom behandlinger etter `kopier`: sett inn nye rader, ikke kjør UPDATE på eksisterende.
+- Ny gateway-implementasjon (`integrasjon/`): registrer i `defaultGatewayProvider()` og i lib-testens `testGatewayProvider()`, legg til miljøvariabler
+  i `.nais/dev.yaml` / `.nais/prod.yaml` og en fake i lib-testens `FakeServers`.

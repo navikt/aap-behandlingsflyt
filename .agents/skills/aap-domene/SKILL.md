@@ -1,16 +1,16 @@
 ---
 name: aap-domene
-description: Domain knowledge for AAP (arbeidsavklaringspenger) in Kelvin/behandlingsflyt — Norwegian glossary with English meaning, the sak/behandling model, roles (Nav-kontor, NAY, kvalitetssikrer, beslutter), vilkår with hjemmel, rettighetstyper, the chain from vilkår to underveis, tilkjent ytelse, vedtak, utbetaling and brev, the external systems behind each gateway, and Tidslinje/Periode semantics. Use when a task uses domain terms you don't know, when mapping a business requirement to code, or when working with periodised data. Keywords — AAP, arbeidsavklaringspenger, ordliste, vilkår, rettighetstype, underveis, meldeperiode, tilkjent ytelse, samordning, Tidslinje, Periode, NAY, Kelvin, Arena.
+description: Domenekunnskap om AAP (arbeidsavklaringspenger) i Kelvin/behandlingsflyt, med norsk ordliste og engelske betydninger, modellen for sak og behandling, roller (Nav-kontor, NAY, kvalitetssikrer, beslutter), vilkår med hjemmel, rettighetstyper, kjeden fra vilkår via underveis til tilkjent ytelse, vedtak, utbetaling og brev, de eksterne systemene bak hver gateway og semantikken til Tidslinje/Periode. Bruk når en oppgave bruker domenetermer du ikke kjenner, når et forretningskrav skal knyttes til kode, eller når du jobber med periodiserte data. Keywords: AAP, arbeidsavklaringspenger, ordliste, vilkår, rettighetstype, underveis, meldeperiode, tilkjent ytelse, samordning, Tidslinje, Periode, NAY, Kelvin, Arena.
 ---
 
-# AAP domain for behandlingsflyt
+# AAP-domene for behandlingsflyt
 
-Legal basis: folketrygdloven kapittel 11 (AAP); references in code are "§ 11-x". Kelvin = NAV's new AAP case system
-(this app is its case-processing core); Arena = the legacy system cases are migrated from (`MIGRERING_FRA_ARENA`).
+Rettslig grunnlag: folketrygdloven kapittel 11 (AAP); henvisninger i kode er «§ 11-x». Kelvin er Navs nye AAP-saksbehandlingssystem
+(denne appen er kjernen for saksbehandlingen); Arena er det gamle systemet sakene migreres fra (`MIGRERING_FRA_ARENA`).
 
-## 1. Glossary
+## 1. Ordliste
 
-| Term | Meaning (code anchor) |
+| Begrep | Betydning (kodeforankring) |
 |---|---|
 | sak / saksnummer | a person's AAP case: one person, one `rettighetsperiode`; root of all behandlinger (`Sak`) |
 | behandling | one processing of a sak (`Behandling`, `TypeBehandling`); *ytelsesbehandling* = Førstegangsbehandling or Revurdering |
@@ -47,23 +47,23 @@ Legal basis: folketrygdloven kapittel 11 (AAP); references in code are "§ 11-x"
 | Nav-kontor / lokalkontor | local office, role SAKSBEHANDLER_OPPFOLGING |
 | postmottak | upstream app that journalfører documents and sends them to us |
 
-## 2. Model essentials
+## 2. Grunnleggende om modellen
 
-- `Sak` 1 — n `Behandling`. Ytelsesbehandlinger form a singly linked list via `forrigeBehandlingId` (a revurdering points to
-  the behandling it builds on; a fasttrack revurdering may be inserted in the middle). Klage/SvarFraAndreinstans/
-  OppfølgingsBehandling have `forrigeBehandlingId = null`.
-- `TypeBehandling` vs *faktisk* type: a revurdering after a behandling without rett is treated as a førstegangsbehandling
-  for kvalitetssikring, beslutter and statistikk (`BehandlingService.utledFaktiskBehandlingstype`).
-- `Sak.rettighetsperiode` is shared by all behandlinger and can change (earlier søknad, overstyring, trukket søknad sets an
-  invalid/fictive period). It is not stored per behandling.
-- Behandling status: OPPRETTET → UTREDES → IVERKSETTES → AVSLUTTET, derived from the active step. `erAvsluttet()` includes IVERKSETTES.
+- `Sak` 1 — n `Behandling`. Ytelsesbehandlinger danner en enkeltlenket liste via `forrigeBehandlingId` (en revurdering peker på
+  behandlingen den bygger på; en fasttrack-revurdering kan settes inn i midten). Klage/SvarFraAndreinstans/
+  OppfølgingsBehandling har `forrigeBehandlingId = null`.
+- `TypeBehandling` og *faktisk* type: En revurdering etter en behandling uten rett regnes som en førstegangsbehandling
+  ved kvalitetssikring, behandling hos beslutter og statistikk (`BehandlingService.utledFaktiskBehandlingstype`).
+- `Sak.rettighetsperiode` deles av alle behandlinger og kan endres (tidligere søknad, overstyring eller trukket søknad setter en
+  ugyldig/fiktiv periode). Perioden lagres ikke per behandling.
+- Behandlingsstatus: OPPRETTET → UTREDES → IVERKSETTES → AVSLUTTET, utledet fra det aktive steget. `erAvsluttet()` inkluderer IVERKSETTES.
 
-## 3. Roles (`no.nav.aap.tilgang.Rolle`, enforced via aap-tilgang)
+## 3. Roller (`no.nav.aap.tilgang.Rolle`, håndheves via aap-tilgang)
 
 SAKSBEHANDLER_OPPFOLGING (Nav-kontor: sykdom, bistand, arbeidsevne, overgang uføre/arbeid, refusjon…) → KVALITETSSIKRER →
 SAKSBEHANDLER_NASJONAL (NAY: yrkesskade, student, sykepengeerstatning, beregning, medlemskap, samordning, barnetillegg,
-foreslå vedtak…) → BESLUTTER (fatte vedtak, vedtaksbrev). `Definisjon.løsesAv` lists the roles per behov; API endpoints
-use `authorizedGet/Post` / `getGrunnlag` with `Operasjon` (SE, SAKSBEHANDLE, DRIFTE, DRIFT_LES) and a `relevanteIdenterResolver`.
+foreslå vedtak…) → BESLUTTER (fatte vedtak, vedtaksbrev). `Definisjon.løsesAv` lister rollene for hvert behov; API-endepunkter
+bruker `authorizedGet/Post` / `getGrunnlag` med `Operasjon` (SE, SAKSBEHANDLE, DRIFTE, DRIFT_LES) og en `relevanteIdenterResolver`.
 
 ## 4. Vilkår (`Vilkårtype`)
 
@@ -86,44 +86,44 @@ use `authorizedGet/Post` / `getGrunnlag` with `Operasjon` (SE, SAKSBEHANDLE, DRI
 | SAMORDNING / SAMORDNING_ANNEN_LOVGIVNING | § 11-27 / § 11-29 | |
 | ORDINÆR_KVOTE / SYKEPENGEERSTATNING_KVOTE | § 11-12 / § 11-13 1. ledd | ✓ |
 
-*`obligatorisk` = `StartBehandlingSteg` creates IKKE_VURDERT periods for it in a førstegangsbehandling (technical, not legal).
-Vilkår results are periodised (`Tidslinje<Vilkårsvurdering>`); `Vilkårsvurderer.vurder` must be pure.
-`TidligereVurderinger` combines results of steps before a given step to decide "uunngåelig avslag" / "ingen behandlingsgrunnlag"
-so later steps can skip work.
+*`obligatorisk` = `StartBehandlingSteg` oppretter IKKE_VURDERT-perioder for vilkåret i en førstegangsbehandling (teknisk, ikke juridisk).
+Vilkårsresultater er periodisert (`Tidslinje<Vilkårsvurdering>`); `Vilkårsvurderer.vurder` må være ren.
+`TidligereVurderinger` kombinerer resultatene fra stegene før et gitt steg for å avgjøre «uunngåelig avslag» / «ingen behandlingsgrunnlag»,
+slik at senere steg kan hoppe over arbeidet.
 
 ## 5. Rettighetstype (`RettighetsType`)
 
 BISTANDSBEHOV (§ 11-6, ordinær kvote), SYKEPENGEERSTATNING (§ 11-13), STUDENT (§ 11-14, ordinær kvote), ARBEIDSSØKER
-(§ 11-17), VURDERES_FOR_UFØRETRYGD (§ 11-18). Derived per period in `FASTSETT_RETTIGHETSTYPE` from vilkårsresultatet via the
-priority list in `KravForRettighetsType.kt`; worked examples (gantt) in `behandlingsflyt/behandlingsflyt.md`.
+(§ 11-17), VURDERES_FOR_UFØRETRYGD (§ 11-18). Utledes per periode i `FASTSETT_RETTIGHETSTYPE` fra vilkårsresultatet, etter
+prioritetslisten i `KravForRettighetsType.kt`; se arbeidseksempler (gantt) i `behandlingsflyt/behandlingsflyt.md`.
 
-## 6. From vurderinger to money (Revurdering flow order)
+## 6. Fra vurderinger til utbetaling (rekkefølgen i Revurdering-flyten)
 
 krav/rettighetsperiode → lovvalg → meldeperioder → alder → sykdom-gruppe (Nav-kontor) → kvalitetssikring → yrkesskade/student/
 sykepengeerstatning → sykdomsvilkåret → beregning (grunnlag) → inntektsbortfall → medlemskap → oppholdskrav → barnetillegg →
 institusjon → samordning → effektuer 11-7 → **rettighetstype** → vedtakslengde → meldeplikt → **underveis** →
-**tilkjent ytelse** → simulering → foreslå vedtak → **fatte vedtak** (vedtak lagres) → **iverksett** (job
+**tilkjent ytelse** → simulering → foreslå vedtak → **fatte vedtak** (vedtak lagres) → **iverksett** (jobb
 `flyt.iverksettUtbetaling` → aap-utbetal; varsler; datadeling) → **brev** (vedtaksbrev via aap-brev).
-Exact list: `python3 .agents/skills/flyt-orkestrering/scripts/flyt.py --flyt Revurdering`.
+Fullstendig liste: `python3 .agents/skills/flyt-orkestrering/scripts/flyt.py --flyt Revurdering`.
 
-## 7. External systems (gateways registered in `repository/.../integrasjon/DefaultGatewayProvider.kt`)
+## 7. Eksterne systemer (gateways registrert i `repository/.../integrasjon/DefaultGatewayProvider.kt`)
 
 PDL (person, identer, barn), POPP/inntekt + A-inntekt (inntektskomponenten), AAREG/EREG (arbeidsforhold), MEDL (medlemskap),
 Inst2 (institusjonsopphold), yrkesskade-registeret, Pesys/uføre, TP (tjenestepensjon), Abakus (sykepenger, foreldrepenger),
 dagpenger, tiltakspenger, aap-arenaoppslag (Arena), aap-utbetal (utbetaling, simulering), aap-brev + pdfgenerator (brev),
 aap-oppgave (oppgavestyring), aap-statistikk, aap-api-intern/SAM (datadeling, samordning id), aap-meldekort-backend,
 dokumentinnhenting (legeerklæring), dokarkiv, Gosys, NOM/NORG (enheter), Kabal, aap-tilgang (PIP), Unleash.
-Inbound Kafka (`api/.../hendelse/kafka`): Kabal, PDL hendelser, tilbakekreving, sykepengevedtak, institusjonsopphold,
-uførevedtak, foreldrepengevedtak. Inbound documents: `POST /api/hendelse/send` from postmottak.
-Outbound events: `flyt.hendelse` job → aap-oppgave (`BehandlingFlytStoppetHendelse`), statistikk, datadeling.
+Innkommende Kafka (`api/.../hendelse/kafka`): Kabal, PDL-hendelser, tilbakekreving, sykepengevedtak, institusjonsopphold,
+uførevedtak, foreldrepengevedtak. Innkommende dokumenter: `POST /api/hendelse/send` fra postmottak.
+Utgående hendelser: `flyt.hendelse`-jobb → aap-oppgave (`BehandlingFlytStoppetHendelse`), statistikk, datadeling.
 
-## 8. Tidslinje / Periode (komponenter `tidslinje`, `verdityper`)
+## 8. Tidslinje / Periode (komponentene `tidslinje`, `verdityper`)
 
-- `Periode(fom, tom)`: whole days, **both ends inclusive**; `fom > tom` throws. `Tid.MIN` = 0001-01-01, `Tid.MAKS` = 2999-01-01.
-- `Tidslinje<T>`: sorted non-overlapping `Segment(periode, verdi)`; constructing with overlaps **throws**. Gaps are allowed.
-- `Tidslinje.map2/map3/…` and `outerJoin` are **outer joins**: the lambda gets nulls where one side has no value and the
-  result covers the union. Use `innerJoin`/`leftJoin`/`kryss` when you mean intersection/left side.
-- `map`/`mapValue` keep segment boundaries; call `komprimer()` to merge equal neighbours. `begrensetTil(periode)` clips;
-  `komplement(periode) { … }` fills gaps; `filter`, `segment(dato)`, `helePerioden()`, `erSammenhengende()`.
-- Build with `tidslinjeOf(periode to verdi, …)` or `liste.somTidslinje { it.periode }`; empty: `Tidslinje.empty()` / `.orEmpty()`.
-- Test helper: `assertTidslinje` in `lib-test/.../help/AssertTidslinje.kt`.
+- `Periode(fom, tom)`: hele dager, **begge ender inkludert**; `fom > tom` kaster et unntak. `Tid.MIN` = 0001-01-01, `Tid.MAKS` = 2999-01-01.
+- `Tidslinje<T>`: sorterte, ikke-overlappende `Segment(periode, verdi)`; opprettelse med overlapp **kaster et unntak**. Det er tillatt med hull.
+- `Tidslinje.map2/map3/…` og `outerJoin` er **outer joins**: lambdaen får null der den ene siden mangler en verdi, og
+  resultatet dekker unionen. Bruk `innerJoin`/`leftJoin`/`kryss` når du mener snittet eller venstresiden.
+- `map`/`mapValue` beholder segmentgrensene; kall `komprimer()` for å slå sammen like nabosegmenter. `begrensetTil(periode)` klipper;
+  `komplement(periode) { … }` fyller hull; `filter`, `segment(dato)`, `helePerioden()`, `erSammenhengende()`.
+- Opprett med `tidslinjeOf(periode to verdi, …)` eller `liste.somTidslinje { it.periode }`; tom tidslinje: `Tidslinje.empty()` / `.orEmpty()`.
+- Testhjelper: `assertTidslinje` i `lib-test/.../help/AssertTidslinje.kt`.

@@ -1,9 +1,9 @@
-# Code skeletons
+# Kodeskjeletter
 
-Adapt names; keep the patterns. Package names follow the existing layout (or a vertical feature package like
-`no.nav.aap.bistandsbehov`). Real exemplars are listed per skeleton — open one before writing your own.
+Tilpass navnene, men behold mønstrene. Pakkenavn følger eksisterende struktur (eller en vertikal feature-pakke som
+`no.nav.aap.bistandsbehov`). Hvert kodeskjelett viser til eksempler fra koden. Åpne et eksempel før du skriver ditt eget.
 
-## Step (exemplars: `TjenestepensjonRefusjonskravSteg`, `VurderSykdomSteg` (periodised), `UnderveisSteg` (computation))
+## Steg (eksempler: `TjenestepensjonRefusjonskravSteg`, `VurderSykdomSteg` (periodisert), `UnderveisSteg` (beregning))
 
 ```kotlin
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
@@ -33,12 +33,12 @@ class NyVurderingSteg private constructor(
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
     )
 
-    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {   // runs on EVERY pass: idempotent
+    override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {   // kjøres ved HVER gjennomgang: idempotent
         avklaringsbehovService.oppdaterAvklaringsbehov(
             definisjon = Definisjon.NY_VURDERING,
-            vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },   // "will the vedtak contain a human vurdering?"
+            vedtakBehøverVurdering = { vedtakBehøverVurdering(kontekst) },   // «skal vedtaket inneholde en menneskelig vurdering?»
             erTilstrekkeligVurdert = { nyVurderingRepository.hentHvisEksisterer(kontekst.behandlingId) != null },
-            tilbakestillGrunnlag = {                                          // back to forrige behandling's vurdering
+            tilbakestillGrunnlag = {                                          // tilbake til vurderingen fra forrige behandling
                 val forrige = kontekst.forrigeBehandlingId?.let { nyVurderingRepository.hentHvisEksisterer(it) }
                 nyVurderingRepository.lagre(kontekst.behandlingId, forrige)
             },
@@ -48,7 +48,7 @@ class NyVurderingSteg private constructor(
     }
 
     private fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean =
-        when (kontekst.vurderingType) {                                       // exhaustive on purpose
+        when (kontekst.vurderingType) {                                       // uttømmende med vilje
             VurderingType.FØRSTEGANGSBEHANDLING,
             VurderingType.REVURDERING,
             VurderingType.MIGERING_FRA_ARENA -> when {
@@ -76,14 +76,14 @@ class NyVurderingSteg private constructor(
     }
 }
 ```
-Flow registration (`Revurdering.kt`): `.medSteg(steg = NyVurderingSteg, vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTTATT_SØKNAD, Vurderingsbehov.HELHETLIG_VURDERING, Vurderingsbehov.NY_VURDERING), informasjonskrav = emptyList())`.
+Registrering i flyten (`Revurdering.kt`): `.medSteg(steg = NyVurderingSteg, vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTTATT_SØKNAD, Vurderingsbehov.HELHETLIG_VURDERING, Vurderingsbehov.NY_VURDERING), informasjonskrav = emptyList())`.
 
-## Løsning + løser (exemplars: `RefusjonkravLøsning`/`RefusjonkravLøser`; periodised: `AvklarSykdomLøsning`/`AvklarSykdomLøser`)
+## Løsning + løser (eksempler: `RefusjonkravLøsning`/`RefusjonkravLøser`; periodisert: `AvklarSykdomLøsning`/`AvklarSykdomLøser`)
 
 ```kotlin
-// behandling/avklaringsbehov/løsning/NyVurderingLøsning.kt   (sealed hierarchy: must be in this package)
+// behandling/avklaringsbehov/løsning/NyVurderingLøsning.kt   (sealed-hierarki: må ligge i denne pakken)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeName(value = NY_VURDERING_KODE)                       // const from kontrakt AvklaringsbehovKode.kt
+@JsonTypeName(value = NY_VURDERING_KODE)                       // const fra kontrakt AvklaringsbehovKode.kt
 class NyVurderingLøsning(
     @param:JsonProperty("vurdering", required = true) val vurdering: NyVurderingDto,
     @param:JsonProperty("behovstype", required = true, defaultValue = NY_VURDERING_KODE)
@@ -93,21 +93,21 @@ class NyVurderingLøsning(
         NyVurderingLøser(repositoryProvider).løs(kontekst, this)
 }
 
-// behandling/avklaringsbehov/løser/NyVurderingLøser.kt       (sealed interface AvklaringsbehovsLøser: same package)
+// behandling/avklaringsbehov/løser/NyVurderingLøser.kt       (sealed interface AvklaringsbehovsLøser: samme pakke)
 class NyVurderingLøser(private val repository: NyVurderingRepository) : AvklaringsbehovsLøser<NyVurderingLøsning> {
     constructor(repositoryProvider: RepositoryProvider) : this(repository = repositoryProvider.provide())
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: NyVurderingLøsning): LøsningsResultat {
-        val vurdering = løsning.vurdering.tilDomene(vurdertAv = kontekst.bruker)   // throw UgyldigForespørselException on bad input
+        val vurdering = løsning.vurdering.tilDomene(vurdertAv = kontekst.bruker)   // kast UgyldigForespørselException ved ugyldige data
         repository.lagre(kontekst.behandlingId(), vurdering)
-        return LøsningsResultat(begrunnelse = vurdering.begrunnelse)              // kreverToTrinn = true to force beslutter
+        return LøsningsResultat(begrunnelse = vurdering.begrunnelse)              // kreverToTrinn = true tvinger fram beslutter
     }
 
     override fun forBehov(): Definisjon = Definisjon.NY_VURDERING
 }
 ```
 
-## Informasjonskrav (exemplars: `YrkesskadeInformasjonskrav`, `InntektInformasjonskrav`, `MeldekortInformasjonskrav`)
+## Informasjonskrav (eksempler: `YrkesskadeInformasjonskrav`, `InntektInformasjonskrav`, `MeldekortInformasjonskrav`)
 
 ```kotlin
 class NyttInformasjonskrav private constructor(
@@ -126,20 +126,20 @@ class NyttInformasjonskrav private constructor(
             && !tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, steg)
             && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
 
-    override fun klargjør(kontekst: FlytKontekstMedPerioder) =             // DB ok, NO http
+    override fun klargjør(kontekst: FlytKontekstMedPerioder) =             // DB tillatt, IKKE HTTP
         Input(sakService.hent(kontekst.sakId).person.aktivIdent().identifikator, kontekst.rettighetsperiode)
 
-    override fun hentData(input: Input) = Registerdata(gateway.hent(input.ident, input.periode))   // http ok, NO DB (parallel)
+    override fun hentData(input: Input) = Registerdata(gateway.hent(input.ident, input.periode))   // HTTP tillatt, IKKE DB (parallelt)
 
     override fun oppdater(input: Input, registerdata: Registerdata, kontekst: FlytKontekstMedPerioder): Informasjonskrav.Endret {
-        val gammel = repository.hentHvisEksisterer(kontekst.behandlingId)  // DB ok, NO http
+        val gammel = repository.hentHvisEksisterer(kontekst.behandlingId)  // DB tillatt, IKKE HTTP
         if (gammel?.data == registerdata.data) return Informasjonskrav.Endret.IKKE_ENDRET
         repository.lagre(kontekst.behandlingId, registerdata.data)
-        return Informasjonskrav.Endret.ENDRET                             // ENDRET → rewind if this step is behind the active one
+        return Informasjonskrav.Endret.ENDRET                             // ENDRET → gå tilbake hvis dette steget ligger før det aktive steget
     }
 
     companion object : Informasjonskravkonstruktør {
-        override val navn = InformasjonskravNavn.NYTT                     // new enum value; persisted
+        override val navn = InformasjonskravNavn.NYTT                     // ny enum-verdi; lagres
         override fun konstruer(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) =
             NyttInformasjonskrav(SakService(repositoryProvider, gatewayProvider), repositoryProvider.provide(),
                 gatewayProvider.provide(), TidligereVurderingerImpl(repositoryProvider, gatewayProvider))
@@ -147,10 +147,10 @@ class NyttInformasjonskrav private constructor(
 }
 ```
 
-## Repository (exemplar: `TjenestepensjonRefusjonskravVurderingRepositoryImpl`, `SykdomRepositoryImpl`)
+## Repository (eksempler: `TjenestepensjonRefusjonskravVurderingRepositoryImpl`, `SykdomRepositoryImpl`)
 
-Domain module: `interface NyVurderingRepository : no.nav.aap.lookup.repository.Repository { hentHvisEksisterer; lagre }`.
-Repository module:
+Domene-modul: `interface NyVurderingRepository : no.nav.aap.lookup.repository.Repository { hentHvisEksisterer; lagre }`.
+Repository-modul:
 ```kotlin
 class NyVurderingRepositoryImpl(private val connection: DBConnection) : NyVurderingRepository {
     companion object : Factory<NyVurderingRepositoryImpl> {
@@ -164,27 +164,27 @@ class NyVurderingRepositoryImpl(private val connection: DBConnection) : NyVurder
         if (vurdering == null) return
         val vurderingId = connection.executeReturnKey("INSERT INTO NY_VURDERING (BEGRUNNELSE, VURDERT_AV) VALUES (?, ?)") {
             setParams { setString(1, vurdering.begrunnelse); setString(2, vurdering.vurdertAv.ident) }
-        }   // child rows are immutable: always INSERT, never UPDATE (they are shared after kopier)
+        }   // child-rader er uforanderlige: bruk alltid INSERT, aldri UPDATE (de deles etter kopier)
         connection.execute("INSERT INTO NY_VURDERING_GRUNNLAG (BEHANDLING_ID, NY_VURDERING_ID, AKTIV) VALUES (?, ?, TRUE)") {
             setParams { setLong(1, behandlingId.toLong()); setLong(2, vurderingId) }
         }
     }
 
-    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {   // new grunnlag row, SAME child row
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {   // ny grunnlagsrad, SAMME child-rad
         connection.execute("""
             INSERT INTO NY_VURDERING_GRUNNLAG (BEHANDLING_ID, NY_VURDERING_ID, AKTIV)
             SELECT ?, NY_VURDERING_ID, TRUE FROM NY_VURDERING_GRUNNLAG WHERE BEHANDLING_ID = ? AND AKTIV
         """.trimIndent()) { setParams { setLong(1, tilBehandling.toLong()); setLong(2, fraBehandling.toLong()) } }
     }
 
-    override fun slett(behandlingId: BehandlingId) { /* hard delete grunnlag + child rows of this (førstegangs)behandling; idempotent */ }
+    override fun slett(behandlingId: BehandlingId) { /* slett grunnlaget og child-radene til denne førstegangsbehandlingen permanent; idempotent */ }
     // hentHvisEksisterer: SELECT … FROM NY_VURDERING_GRUNNLAG g JOIN NY_VURDERING v ON … WHERE g.BEHANDLING_ID = ? AND g.AKTIV
 }
 ```
-Then `.register<NyVurderingRepositoryImpl>()` in `PostgresRepositoryRegistry.kt`. Migration
-`repository/src/main/resources/flyway/V1.<next>__ny_vurdering.sql` (next number: `repo.py neste-migrering`).
+Registrer deretter `.register<NyVurderingRepositoryImpl>()` i `PostgresRepositoryRegistry.kt`. Migrering:
+`repository/src/main/resources/flyway/V1.<next>__ny_vurdering.sql` (neste nummer: `repo.py neste-migrering`).
 
-## Grunnlag API (exemplar: `api/src/main/kotlin/no/nav/aap/bistandsbehov/BistandsgrunnlagApi.kt`)
+## Grunnlag-API (eksempel: `api/src/main/kotlin/no/nav/aap/bistandsbehov/BistandsgrunnlagApi.kt`)
 
 ```kotlin
 fun NormalOpenAPIRoute.nyVurderingGrunnlagApi(dataSource: DataSource, repositoryRegistry: RepositoryRegistry, gatewayProvider: GatewayProvider) {
@@ -209,19 +209,19 @@ fun NormalOpenAPIRoute.nyVurderingGrunnlagApi(dataSource: DataSource, repository
     }
 }
 ```
-Register: `nyVurderingGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)` inside `apiRouting { … }` in `App.kt`.
+Registrering: `nyVurderingGrunnlagApi(fellesDataSource, repositoryRegistry, gatewayProvider)` inne i `apiRouting { … }` i `App.kt`.
 
-## Vilkår (new style; exemplars: `OvergangArbeidVilkår`, `Bistandsvilkåret`)
+## Vilkår (ny stil; eksempler: `OvergangArbeidVilkår`, `Bistandsvilkåret`)
 
 ```kotlin
 object NyttVilkår : Vilkårsvurderer<NyttFaktagrunnlag> {
     override val vilkårtype = Vilkårtype.NYTT_VILKÅR
-    override fun vurder(faktagrunnlag: NyttFaktagrunnlag): Tidslinje<Vilkårsvurdering> =   // PURE: no DB, no toggles
+    override fun vurder(faktagrunnlag: NyttFaktagrunnlag): Tidslinje<Vilkårsvurdering> =   // REN: ingen DB, ingen toggles
         faktagrunnlag.vurderinger.mapValue { v ->
             Vilkårsvurdering(utfall = if (v.oppfylt) Utfall.OPPFYLT else Utfall.IKKE_OPPFYLT,
                 avslagsårsak = Avslagsårsak.X.takeUnless { v.oppfylt }, begrunnelse = v.begrunnelse,
                 faktagrunnlag = faktagrunnlag, manuellVurdering = true)
         }
 }
-// in the step: VilkårService(repositoryProvider).vurderVilkår(kontekst.behandlingId, faktagrunnlag, NyttVilkår)
+// i steget: VilkårService(repositoryProvider).vurderVilkår(kontekst.behandlingId, faktagrunnlag, NyttVilkår)
 ```

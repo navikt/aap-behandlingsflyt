@@ -1,72 +1,72 @@
 ---
 name: repository-og-migrering
-description: Persistence in aap-behandlingsflyt — repository interfaces vs impls and registries, the grunnlag/aktiv versioning pattern with shared immutable child rows, kopier (revurdering) and slett (GDPR) semantics and which repositories do NOT copy, Flyway migrations (naming, next number), dbconnect usage, row locks and behandling versjon, time zone rules. Use when adding/changing tables, repositories or SQL, when data "disappears" or "leaks" between behandlinger, or when writing repository tests. Keywords — repository, RepositoryImpl, grunnlag, aktiv, kopier, slett, flyway, migrering, dbconnect, DBConnection, transaction, lås, versjon.
+description: Lagring i aap-behandlingsflyt: repository-grensesnitt mot implementasjoner og registre, mønsteret for versjonering av grunnlag/aktiv med delte, uforanderlige child-rader, semantikken for kopier (revurdering) og slett (GDPR), og hvilke repositories som IKKE kopierer, Flyway-migreringer (navngiving, neste nummer), bruk av dbconnect, radlåser og behandling-versjon, tidssoneregler. Bruk når du legger til eller endrer tabeller, repositories eller SQL, når data «forsvinner» eller «lekker» mellom behandlinger, eller når du skriver repository-tester. Nøkkelord — repository, RepositoryImpl, grunnlag, aktiv, kopier, slett, flyway, migrering, dbconnect, DBConnection, transaction, lås, versjon.
 ---
 
-# Repositories, data model and migrations
+# Repositories, datamodell og migreringer
 
-Tools: `python3 .agents/skills/repository-og-migrering/scripts/repo.py`
-- `neste-migrering [--navn beskrivelse]` → next Flyway file name
-- `oversikt [--filter X]` → every repository interface → impl, registered (PG/MEM), `kopier`/`slett` impl | noop | n/a
-- `sjekk XRepository` → wiring check for one repository
+Verktøy: `python3 .agents/skills/repository-og-migrering/scripts/repo.py`
+- `neste-migrering [--navn beskrivelse]` → neste Flyway-filnavn
+- `oversikt [--filter X]` → hvert repository-grensesnitt → implementasjon, registrering (PG/MEM), implementasjon av `kopier`/`slett` | ingen handling | ikke relevant
+- `sjekk XRepository` → kontroller koblingene for ett repository
 
-## 1. Layers and wiring
+## 1. Lag og koblinger
 
-| What | Where |
+| Hva | Hvor |
 |---|---|
-| Interface (domain) | `behandlingsflyt/src/main/kotlin/…` (or feature package), extends `no.nav.aap.lookup.repository.Repository` (adds `kopier` + `slett`) or plain `no.nav.aap.komponenter.repository.Repository` (no copy/delete: sak-level data, logs, jobs) |
-| Impl (SQL) | `repository/src/main/kotlin/…` (same package as the domain area or `…repository.<area>`), `class XRepositoryImpl(private val connection: DBConnection) : XRepository` + `companion object : Factory<XRepositoryImpl>` (`no.nav.aap.lookup.repository.Factory`). A few legacy impls live in `behandlingsflyt` (`MottattDokumentRepositoryImpl`, `GjenopptakRepositoryImpl`) |
-| Production registry | `repository/.../PostgresRepositoryRegistry.kt` → `.register<XRepositoryImpl>()` (registered per marker interface it implements) |
-| Test registry | `lib-test/.../inmemoryrepo/InMemoryRepositoryRegistry.kt` (+ `InMemoryXRepository`) for unit tests without DB |
-| Usage | `repositoryProvider.provide<XRepository>()` — a `RepositoryProvider` is bound to ONE connection/transaction and caches instances; never keep repositories across transactions |
+| Grensesnitt (domene) | `behandlingsflyt/src/main/kotlin/…` (eller en feature-pakke), utvider `no.nav.aap.lookup.repository.Repository` (legger til `kopier` + `slett`) eller vanlige `no.nav.aap.komponenter.repository.Repository` (ingen kopiering/sletting: data på saksnivå, logger, jobber) |
+| Implementasjon (SQL) | `repository/src/main/kotlin/…` (samme pakke som domeneområdet eller `…repository.<area>`), `class XRepositoryImpl(private val connection: DBConnection) : XRepository` + `companion object : Factory<XRepositoryImpl>` (`no.nav.aap.lookup.repository.Factory`). Noen eldre implementasjoner ligger i `behandlingsflyt` (`MottattDokumentRepositoryImpl`, `GjenopptakRepositoryImpl`) |
+| Produksjonsregister | `repository/.../PostgresRepositoryRegistry.kt` → `.register<XRepositoryImpl>()` (registrert for hvert markørgrensesnitt den implementerer) |
+| Testregister | `lib-test/.../inmemoryrepo/InMemoryRepositoryRegistry.kt` (+ `InMemoryXRepository`) for enhetstester uten DB |
+| Bruk | `repositoryProvider.provide<XRepository>()` — en `RepositoryProvider` er knyttet til ÉN tilkobling/transaksjon og mellomlagrer instanser. Ikke behold repositories på tvers av transaksjoner. |
 
-`GrunnlagKopiererImpl` and the GDPR delete in `SøknadSteg`/`TrekkKlageSteg` iterate `repositoryProvider.provideAlle()` and call
-`kopier`/`slett` on every `no.nav.aap.lookup.repository.Repository` — your impl is included automatically once registered
-(an impl registered under two marker interfaces is called twice: keep `kopier` idempotent or a no-op).
+`GrunnlagKopiererImpl` og GDPR-slettingen i `SøknadSteg`/`TrekkKlageSteg` itererer over `repositoryProvider.provideAlle()` og kaller
+`kopier`/`slett` på alle `no.nav.aap.lookup.repository.Repository`. Implementasjonen din tas automatisk med når den er registrert
+(en implementasjon som er registrert under to markørgrensesnitt, kalles to ganger: sørg for at `kopier` er idempotent eller ikke gjør noe).
 
-## 2. The grunnlag pattern (versioned per behandling, structurally shared)
+## 2. Grunnlagsmønsteret (versjonert per behandling, strukturelt delt)
 
 ```
 X_GRUNNLAG(id, behandling_id, <child>_id, aktiv, opprettet_tid)     ← one ACTIVE row per behandling
 X_VURDERINGER(id) / X_VURDERING(id, <set>_id, …)                    ← child rows, immutable once written
 ```
-- `lagre(behandlingId, …)`: set the active grunnlag row `aktiv = false`, insert new child rows, insert a new grunnlag row.
-  Old rows stay (history).
+- `lagre(behandlingId, …)`: sett den aktive grunnlagsraden `aktiv = false`, sett inn nye child-rader, og sett inn en ny grunnlagsrad.
+  Gamle rader blir stående som historikk.
 - `hentHvisEksisterer(behandlingId)`: `WHERE behandling_id = ? AND aktiv`.
-- `kopier(fra, til)` (called when a revurdering is created): insert a new grunnlag row for `til` **pointing to the same child
-  rows**. Child rows are therefore shared by several behandlinger → **never UPDATE or DELETE child rows in place**; write new
-  ones and repoint.
-- `slett(behandlingId)`: hard-delete personal data for that behandling (idempotent). Only called for a førstegangsbehandling
-  whose søknad is trukket, or a trukket klage — implementations may assume no later behandling shares the rows.
-- Periodised vurderinger: the grunnlag of a behandling contains all gjeldende vurderinger including those inherited from
-  earlier behandlinger; each carries `vurdertIBehandling`. Løsere typically save `forrige behandling's vurderinger + nye`
-  (see `AvklarSykdomLøser`). "New in this behandling" = `vurdertIBehandling == behandlingId`.
+- `kopier(fra, til)` (kalles når en revurdering opprettes): sett inn en ny grunnlagsrad for `til` **som peker på de samme child-
+  radene**. Flere behandlinger deler dermed child-radene. **Ikke bruk UPDATE eller DELETE på child-rader**; skriv nye rader
+  og la grunnlagsraden peke på dem.
+- `slett(behandlingId)`: slett personopplysninger for behandlingen permanent (idempotent). Kalles bare for en førstegangsbehandling
+  der søknaden er trukket, eller en trukket klage. Implementasjoner kan regne med at ingen senere behandling deler radene.
+- Periodiserte vurderinger: grunnlaget for en behandling inneholder alle gjeldende vurderinger, også de som er arvet fra
+  tidligere behandlinger. Hver vurdering har `vurdertIBehandling`. Løsere lagrer vanligvis `forrige behandlings vurderinger + nye`
+  (se `AvklarSykdomLøser`). «Ny i denne behandlingen» = `vurdertIBehandling == behandlingId`.
 
-## 3. What is (not) carried into a revurdering
+## 3. Hva som videreføres (og ikke) til en revurdering
 
-`opprettRevurdering` runs `kopier(forrige → ny)` for every repository. **Not copied** (`kopier` no-op or n/a): avklaringsbehov,
+`opprettRevurdering` kjører `kopier(forrige → ny)` for hvert repository. **Kopieres ikke** (`kopier` gjør ingenting eller er ikke relevant): avklaringsbehov,
 vedtak, brevbestilling, behandling/steg_historikk, kontekst-logg (`ContextRepository`), informasjonskrav_oppdatert, PIP,
-klage-specific grunnlag, avbrutt revurdering, uføre-søknad, sak/person, mellomlagring, Arena-migrering, SamId, … — run
-`repo.py oversikt` for the current list. (The Dokka page `behandlingsflyt/behandlingsflyt.md` claims vedtak, avklaringsbehov
-and brev are copied — the code says otherwise.) Klage, SvarFraAndreinstans and OppfølgingsBehandling start with
-`forrigeBehandlingId = null` and copy nothing; Aktivitetsplikt copies from the previous behandling of the same type.
+klagespesifikt grunnlag, avbrutt revurdering, uføre-søknad, sak/person, mellomlagring, Arena-migrering, SamId, … Kjør
+`repo.py oversikt` for å se den gjeldende lista. (Dokka-sida `behandlingsflyt/behandlingsflyt.md` sier at vedtak, avklaringsbehov
+og brev kopieres, men koden viser noe annet.) Klage, SvarFraAndreinstans og OppfølgingsBehandling starter med
+`forrigeBehandlingId = null` og kopierer ingenting. Aktivitetsplikt kopierer fra forrige behandling av samme type.
 
 ## 4. Flyway
 
-- Files: `repository/src/main/resources/flyway/V1.<n>__<beskrivelse>.sql` (one oddball `V1.14.1__…` exists). Next number:
-  `repo.py neste-migrering`. Ordering is numeric (V1.9 < V1.10).
-- Applied at app startup (`Migrering.migrate(fellesDataSource)` in `App.kt`) and by `TestDataSource()` in tests (classpath
-  location `flyway`). Never edit a merged migration — add a new one. Write migrations that are safe while the previous app
-  version is still running (rolling deploy, several pods): add nullable columns / defaults first, remove later.
-- Conventions: snake_case names; enums stored as their `name` (`setEnumName`/`getEnum`) — so enum constants must never be
-  renamed; `behandling.type` stores `TypeBehandling.identifikator()` ("ae0034"), not the enum name; periods as `daterange`
-  (`setPeriode`/`getPeriode`); timestamps `TIMESTAMP(3)` without time zone, written as Oslo local time.
-- Key tables: `sak`, `behandling` (`status`, `type`, `versjon`, `forrige_id`, `aarsak_til_opprettelse`), `steg_historikk`
-  (one `aktiv` row per behandling), `avklaringsbehov` (unique per behandling+definisjon) + `avklaringsbehov_endring`,
+- Filer: `repository/src/main/resources/flyway/V1.<n>__<beskrivelse>.sql` (det finnes ett avvik, `V1.14.1__…`). Neste nummer:
+  `repo.py neste-migrering`. Rekkefølgen er numerisk (V1.9 < V1.10).
+- Kjøres ved oppstart av appen (`Migrering.migrate(fellesDataSource)` i `App.kt`) og av `TestDataSource()` i tester (classpath-
+  plassering `flyway`). Ikke rediger en migrering som er merget. Legg til en ny. Skriv migreringer som fungerer mens den forrige app-
+  versjonen fortsatt kjører (rolling deploy, flere pods): legg først til nullable kolonner eller standardverdier, og fjern dem senere.
+- Konvensjoner: snake_case-navn; enums lagres med `name` (`setEnumName`/`getEnum`), så enum-konstanter må aldri få nytt
+  navn; `behandling.type` lagrer `TypeBehandling.identifikator()` ("ae0034"), ikke enum-navnet; perioder som `daterange`
+  (`setPeriode`/`getPeriode`); tidsstempler som `TIMESTAMP(3)` uten tidssone, skrevet som lokal tid i Oslo.
+- Viktige tabeller: `sak`, `behandling` (`status`, `type`, `versjon`, `forrige_id`, `aarsak_til_opprettelse`), `steg_historikk`
+  (én `aktiv`-rad per behandling), `avklaringsbehov` (unik per behandling+definisjon) + `avklaringsbehov_endring`,
   `vurderingsbehov` + `behandling_aarsak`, `mottatt_dokument`, `informasjonskrav_oppdatert`, `vilkar_resultat`/`vilkar`/`vilkar_periode`,
   `jobb` + `jobb_historikk` (+ `_arkiv`).
 
-## 5. dbconnect essentials (`no.nav.aap.komponenter.dbconnect`)
+## 5. Grunnleggende om dbconnect (`no.nav.aap.komponenter.dbconnect`)
 
 ```kotlin
 dataSource.transaction { connection -> … }                    // commit on success; readOnly = true for reads
@@ -76,26 +76,26 @@ val n = connection.executeReturnUpdated(sql) { … }
 connection.executeBatch(sql, items) { setParams { item -> setLong(1, item.id) } }
 connection.queryFirstOrNull(sql) { setParams { … }; setRowMapper { row -> row.getLong("id") } }   // also queryFirst/List/Set
 ```
-Call `setParams` once per statement; params are 1-indexed; default query timeout 30 s; `Row` has `get…`/`get…OrNull`,
-`getEnum`, `getPeriode`, `getUUID`, `getArray`. On exception a transaction rolls back to the last `markerSavepoint()` and
-commits the rest (see motor-jobber §3) — don't call `markerSavepoint()` casually.
+Kall `setParams` én gang per statement. Parametrene starter på indeks 1. Standard tidsavbrudd for spørringer er 30 s. `Row` har `get…`/`get…OrNull`,
+`getEnum`, `getPeriode`, `getUUID`, `getArray`. Ved unntak ruller en transaksjon tilbake til siste `markerSavepoint()` og
+committer resten (se motor-jobber §3). Ikke kall `markerSavepoint()` uten grunn.
 
-## 6. Locks and versjon
+## 6. Låser og versjon
 
 `TaSkriveLåsRepository`: `lås(sakId, behandlingId)` / `låsSak` / `låsBehandling` / `withLås…` = `SELECT versjon … FOR UPDATE`
-(always sak before behandling, to avoid deadlocks); `verifiserSkrivelås(lås)` = `UPDATE … SET versjon = versjon + 1 WHERE
-versjon = ?` (must hit 1 row). `behandling.versjon` is what the frontend sends as `behandlingVersjon`; every processing run
-bumps it, so a stale page gets `OutdatedBehandlingException`. Jobs and API writes that change a behandling take these locks.
+(alltid sak før behandling for å unngå deadlocks); `verifiserSkrivelås(lås)` = `UPDATE … SET versjon = versjon + 1 WHERE
+versjon = ?` (må treffe én rad). Frontend sender `behandling.versjon` som `behandlingVersjon`. Hver prosesseringskjøring
+øker versjonen, så en utdatert side får `OutdatedBehandlingException`. Jobber og API-skrivinger som endrer en behandling, tar disse låsene.
 
-## 7. Time zone
+## 7. Tidssone
 
-JVM and DB session must be `Europe/Oslo` (`verifiserTidssone` fails startup otherwise; the Gradle test task sets `TZ`).
-Use `LocalDate`/`LocalDateTime` in Oslo time; `Tid.MAKS` = 2999-01-01 is "open end".
+JVM-en og DB-sesjonen må bruke `Europe/Oslo` (`verifiserTidssone` feiler ved oppstart hvis ikke; Gradle-testoppgaven setter `TZ`).
+Bruk `LocalDate`/`LocalDateTime` i Oslo-tid. `Tid.MAKS` = 2999-01-01 er «åpen slutt».
 
-## 8. Repository tests
+## 8. Repository-tester
 
-`repository/src/test/...`: `TestDataSource()` in `@BeforeAll`, `dataSource.transaction { c -> val sak = sak(c);
-val behandling = finnEllerOpprettBehandling(c, sak) … }` (helpers in `lib-test/.../help/`), test `lagre`/`hent`/`kopier`/`slett`
-including that `kopier` + `lagre` on the new behandling does not change the old one. Example: `BistandRepositoryImplTest`.
-Run just that class (`python3 .agents/skills/testing/scripts/kjor_test.py BistandRepositoryImplTest`); skeleton and
-running rules in the testing skill.
+`repository/src/test/...`: `TestDataSource()` i `@BeforeAll`, `dataSource.transaction { c -> val sak = sak(c);
+val behandling = finnEllerOpprettBehandling(c, sak) … }` (hjelpemetoder i `lib-test/.../help/`), test `lagre`/`hent`/`kopier`/`slett`
+inkludert at `kopier` + `lagre` på den nye behandlingen ikke endrer den gamle. Eksempel: `BistandRepositoryImplTest`.
+Kjør bare den klassen (`python3 .agents/skills/testing/scripts/kjor_test.py BistandRepositoryImplTest`). Se testing-skillen for
+testskjelett og regler for kjøring.

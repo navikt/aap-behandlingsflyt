@@ -1,18 +1,18 @@
-# Flows and steps (`forretningsflyt/`) — supplements the root AGENTS.md (read that too)
+# Flyter og steg (`forretningsflyt/`) — tillegg til AGENTS.md i rota (les den også)
 
-Load skills `flyt-orkestrering` (how flows execute) and `legg-til-steg` (recipes) before editing here.
+Last inn skillene `flyt-orkestrering` (hvordan flytene kjøres) og `legg-til-steg` (oppskrifter) før du redigerer her.
 
-- `behandlingstyper/Revurdering.kt` is the flow for BOTH Revurdering and Førstegangsbehandling (`Førstegangsbehandling.flyt()`
-  delegates to it). Overview without reading 500 lines: `python3 .agents/skills/flyt-orkestrering/scripts/flyt.py --flyt Revurdering`.
-- Changing the flow (removing, renaming or reordering steps) can break open and closed behandlinger: `StegType` names are
-  persisted and published in `kontrakt`. Removed steps that behandlinger sit on give "Steg X finnes ikke i flyten".
-- `vurderingsbehovRelevanteForSteg` filters `kontekst.vurderingsbehovRelevanteForSteg` and decides which new vurderingsbehov
-  rewind the flow to the step. It never skips a step — every step executes on every pass.
-- `informasjonskrav` on a step are refreshed in its OPPDATER_FAKTAGRUNNLAG phase and, for steps before the active one, in
-  `forbered` (where ENDRET rewinds the flow). Steps after `.sluttÅOppdatereFaktagrunnlag()` get no refresh in `forbered` and
-  receive ALL vurderingsbehov in their kontekst.
-- `TidligereVurderingerImpl` must list its checks in flow order (it `require`s this when constructed).
-- Every `utfør` must be idempotent and reconcile avklaringsbehov via `AvklaringsbehovService` (avbryt + `tilbakestillGrunnlag`
-  when no longer relevant). External side effects go through motor jobs.
-- After editing a flow: `flyt.py --check .agents/skills/flyt-orkestrering/references/flyter.md` (regenerate with
-  `--markdown >` when stale) and run the closest `*FlytTest`.
+- `behandlingstyper/Revurdering.kt` definerer flyten for både Revurdering og Førstegangsbehandling (`Førstegangsbehandling.flyt()`
+  bruker den). Få oversikt uten å lese 500 linjer: `python3 .agents/skills/flyt-orkestrering/scripts/flyt.py --flyt Revurdering`.
+- Endringer i flyten (fjerne, gi nytt navn til eller endre rekkefølgen på steg) kan ødelegge åpne og avsluttede behandlinger: `StegType`-navn
+  lagres og publiseres i `kontrakt`. Hvis et steg fjernes mens behandlinger står på det, får de feilen «Steg X finnes ikke i flyten».
+- `vurderingsbehovRelevanteForSteg` filtrerer `kontekst.vurderingsbehovRelevanteForSteg` og avgjør hvilke nye vurderingsbehov
+  som fører flyten tilbake til steget. Den hopper aldri over et steg. Hvert steg kjøres ved hver gjennomgang.
+- Stegets `informasjonskrav` oppdateres i fasen OPPDATER_FAKTAGRUNNLAG og, for steg før det aktive steget, i
+  `forbered` (der ENDRET fører flyten tilbake). Steg etter `.sluttÅOppdatereFaktagrunnlag()` får ingen oppdatering i `forbered` og
+  mottar ALLE vurderingsbehov i konteksten.
+- `TidligereVurderingerImpl` må liste kontrollene i flytrekkefølge (`require` krever dette når objektet opprettes).
+- Hver `utfør` må være idempotent og avstemme avklaringsbehov gjennom `AvklaringsbehovService` (avbryt + `tilbakestillGrunnlag`
+  når behovet ikke lenger er relevant). Bruk motor-jobber for eksterne sideeffekter.
+- Etter at du har endret en flyt: Kjør `flyt.py --check .agents/skills/flyt-orkestrering/references/flyter.md` (generer på nytt med
+  `--markdown >` hvis den er utdatert), og kjør den nærmeste `*FlytTest`-testen.

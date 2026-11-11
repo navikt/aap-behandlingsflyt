@@ -1,9 +1,9 @@
-# Test skeletons
+# Testmaler
 
-Copy, rename, and keep the house style (JUnit 5, AssertJ, backtick names in Norwegian). Imports: fakes and helpers
-come from `no.nav.aap.behandlingsflyt.test.*`, `…test.inmemoryrepo.*` and `…help.*` (lib-test).
+Kopier og gi nytt navn, og følg kodestilen (JUnit 5, AssertJ, testnavn på norsk i backticks). Importer: fakes og hjelpere
+kommer fra `no.nav.aap.behandlingsflyt.test.*`, `…test.inmemoryrepo.*` og `…help.*` (lib-test).
 
-## Unit test of a step (fakes, no mocks)
+## Enhetstest av et steg (fakes, ingen mocks)
 
 ```kotlin
 class NyttStegTest {
@@ -28,11 +28,11 @@ class NyttStegTest {
 }
 ```
 
-Use the primary constructor when you need to swap one collaborator, e.g. `FakeTidligereVurderinger().apply {
+Bruk primærkonstruktøren når du må bytte ut én samarbeidspartner, for eksempel `FakeTidligereVurderinger().apply {
 avslagEllerIngenBehandlingsgrunnlag = true }`. Gateways: `minimalGatewayProvider { register<FakeOppgavestyringGateway>() }`.
-Many steps expose smaller functions too (`utledBehov(kontekst)` in `SykestipendStegTest`); test those directly.
+Mange steg har også mindre funksjoner (`utledBehov(kontekst)` i `SykestipendStegTest`), som du kan teste direkte.
 
-## Unit test of a løser
+## Enhetstest av en løser
 
 ```kotlin
 class NyVurderingLøserTest {
@@ -49,7 +49,7 @@ class NyVurderingLøserTest {
 }
 ```
 
-## Repository integration test (Postgres via Testcontainers)
+## Repository-integrasjonstest (Postgres via Testcontainers)
 
 ```kotlin
 internal class NyVurderingRepositoryImplTest {
@@ -89,9 +89,9 @@ internal class NyVurderingRepositoryImplTest {
 }
 ```
 
-Tests in the class share the database: never assume empty tables or count rows globally.
+Testene i klassen deler database: Ikke anta at tabellene er tomme, og ikke tell rader globalt.
 
-## Gateway integration test (HTTP fake server)
+## Gateway-integrasjonstest (HTTP-fake-server)
 
 ```kotlin
 @Fakes
@@ -107,9 +107,9 @@ class NyGatewayImplTest {
 }
 ```
 
-The fake server lives in `lib-test/.../test/fakes/` and is wired in `FakeServers` (see fakes.md).
+Fake-serveren ligger i `lib-test/.../test/fakes/` og kobles til i `FakeServers` (se fakes.md).
 
-## API route test (Ktor test host, in-memory, no Docker)
+## API-rutetest (Ktor test host, in-memory, uten Docker)
 
 ```kotlin
 @Fakes
@@ -131,7 +131,7 @@ class NyVurderingApiTest : BaseApiTest() {
 }
 ```
 
-## Flyt-test
+## Flyttest
 
-See [flyttester.md](flyttester.md). Extend an existing `*FlytTest` class when the scenario fits it; a new class pays the
-database and fake start-up again.
+Se [flyttester.md](flyttester.md). Utvid en eksisterende `*FlytTest`-klasse når scenarioet passer. En ny klasse må starte
+database og fakes på nytt.

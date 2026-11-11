@@ -1,13 +1,13 @@
-# Flyt-tests — supplements the root AGENTS.md (read that too)
+# Flyttester — tillegg til AGENTS.md i rota (les den også)
 
-Load skill `testing`; DSL, snapshot tests and pitfalls are in `.agents/skills/testing/references/flyttester.md`.
+Last inn skillen `testing`. DSL, snapshot-tester og fallgruver er beskrevet i `.agents/skills/testing/references/flyttester.md`.
 
-- Classes extending `AbstraktFlytOrkestratorTest`/`AbstraktFlytOrkestratorSnapshotTest` start Postgres, all fakes and
-  the motor; one class takes from seconds to over a minute. Run one class (at most ~3 per Gradle run), never
+- Klasser som utvider `AbstraktFlytOrkestratorTest`/`AbstraktFlytOrkestratorSnapshotTest`, starter Postgres, alle fakes og
+  motoren. Én klasse tar fra noen sekunder til over ett minutt. Kjør én klasse (maksimalt rundt tre per Gradle-kjøring), aldri
   `--tests '*FlytTest'`: `python3 .agents/skills/testing/scripts/kjor_test.py <Klasse> [-m "del av navn"]`.
-  Not every class in this package is a flyt-test; `kjor_test.py --liste flyt` lists the real ones.
-- Chain on the `Behandling` each DSL helper returns. A new avklaringsbehov gets a `løsX()` helper in
-  `AbstraktFlytOrkestratorTest` (`kjor_test.py --dsl` lists the existing ones).
-- A flyt-test failing oddly usually hides a swallowed job exception: `kjor_test.py --resultat behandlingsflyt`.
-- Prefer extending an existing class; use the snapshot base class for many tests that start from the same finished
+  Ikke alle klassene i denne pakken er flyttester. `kjor_test.py --liste flyt` viser hvilke som er det.
+- Kjed sammen kallene med `Behandling`-objektet hver DSL-hjelpemetode returnerer. Legg til en `løsX()`-hjelpemetode i
+  `AbstraktFlytOrkestratorTest` for nye avklaringsbehov (`kjor_test.py --dsl` viser de eksisterende).
+- Hvis en flyttest feiler på en merkelig måte, er det vanligvis en skjult jobbfeil: `kjor_test.py --resultat behandlingsflyt`.
+- Utvid helst en eksisterende klasse. Bruk snapshot-basisklassen for mange tester som starter fra samme ferdige
   førstegangsbehandling.

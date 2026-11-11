@@ -1,31 +1,31 @@
-# Fakes (lib-test) — catalogue and how to add one
+# Fakes (lib-test): katalog og hvordan du legger til en
 
-All shared fakes live in the `lib-test` module (`lib-test/src/main/kotlin/no/nav/aap/behandlingsflyt/`), which every
-other module has as `testImplementation`. A fake is a working, simple implementation of a production interface. Prefer
-it over a mock everywhere; extend it when it lacks something.
+Alle delte fakes ligger i modulen `lib-test` (`lib-test/src/main/kotlin/no/nav/aap/behandlingsflyt/`), som alle andre
+moduler har som `testImplementation`. En fake er en enkel, fungerende implementasjon av et produksjonsgrensesnitt. Foretrekk
+den framfor en mock overalt, og utvid den hvis den mangler noe.
 
-## Catalogue
+## Katalog
 
-| Need | Fake | Notes |
+| Behov | Fake | Merknader |
 |---|---|---|
-| Repositories in unit tests | `test/inmemoryrepo/InMemory<Name>Repository` (~70) | Mostly `object`s with a `ConcurrentHashMap` → JVM-global state. 8 are classes (new instance per `RepositoryProvider`). Some methods are `TODO()`. |
-| `RepositoryProvider` for `konstruer(...)`/secondary constructors | `inMemoryRepositoryProvider`, `inMemoryRepositoryRegistry` (`test/inmemoryrepo/InMemoryRepositoryRegistry.kt`) | Only repositories registered there can be provided. |
-| `BehandlingService` | `InMemoryBehandlingService` (`test/inmemoryservice/`) | A real `BehandlingService` over in-memory repos. |
-| Sak/behandling setup without DB | `help/opprettSak.kt`: `opprettInMemorySak()`, `opprettInMemorySakOgBehandling()`, `opprettInMemorySakOgRevurdering()` | Random ident, IDs from 10000 upwards. |
-| Sak/behandling setup with DB | `help/opprettSak.kt` `opprettSak(connection, dato)`; `help/FinnEllerOpprettBehandling.kt` `sak(connection)`, `finnEllerOpprettBehandling(connection, sak, vurderingsbehov)`, `opprettRevurdering(...)` | For repository/service integration tests. |
-| `FlytKontekstMedPerioder`, `AvklaringsbehovKontekst` | `flytKontekstMedPerioder { behandling = …; vurderingType = … }`, `avklaringsbehovKontekst { }` (`help/`) | Defaults: SakId(1)/BehandlingId(1), Revurdering. |
-| `TidligereVurderinger` | `FakeTidligereVurderinger(utfall)` (`test/`) | Flags `avslagEllerIngenBehandlingsgrunnlag`, `avslag`, `ingenBehandlingsgrunnlag`. |
-| Unleash | `test/FakeUnleash.kt`: `AlleAvskruddUnleash`, `LokalUnleash`, `FakeUnleashBase(map)`, `FakeUnleashBaseWithDefaultDisabled(list)` | `FakeUnleashBase` throws for toggles not in its map. |
-| Gateways in unit tests (in-process) | `test/Fake*Gateway.kt` (AnsattInfo, ApiIntern, ArenaOppslag, Dokarkiv, Enhet, Meldekort, Oppgavestyring, PdfGenerator), `test/inmemorygateway/FakePersoninfoGateway`, `FakeTilgangGateway`, `help/FakePdlGateway`; behandlingsflyt tests: `flyt/testutil/FakeBrevbestillingGateway`, `FakeEregGateway` | Register in `createGatewayProvider { register<FakeX>() }` or `minimalGatewayProvider { register<FakeX>() }` (the latter only has Unleash). |
-| `BehandlingHendelseService` | `DummyBehandlingHendelseService` | No-op. |
-| External systems over HTTP (integration and flyt-tests) | `test/FakeServers.kt` + `test/fakes/<System>Fake.kt` (~33 embedded Ktor servers), started by `@Fakes` | `testGatewayProvider(unleash)` registers the real gateway impls, which find the fakes through `INTEGRASJON_*_URL` system properties. |
-| Person data for the HTTP fakes | `FakePersoner.leggTil(TestPerson(...))` (`test/modell/TestPerson.kt`), `TestPersoner.*` and `nyPerson(...)` in flyt-tests | Reset before each test by `@Fakes`. |
-| Statistikk events | parameter `hendelser: List<StoppetBehandling>` in a `@Fakes` test | Resolved by `FakesExtension`. |
-| `DataSource`/`DBConnection` for code that opens transactions | `MockDataSource()`, `MockConnection().toDBConnection()` | Hand-written no-op JDBC stubs; any real SQL hits `TODO()`. Use with in-memory repos only. |
-| Dates/clock | `test/Dato.kt` (`1 januar 2025`), `test/Klokke.kt` (`fixedClock(dato)`) | |
-| Asserting a `Tidslinje` | `help/AssertTidslinje.kt` (`assertTidslinje`, `assertTidslinjeEquals`) | |
+| Repositories i enhetstester | `test/inmemoryrepo/InMemory<Name>Repository` (~70) | For det meste `object`-er med en `ConcurrentHashMap` → tilstand global for JVM-en. 8 er klasser (ny instans per `RepositoryProvider`). Noen metoder er `TODO()`. |
+| `RepositoryProvider` for `konstruer(...)`/sekundærkonstruktører | `inMemoryRepositoryProvider`, `inMemoryRepositoryRegistry` (`test/inmemoryrepo/InMemoryRepositoryRegistry.kt`) | Bare repositories som er registrert der, kan hentes. |
+| `BehandlingService` | `InMemoryBehandlingService` (`test/inmemoryservice/`) | En ekte `BehandlingService` som bruker in-memory repositories. |
+| Oppsett av sak/behandling uten DB | `help/opprettSak.kt`: `opprettInMemorySak()`, `opprettInMemorySakOgBehandling()`, `opprettInMemorySakOgRevurdering()` | Tilfeldig ident, ID-er fra 10000 og oppover. |
+| Oppsett av sak/behandling med DB | `help/opprettSak.kt` `opprettSak(connection, dato)`; `help/FinnEllerOpprettBehandling.kt` `sak(connection)`, `finnEllerOpprettBehandling(connection, sak, vurderingsbehov)`, `opprettRevurdering(...)` | For integrasjonstester av repository/tjeneste. |
+| `FlytKontekstMedPerioder`, `AvklaringsbehovKontekst` | `flytKontekstMedPerioder { behandling = …; vurderingType = … }`, `avklaringsbehovKontekst { }` (`help/`) | Standardverdier: SakId(1)/BehandlingId(1), Revurdering. |
+| `TidligereVurderinger` | `FakeTidligereVurderinger(utfall)` (`test/`) | Flaggene `avslagEllerIngenBehandlingsgrunnlag`, `avslag`, `ingenBehandlingsgrunnlag`. |
+| Unleash | `test/FakeUnleash.kt`: `AlleAvskruddUnleash`, `LokalUnleash`, `FakeUnleashBase(map)`, `FakeUnleashBaseWithDefaultDisabled(list)` | `FakeUnleashBase` kaster feil for toggles som ikke finnes i map-et. |
+| Gateways i enhetstester (i samme prosess) | `test/Fake*Gateway.kt` (AnsattInfo, ApiIntern, ArenaOppslag, Dokarkiv, Enhet, Meldekort, Oppgavestyring, PdfGenerator), `test/inmemorygateway/FakePersoninfoGateway`, `FakeTilgangGateway`, `help/FakePdlGateway`; tester i behandlingsflyt: `flyt/testutil/FakeBrevbestillingGateway`, `FakeEregGateway` | Registrer i `createGatewayProvider { register<FakeX>() }` eller `minimalGatewayProvider { register<FakeX>() }` (den siste har bare Unleash). |
+| `BehandlingHendelseService` | `DummyBehandlingHendelseService` | Gjør ingenting. |
+| Eksterne systemer over HTTP (integrasjons- og flyttester) | `test/FakeServers.kt` + `test/fakes/<System>Fake.kt` (~33 innebygde Ktor-servere), startet av `@Fakes` | `testGatewayProvider(unleash)` registrerer de ekte gateway-implementasjonene, som finner fake-ene via systemegenskapene `INTEGRASJON_*_URL`. |
+| Persondata for HTTP-fake-ene | `FakePersoner.leggTil(TestPerson(...))` (`test/modell/TestPerson.kt`), `TestPersoner.*` og `nyPerson(...)` i flyttester | Nullstilles før hver test av `@Fakes`. |
+| Statistikkhendelser | Parameteren `hendelser: List<StoppetBehandling>` i en `@Fakes`-test | Håndteres av `FakesExtension`. |
+| `DataSource`/`DBConnection` for kode som åpner transaksjoner | `MockDataSource()`, `MockConnection().toDBConnection()` | Håndskrevne JDBC-stubber uten effekt; faktisk SQL gir `TODO()`. Bruk bare med in-memory repositories. |
+| Datoer/klokke | `test/Dato.kt` (`1 januar 2025`), `test/Klokke.kt` (`fixedClock(dato)`) | |
+| Sjekke en `Tidslinje` | `help/AssertTidslinje.kt` (`assertTidslinje`, `assertTidslinjeEquals`) | |
 
-## Typical unit test wiring
+## Typisk oppsett for enhetstest
 
 ```kotlin
 // production constructor + fakes, no mocks
@@ -40,32 +40,32 @@ val steg = SendForvaltningsmeldingSteg.konstruer(
 val (sak, behandling) = opprettInMemorySakOgBehandling()
 ```
 
-or with the primary constructor: `FastsettMeldeperiodeSteg(InMemoryMeldeperiodeRepository, FakeTidligereVurderinger(),
+eller med primærkonstruktøren: `FastsettMeldeperiodeSteg(InMemoryMeldeperiodeRepository, FakeTidligereVurderinger(),
 InMemorySakRepository)`.
 
-## Adding a fake
+## Legge til en fake
 
-**In-memory repository** (needed when unit tests use a new repository interface):
+**In-memory repository** (trengs når enhetstester bruker et nytt repository-grensesnitt):
 1. `lib-test/.../test/inmemoryrepo/InMemory<Name>Repository.kt`: `object InMemory<Name>Repository : <Name>Repository`
-   with a `ConcurrentHashMap<BehandlingId, …>`; implement `kopier` (copy the reference) and `slett` (remove) too.
-   An `object` needs no factory; a `class` needs `companion object : RepositoryFactory<<Name>Repository> {
+   med en `ConcurrentHashMap<BehandlingId, …>`. Implementer også `kopier` (kopier referansen) og `slett` (fjern).
+   Et `object` trenger ingen factory; en `class` trenger `companion object : RepositoryFactory<<Name>Repository> {
    override fun konstruer(connection: DBConnection) = InMemory<Name>Repository() }`.
-2. Register it in `inMemoryRepositoryRegistry` (`InMemoryRepositoryRegistry.kt`).
-3. `python3 .agents/skills/repository-og-migrering/scripts/repo.py oversikt` shows which repositories have one (column MEM).
+2. Registrer den i `inMemoryRepositoryRegistry` (`InMemoryRepositoryRegistry.kt`).
+3. `python3 .agents/skills/repository-og-migrering/scripts/repo.py oversikt` viser hvilke repositories som har en (kolonnen MEM).
 
-**In-process gateway fake**: `class Fake<Name>Gateway : <Name>Gateway { … companion object : Factory<<Name>Gateway> {
-override fun konstruer() = Fake<Name>Gateway() } }` (or an `object`) in `lib-test/.../test/`; register it per test with
+**Gateway-fake i samme prosess**: `class Fake<Name>Gateway : <Name>Gateway { … companion object : Factory<<Name>Gateway> {
+ override fun konstruer() = Fake<Name>Gateway() } }` (eller et `object`) i `lib-test/.../test/`. Registrer den for hver test med
 `createGatewayProvider { register<Fake<Name>Gateway>() }`.
 
-**HTTP fake for a new integration** (needed by integration and flyt-tests):
+**HTTP-fake for en ny integrasjon** (trengs i integrasjons- og flyttester):
 1. `lib-test/.../test/fakes/<System>Fake.kt`: `class <System>Fake(private val fakePersoner: () -> TestPersonService) :
-   FakeServer()` with `override val server = embeddedServer(Netty, port = 0, module = module())`,
-   `installerContentNegotiation()`, `installerStatusPages("<SYSTEM>")` and routes answering from `fakePersoner()`
-   (see `DagpengerFake`). Add data fields to `TestPerson` if needed.
-2. In `FakeServers.kt`: create it, add it to `allFakes`, and in `setProperties()` set
-   `INTEGRASJON_<SYSTEM>_URL` = `http://localhost:${x.port()}` (+ `_SCOPE`) with the same keys the gateway reads.
-3. Register the real gateway impl in `testGatewayProvider()` (`test/TestGatewayProvider.kt`) and in production
+   FakeServer()` med `override val server = embeddedServer(Netty, port = 0, module = module())`,
+   `installerContentNegotiation()`, `installerStatusPages("<SYSTEM>")` og ruter som svarer med data fra `fakePersoner()`
+   (se `DagpengerFake`). Legg til datafelter i `TestPerson` hvis det trengs.
+2. I `FakeServers.kt`: opprett den, legg den til i `allFakes`, og sett i `setProperties()`
+   `INTEGRASJON_<SYSTEM>_URL` = `http://localhost:${x.port()}` (+ `_SCOPE`) med de samme nøklene som gatewayen leser.
+3. Registrer den ekte gateway-implementasjonen i `testGatewayProvider()` (`test/TestGatewayProvider.kt`) og i produksjonens
    `defaultGatewayProvider()`.
 
-**New feature toggle**: add it to `LokalUnleash` (otherwise `feature toggle X ikke definert for fake`);
-`AlleAvskruddUnleash` needs nothing (everything off).
+**Ny feature toggle**: legg den til i `LokalUnleash` (ellers får du `feature toggle X ikke definert for fake`);
+`AlleAvskruddUnleash` trenger ingen endring (alt er slått av).

@@ -1,12 +1,12 @@
-# Motor internals (verified against aap-kelvin-komponenter, motor unchanged 2.0.191 → 2.0.197)
+# Internt i motor (verifisert mot aap-kelvin-komponenter, motor uendret fra 2.0.191 → 2.0.197)
 
-Files in the komponenter repo: `motor/src/main/kotlin/no/nav/aap/motor/`
+Filer i komponenter-repoet: `motor/src/main/kotlin/no/nav/aap/motor/`
 `Motor.kt` (MotorImpl: Forbrenningskammer, Scheduler, Watchdog, MetricsUpdater), `JobbRepository.kt` (all SQL),
 `JobbInput.kt`, `JobbSpesifikasjon.kt`, `Prioritet.kt`, `JobbType.kt`, `FlytJobbRepository.kt`, `retry/*`, `jobbarkiv/*`,
 `../../../../../../motor-api/.../MotorApi.kt`, `motor-test-utils/.../ManuellMotorImpl.kt`.
 dbconnect: `dbconnect/src/main/kotlin/no/nav/aap/komponenter/dbconnect/{DBConnect.kt,DBTransaction.kt,DBConnection.kt}`.
 
-## Worker loop (Forbrenningskammer.run)
+## Worker-løkke (Forbrenningskammer.run)
 
 ```
 while not stopped:
@@ -31,7 +31,7 @@ utfør(job, conn):
   }
 ```
 
-## dbconnect transaction semantics (why failures commit partial work)
+## Transaksjonssemantikk i dbconnect (hvorfor feil committer deler av arbeidet)
 
 ```kotlin
 // DBTransaction.transaction
@@ -39,10 +39,10 @@ try { autoCommitOff(); val r = block(dbConnection); dbConnection.commit(); retur
 catch (e: Throwable) { dbConnection.rollback(); throw e }   // rollback(): to `savepoint` if markerSavepoint() was called
 finally { dbConnection.autoCommitOn() }                     // JDBC: switching autocommit on COMMITS the open transaction
 ```
-`DBConnection.markerSavepoint()` keeps only the latest savepoint (one field). In behandlingsflyt only
-`BehandlingRepositoryImpl.markerSavepoint()` calls it.
+`DBConnection.markerSavepoint()` beholder bare det siste savepointet (ett felt). I behandlingsflyt er det bare
+`BehandlingRepositoryImpl.markerSavepoint()` kaller den.
 
-## Pick query V2 (prod)
+## V2-spørring for plukking (prod)
 
 ```sql
 select … from jobb
@@ -51,49 +51,49 @@ order by prioritet, neste_kjoring
 for update skip locked limit 1
 ```
 
-## Scheduler (V2, every 100 ms, `pg_try_advisory_xact_lock(0x4D4F544F52534B4A)` so one pod at a time)
+## Scheduler (V2, hvert 100 ms, `pg_try_advisory_xact_lock(0x4D4F544F52534B4A)` slik at én pod kjører om gangen)
 
 1. Selvstendige: `update jobb set kjorbar = true where status='KLAR' and sak_id is null and behandling_id is null and not kjorbar and neste_kjoring <= now()`.
-2. Ekskluderende: per (sak_id, behandling_id, type) group that has no row with `status='FEILET' or (status='KLAR' and kjorbar)`,
-   promote the KLAR row with the lowest `neste_kjoring` (≤ now), max 50 groups per run.
-`kjorbar` only goes false → true. A backoff retry moves `neste_kjoring` forward but keeps `kjorbar = true` (keeps the slot).
-Unique index `UX_JOBB_EKSKLUSIV_AKTIV (coalesce(sak_id,-1), coalesce(behandling_id,-1), type) where status='FEILET' or (status='KLAR' and kjorbar)` (flyway V1.335).
+2. Ekskluderende: For hver gruppe (sak_id, behandling_id, type) uten en rad med `status='FEILET' or (status='KLAR' and kjorbar)`,
+   sett KLAR-raden med lavest `neste_kjoring` (≤ now) som kjorbar, maks. 50 grupper per kjøring.
+`kjorbar` endres bare fra false → true. Et retry med backoff flytter `neste_kjoring` framover, men beholder `kjorbar = true` (plassen beholdes).
+Unik indeks `UX_JOBB_EKSKLUSIV_AKTIV (coalesce(sak_id,-1), coalesce(behandling_id,-1), type) where status='FEILET' or (status='KLAR' and kjorbar)` (flyway V1.335).
 
-## V1 pick (used by ManuellMotorImpl unless enableV2)
+## V1-plukking (brukes av ManuellMotorImpl hvis ikke enableV2 er aktivert)
 
-`distinct on (sak_id, behandling_id, type)` over KLAR+FEILET rows ordered by neste_kjoring; picks the head only if it is KLAR
-(a FEILET head blocks the group) + selvstendige; `neste_kjoring < now()`; ordered by `neste_kjoring` (no priority).
+`distinct on (sak_id, behandling_id, type)` over KLAR- og FEILET-rader sortert etter neste_kjoring; plukker den første raden bare hvis den er KLAR
+(en FEILET-rad først blokkerer gruppen) + selvstendige; `neste_kjoring < now()`; sortert etter `neste_kjoring` (ingen prioritet).
 
-## Retry arithmetic
+## Retry-beregning
 
-`antallFeil` = count of FEILET rows in `jobb_historikk` for the job (all time). `maksFeilNådd(): retries <= antallFeil + 1`.
-`markerSomFeilet`: if maks → `status = FEILET`; else if `retryBackoffTid != null` → `neste_kjoring = now + backoff`;
-always inserts a FEILET history row with the stack trace in `feilmelding`.
-`RekjørFeiledeJobb` (`oppgave.retryFeilede`): `UPDATE jobb SET status='KLAR' WHERE status='FEILET'` (+ KLAR history rows).
+`antallFeil` = antall FEILET-rader i `jobb_historikk` for jobben (alle forsøk). `maksFeilNådd(): retries <= antallFeil + 1`.
+`markerSomFeilet`: Hvis maks er nådd → `status = FEILET`; ellers, hvis `retryBackoffTid != null` → `neste_kjoring = now + backoff`;
+setter alltid inn en FEILET-historikkrad med stack trace i `feilmelding`.
+`RekjørFeiledeJobb` (`oppgave.retryFeilede`): `UPDATE jobb SET status='KLAR' WHERE status='FEILET'` (+ KLAR-historikkrader).
 
-## JobbInput API (selection)
+## JobbInput API (utvalg)
 
 `JobbInput(spec)` · `.forBehandling(sakId: Long, behandlingId: Long)` · `.forSak(sakId: Long)` · `.medPayload(T)` /
 `.medPayload(String?)` · `.medParameter(k, v)` · `.medNesteKjøring(LocalDateTime)` · `.medPrioritet(Int)` · `.medCallId()`
-Reading: `input.sakId()`, `behandlingId()` (throw if null; `…OrNull()` variants), `payload<T>()`, `parameter(k)`,
+Lesing: `input.sakId()`, `behandlingId()` (kaster unntak hvis null; `…OrNull()`-varianter), `payload<T>()`, `parameter(k)`,
 `optionalParameter(k)`, `antallRetriesForsøkt()`, `jobbId()`.
-`JobbSpesifikasjon` flavours: `ProvidersJobbSpesifikasjon` (RepositoryProvider + GatewayProvider — used here),
-`ProviderJobbSpesifikasjon`, `ConnectionJobbSpesifikasjon`, legacy `Jobb`.
-`FlytJobbRepository`: `leggTil`, `hentJobberForBehandling(id)` / `hentJobberForSak(id)` (KLAR + FEILET only),
+Varianter av `JobbSpesifikasjon`: `ProvidersJobbSpesifikasjon` (RepositoryProvider + GatewayProvider, brukes her),
+`ProviderJobbSpesifikasjon`, `ConnectionJobbSpesifikasjon`, eldre `Jobb`.
+`FlytJobbRepository`: `leggTil`, `hentJobberForBehandling(id)` / `hentJobberForSak(id)` (bare KLAR + FEILET),
 `hentFeilmeldingForOppgave(id)`, `hentJobberMedHistorikkForSak(id)`.
 
-## Archive
+## Arkiv
 
-`jobber.arkiverFerdigstilte` (cron 01:00) moves FERDIG jobs to `jobb_arkiv` / `jobb_historikk_arkiv`. When investigating old
-runs, query the archive tables too.
+`jobber.arkiverFerdigstilte` (cron 01:00) flytter FERDIG-jobber til `jobb_arkiv` / `jobb_historikk_arkiv`. Når du undersøker eldre
+kjøringer, må du også spørre arkivtabellene.
 
-## Metrics (Prometheus)
+## Metrikker (Prometheus)
 
 `motor_antall_jobber_klar`, `motor_antall_jobber_feilet`, `motor_siste_plukk_timestamp_seconds{forbrenningskammer,jobb_type}`,
-`motor_scheduler_siste_kjoring_timestamp_seconds`, job timers per type, failure counters when max retries is reached.
-Watchdog restarts dead workers every minute and logs ERROR if the scheduler hasn't completed for 2 minutes.
+`motor_scheduler_siste_kjoring_timestamp_seconds`, jobbtimere per type og feiltellere når maksimalt antall retry er nådd.
+Watchdog starter workers som har stoppet, på nytt hvert minutt, og logger ERROR hvis scheduler ikke har fullført på 2 minutter.
 
-## motor-api endpoints (`/drift/api/jobb`)
+## Endepunkter i motor-api (`/drift/api/jobb`)
 
 GET `/feilende`, `/feilende/antall`, `/planlagte-jobber`, `/sisteKjørte`, `/rekjor/{jobbId}`, `/rekjorAlleFeilede`,
-`/avbryt/{jobbId}` (also POST with body), `/avbrytAlleFeilede`; POST `/{jobbId}/kjor`, `/{jobbId}/leggTilKommentar`.
+`/avbryt/{jobbId}` (også POST med body), `/avbrytAlleFeilede`; POST `/{jobbId}/kjor`, `/{jobbId}/leggTilKommentar`.

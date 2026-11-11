@@ -1,109 +1,109 @@
 c---
 name: legg-til-steg
-description: Step-by-step recipes (with file paths and code skeletons) for common changes in behandlingsflyt — a new or changed steg in a flow, a new vurdering/avklaringsbehov (Definisjon + løsning + løser + grunnlag/repository + API), a new informasjonskrav (register data), a new vilkår, a new Vurderingsbehov, a new feature toggle, a new gateway/integration. Use when implementing features that touch the flow, so nothing in the wiring is forgotten. Keywords — nytt steg, ny vurdering, nytt avklaringsbehov, ny løsning, ny løser, informasjonskrav, vilkår, vurderingsbehov, feature toggle, gateway, integrasjon, grunnlag-API.
+description: Oppskrifter trinn for trinn, med filstier og kodeskjeletter, for vanlige endringer i behandlingsflyt: et nytt eller endret steg i en flyt, en ny vurdering/et nytt avklaringsbehov (Definisjon + løsning + løser + grunnlag/repository + API), et nytt informasjonskrav (registerdata), et nytt vilkår, et nytt Vurderingsbehov, en ny feature toggle eller en ny gateway/integrasjon. Bruk når du lager funksjonalitet som berører flyten, så du ikke glemmer noe i koblingene. Nøkkelord — nytt steg, ny vurdering, nytt avklaringsbehov, ny løsning, ny løser, informasjonskrav, vilkår, vurderingsbehov, feature toggle, gateway, integrasjon, grunnlag-API.
 ---
 
-# Recipes for changing the flow
+# Oppskrifter for å endre flyten
 
-Read first if unfamiliar: flyt-orkestrering (engine), avklaringsbehov (behov lifecycle). Skeletons:
-[references/maler.md](references/maler.md). Find exemplars quickly with `flyt.py --steg <StegType>` and
-`avklaringsbehov.py --definisjon <NAVN>`. Newer features are grouped as vertical packages (`no.nav.aap.bistandsbehov`,
-`no.nav.aap.meldeplikt`, `no.nav.aap.overgangarbeid`: steg, vilkår, vurdering, grunnlag, repository interface together;
-impl in `repository/` and API in `api/` under the same package) — prefer that for new features.
+Les først hvis du ikke kjenner temaet: flyt-orkestrering (motor), avklaringsbehov (livssyklus for behov). Kodeskjeletter:
+[references/maler.md](references/maler.md). Finn raskt eksempler med `flyt.py --steg <StegType>` og
+`avklaringsbehov.py --definisjon <NAVN>`. Nyere funksjonalitet er samlet i vertikale pakker (`no.nav.aap.bistandsbehov`,
+`no.nav.aap.meldeplikt`, `no.nav.aap.overgangarbeid`: steg, vilkår, vurdering, grunnlag og repository-grensesnitt samlet;
+implementasjon i `repository/` og API i `api/` under samme pakke). Bruk helst denne strukturen for ny funksjonalitet.
 
-## A. New step (steg) in a flow
+## A. Nytt steg i en flyt
 
-1. `kontrakt/.../steg/StegType.kt`: add `NY_STEG(gruppe = StegGruppe.X, status = Status.UTREDES)`. Pick the `StegGruppe` the UI
-   should show it under (new group → frontend change). Status IVERKSETTES only for post-vedtak steps. Never rename/remove existing values.
-2. Step class (`forretningsflyt/steg/` or the feature package): `class NyttSteg(deps) : BehandlingSteg` + secondary
-   constructor `(RepositoryProvider, GatewayProvider)` + `companion object : FlytSteg { konstruer(); type() = StegType.NY_STEG }`.
-   Optional `override val rekkefølge` in the companion to order several behov within the step.
-3. `utfør` must be idempotent and decide relevance itself: `when (kontekst.vurderingType)` (exhaustive),
+1. `kontrakt/.../steg/StegType.kt`: legg til `NY_STEG(gruppe = StegGruppe.X, status = Status.UTREDES)`. Velg `StegGruppe` som UI-et
+   skal vise steget under (ny gruppe → endring i frontend). Bruk statusen IVERKSETTES bare for steg etter vedtak. Ikke gi eksisterende verdier nye navn eller fjern dem.
+2. Stegklasse (`forretningsflyt/steg/` eller feature-pakken): `class NyttSteg(deps) : BehandlingSteg` + sekundær
+   konstruktør `(RepositoryProvider, GatewayProvider)` + `companion object : FlytSteg { konstruer(); type() = StegType.NY_STEG }`.
+    Legg eventuelt til `override val rekkefølge` i companion for å sortere flere behov i steget.
+3. `utfør` må være idempotent og selv avgjøre om steget er relevant: `when (kontekst.vurderingType)` (uttømmende),
    `tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type())`, `kontekst.vurderingsbehovRelevanteForSteg`.
-   Reconcile behov via `AvklaringsbehovService` (never hand-create). Side effects to other systems → enqueue a motor job.
-4. `forretningsflyt/behandlingstyper/Revurdering.kt` (also used by Førstegangsbehandling) or the relevant flow: insert
-   `.medSteg(steg = NyttSteg, vurderingsbehovRelevanteForSteg = listOf(...), informasjonskrav = listOf(...))` at the right
-   position (before `.sluttÅOppdatereFaktagrunnlag()` unless it is a post-vedtak step). The vurderingsbehov list = which
-   behov the step should see AND which ones rewind the flow to it.
-5. If the step can conclude avslag/no grunnlag for later steps: add a `Sjekk(StegType.NY_STEG)` in `TidligereVurderingerImpl`
-   **in flow order** (it `require`s ordering at construction).
-6. Frontend/API: grunnlag endpoint (§B.5). `StegGruppe` with `skalVises = true` appears in the UI.
-7. Verify: `python3 .agents/skills/flyt-orkestrering/scripts/flyt.py --flyt Revurdering` then regenerate references
-   (`flyt.py --markdown > .agents/skills/flyt-orkestrering/references/flyter.md`), unit-test the step with fakes, and run
-   the closest flyt-test (testing skill). Never all flyt-tests in one Gradle run; if the change is broad, use
-   `kjor_test.py --batch flyt` and run the batches one per tool call. Consider open behandlinger
-   already past the insertion point (flyt-orkestrering §11).
+    Avstem behov via `AvklaringsbehovService` (ikke opprett dem manuelt). Sideeffekter i andre systemer → legg en motor-jobb i kø.
+4. `forretningsflyt/behandlingstyper/Revurdering.kt` (brukes også av Førstegangsbehandling) eller den relevante flyten: sett inn
+   `.medSteg(steg = NyttSteg, vurderingsbehovRelevanteForSteg = listOf(...), informasjonskrav = listOf(...))` på riktig
+   riktig sted (før `.sluttÅOppdatereFaktagrunnlag()` hvis det ikke er et steg etter vedtak). Listen over vurderingsbehov angir hvilke
+    behov steget skal se OG hvilke som fører til tilbakeføring av flyten til steget.
+5. Hvis steget kan konkludere med avslag/ikke grunnlag for senere steg: legg til en `Sjekk(StegType.NY_STEG)` i `TidligereVurderingerImpl`
+    **i flytrekkefølge** (`require` kontrollerer rekkefølgen under oppretting).
+6. Frontend/API: grunnlag-endepunkt (§B.5). `StegGruppe` med `skalVises = true` vises i UI-et.
+7. Kontroller: Kjør `python3 .agents/skills/flyt-orkestrering/scripts/flyt.py --flyt Revurdering`, og generer referansene på nytt
+    (`flyt.py --markdown > .agents/skills/flyt-orkestrering/references/flyter.md`). Skriv enhetstest for steget med fakes, og kjør
+    den nærmeste flyttesten (testing-skillen). Kjør aldri alle flyttestene i én Gradle-kjøring. Hvis endringen er omfattende, bruk
+    `kjor_test.py --batch flyt` og kjør hver gruppe i et eget verktøykall. Ta hensyn til åpne behandlinger
+    som allerede er forbi innsettingspunktet (flyt-orkestrering §11).
 
-## B. New vurdering = avklaringsbehov + løsning + løser + grunnlag + API
+## B. Ny vurdering = avklaringsbehov + løsning + løser + grunnlag + API
 
-1. **kontrakt** `avklaringsbehov/AvklaringsbehovKode.kt`: `public const val NY_KODE: String = "50xx"` + enum value; `Definisjon.kt`:
+1. **kontrakt** `avklaringsbehov/AvklaringsbehovKode.kt`: `public const val NY_KODE: String = "50xx"` + enum-verdi; `Definisjon.kt`:
    `NY_VURDERING(kode = AvklaringsbehovKode.\`50xx\`, type = BehovType.MANUELT_PÅKREVD, løsesISteg = StegType.X,
-   kreverToTrinn = …, kvalitetssikres = …, løsesAv = listOf(Rolle.…))`. Never reuse codes. Tell the user that consumers
-   (aap-tilgang, aap-oppgave, aap-statistikk, frontend) must bump the kontrakt version.
-2. **Domain**: vurdering data class (+ `PeriodisertVurdering` if periodised: `fom`, `tom`, `vurdertIBehandling`, `vurdertAv`),
-   grunnlag class, repository interface extending `no.nav.aap.lookup.repository.Repository`.
-3. **Persistence** (repository-og-migrering skill): Flyway migration (`repo.py neste-migrering --navn …`), `XRepositoryImpl` with
-   `companion object : Factory<XRepositoryImpl>`, `kopier` + `slett`, register in `PostgresRepositoryRegistry.kt`, and an
-   `InMemory…` variant in lib-test if unit tests need it. Repository test in `repository/src/test`.
+    kreverToTrinn = …, kvalitetssikres = …, løsesAv = listOf(Rolle.…))`. Ikke bruk koder på nytt. Fortell brukeren at konsumentene
+    (aap-tilgang, aap-oppgave, aap-statistikk, frontend) må oppgradere kontrakt-versjonen.
+2. **Domene**: vurdering-data class (+ `PeriodisertVurdering` hvis periodisert: `fom`, `tom`, `vurdertIBehandling`, `vurdertAv`),
+    grunnlag-class, repository-grensesnitt som utvider `no.nav.aap.lookup.repository.Repository`.
+3. **Lagring** (repository-og-migrering-skillen): Flyway-migrering (`repo.py neste-migrering --navn …`), `XRepositoryImpl` med
+    `companion object : Factory<XRepositoryImpl>`, `kopier` + `slett`, registrering i `PostgresRepositoryRegistry.kt` og en
+    `InMemory…`-variant i lib-test hvis enhetstestene trenger den. Repository-test i `repository/src/test`.
 4. **Løsning + løser**: `behandling/avklaringsbehov/løsning/NyLøsning.kt` (`@JsonTypeName(value = NY_KODE)`,
-   `EnkeltAvklaringsbehovLøsning` or `PeriodisertAvklaringsbehovLøsning<Dto>`; sealed → this package only) delegating to
-   `løser/NyLøser.kt` (`AvklaringsbehovsLøser<NyLøsning>`): validate (throw `UgyldigForespørselException` for user errors),
-   merge with `forrigeBehandlingId`'s vurderinger when periodised, save, return `LøsningsResultat(begrunnelse)`.
-   Jackson subtypes are discovered automatically (`utledSubtypesTilAvklaringsbehovLøsning`).
-5. **Step**: in the step with `type() == løsesISteg`, call `avklaringsbehovService.oppdaterAvklaringsbehov(...)` or the
-   periodised variant every run; implement `tilbakestillGrunnlag` (reset to forrige behandling's vurderinger).
-6. **Vilkår** (if the vurdering decides a vilkår): `Vilkårsvurderer<F : Faktagrunnlag>` object with `vilkårtype` and a pure
-   `vurder(faktagrunnlag): Tidslinje<Vilkårsvurdering>` (feature toggles go INTO the faktagrunnlag, never read inside
-   `vurder`); call `VilkårService(repositoryProvider).vurderVilkår(behandlingId, faktagrunnlag, Vilkår)` from the step. New
-   `Vilkårtype` entries need a kontrakt statistikk `Vilkårtype` too.
-7. **API**: `api/.../XGrunnlagApi.kt` with `getGrunnlag<BehandlingReferanse, XGrunnlagResponse>(…, påkrevdRolle =
-   Definisjon.NY_VURDERING.løsesAv)` in a `readOnly` transaction; register the route in `app/.../App.kt` (`routing { … apiRouting { … } }`).
-   Solving uses the generic `POST /api/behandling/løs-behov` — no new endpoint.
-8. **Tests** (testing skill): løser unit test with in-memory repos; repository test; flow test with a `løsNyVurdering()`
-   helper in `AbstraktFlytOrkestratorTest`; API test if the response is non-trivial.
-9. Regenerate `.agents/skills/avklaringsbehov/references/definisjoner.md`.
+   `EnkeltAvklaringsbehovLøsning` eller `PeriodisertAvklaringsbehovLøsning<Dto>`; sealed → bare denne pakken) som delegerer til
+    `løser/NyLøser.kt` (`AvklaringsbehovsLøser<NyLøsning>`): valider (kast `UgyldigForespørselException` ved brukerfeil),
+    slå sammen vurderinger fra `forrigeBehandlingId` hvis de er periodisert, lagre og returner `LøsningsResultat(begrunnelse)`.
+    Jackson finner undertypene automatisk (`utledSubtypesTilAvklaringsbehovLøsning`).
+5. **Steg**: I steget der `type() == løsesISteg`, kall `avklaringsbehovService.oppdaterAvklaringsbehov(...)` eller den
+    periodiserte varianten ved hver kjøring. Implementer `tilbakestillGrunnlag` (tilbakestill til vurderingene fra forrige behandling).
+6. **Vilkår** (hvis vurderingen avgjør et vilkår): `Vilkårsvurderer<F : Faktagrunnlag>`-objekt med `vilkårtype` og en ren
+    `vurder(faktagrunnlag): Tidslinje<Vilkårsvurdering>`-funksjon (feature toggles legges INN i faktagrunnlaget, de leses aldri i
+    `vurder`). Kall `VilkårService(repositoryProvider).vurderVilkår(behandlingId, faktagrunnlag, Vilkår)` fra steget. Nye
+    `Vilkårtype`-verdier trenger også en `Vilkårtype` for kontrakt-statistikk.
+7. **API**: `api/.../XGrunnlagApi.kt` med `getGrunnlag<BehandlingReferanse, XGrunnlagResponse>(…, påkrevdRolle =
+    Definisjon.NY_VURDERING.løsesAv)` i en `readOnly`-transaksjon. Registrer ruta i `app/.../App.kt` (`routing { … apiRouting { … } }`).
+    Løsning bruker det generiske `POST /api/behandling/løs-behov`. Ikke lag et nytt endepunkt.
+8. **Tester** (testing-skillen): enhetstest av løseren med in-memory-repositories, repository-test, flyttest med en `løsNyVurdering()`-
+    hjelpefunksjon i `AbstraktFlytOrkestratorTest`, og API-test hvis responsen ikke er triviell.
+9. Generer `.agents/skills/avklaringsbehov/references/definisjoner.md` på nytt.
 
-## C. New informasjonskrav (fetch/refresh external facts)
+## C. Nytt informasjonskrav (hent/oppdater eksterne fakta)
 
-1. `InformasjonskravNavn` new value (persisted in `informasjonskrav_oppdatert`; never rename).
-2. Class implementing `Informasjonskrav<Input, Registerdata>` + `companion object : Informasjonskravkonstruktør`
-   (`navn`, `konstruer`). Respect the phase rules: `klargjør` (DB, no HTTP) → `hentData` (HTTP, **no DB**, runs in parallel)
-   → `oppdater` (DB, compare with stored grunnlag, return ENDRET only on real change). `erRelevant`: limit to
-   relevant vurderingTyper, skip when `TidligereVurderinger` gives avslag, throttle with `oppdatert.ikkeKjørtSisteKalenderdag()`
-   or similar — it runs on every pass through `forbered` otherwise.
-3. Gateway interface + impl (§F) for the external source.
-4. Register on the step that needs the data: `informasjonskrav = listOf(NyttInformasjonskrav)` in the flow. ENDRET for a
-   step before the active one rewinds the flow to that step.
-5. If an atomic (meldekort/fasttrack) revurdering may produce data the open behandling needs, override
+1. Ny verdi i `InformasjonskravNavn` (lagres i `informasjonskrav_oppdatert`; ikke gi den nytt navn).
+2. Klasse som implementerer `Informasjonskrav<Input, Registerdata>` + `companion object : Informasjonskravkonstruktør`
+    (`navn`, `konstruer`). Følg fasereglene: `klargjør` (DB, ingen HTTP) → `hentData` (HTTP, **ingen DB**, kjører parallelt)
+    → `oppdater` (DB, sammenlign med lagret grunnlag, returner ENDRET bare ved reell endring). `erRelevant`: begrens til
+    relevante vurderingTyper, hopp over hvis `TidligereVurderinger` gir avslag, begrens kjøringene med `oppdatert.ikkeKjørtSisteKalenderdag()`
+    eller tilsvarende. Ellers kjører kravet ved hver gjennomgang i `forbered`.
+3. Gateway-grensesnitt + implementasjon (§F) for den eksterne kilden.
+4. Registrer kravet på steget som trenger dataene: `informasjonskrav = listOf(NyttInformasjonskrav)` i flyten. ENDRET for et
+    steg før det aktive steget fører til at flyten går tilbake til dette steget.
+5. Hvis en atomisk (meldekort/fasttrack) revurdering kan produsere data som den åpne behandlingen trenger, overstyr
    `flettOpplysningerFraAtomærBehandling`.
 
-## D. New Vurderingsbehov
+## D. Nytt Vurderingsbehov
 
-1. kontrakt `statistikk/StoppetBehandling.kt` → `enum class Vurderingsbehov` (public; used by other apps/frontend).
-2. `sakogbehandling/flyt/Vurderingsbehov.kt` internal enum + `tilVurderingsbehov()`; `prosessering/statistikk/mappere.kt`
-   (`tilKontraktVurderingsbehov`); `periodisering/FlytKontekstMedPeriodeService.vurderingsbehovTilType`. The compiler flags
-   the exhaustive `when`s.
-3. Add it to `vurderingsbehovRelevanteForSteg` for each step that must react (check `flyt.py --vurderingsbehov`), and to the
-   steps' `tvingerAvklaringsbehov` if it should force a behov. Remember `Vurderingsbehov.alle()` excludes only G_REGULERING.
-4. Fasttrack candidate? Add to `BehandlingService.fasttrackKandidater` only if the whole flow can complete without humans.
-5. If created from documents: `hendelse/mottak/MottattHendelseUtleder.kt`.
+1. kontrakt `statistikk/StoppetBehandling.kt` → `enum class Vurderingsbehov` (public; brukes av andre apper/frontend).
+2. `sakogbehandling/flyt/Vurderingsbehov.kt` intern enum + `tilVurderingsbehov()`; `prosessering/statistikk/mappere.kt`
+   (`tilKontraktVurderingsbehov`); `periodisering/FlytKontekstMedPeriodeService.vurderingsbehovTilType`. Kompilatoren varsler om
+   uttømmende `when`-uttrykk.
+3. Legg det til i `vurderingsbehovRelevanteForSteg` for hvert steg som skal reagere (sjekk `flyt.py --vurderingsbehov`), og i
+    stegenes `tvingerAvklaringsbehov` hvis det skal tvinge fram et behov. Husk at `Vurderingsbehov.alle()` bare utelater G_REGULERING.
+4. Aktuelt for fasttrack? Legg det til i `BehandlingService.fasttrackKandidater` bare hvis hele flyten kan fullføres uten mennesker.
+5. Hvis det opprettes fra dokumenter: `hendelse/mottak/MottattHendelseUtleder.kt`.
 
 ## E. Feature toggle
 
-1. Add to `BehandlingsflytFeature` (`unleash/FeatureToggle.kt`); create it in Unleash (aap-unleash-web). `default` is used
-   when Unleash is unavailable.
-2. **Add it to `LokalUnleash` in `lib-test/.../FakeUnleash.kt`** (it throws "feature toggle X ikke definert for fake").
-   `AlleAvskruddUnleash` needs nothing (everything off except `IngenValidering`).
-3. Use `unleashGateway.isEnabled(BehandlingsflytFeature.X)` (gateway from `gatewayProvider.provide()`); for per-sak rollout
-   `erPåskruddForSak(...)`. Never read toggles inside `Vilkårsvurderer.vurder`.
+1. Legg det til i `BehandlingsflytFeature` (`unleash/FeatureToggle.kt`), og opprett det i Unleash (aap-unleash-web). `default` brukes
+    når Unleash ikke er tilgjengelig.
+2. **Legg det til i `LokalUnleash` i `lib-test/.../FakeUnleash.kt`** (den kaster «feature toggle X ikke definert for fake»).
+    `AlleAvskruddUnleash` trenger ingen endring (alt er av, bortsett fra `IngenValidering`).
+3. Bruk `unleashGateway.isEnabled(BehandlingsflytFeature.X)` (gateway fra `gatewayProvider.provide()`); for utrulling per sak,
+    bruk `erPåskruddForSak(...)`. Les aldri toggles inne i `Vilkårsvurderer.vurder`.
 
-## F. New gateway (HTTP integration)
+## F. Ny gateway (HTTP-integrasjon)
 
-1. Interface in `behandlingsflyt` extending `no.nav.aap.komponenter.gateway.Gateway`.
-2. Impl in `repository/src/main/kotlin/.../integrasjon/<area>/` with `companion object : Factory<Interface>`; config via
-   `requiredConfigForKey("INTEGRASJON_X_URL")` / `_SCOPE`; `RestClient.withDefaultResponseHandler(config, AzureM2MTokenProvider, prometheus)`.
-3. Register in `defaultGatewayProvider()` (`repository/.../integrasjon/DefaultGatewayProvider.kt`) **and** `testGatewayProvider()`
-   (`lib-test/.../TestGatewayProvider.kt`).
-4. Env vars in `.nais/dev.yaml` and `.nais/prod.yaml` (+ accessPolicy outbound). Fake server in `lib-test/.../fakes/`,
-   started and wired with `System.setProperty("INTEGRASJON_X_URL", …)` in `FakeServers.kt`.
-5. Call it only from `Informasjonskrav.hentData`, a motor job, or a dedicated service — not inside DB-heavy loops.
+1. Grensesnitt i `behandlingsflyt` som utvider `no.nav.aap.komponenter.gateway.Gateway`.
+2. Implementasjon i `repository/src/main/kotlin/.../integrasjon/<area>/` med `companion object : Factory<Interface>`; konfigurer via
+    `requiredConfigForKey("INTEGRASJON_X_URL")` / `_SCOPE`; `RestClient.withDefaultResponseHandler(config, AzureM2MTokenProvider, prometheus)`.
+3. Registrer i `defaultGatewayProvider()` (`repository/.../integrasjon/DefaultGatewayProvider.kt`) **og** `testGatewayProvider()`
+    (`lib-test/.../TestGatewayProvider.kt`).
+4. Miljøvariabler i `.nais/dev.yaml` og `.nais/prod.yaml` (+ utgående accessPolicy). Fake-server i `lib-test/.../fakes/`,
+    start og koble den til med `System.setProperty("INTEGRASJON_X_URL", …)` i `FakeServers.kt`.
+5. Kall den bare fra `Informasjonskrav.hentData`, en motor-jobb eller en egen tjeneste, ikke i løkker med mye DB-arbeid.

@@ -1,17 +1,17 @@
-# Flow engine (`flyt/`) — supplements the root AGENTS.md (read that too)
+# Flytmotor (`flyt/`) — tillegg til AGENTS.md i rota (les den også)
 
-Load skill `flyt-orkestrering` before changing anything here: every flow and every open behandling in production runs on
-this state machine.
+Last inn skillen `flyt-orkestrering` før du endrer noe her. Alle flyter og alle åpne behandlinger i produksjon kjører på
+denne tilstandsmaskinen.
 
-Invariants the code relies on:
-- Step phases: START → OPPDATER_FAKTAGRUNNLAG → UTFØRER → AVKLARINGSPUNKT → AVSLUTTER (`StegStatus.rekkefølge()`; the
-  `StegOrkestrator` KDoc omits OPPDATER_FAKTAGRUNNLAG). AVKLARINGSPUNKT is the only stop point; TILBAKEFØRT is written by rewinds only.
-- `StegOrkestrator` marks DB savepoints after START and OPPDATER_FAKTAGRUNNLAG (unless `markSavepointAt` is overridden);
-  on failure dbconnect rolls back to the last savepoint and commits the rest.
-- `BehandlingFlyt` is a stateful cursor (`aktivtSteg`); `behandling.flyt()` returns a fresh one positioned on the first step.
-  Tilbakeflyt instances move their parent's cursor as they walk backwards.
-- Rewinds (`tilbakefør`) run no step code and are skipped for IVERKSETTES/AVSLUTTET behandlinger.
-- `prosesserBehandling` publishes `behandlingHendelseService.stoppet(...)` on every stop and at the end, but not when it exits
-  because of `stoppNårStatus` (atomic runs).
+Invarianter som koden bygger på:
+- Faser i et steg: START → OPPDATER_FAKTAGRUNNLAG → UTFØRER → AVKLARINGSPUNKT → AVSLUTTER (`StegStatus.rekkefølge()`; KDoc-en til
+  `StegOrkestrator` utelater OPPDATER_FAKTAGRUNNLAG). AVKLARINGSPUNKT er eneste stoppunkt. Tilbakeføring skriver bare TILBAKEFØRT.
+- `StegOrkestrator` oppretter DB-savepoints etter START og OPPDATER_FAKTAGRUNNLAG (med mindre `markSavepointAt` er overstyrt).
+  Ved feil ruller dbconnect tilbake til siste savepoint og committer resten.
+- `BehandlingFlyt` er en tilstandshåndterende peker (`aktivtSteg`). `behandling.flyt()` returnerer en ny peker på det første steget.
+  `Tilbakeflyt`-instanser flytter forelderens peker bakover.
+- Tilbakeføringer (`tilbakefør`) kjører ingen stegkode og hoppes over for behandlinger med status IVERKSETTES/AVSLUTTET.
+- `prosesserBehandling` publiserer `behandlingHendelseService.stoppet(...)` ved hvert stopp og på slutten, men ikke når den avsluttes
+  på grunn av `stoppNårStatus` (atomiske kjøringer).
 
-Tests: `BehandlingFlytTest`, `EnklereFlytOrkestratorTest`, `FlytOrkestratorTest`, plus flow tests in `src/test/.../flyt/`.
+Tester: `BehandlingFlytTest`, `EnklereFlytOrkestratorTest`, `FlytOrkestratorTest` og flyttester i `src/test/.../flyt/`.

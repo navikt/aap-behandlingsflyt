@@ -1,13 +1,13 @@
-# lib-test — supplements the root AGENTS.md (read that too)
+# lib-test — tillegg til AGENTS.md i rota (les den også)
 
-Shared test fixtures for every module (it is `main` code here, so changes recompile and affect tests everywhere).
-Load skill `testing`; the fakes catalogue is `.agents/skills/testing/references/fakes.md`.
+Delte testoppsett for alle moduler. Dette er `main`-kode, så endringer kompileres på nytt og påvirker tester overalt.
+Last inn skillen `testing`. Oversikten over fakes ligger i `.agents/skills/testing/references/fakes.md`.
 
-- Fakes over mocks: when a test needs a repository or gateway that has no fake, add the fake here instead of mocking it.
-- New repository → `test/inmemoryrepo/InMemory<Name>Repository` (`object` with a `ConcurrentHashMap`; implement `kopier`
-  and `slett` too) and register it in `inMemoryRepositoryRegistry`.
-- New gateway → in-process `Fake<Name>Gateway` (`companion object : Factory<…>` or an `object`) and/or an HTTP fake in
-  `test/fakes/`, started and wired (`INTEGRASJON_*_URL` system properties) in `FakeServers`; register the real impl in
+- Bruk fakes framfor mocks: Hvis en test trenger et repository eller en gateway uten fake, legg til en fake her i stedet for å mocke den.
+- Nytt repository → `test/inmemoryrepo/InMemory<Name>Repository` (`object` med en `ConcurrentHashMap`; implementer også `kopier`
+  og `slett`), og registrer det i `inMemoryRepositoryRegistry`.
+- Ny gateway → `Fake<Name>Gateway` i samme prosess (`companion object : Factory<…>` eller et `object`) og/eller en HTTP-fake i
+  `test/fakes/`. Start og koble den til (`INTEGRASJON_*_URL`-systemegenskaper) i `FakeServers`, og registrer den ekte implementasjonen i
   `testGatewayProvider()`.
-- New `BehandlingsflytFeature` → add it to `LokalUnleash` in `test/FakeUnleash.kt` (it throws for unknown toggles).
-- In-memory `object` repositories, `FakeServers` and `FakePersoner` are JVM-global: never rely on them being empty.
+- Ny `BehandlingsflytFeature` → legg den til i `LokalUnleash` i `test/FakeUnleash.kt` (den kaster feil for ukjente toggler).
+- In-memory-`object`-repositories, `FakeServers` og `FakePersoner` er globale for JVM-en. Ikke gå ut fra at de er tomme.

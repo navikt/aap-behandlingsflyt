@@ -1,25 +1,25 @@
-# Flyt-tests (AbstraktFlytOrkestratorTest)
+# Flyttester (AbstraktFlytOrkestratorTest)
 
-End-to-end tests of the engine: real Postgres, every repository, every gateway against the HTTP fakes, and the motor
-jobs, driven through a small DSL. Slowest kind of test (4–70 s per class on a fast laptop): run at most ~3 classes /
-~20 tests per Gradle invocation.
+Helhetstester av motoren: ekte Postgres, alle repositories, alle gateways mot HTTP-fake-ene og motorjobbene,
+styrt gjennom en liten DSL. Dette er den tregeste testtypen (4–70 s per klasse på en rask bærbar): kjør maksimalt ~3 klasser /
+~20 tester per Gradle-kjøring.
 
-## What the base class sets up (`behandlingsflyt/src/test/.../flyt/AbstraktFlytOrkestratorTest.kt`)
+## Hva basisklassen setter opp (`behandlingsflyt/src/test/.../flyt/AbstraktFlytOrkestratorTest.kt`)
 
-- `@Fakes` → `FakeServers.start()` once per JVM; before each test `FakePersoner`, statistikk events, legeerklæring
-  statuses and Dokarkiv journalposter are reset.
-- `dataSource = TestDataSource()` per test class (`@BeforeAll`): a fresh database cloned from a template that Flyway
-  migrated once per JVM in a Postgres 18 Testcontainer. Before each test **all tables are truncated**.
+- `@Fakes` → `FakeServers.start()` én gang per JVM. Før hver test nullstilles `FakePersoner`, statistikkhendelser,
+  legeerklæringsstatuser og journalposter i Dokarkiv.
+- `dataSource = TestDataSource()` per testklasse (`@BeforeAll`): en ny database klonet fra en mal som Flyway
+  migrerte én gang per JVM i en Postgres 18 Testcontainer. Før hver test **tømmes alle tabeller**.
 - `motor = ManuellMotorImpl(dataSource, ProsesseringsJobber.alle(), postgresRepositoryRegistry, gatewayProvider)`;
   `gatewayProvider = testGatewayProvider(<Unleash class from the constructor>)` (real gateway impls → `FakeServers`).
-- Every state-changing helper ends with `motor.kjørJobber()` (runs all due jobs synchronously, including the
-  `flyt.prosesserBehandling` they trigger) and returns a **fresh** `Behandling` read from the database. Always chain on
-  the returned value; a saved `behandling` variable goes stale (status, aktivt steg, versjon).
+- Hjelpere som endrer tilstand, avslutter med `motor.kjørJobber()` (kjører alle forfalte jobber synkront, inkludert
+  `flyt.prosesserBehandling` som de utløser) og returnerer en **ny** `Behandling` lest fra databasen. Kjed alltid videre
+  fra returverdien. En lagret `behandling`-variabel blir utdatert (status, aktivt steg, versjon).
 
-List the helpers with signatures instead of reading the 1 700-line file:
+Vis hjelperne med signaturer i stedet for å lese fila på 1 700 linjer:
 `python3 .agents/skills/testing/scripts/kjor_test.py --dsl` (filter: `--dsl løs`, `--dsl Sak.`, `--dsl assert`).
 
-## Example
+## Eksempel
 
 ```kotlin
 class MinFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
@@ -42,36 +42,36 @@ class MinFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
 }
 ```
 
-`happyCaseFørstegangsbehandling()` runs a complete førstegangsbehandling and returns the `Sak`;
-`revurdereFramTilOgMedSykdom(sak, gjelderFra)` starts a revurdering and solves sykdom.
+`happyCaseFørstegangsbehandling()` kjører en hel førstegangsbehandling og returnerer `Sak`;
+`revurdereFramTilOgMedSykdom(sak, gjelderFra)` starter en revurdering og løser sykdom.
 
-## DSL overview
+## Oversikt over DSL-en
 
-- Input: `sendInnFørsteSøknad(søknad, person, mottattTidspunkt)`, `Sak.sendInnSøknad/sendInnMeldekort/sendInnKlage/
+- Inndata: `sendInnFørsteSøknad(søknad, person, mottattTidspunkt)`, `Sak.sendInnSøknad/sendInnMeldekort/sendInnKlage/
   sendInnKabalHendelse/sendInnOppfølgingsoppgave`, `Sak.opprettManuellRevurdering(vurderingsbehov)`,
   `Behandling.leggTilVurderingsbehov(...)`, `settBehandlingPåVent`, `Behandling.bestillLegeerklæring()`.
-- Solving: generic `Behandling.løsAvklaringsBehov(løsning, bruker = Bruker("SAKSBEHANDLER"))` and wrappers `løsSykdom`,
+- Løse behov: generisk `Behandling.løsAvklaringsBehov(løsning, bruker = Bruker("SAKSBEHANDLER"))` og hjelperne `løsSykdom`,
   `løsBistand`, `løsLovvalg`, `løsForutgåendeMedlemskap`, `løsYrkesskade`, `løsBeregningstidspunkt`,
   `løsFastsettManuellInntekt`, `løsSamordning*`, `løsBarnetillegg`, `løsRettighetsperiode`, `løsVedtakslengde`,
   `bekreftVurderinger`, `kvalitetssikre(...)` (Bruker "KVALITETSSIKRER"), `fattVedtak()` /
-  `beslutterGodkjennerIkke(...)` (Bruker "BESLUTTER"), `løsVedtaksbrev()`; shortcut `løsFramTilGrunnlag`.
-- Inspecting: `medKontekst { avklaringsbehovSomMåLøses; ventebehov; behandling; avklaringsbehovene; repositoryProvider }`
-  (fresh data, inside a transaction), `hentStegHistorikk`, `hentVilkårsresultat`, `hentVedtak`, `hentBrevAvType`,
+  `beslutterGodkjennerIkke(...)` (Bruker "BESLUTTER"), `løsVedtaksbrev()`; snarvei `løsFramTilGrunnlag`.
+- Kontrollere: `medKontekst { avklaringsbehovSomMåLøses; ventebehov; behandling; avklaringsbehovene; repositoryProvider }`
+  (ferske data i en transaksjon), `hentStegHistorikk`, `hentVilkårsresultat`, `hentVedtak`, `hentBrevAvType`,
   `assertVilkårsutfall`, `assertRettighetstype`, `assertUnderveis`, `hentSisteOpprettedeBehandlingForSak`,
-  `Behandling.assertThrows(...)`. Re-run the engine directly: `prosesserBehandling(behandling)`.
-- Persons: `TestPersoner.STANDARD_PERSON()`, `PERSON_MED_YRKESSKADE()`, `PERSON_FOR_UNG()`, `PERSON_61()`,
-  `PERSON_62()`, `PERSON_MED_FORUTGÅENDE_MEDLEMSKAP()`, or `nyPerson(...)`. Calling them registers the person in
-  `FakePersoner`, which the HTTP fakes (PDL, inntekt, yrkesskade, …) read. Søknader: `TestSøknader.STANDARD_SØKNAD`,
+  `Behandling.assertThrows(...)`. Kjør motoren direkte på nytt: `prosesserBehandling(behandling)`.
+- Personer: `TestPersoner.STANDARD_PERSON()`, `PERSON_MED_YRKESSKADE()`, `PERSON_FOR_UNG()`, `PERSON_61()`,
+  `PERSON_62()`, `PERSON_MED_FORUTGÅENDE_MEDLEMSKAP()` eller `nyPerson(...)`. Kallene registrerer personen i
+  `FakePersoner`, som HTTP-fake-ene (PDL, inntekt, yrkesskade, …) leser fra. Søknader: `TestSøknader.STANDARD_SØKNAD`,
   `SØKNAD_STUDENT`, `SØKNAD_YRKESSKADE`, `SØKNAD_INGEN_MEDLEMSKAP`, `SØKNAD_MED_BARN(listOf(navn to fødselsdato))`.
-- Unleash: `AlleAvskruddUnleash` (all off except `IngenValidering`, prod-like), `LokalUnleash` (local defaults; must
-  list every toggle), or a test-local `object X : FakeUnleashBaseWithDefaultDisabled(listOf(...))`.
-- A new avklaringsbehov needs a helper here: `protected fun Behandling.løsNyVurdering(...): Behandling =
+- Unleash: `AlleAvskruddUnleash` (alt av, bortsett fra `IngenValidering`, som i produksjon), `LokalUnleash` (lokale standardverdier; må
+  liste opp alle toggles), eller et testlokalt `object X : FakeUnleashBaseWithDefaultDisabled(listOf(...))`.
+- Et nytt avklaringsbehov trenger en hjelper her: `protected fun Behandling.løsNyVurdering(...): Behandling =
   løsAvklaringsBehov(NyVurderingLøsning(...))`.
 
-## Snapshot tests (`AbstraktFlytOrkestratorSnapshotTest`)
+## Snapshot-tester (`AbstraktFlytOrkestratorSnapshotTest`)
 
-For many tests that start from the same finished state (typically a vedtatt førstegangsbehandling): the setup runs
-once, the database is frozen as a Postgres template, and every test gets its own clone.
+For mange tester som starter fra samme ferdigstilte tilstand (vanligvis en vedtatt førstegangsbehandling): oppsettet kjøres
+én gang, databasen fryses som en Postgres-mal, og hver test får sin egen klone.
 
 ```kotlin
 class MinRevurderingTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {  // PER_CLASS lifecycle
@@ -91,34 +91,34 @@ class MinRevurderingTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnlea
 }
 ```
 
-Examples: `KvalitetssikringFlytTest`, `OppfølgingsBehandlingFlytTest`, `AktivitetspliktFlytTest`,
+Eksempler: `KvalitetssikringFlytTest`, `OppfølgingsBehandlingFlytTest`, `AktivitetspliktFlytTest`,
 `overgangarbeid/OvergangArbeidFlytTest`.
 
-## Running
+## Kjøre tester
 
-- `python3 .agents/skills/testing/scripts/kjor_test.py --liste flyt` lists all 34 classes with test counts
-  (`5x2` = `@ParameterizedClass`, every test runs once per Unleash setup).
-- Run the class that covers your change, then maybe one neighbour. All of them only when the change is broad (flow
-  order, engine, shared helpers): `kjor_test.py --batch flyt` and then `--run 1`, `--run 2`, … one per tool call.
-- A single method: `kjor_test.py VedtakslengdeFlytTest -m "del av navnet"`.
+- `python3 .agents/skills/testing/scripts/kjor_test.py --liste flyt` viser alle 34 klassene og antall tester
+  (`5x2` = `@ParameterizedClass`; hver test kjøres én gang per Unleash-oppsett).
+- Kjør klassen som dekker endringen, og eventuelt én nærliggende klasse. Kjør alle bare ved større endringer (rekkefølge på flyt,
+  motor, delte hjelpere): `kjor_test.py --batch flyt` og deretter `--run 1`, `--run 2`, … én per verktøykall.
+- Én metode: `kjor_test.py VedtakslengdeFlytTest -m "del av navnet"`.
 
-## Pitfalls (verified)
+## Fallgruver (verifisert)
 
-- **Failing jobs don't fail the test.** `ManuellMotorImpl` catches the exception, logs `Feil under prosessering av jobb`,
-  marks the job (retried up to 3 times, then FEILET) and the test continues to fail later with a confusing assertion.
-  It also runs the job on the picking connection, so the failed job's writes are **not rolled back** (prod rolls back to
-  the last savepoint). Look for the log line first: `kjor_test.py --resultat behandlingsflyt` lists them. Some passing
-  tests log one too (`TrekkOgAvbrytFlytTest` and `KvoteOgVarighetFlytTest` did when this was written), so
-  compare with the same test before your change before blaming it.
-- Jobs with `neste_kjoring` in the future (e.g. `flyt.informasjonskrav` planned for later) and cron jobs never run in
-  tests unless you trigger them yourself.
-- Informasjonskrav are throttled per sak (often once a day). To make a second fetch happen in one test call
-  `nullstillInformasjonskravOppdatert(InformasjonskravNavn.X, sak.id)` after changing the fake data.
-- `IngenValidering` is on in both standard fake Unleash setups, so the four-eyes rule
-  (`KanIkkeVurdereEgneVurderingerException`) is not exercised.
-- New `BehandlingsflytFeature` → add it to `LokalUnleash`, or every `LokalUnleash` test throws
+- **Jobbfeil får ikke testen til å feile direkte.** `ManuellMotorImpl` fanger unntaket, logger `Feil under prosessering av jobb`,
+  markerer jobben (prøver på nytt opptil 3 ganger, deretter FEILET), og testen feiler senere med en forvirrende påstand.
+  Jobben kjører også på forbindelsen som henter den, så skrivingene fra den feilede jobben **rulles ikke tilbake** (i produksjon rulles de tilbake til
+  siste savepoint). Se etter logglinjen først: `kjor_test.py --resultat behandlingsflyt` viser dem. Noen tester som består,
+  logger også en slik feil (`TrekkOgAvbrytFlytTest` og `KvoteOgVarighetFlytTest` gjorde det da dette ble skrevet), så
+  sammenlign med samme test før endringen før du legger skylden på den.
+- Jobber med `neste_kjoring` i framtiden (for eksempel `flyt.informasjonskrav` som er planlagt senere) og cron-jobber kjøres ikke i
+  tester med mindre du utløser dem selv.
+- Informasjonskrav begrenses per sak (ofte til én gang om dagen). For å hente data på nytt i samme test, kall
+  `nullstillInformasjonskravOppdatert(InformasjonskravNavn.X, sak.id)` etter at du har endret fake-dataene.
+- `IngenValidering` er aktivert i begge standardoppsettene for fake Unleash, så fireøyneprinsippet
+  (`KanIkkeVurdereEgneVurderingerException`) testes ikke.
+- Ny `BehandlingsflytFeature` → legg den til i `LokalUnleash`, ellers feiler alle `LokalUnleash`-tester med
   `feature toggle X ikke definert for fake`.
-- New gateway → register it in `testGatewayProvider()` and add an HTTP fake in `FakeServers` (see fakes.md).
-- `FakeServers`/`FakePersoner` are JVM-global singletons; tests in one JVM run sequentially, so the resets in
-  `@Fakes` are enough — don't keep person data in static fields across tests.
-- Dates are relative to `LocalDate.now()`; never hard-code dates that age out of rules (alder, frister, meldeperioder).
+- Ny gateway → registrer den i `testGatewayProvider()` og legg til en HTTP-fake i `FakeServers` (se fakes.md).
+- `FakeServers`/`FakePersoner` er singleton-objekter globale for JVM-en. Testene kjører sekvensielt i samme JVM, så nullstilling i
+  `@Fakes` er nok. Ikke behold persondata i statiske felter mellom tester.
+- Datoer er relative til `LocalDate.now()`. Ikke hardkod datoer som blir for gamle for regler om alder, frister eller meldeperioder.

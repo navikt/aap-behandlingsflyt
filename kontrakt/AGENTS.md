@@ -1,14 +1,14 @@
-# kontrakt — supplements the root AGENTS.md (read that too)
+# kontrakt — tillegg til AGENTS.md i rota (les den også)
 
-This module is published as `no.nav.aap.behandlingsflyt:kontrakt` and used by other Kelvin apps (aap-tilgang, aap-oppgave,
-aap-statistikk, postmottak, frontend). See `src/main/kotlin/no/nav/aap/behandlingsflyt/kontrakt/README.md`.
+Denne modulen publiseres som `no.nav.aap.behandlingsflyt:kontrakt` og brukes av andre Kelvin-apper (aap-tilgang, aap-oppgave,
+aap-statistikk, postmottak og frontend). Se `src/main/kotlin/no/nav/aap/behandlingsflyt/kontrakt/README.md`.
 
-- Changes must be backwards compatible. Never rename or remove enum constants (`StegType`, `StegGruppe`, `Definisjon`,
-  `AvklaringsbehovKode`, statuses, `TypeBehandling`, statistikk `Vurderingsbehov`/`Vilkårtype`): names are persisted in
-  databases and sent as JSON. Deprecate instead.
-- Avklaringsbehov codes are unique forever — never reuse a code (`Definisjon` checks uniqueness at class init).
-- New `Definisjon` values or other enum values: consumers must bump the kontrakt version to understand them; mention this
-  to the user.
-- Explicit API mode is on: keep `public` modifiers. Jackson annotations define the wire format.
-- Run `./gradlew :kontrakt:check` after changes; regenerate `.agents/skills/avklaringsbehov/references/definisjoner.md`
-  (`python3 .agents/skills/avklaringsbehov/scripts/avklaringsbehov.py --markdown > …`) when `Definisjon` changes.
+- Endringer må være bakoverkompatible. Gi aldri enum-konstanter nytt navn eller fjern dem (`StegType`, `StegGruppe`, `Definisjon`,
+  `AvklaringsbehovKode`, statuser, `TypeBehandling`, statistikkens `Vurderingsbehov`/`Vilkårtype`). Navnene lagres i
+  databaser og sendes som JSON. Merk dem deprecated i stedet.
+- Koder for avklaringsbehov er unike for alltid. Ikke bruk en kode på nytt (`Definisjon` kontrollerer at kodene er unike ved oppstart av klassen).
+- Når du legger til verdier i `Definisjon` eller andre enum-er, må konsumentene oppgradere kontraktversjonen for å forstå dem. Informer
+  brukeren om dette.
+- Explicit API-modus er aktiv. Behold `public`-modifikatorer. Jackson-annotasjoner definerer wire-formatet.
+- Kjør `./gradlew :kontrakt:check` etter endringer. Generer `.agents/skills/avklaringsbehov/references/definisjoner.md`
+  på nytt (`python3 .agents/skills/avklaringsbehov/scripts/avklaringsbehov.py --markdown > …`) når `Definisjon` endres.
