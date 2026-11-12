@@ -1,22 +1,20 @@
 package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 
+import no.nav.aap.barnetillegg.BarnIdentifikator
 import no.nav.aap.barnetillegg.BarnetilleggPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Helseoppholdvurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Soningsvurderinger
-import no.nav.aap.barnetillegg.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.OppholdVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBarnetilleggRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryInstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -34,12 +32,6 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         institusjonsoppholdRepository,
         InMemorySakRepository,
         InMemoryBehandlingRepository,
-        FakeUnleashBase(
-            mapOf(
-                BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true,
-                BehandlingsflytFeature.Helseinstitusjon1Manedsregel to true,
-            )
-        )
     )
 
     // --- Hjelpefunksjoner ---
@@ -96,16 +88,6 @@ internal class InstitusjonsoppholdUtlederServiceTest {
             )
         ),
         rettighetsperiode = Periode(fom.minusYears(1), tom.plusYears(2))
-    )
-
-    private fun soningsvurderinger(
-        vararg vurderinger: Soningsvurdering,
-        vurdertAv: Bruker = Bruker("ident"),
-        vurdertTidspunkt: LocalDateTime = LocalDateTime.now()
-    ) = Soningsvurderinger(
-        vurderinger = vurderinger.toList(),
-        vurdertAv = vurdertAv,
-        vurdertTidspunkt = vurdertTidspunkt
     )
 
     private fun helsevurderinger(

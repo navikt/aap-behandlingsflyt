@@ -62,7 +62,6 @@ class InMemoryInstitusjonsoppholdRepository(private val clock: Clock = Clock.sys
     override fun lagreHelseVurdering(
         behandlingId: BehandlingId,
         helseinstitusjonVurderinger: List<HelseinstitusjonVurdering>,
-        sammenhengendeOppholdEnabled: Boolean
     ) = synchronized(lock) {
         val eksisterende = memory[behandlingId] ?: InstitusjonsoppholdGrunnlag()
         memory[behandlingId] = eksisterende.copy(

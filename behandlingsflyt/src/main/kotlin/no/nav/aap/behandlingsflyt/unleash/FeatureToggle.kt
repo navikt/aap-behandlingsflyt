@@ -45,9 +45,7 @@ enum class BehandlingsflytFeature(
     KanVurdereRefusjonIRevurdering,
     KunEnAktivKlagebehandling,
     KlagePaaTilbakekreving,
-    SammenhengendeInstitusjonsopphold,
     DatadelingBehandlingVisning,
-    Helseinstitusjon1Manedsregel,
     OvergangUfoereBrevbygger,
     BackfillRedusertDagsats,
     ;

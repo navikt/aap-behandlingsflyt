@@ -15,10 +15,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.utils.Validation
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
@@ -34,14 +31,11 @@ import java.time.format.DateTimeFormatter
 class AvklarHelseinstitusjonLøser(
     private val behandlingRepository: BehandlingRepository,
     private val helseinstitusjonRepository: InstitusjonsoppholdRepository,
-    private val unleashGateway: UnleashGateway
 ) : AvklaringsbehovsLøser<AvklarHelseinstitusjonLøsning> {
-    private val enManedsregelEnabled get() = unleashGateway.isEnabled(BehandlingsflytFeature.Helseinstitusjon1Manedsregel)
 
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
         helseinstitusjonRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide()
     )
 
     override fun løs(
@@ -51,12 +45,7 @@ class AvklarHelseinstitusjonLøser(
         val behandling = behandlingRepository.hent(kontekst.behandlingId())
         val vurdertAv = kontekst.bruker
 
-        val innsendteVurderinger =
-            if (enManedsregelEnabled) {
-                løsning.helseinstitusjonVurdering.vurderinger
-            } else {
-                løsning.helseinstitusjonVurdering.vurderinger.map { it.copy(erHistoriskUtenReduksjonsberegning = false) }
-            }
+        val innsendteVurderinger = løsning.helseinstitusjonVurdering.vurderinger
 
         val oppdaterteVurderinger =
             slåSammenMedNyeVurderinger(
@@ -67,11 +56,7 @@ class AvklarHelseinstitusjonLøser(
 
         validerReduksjonsdatoForInstitusjonsopphold(
             behandling,
-            if (enManedsregelEnabled) {
-                innsendteVurderinger.filterNot { it.erHistoriskUtenReduksjonsberegning }
-            } else {
-                innsendteVurderinger
-            },
+            innsendteVurderinger.filterNot { it.erHistoriskUtenReduksjonsberegning },
             oppdaterteVurderinger,
             løsning.helseinstitusjonVurdering.vurderinger
         ).throwOnInvalid {
@@ -81,7 +66,6 @@ class AvklarHelseinstitusjonLøser(
         helseinstitusjonRepository.lagreHelseVurdering(
             kontekst.kontekst.behandlingId,
             oppdaterteVurderinger,
-            sammenhengendeOppholdEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)
         )
 
         return LøsningsResultat(løsning.helseinstitusjonVurdering.vurderinger.joinToString(" ") { it.begrunnelse })
@@ -96,9 +80,7 @@ class AvklarHelseinstitusjonLøser(
             behandling.forrigeBehandlingId?.let { helseinstitusjonRepository.hentHvisEksisterer(it) }
         val nåværendeGrunnlag = helseinstitusjonRepository.hentHvisEksisterer(behandling.id)
 
-        val (nyeHistoriske, nyePeriodiserte) =
-            if (enManedsregelEnabled) nyeVurderinger.partition { it.erHistoriskUtenReduksjonsberegning }
-            else emptyList<HelseinstitusjonVurderingDto>() to nyeVurderinger
+        val (nyeHistoriske, nyePeriodiserte) = nyeVurderinger.partition { it.erHistoriskUtenReduksjonsberegning }
 
         val nåværendeOpphold = nåværendeGrunnlag?.oppholdene?.opphold.orEmpty()
         val historiskeOppholdPerioder = nyeHistoriske.mapNotNull { historisk ->
@@ -117,7 +99,6 @@ class AvklarHelseinstitusjonLøser(
         val oppholdIderMedNyInput = nyeVurderinger.mapNotNull { it.oppholdId }.toSet()
         val nåværendeOppholdIder = nåværendeOpphold.map { lagOppholdId(it.verdi.navn, it.periode.fom) }.toSet()
         val eksisterendeHistoriske = forrigeGrunnlag?.helseoppholdvurderinger?.historiskeVurderinger.orEmpty()
-            .filter { enManedsregelEnabled }
             .filter { it.oppholdId !in oppholdIderMedNyInput }
             .filter { nåværendeOpphold.isEmpty() || it.oppholdId in nåværendeOppholdIder }
 
@@ -278,7 +259,6 @@ class AvklarHelseinstitusjonLøser(
         val tidligsteReduksjonsdatoPerKjede = beregnTidligsteReduksjonsdatoPerKjede(
             opphold,
             harInnvilgetReduksjon(oppdaterteVurderinger),
-            enManedsregelEnabled
         )
 
         validerHistoriskeVurderinger(alleInnsendte, kjeder, tidligsteReduksjonsdatoPerKjede)?.let { return it }
@@ -302,8 +282,6 @@ class AvklarHelseinstitusjonLøser(
         kjeder: List<SammenhengendeOppholdGruppe>,
         tidligsteReduksjonsdatoPerKjede: Map<SammenhengendeOppholdGruppe, LocalDate>
     ): Validation<List<HelseinstitusjonVurderingDto>>? {
-        if (!enManedsregelEnabled) return null
-
         val harFeilaktigHistorisk = alleInnsendte
             .filter { it.erHistoriskUtenReduksjonsberegning && it.girReduksjonUtenHistorikk() }
             .any { rekkerInnenforOppholdet(it, kjeder, tidligsteReduksjonsdatoPerKjede) }
