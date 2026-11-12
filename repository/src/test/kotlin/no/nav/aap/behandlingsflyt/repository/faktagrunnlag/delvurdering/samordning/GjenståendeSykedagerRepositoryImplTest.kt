@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedagerGrunnlag
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
@@ -64,7 +65,7 @@ class GjenståendeSykedagerRepositoryImplTest {
     }
 
     @Test
-    fun `kopierer aktivt oppslag og tåler gjentatt sletting`() {
+    fun `kopierer grunnlaget uten å kopiere data, og sletter kun ubrukte data`() {
         val (fra, til) = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak(it)) to finnEllerOpprettBehandling(it, sak(it))
         }
@@ -73,6 +74,7 @@ class GjenståendeSykedagerRepositoryImplTest {
         dataSource.transaction { GjenståendeSykedagerRepositoryImpl(it).kopier(fra.id, til.id) }
         assertThat(dataSource.transaction { GjenståendeSykedagerRepositoryImpl(it).hentHvisEksisterer(til.id) })
             .isEqualTo(vedtak)
+        assertThat(sykedagerIdFor(fra.id)).isEqualTo(sykedagerIdFor(til.id))
 
         dataSource.transaction {
             GjenståendeSykedagerRepositoryImpl(it).slett(til.id)
@@ -82,5 +84,12 @@ class GjenståendeSykedagerRepositoryImplTest {
             .isNull()
         assertThat(dataSource.transaction { GjenståendeSykedagerRepositoryImpl(it).hentHvisEksisterer(fra.id) })
             .isEqualTo(vedtak)
+    }
+
+    private fun sykedagerIdFor(behandlingId: BehandlingId): Long = dataSource.transaction {
+        it.queryFirst("SELECT gjenstaaende_sykedager_id FROM gjenstaaende_sykedager_grunnlag WHERE behandling_id = ? AND aktiv") {
+            setParams { setLong(1, behandlingId.toLong()) }
+            setRowMapper { row -> row.getLong("gjenstaaende_sykedager_id") }
+        }
     }
 }

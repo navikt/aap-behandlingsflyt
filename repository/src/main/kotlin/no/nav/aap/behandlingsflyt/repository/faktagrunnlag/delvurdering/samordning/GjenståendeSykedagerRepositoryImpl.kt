@@ -18,9 +18,10 @@ class GjenståendeSykedagerRepositoryImpl(private val dbConnection: DBConnection
     override fun hentHvisEksisterer(behandlingId: BehandlingId): GjenståendeSykedager? {
         return dbConnection.queryFirstOrNull(
             """
-            SELECT grunnlag, gjenstaaende_dager, vurdert_til_og_med
-            FROM gjenstaaende_sykedager_grunnlag
-            WHERE behandling_id = ? AND aktiv = TRUE
+            SELECT gs.grunnlag, gs.gjenstaaende_dager, gs.vurdert_til_og_med
+            FROM gjenstaaende_sykedager_grunnlag gsg
+                     JOIN gjenstaaende_sykedager gs ON gs.id = gsg.gjenstaaende_sykedager_id
+            WHERE gsg.behandling_id = ? AND gsg.aktiv = TRUE
             """.trimIndent()
         ) {
             setParams { setLong(1, behandlingId.toLong()) }
@@ -43,19 +44,30 @@ class GjenståendeSykedagerRepositoryImpl(private val dbConnection: DBConnection
             deaktiverGrunnlag(behandlingId)
         }
 
+        val sykedagerId = dbConnection.executeReturnKey(
+            """
+            INSERT INTO gjenstaaende_sykedager (grunnlag, gjenstaaende_dager, vurdert_til_og_med, opprettet_tid)
+            VALUES (?, ?, ?, ?)
+            """.trimIndent()
+        ) {
+            setParams {
+                setEnumName(1, gjenståendeSykedager.grunnlag)
+                setInt(2, gjenståendeSykedager.gjenståendeDager)
+                setLocalDate(3, gjenståendeSykedager.vurdertTilOgMed)
+                setInstant(4, Instant.now())
+            }
+        }
+
         dbConnection.execute(
             """
-            INSERT INTO gjenstaaende_sykedager_grunnlag
-                (behandling_id, aktiv, grunnlag, gjenstaaende_dager, vurdert_til_og_med, opprettet_tid)
-            VALUES (?, TRUE, ?, ?, ?, ?)
+            INSERT INTO gjenstaaende_sykedager_grunnlag (behandling_id, aktiv, gjenstaaende_sykedager_id, opprettet_tid)
+            VALUES (?, TRUE, ?, ?)
             """.trimIndent()
         ) {
             setParams {
                 setLong(1, behandlingId.toLong())
-                setEnumName(2, gjenståendeSykedager.grunnlag)
-                setInt(3, gjenståendeSykedager.gjenståendeDager)
-                setLocalDate(4, gjenståendeSykedager.vurdertTilOgMed)
-                setInstant(5, Instant.now())
+                setLong(2, sykedagerId)
+                setInstant(3, Instant.now())
             }
         }
     }
@@ -63,9 +75,8 @@ class GjenståendeSykedagerRepositoryImpl(private val dbConnection: DBConnection
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
         dbConnection.execute(
             """
-            INSERT INTO gjenstaaende_sykedager_grunnlag
-                (behandling_id, aktiv, grunnlag, gjenstaaende_dager, vurdert_til_og_med, opprettet_tid)
-            SELECT ?, TRUE, grunnlag, gjenstaaende_dager, vurdert_til_og_med, ?
+            INSERT INTO gjenstaaende_sykedager_grunnlag (behandling_id, aktiv, gjenstaaende_sykedager_id, opprettet_tid)
+            SELECT ?, TRUE, gjenstaaende_sykedager_id, ?
             FROM gjenstaaende_sykedager_grunnlag
             WHERE behandling_id = ? AND aktiv = TRUE
             """.trimIndent()
@@ -79,8 +90,28 @@ class GjenståendeSykedagerRepositoryImpl(private val dbConnection: DBConnection
     }
 
     override fun slett(behandlingId: BehandlingId) {
+        val sykedagerIder = dbConnection.queryList(
+            "SELECT DISTINCT gjenstaaende_sykedager_id FROM gjenstaaende_sykedager_grunnlag WHERE behandling_id = ?"
+        ) {
+            setParams { setLong(1, behandlingId.toLong()) }
+            setRowMapper { row -> row.getLong("gjenstaaende_sykedager_id") }
+        }
+
         dbConnection.execute("DELETE FROM gjenstaaende_sykedager_grunnlag WHERE behandling_id = ?") {
             setParams { setLong(1, behandlingId.toLong()) }
+        }
+
+        // Dataradene kan deles med andre behandlinger via kopier
+        dbConnection.execute(
+            """
+            DELETE FROM gjenstaaende_sykedager gs
+            WHERE gs.id = ANY(?::bigint[])
+              AND NOT EXISTS (
+                SELECT 1 FROM gjenstaaende_sykedager_grunnlag gsg WHERE gsg.gjenstaaende_sykedager_id = gs.id
+              )
+            """.trimIndent()
+        ) {
+            setParams { setLongArray(1, sykedagerIder) }
         }
     }
 
