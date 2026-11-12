@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 
 class Medlemskapvilkåret(
@@ -24,7 +25,7 @@ class Medlemskapvilkåret(
 
         // Manuelle vurderinger overstyrer de automatiske der de finnes
         val vilkårsvurderinger = automatiskTidslinje
-            .kombiner(manuellTidslinje, StandardSammenslåere.prioriterHøyreSideCrossJoin())
+            .mergePrioriterHøyre(manuellTidslinje)
             .komprimer()
             .begrensetTil(rettighetsPeriode)
 
@@ -40,10 +41,9 @@ class Medlemskapvilkåret(
         val oppfylt = automatiskVurdering(Utfall.OPPFYLT, grunnlag)
         val ikkeVurdert = automatiskVurdering(Utfall.IKKE_VURDERT, grunnlag)
 
-        return Tidslinje(rettighetsPeriode, ikkeVurdert).kombiner(
+        return tidslinjeOf(rettighetsPeriode to ikkeVurdert).mergePrioriterHøyre(
             grunnlag.delvurderinger.kanVurderesAutomatiskTidslinje()
-                .mapValue { kanBehandlesAutomatisk -> if (kanBehandlesAutomatisk) oppfylt else ikkeVurdert },
-            StandardSammenslåere.prioriterHøyreSideCrossJoin()
+                .mapValue { kanBehandlesAutomatisk -> if (kanBehandlesAutomatisk) oppfylt else ikkeVurdert }
         )
     }
 
