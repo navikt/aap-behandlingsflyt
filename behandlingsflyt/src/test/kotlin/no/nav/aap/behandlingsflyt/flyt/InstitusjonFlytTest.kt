@@ -9,6 +9,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarHels
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
@@ -684,10 +686,12 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
         val revurdering =
             sak.opprettManuellRevurdering(listOf(Vurderingsbehov.BARNETILLEGG))
 
+        val sluttdatoFørsteInnvilgelse = fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
         revurdering
             .løsAvklaringsBehov(løsNeiTilBarnetillegg(barn, barnetilleggFom))
             .løsAvklaringsBehov(løsHelseinstitusjonMedReduksjon(fom, oppholdTom))
             .løsAndreStatligeYtelser()
+            .løsVedtakslengde(sluttdatoFørsteInnvilgelse, sluttdatoFørsteInnvilgelse.plussEtÅrMedHverdager(ÅrMedHverdager.ANDRE_ÅR))
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .medKontekst {
