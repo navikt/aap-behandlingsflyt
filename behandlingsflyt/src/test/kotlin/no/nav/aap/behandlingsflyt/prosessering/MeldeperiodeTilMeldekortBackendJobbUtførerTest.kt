@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.meldeplikt.MeldepliktStatus
 import no.nav.aap.meldeplikt.MeldepliktStatus.FØR_VEDTAK
 import no.nav.aap.meldeplikt.MeldepliktStatus.IKKE_MELDT_SEG
+import no.nav.aap.meldeplikt.Fritaksvurdering
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -24,10 +26,12 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlin.test.Test
 
 class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
@@ -149,6 +153,57 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
         ))
     }
 
+    @Test
+    fun `sender fritaksperioder for vedtak og komprimerer sammenhengende perioder`() {
+        val opplysninger = MeldeperiodeTilMeldekortBackendJobbUtfører.opplysningerVedVedtak(
+            sak = sak(),
+            meldeperioder = emptyList(),
+            vedtaksdatoFørsteInnvilgelse = null,
+            meldepliktGrunnlag = MeldepliktGrunnlag(
+                vurderinger = listOf(
+                    fritaksvurdering(true, "2025-03-31", "2025-04-06"),
+                    fritaksvurdering(true, "2025-04-07", "2025-04-13"),
+                    fritaksvurdering(false, "2025-04-14", "2025-04-20"),
+                )
+            ),
+            underveisGrunnlag = null,
+        )
+
+        assertThat(opplysninger.fritak.map { Periode(it.fom, it.tom) })
+            .containsExactly(Periode(LocalDate.parse("2025-03-31"), LocalDate.parse("2025-04-13")))
+    }
+
+    @Test
+    fun `fritak er tomt uten meldepliktgrunnlag`() {
+        val opplysninger = MeldeperiodeTilMeldekortBackendJobbUtfører.opplysningerVedVedtak(
+            sak = sak(),
+            meldeperioder = emptyList(),
+            vedtaksdatoFørsteInnvilgelse = null,
+            meldepliktGrunnlag = null,
+            underveisGrunnlag = null,
+        )
+
+        assertThat(opplysninger.fritak).isEmpty()
+    }
+
+    private fun sak() = Sak(
+        id = SakId(0),
+        saksnummer = Saksnummer("s1"),
+        person = person(identer = listOf(Ident("1".repeat(11), aktivIdent = true))),
+        rettighetsperiode = Periode(LocalDate.parse("2025-03-31"), LocalDate.parse("2026-03-30")),
+        status = Status.UTREDES,
+    )
+
+    private fun fritaksvurdering(harFritak: Boolean, fom: String, tom: String) = Fritaksvurdering(
+        harFritak = harFritak,
+        fom = LocalDate.parse(fom),
+        tom = LocalDate.parse(tom),
+        begrunnelse = "",
+        vurdertAv = Bruker("saksbehandler"),
+        opprettetTid = LocalDateTime.parse("2025-03-31T12:00:00"),
+        vurdertIBehandling = BehandlingId(1),
+    )
+
     private fun underveisperiode(
         periode: String,
         meldeperiode: String,
@@ -181,4 +236,3 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
         return Periode(LocalDate.parse(start), LocalDate.parse(slutt).minusDays(1))
     }
 }
-
