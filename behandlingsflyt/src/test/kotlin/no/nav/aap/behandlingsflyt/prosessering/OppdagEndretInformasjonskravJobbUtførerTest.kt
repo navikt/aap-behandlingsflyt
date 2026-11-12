@@ -97,7 +97,7 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
     object FakeSykepengerGateway : SykepengerGateway {
         var sykepengerRespons = SykepengerResponse(emptyList())
         override fun hentGjenståendeSykedager(fødselsnummer: String): GjenståendeSykedager =
-             GjenståendeSykedager(GjenståendeSykedagerGrunnlag.INGEN_SYKEPENGER_SISTE_26_UKER)
+            GjenståendeSykedager(GjenståendeSykedagerGrunnlag.INGEN_SYKEPENGER_SISTE_26_UKER)
 
 
         override fun hentYtelseSykepenger(

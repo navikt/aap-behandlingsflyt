@@ -6,6 +6,7 @@ public data class GjenståendeSykedagerDto(
     val grunnlag: GjenståendeSykedagerGrunnlagDto,
     val gjenståendeDager: Int?,
     val vurdertTilOgMed: LocalDate?,
+    val maksdato: LocalDate?,
 )
 
 public enum class GjenståendeSykedagerGrunnlagDto {

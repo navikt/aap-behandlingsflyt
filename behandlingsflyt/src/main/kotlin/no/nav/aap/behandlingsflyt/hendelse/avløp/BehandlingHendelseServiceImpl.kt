@@ -163,6 +163,7 @@ class BehandlingHendelseServiceImpl(
         grunnlag = GjenståendeSykedagerGrunnlagDto.valueOf(grunnlag.name),
         gjenståendeDager = gjenståendeDager,
         vurdertTilOgMed = vurdertTilOgMed,
+        maksdato = utledMaksdato(),
     )
 
     private fun hentReservertTil(behandlingId: BehandlingId): Bruker? {

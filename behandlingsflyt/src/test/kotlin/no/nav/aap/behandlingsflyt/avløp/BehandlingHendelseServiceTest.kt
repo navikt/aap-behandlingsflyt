@@ -48,6 +48,7 @@ import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.dokument.Kanal
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryGjenståendeSykedagerRepository
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.mars
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -129,13 +130,13 @@ class BehandlingHendelseServiceTest {
         val (behandlingHendelseService, behandling) = settOppFlyt()
         InMemoryGjenståendeSykedagerRepository.lagre(
             behandling.id,
-            GjenståendeSykedager(GjenståendeSykedagerGrunnlag.MAKSDATO_I_INFOTRYGD, 42, 1 januar 2026)
+            GjenståendeSykedager(GjenståendeSykedagerGrunnlag.VEDTAK_I_NY_LØSNING, 42, 1 januar 2026)
         )
 
         behandlingHendelseService.stoppet(behandling, avklaringsbehoveneMedÉttÅpent())
 
         assertThat(oppgaveHendelse().gjenståendeSykedager).isEqualTo(
-            GjenståendeSykedagerDto(GjenståendeSykedagerGrunnlagDto.MAKSDATO_I_INFOTRYGD, 42, 1 januar 2026)
+            GjenståendeSykedagerDto(GjenståendeSykedagerGrunnlagDto.VEDTAK_I_NY_LØSNING, 42, 1 januar 2026, 2 mars 2026)
         )
     }
 
@@ -144,7 +145,7 @@ class BehandlingHendelseServiceTest {
         val (behandlingHendelseService, behandling) = settOppFlyt(TypeBehandling.Revurdering)
         InMemoryGjenståendeSykedagerRepository.lagre(
             behandling.id,
-            GjenståendeSykedager(GjenståendeSykedagerGrunnlag.MAKSDATO_I_INFOTRYGD, 42, 1 januar 2026)
+            GjenståendeSykedager(GjenståendeSykedagerGrunnlag.VEDTAK_I_NY_LØSNING, 42, 1 januar 2026)
         )
 
         behandlingHendelseService.stoppet(behandling, avklaringsbehoveneMedÉttÅpent())
