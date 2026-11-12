@@ -31,6 +31,9 @@ enum class BehandlingsflytFeature(
     KravManuellVurdering,
     NyttKravPeriodiserteAvklaringsbehov,
 
+    // --- Utbetaling ---
+    SimuleringStegForNyttUtbetalingsgrensesnitt,
+
     // --- Migrering ---
     MigererSykdomFraArenaAutomatisk,
     MigrerRefusjonskravFraArenaAutomatisk,
