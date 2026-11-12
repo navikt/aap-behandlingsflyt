@@ -569,6 +569,78 @@ class VedtakslengdeServiceTest {
         }
     }
 
+    @Nested
+    inner class NærmerSegSluttOgRettighetGårLenger {
+
+        @Test
+        fun `gir true når under 28 dager igjen og rettighet går lenger`() {
+            setupForrigeBehandling(dagensDato.plusDays(27))
+            settOppRettighet(Segment(Periode(1 januar 2026, dagensDato.plusDays(28)), RettighetsType.BISTANDSBEHOV))
+
+            assertThat(service().vedtakslengdeNærmerSegSluttOgRettighetGårLenger(behandlingId, forrigeBehandlingId))
+                .isTrue()
+        }
+
+        @Test
+        fun `gir true når vedtatt sluttdato allerede er passert`() {
+            setupForrigeBehandling(dagensDato.minusDays(5))
+            settOppRettighet(Segment(Periode(1 januar 2026, dagensDato.plusDays(100)), RettighetsType.BISTANDSBEHOV))
+
+            assertThat(service().vedtakslengdeNærmerSegSluttOgRettighetGårLenger(behandlingId, forrigeBehandlingId))
+                .isTrue()
+        }
+
+        @Test
+        fun `gir false når 28 dager eller mer igjen`() {
+            setupForrigeBehandling(dagensDato.plusDays(28))
+            settOppRettighet(Segment(Periode(1 januar 2026, dagensDato.plusDays(300)), RettighetsType.BISTANDSBEHOV))
+
+            assertThat(service().vedtakslengdeNærmerSegSluttOgRettighetGårLenger(behandlingId, forrigeBehandlingId))
+                .isFalse()
+        }
+
+        @Test
+        fun `gir false når rettighet ikke går lenger enn vedtatt sluttdato`() {
+            val vedtatt = dagensDato.plusDays(10)
+            setupForrigeBehandling(vedtatt)
+            settOppRettighet(Segment(Periode(1 januar 2026, vedtatt), RettighetsType.BISTANDSBEHOV))
+
+            assertThat(service().vedtakslengdeNærmerSegSluttOgRettighetGårLenger(behandlingId, forrigeBehandlingId))
+                .isFalse()
+        }
+
+        @Test
+        fun `gir false når det ikke finnes rettighetstyper`() {
+            setupForrigeBehandling(dagensDato.plusDays(10))
+            settOppRettighet()
+
+            assertThat(service().vedtakslengdeNærmerSegSluttOgRettighetGårLenger(behandlingId, forrigeBehandlingId))
+                .isFalse()
+        }
+
+        @Test
+        fun `gir false når forrige behandling mangler vedtakslengde`() {
+            every { vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId) } returns null
+            every { underveisRepository.hentHvisEksisterer(forrigeBehandlingId) } returns null
+            settOppRettighet(Segment(Periode(1 januar 2026, dagensDato.plusDays(300)), RettighetsType.BISTANDSBEHOV))
+
+            assertThat(service().vedtakslengdeNærmerSegSluttOgRettighetGårLenger(behandlingId, forrigeBehandlingId))
+                .isFalse()
+        }
+
+        @Test
+        fun `gir false når det ikke finnes forrige behandling`() {
+            assertThat(service().vedtakslengdeNærmerSegSluttOgRettighetGårLenger(behandlingId, null)).isFalse()
+        }
+
+        private fun service() = vedtakslengdeService()
+
+        private fun settOppRettighet(vararg segmenter: Segment<RettighetsType>) {
+            every { rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandlingId) } returns
+                    Tidslinje(segmenter.toList())
+        }
+    }
+
     // -- Hjelpefunksjoner --
 
     private fun vedtakslengdeService() =
