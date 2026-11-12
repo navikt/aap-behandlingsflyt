@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsoppho
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.LovvalgMedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
@@ -49,6 +50,7 @@ class VurderLovvalgSteg private constructor(
     private val avklaringsbehovService: AvklaringsbehovService,
     private val lovvalgDelvurderingRepository: LovvalgDelvurderingRepository,
     private val stønadsperiodeRepository: StønadsperiodeRepository,
+    private val kravRepository: KravRepository,
     private val unleashGateway: UnleashGateway
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -60,6 +62,7 @@ class VurderLovvalgSteg private constructor(
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         lovvalgDelvurderingRepository = repositoryProvider.provide(),
         stønadsperiodeRepository = repositoryProvider.provide(),
+        kravRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -173,20 +176,25 @@ class VurderLovvalgSteg private constructor(
      * når ingen stønadsperioder er vurdert.
      */
     private fun utledRelevanteDatoer(kontekst: FlytKontekstMedPerioder): Set<LocalDate> {
-        val fraStønadsperioder = stønadsperiodeRepository.hentHvisEksisterer(kontekst.behandlingId)
-            ?.gjeldendeVurderinger()
-            .orEmpty()
+        val gjeldendeKravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val gjeldendeStønadsperiodeGrunnlag = stønadsperiodeRepository.hentHvisEksisterer(kontekst.behandlingId)
+        requireNotNull(gjeldendeKravGrunnlag)
+        requireNotNull(gjeldendeStønadsperiodeGrunnlag)
+
+        val relevanteStønadsperiodeDatoer = gjeldendeStønadsperiodeGrunnlag
+            .tilTidslinje(gjeldendeKravGrunnlag)
+            .segmenter()
             .filter {
-                it.relevantKravType in setOf(
+                it.verdi.relevantKravType in setOf(
                     RelevantKravType.NY_STØNADSPERIODE,
                     RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR,
                     RelevantKravType.MIGRERT_STØNADSPERIODE,
                 )
             }
-            .map { it.startDato }
+            .map { it.verdi.startDato }
             .toSet()
 
-        return fraStønadsperioder.ifEmpty { setOf(kontekst.rettighetsperiode.fom) }
+        return relevanteStønadsperiodeDatoer.ifEmpty { setOf(kontekst.rettighetsperiode.fom) }
     }
 
     private fun perioderSomIkkeErTilstrekkeligVurdert (
