@@ -3,12 +3,14 @@ package no.nav.aap.behandlingsflyt.behandling.utbetaling
 import no.nav.aap.komponenter.gateway.Gateway
 import no.nav.aap.utbetal.simulering.SimuleringDto
 import no.nav.aap.utbetal.simulering.UtbetalingOgSimuleringDto
+import no.nav.aap.utbetal.simuleringv2.SimuleringsresponseDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
 import no.nav.aap.utbetal.trekk.TrekkResponsDto
 
 interface UtbetalingGateway: Gateway {
     fun utbetal(tilkjentYtelseDto: TilkjentYtelseDto): Unit?
     fun simulering(tilkjentYtelseDto: TilkjentYtelseDto): List<UtbetalingOgSimuleringDto>
-    fun simuleringV2(tilkjentYtelseDto: TilkjentYtelseDto): SimuleringDto
+    fun simuleringV2(tilkjentYtelseDto: TilkjentYtelseDto): SimuleringsresponseDto
     fun hentTrekk(saksnummer: String): TrekkResponsDto
+    fun erMigrert(personIdent: String, saksnummer: String): Boolean
 }
