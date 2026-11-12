@@ -15,16 +15,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Aktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdagForBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -44,12 +40,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 class SamordningYtelseVurderingInformasjonskrav(
     private val samordningYtelseRepository: SamordningYtelseRepository,
     private val samordningVurderingRepository: SamordningVurderingRepository,
-    private val gjenståendeSykedagerRepository: GjenståendeSykedagerRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val fpGateway: ForeldrepengerGateway,
     private val spGateway: SykepengerGateway,
     private val sakService: SakService,
-    private val unleashGateway: UnleashGateway,
 ) : Informasjonskrav<SamordningInput, SamordningRegisterdata>, KanTriggeRevurdering {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -69,28 +63,20 @@ class SamordningYtelseVurderingInformasjonskrav(
     data class SamordningInput(
         val person: Person,
         val rettighetsperiode: Periode,
-        val hentGjenståendeSykedager: Boolean = false,
     ) : InformasjonskravInput
 
 
     data class SamordningRegisterdata(
-        val samordningYtelser: Set<SamordningYtelse>,
-        val gjenståendeSykedager: GjenståendeSykedager? = null,
+        val samordningYtelser: Set<SamordningYtelse>
     ) : InformasjonskravRegisterdata
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): SamordningInput {
         val sak = sakService.hentSakFor(kontekst.behandlingId)
-        return SamordningInput(
-            person = sak.person,
-            rettighetsperiode = sak.rettighetsperiode,
-            hentGjenståendeSykedager = kontekst.behandlingType == TypeBehandling.Førstegangsbehandling
-                    && unleashGateway.isEnabled(BehandlingsflytFeature.MaksdatoSykepenger),
-        )
+        return SamordningInput(sak.person, sak.rettighetsperiode)
     }
 
     override fun hentData(input: SamordningInput): SamordningRegisterdata {
-        val person = input.person
-        val rettighetsperiode = input.rettighetsperiode
+        val (person, rettighetsperiode) = input
         val personIdent = person.aktivIdent().identifikator
         val oppslagsPeriode = Periode(rettighetsperiode.fom.minusWeeks(4), rettighetsperiode.tom)
 
@@ -110,9 +96,7 @@ class SamordningYtelseVurderingInformasjonskrav(
 
         log.info("Hentet sykepenger. Tok ${sykepengerDuration.inWholeMilliseconds} ms")
         val samordningYtelser = mapTilSamordningYtelse(foreldrepenger, sykepenger)
-        val gjenståendeSykedager = if (input.hentGjenståendeSykedager) hentGjenståendeSykedager(personIdent) else null
-
-        return SamordningRegisterdata(samordningYtelser, gjenståendeSykedager)
+        return SamordningRegisterdata(samordningYtelser)
     }
 
     override fun oppdater(
@@ -121,8 +105,6 @@ class SamordningYtelseVurderingInformasjonskrav(
         val eksisterendeData = samordningYtelseRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         val (samordningYtelser) = registerdata
-
-        registerdata.gjenståendeSykedager?.let { gjenståendeSykedagerRepository.lagre(kontekst.behandlingId, it) }
 
         if (harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(eksisterendeData, samordningYtelser)) {
             log.info("Oppdaterer samordning ytelser for behandling ${kontekst.behandlingId}. Ytelser funnet: ${samordningYtelser.map { it.ytelseType }}")
@@ -149,15 +131,6 @@ class SamordningYtelseVurderingInformasjonskrav(
             } else {
                 null
             }
-        }
-    }
-
-    private fun hentGjenståendeSykedager(personIdent: String): GjenståendeSykedager? {
-        return try {
-            spGateway.hentGjenståendeSykedager(personIdent)
-        } catch (e: Exception) {
-            log.warn("Klarte ikke hente gjenstående sykedager", e)
-            null
         }
     }
 
@@ -242,12 +215,10 @@ class SamordningYtelseVurderingInformasjonskrav(
             return SamordningYtelseVurderingInformasjonskrav(
                 samordningYtelseRepository = repositoryProvider.provide(),
                 samordningVurderingRepository = repositoryProvider.provide(),
-                gjenståendeSykedagerRepository = repositoryProvider.provide(),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 fpGateway = gatewayProvider.provide(),
                 spGateway = gatewayProvider.provide(),
                 sakService = SakService(repositoryProvider, gatewayProvider),
-                unleashGateway = gatewayProvider.provide(),
             )
         }
 

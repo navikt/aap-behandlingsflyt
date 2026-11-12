@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusForeldrepengerGat
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.AbakusSykepengerGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.GjenståendeSykedagerRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.ytelsesvurdering.SamordningVurderingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -26,10 +25,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.Fakes
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -58,9 +54,6 @@ class SamordningYtelseVurderingServiceTest {
         @AfterAll
         @JvmStatic
         fun tearDown() = dataSource.close()
-
-        private val maksdatoSykepengerPå =
-            FakeUnleashBaseWithDefaultDisabled(listOf(BehandlingsflytFeature.MaksdatoSykepenger))
     }
 
     @Test
@@ -95,12 +88,10 @@ class SamordningYtelseVurderingServiceTest {
             val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
                 SamordningYtelseRepositoryImpl(connection),
                 SamordningVurderingRepositoryImpl(connection),
-                GjenståendeSykedagerRepositoryImpl(connection),
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
-                SakService(postgresRepositoryRegistry.provider(connection), createGatewayProvider {  }),
-                maksdatoSykepengerPå,
+                SakService(postgresRepositoryRegistry.provider(connection), createGatewayProvider {  })
             )
             val foreldrePerson = PersonRepositoryImpl(connection).finnEllerOpprett(
                 listOf(
@@ -145,12 +136,10 @@ class SamordningYtelseVurderingServiceTest {
             val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
                 SamordningYtelseRepositoryImpl(connection),
                 SamordningVurderingRepositoryImpl(connection),
-                GjenståendeSykedagerRepositoryImpl(connection),
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
                 SakService(postgresRepositoryRegistry.provider(connection), createGatewayProvider {  }),
-                maksdatoSykepengerPå,
             )
             val sykepengerPerson = PersonRepositoryImpl(connection).finnEllerOpprett(
                 listOf(
@@ -187,12 +176,10 @@ class SamordningYtelseVurderingServiceTest {
             val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
                 SamordningYtelseRepositoryImpl(connection),
                 SamordningVurderingRepositoryImpl(connection),
-                GjenståendeSykedagerRepositoryImpl(connection),
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
                 SakService(postgresRepositoryRegistry.provider(connection), createGatewayProvider {  }),
-                maksdatoSykepengerPå,
             )
             val sykepengerPerson = PersonRepositoryImpl(connection).finnEllerOpprett(
                 listOf(
@@ -221,12 +208,10 @@ class SamordningYtelseVurderingServiceTest {
             val samordningYtelseVurderingInformasjonskrav = SamordningYtelseVurderingInformasjonskrav(
                 SamordningYtelseRepositoryImpl(connection),
                 SamordningVurderingRepositoryImpl(connection),
-                GjenståendeSykedagerRepositoryImpl(connection),
                 FakeTidligereVurderinger(),
                 AbakusForeldrepengerGateway(),
                 AbakusSykepengerGateway(),
                 SakService(postgresRepositoryRegistry.provider(connection), createGatewayProvider {  }),
-                maksdatoSykepengerPå,
             )
             val kontekst = opprettSakdata(connection)
 
@@ -245,62 +230,6 @@ class SamordningYtelseVurderingServiceTest {
             assertThat(nyData).isEqualTo(Informasjonskrav.Endret.IKKE_ENDRET)
         }
     }
-
-    @Test
-    fun `lagrer gjenstående sykedager for førstegangsbehandling uten å påvirke endret-status`() {
-        dataSource.transaction { connection ->
-            val sykedagerRepo = GjenståendeSykedagerRepositoryImpl(connection)
-            val informasjonskrav = lagInformasjonskrav(connection)
-            val kontekst = opprettSakdata(connection)
-
-            klargjørOgOppdater(informasjonskrav, kontekst)
-            assertThat(sykedagerRepo.hentHvisEksisterer(kontekst.behandlingId)).isNotNull()
-
-            assertThat(klargjørOgOppdater(informasjonskrav, kontekst)).isEqualTo(Informasjonskrav.Endret.IKKE_ENDRET)
-        }
-    }
-
-    @Test
-    fun `henter ikke gjenstående sykedager når feature flag er av`() {
-        dataSource.transaction { connection ->
-            val sykedagerRepo = GjenståendeSykedagerRepositoryImpl(connection)
-            val informasjonskrav = lagInformasjonskrav(connection, FakeUnleashBaseWithDefaultDisabled(emptyList()))
-            val kontekst = opprettSakdata(connection)
-
-            klargjørOgOppdater(informasjonskrav, kontekst)
-
-            assertThat(sykedagerRepo.hentHvisEksisterer(kontekst.behandlingId)).isNull()
-        }
-    }
-
-    @Test
-    fun `henter og lagrer ikke gjenstående sykedager for revurdering`() {
-        dataSource.transaction { connection ->
-            val sykedagerRepo = GjenståendeSykedagerRepositoryImpl(connection)
-            val informasjonskrav = lagInformasjonskrav(connection)
-            val kontekst = opprettSakdata(connection).copy(behandlingType = TypeBehandling.Revurdering)
-
-            val input = informasjonskrav.klargjør(kontekst)
-            assertThat(informasjonskrav.hentData(input).gjenståendeSykedager).isNull()
-
-            klargjørOgOppdater(informasjonskrav, kontekst)
-            assertThat(sykedagerRepo.hentHvisEksisterer(kontekst.behandlingId)).isNull()
-        }
-    }
-
-    private fun lagInformasjonskrav(
-        connection: DBConnection,
-        unleash: UnleashGateway = maksdatoSykepengerPå,
-    ) = SamordningYtelseVurderingInformasjonskrav(
-        SamordningYtelseRepositoryImpl(connection),
-        SamordningVurderingRepositoryImpl(connection),
-        GjenståendeSykedagerRepositoryImpl(connection),
-        FakeTidligereVurderinger(),
-        AbakusForeldrepengerGateway(),
-        AbakusSykepengerGateway(),
-        SakService(postgresRepositoryRegistry.provider(connection), createGatewayProvider { }),
-        unleash,
-    )
 
     private fun klargjørOgOppdater(
         samordningYtelseVurderingInformasjonskrav: SamordningYtelseVurderingInformasjonskrav,
