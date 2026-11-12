@@ -23,6 +23,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdagForBeh
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -47,6 +49,7 @@ class SamordningYtelseVurderingInformasjonskrav(
     private val fpGateway: ForeldrepengerGateway,
     private val spGateway: SykepengerGateway,
     private val sakService: SakService,
+    private val unleashGateway: UnleashGateway,
 ) : Informasjonskrav<SamordningInput, SamordningRegisterdata>, KanTriggeRevurdering {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -80,7 +83,8 @@ class SamordningYtelseVurderingInformasjonskrav(
         return SamordningInput(
             person = sak.person,
             rettighetsperiode = sak.rettighetsperiode,
-            hentGjenståendeSykedager = kontekst.behandlingType == TypeBehandling.Førstegangsbehandling,
+            hentGjenståendeSykedager = kontekst.behandlingType == TypeBehandling.Førstegangsbehandling
+                    && unleashGateway.isEnabled(BehandlingsflytFeature.MaksdatoSykepenger),
         )
     }
 
@@ -243,6 +247,7 @@ class SamordningYtelseVurderingInformasjonskrav(
                 fpGateway = gatewayProvider.provide(),
                 spGateway = gatewayProvider.provide(),
                 sakService = SakService(repositoryProvider, gatewayProvider),
+                unleashGateway = gatewayProvider.provide(),
             )
         }
 
