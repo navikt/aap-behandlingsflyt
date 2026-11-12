@@ -1267,8 +1267,14 @@ internal object VedtakDokumentRenderer {
     }
 
     private fun VedtakDokumentGrunnlag.opplysningerOmBehandlingenSub(): Seksjon {
-        val vedtakstidspunktEtikett = if (erMigrertVedtak()) "Migreringstidspunkt" else "Vedtakstidspunkt"
-        val vedtakstidspunkt = behandlinger.single { it.id == behandling.id }.vedtakstidspunkt
+        val vedtakEllerMigreringstidspunkt = if (erMigrertVedtak()) {
+            val muligRettFra = requireNotNull(kravGrunnlag?.gjeldendeMigrertKrav()?.muligRettFra) {
+                "Migrert vedtak mangler migrert krav med muligRettFra"
+            }
+            "Migreringstidspunkt" to Dato(muligRettFra)
+        } else {
+            "Vedtakstidspunkt" to Tidspunkt(behandlinger.single { it.id == behandling.id }.vedtakstidspunkt)
+        }
 
         return Seksjon(
             tittel = Tekst("Opplysninger om behandlingen"),
@@ -1286,7 +1292,7 @@ internal object VedtakDokumentRenderer {
                                     Tekst("."),
                                 )
                             },
-                    vedtakstidspunktEtikett to Tidspunkt(vedtakstidspunkt),
+                    vedtakEllerMigreringstidspunkt
                 )
             ),
         )
