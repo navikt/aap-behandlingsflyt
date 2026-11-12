@@ -393,9 +393,10 @@ class BrevUtlederServiceTest {
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
 
-            assertIs<VurderesForUføretrygd>(resultat, "forventer brevbehov er av typen 11-18")
-            assertEquals(sisteDagMedYtelse, resultat.sisteDagMedYtelse)
-            assertEquals(kravdatoUføretrygd, resultat.kravdatoUføretrygd)
+            assertIs<VurderesForUføretrygdV2>(resultat, "forventer brevbehov er av typen 11-18 V2")
+            assertEquals(sisteDagMedYtelse, resultat.uføreVurdering.sisteDagMedYtelse)
+            assertEquals(kravdatoUføretrygd, resultat.uføreVurdering.kravdatoUføretrygd)
+            assertNull(resultat.ordinærAAP)
         }
 
         @Test
@@ -1488,7 +1489,7 @@ class BrevUtlederServiceTest {
     }
 
     @Test
-    fun `førstegangsbehandling med kun 11-18 perioder skal gi vurderesforuføretrygdbrev`() {
+    fun `førstegangsbehandling med kun 11-18 perioder skal gi V2 uten ordinær AAP`() {
         val kravdatoUføretrygd = 20 februar 2023
         val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
         val førsteDagMedYtelse = 1 januar 2025
@@ -1522,7 +1523,8 @@ class BrevUtlederServiceTest {
 
         val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
 
-        assertIs<VurderesForUføretrygd>(resultat)
+        assertIs<VurderesForUføretrygdV2>(resultat)
+        assertNull(resultat.ordinærAAP)
     }
 
     @Test
