@@ -64,7 +64,7 @@ class GjenståendeSykedagerRepositoryImplTest {
     }
 
     @Test
-    fun `kopierer aktivt oppslag og sletter idempotent`() {
+    fun `kopierer aktivt oppslag og tåler gjentatt sletting`() {
         val (fra, til) = dataSource.transaction {
             finnEllerOpprettBehandling(it, sak(it)) to finnEllerOpprettBehandling(it, sak(it))
         }
