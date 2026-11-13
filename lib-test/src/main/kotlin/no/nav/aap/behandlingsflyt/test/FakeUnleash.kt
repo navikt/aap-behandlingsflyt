@@ -110,9 +110,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.KanVurdereRefusjonIRevurdering to false,
         BehandlingsflytFeature.KunEnAktivKlagebehandling to true,
         BehandlingsflytFeature.KlagePaaTilbakekreving to true,
-        BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true,
         BehandlingsflytFeature.DatadelingBehandlingVisning to true,
-        BehandlingsflytFeature.Helseinstitusjon1Manedsregel to true,
         BehandlingsflytFeature.OvergangUfoereBrevbygger to true,
     )
 ) {

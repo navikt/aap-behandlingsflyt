@@ -422,8 +422,7 @@ class InstitusjonsoppholdRepositoryImplTest {
             // Vurderingen strekker seg over hele kjeden, ikke bare ett enkelt segment
             repo.lagreHelseVurdering(
                 behandling.id,
-                listOf(vurdering(Periode(1 mai 2026, 31 desember 2026), behandling.id)),
-                true
+                listOf(vurdering(Periode(1 mai 2026, 31 desember 2026), behandling.id))
             )
 
             val grunnlag = requireNotNull(repo.hentHvisEksisterer(behandling.id))
@@ -451,8 +450,7 @@ class InstitusjonsoppholdRepositoryImplTest {
 
             repo.lagreHelseVurdering(
                 behandling.id,
-                listOf(vurdering(Periode(1 mai 2026, 1 september 2026), behandling.id)),
-                true
+                listOf(vurdering(Periode(1 mai 2026, 1 september 2026), behandling.id))
             )
 
             val grunnlag = requireNotNull(repo.hentHvisEksisterer(behandling.id))
@@ -576,8 +574,7 @@ class InstitusjonsoppholdRepositoryImplTest {
                 listOf(
                     vurdering(Periode(1 november 2026, 1 november 2026), behandling.id)
                         .copy(erHistoriskUtenReduksjonsberegning = true, oppholdId = førsteOppholdId)
-                ),
-                true
+                )
             )
 
             val lagret = requireNotNull(repo.hentHvisEksisterer(behandling.id))
@@ -602,8 +599,7 @@ class InstitusjonsoppholdRepositoryImplTest {
             assertThrows<IllegalArgumentException> {
                 repo.lagreHelseVurdering(
                     behandling.id,
-                    listOf(vurdering(Periode(1 november 2026, 1 november 2026), behandling.id)),
-                    true
+                    listOf(vurdering(Periode(1 november 2026, 1 november 2026), behandling.id))
                 )
             }
         }
@@ -632,8 +628,7 @@ class InstitusjonsoppholdRepositoryImplTest {
                 listOf(
                     vurdering(Periode(1 november 2027, 1 november 2027), behandling.id)
                         .copy(erHistoriskUtenReduksjonsberegning = true)
-                ),
-                true
+                )
             )
 
             val lagret = requireNotNull(repo.hentHvisEksisterer(behandling.id))
@@ -666,8 +661,7 @@ class InstitusjonsoppholdRepositoryImplTest {
                 listOf(
                     vurdering(Periode(1 mai 2026, 1 juni 2026), behandling.id)
                         .copy(erHistoriskUtenReduksjonsberegning = true, oppholdId = andreOppholdId)
-                ),
-                true
+                )
             )
 
             val gruppert = repo.hentVurderingerGruppertPerOpphold(behandling.id)
