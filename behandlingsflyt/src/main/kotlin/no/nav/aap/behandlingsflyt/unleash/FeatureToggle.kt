@@ -24,6 +24,7 @@ enum class BehandlingsflytFeature(
     SynkroniserArenaMeldeperiodesyklus,
     HandtereMaksdatoForKantTilKant,
     DynamiskFrivilligSykestipend,
+    MaksdatoSykepenger,
 
     // --- Krav ---
     KravSteg, // Visning
