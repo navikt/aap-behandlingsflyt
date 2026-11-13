@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.Ytelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
@@ -33,6 +34,9 @@ internal object FakeSykepengerGateway : SykepengerGateway {
         identerBrukt = emptySet()
         periodeBrukt = null
     }
+
+    override fun hentGjenståendeSykedager(fødselsnummer: String): GjenståendeSykedager =
+        error("Oppslag av gjenstående sykedager er ikke implementert i testgatewayen")
 
     override fun hentYtelseSykepenger(
         personidentifikatorer: Set<String>,

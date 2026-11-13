@@ -35,10 +35,6 @@ object InMemoryVedtakRepository : VedtakRepository {
         return grunnlag[behandlingId]?.second
     }
 
-    override fun hentId(behandlingId: BehandlingId): Long {
-        return grunnlag[behandlingId]?.first!!
-    }
-
     override fun kopier(
         fraBehandling: BehandlingId,
         tilBehandling: BehandlingId

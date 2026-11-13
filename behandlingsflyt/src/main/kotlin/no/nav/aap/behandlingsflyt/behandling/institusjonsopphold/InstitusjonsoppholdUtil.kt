@@ -32,22 +32,8 @@ fun HelseinstitusjonVurderingDto.giReduksjon(): Boolean =
 fun beregnTidligsteReduksjonsdatoPerKjede(
     opphold: List<Segment<Institusjon>>,
     harInnvilgetReduksjon: (SammenhengendeOppholdGruppe) -> Boolean = { false },
-    enManedsregelEnabled: Boolean
 ): Map<SammenhengendeOppholdGruppe, LocalDate> {
     if (opphold.isEmpty()) return emptyMap()
-
-    if (!enManedsregelEnabled) {
-        val kjeder = grupperSammenhengendeOppholdSegmenter(opphold)
-        // Ett representant-segment per kjede: kjedens fulle periode (første fom - siste tom)
-        val kjedeTilRepresentant = kjeder.associateWith { kjede ->
-            Segment(kjede.periode, kjede.elementer.first().verdi)
-        }
-        val tidligsteReduksjonsdatoPerRepresentant =
-            beregnTidligsteReduksjonsdatoPerOpphold(kjedeTilRepresentant.values.toList())
-        return kjedeTilRepresentant.mapNotNull { (kjede, representant) ->
-            tidligsteReduksjonsdatoPerRepresentant[representant]?.let { kjede to it }
-        }.toMap()
-    }
 
     val kjeder = grupperSammenhengendeOppholdSegmenter(opphold).sortedBy { it.periode.fom }
     val result = mutableMapOf<SammenhengendeOppholdGruppe, LocalDate>()
@@ -66,36 +52,5 @@ fun beregnTidligsteReduksjonsdatoPerKjede(
             }
         }
     }
-    return result
-}
-
-fun beregnTidligsteReduksjonsdatoPerOpphold(
-    opphold: List<Segment<Institusjon>>
-): Map<Segment<Institusjon>, LocalDate> {
-    if (opphold.isEmpty()) return emptyMap()
-
-    val sortert = opphold.sortedBy { it.periode.fom }
-    val result = mutableMapOf<Segment<Institusjon>, LocalDate>()
-
-    sortert.forEachIndexed { index, nåværende ->
-        val tidligsteReduksjonsdato = if (index == 0) {
-            // Første opphold: innleggelsesmåned + 3 måneder (dvs. 1. dag i måned 4 etter innleggelse)
-            nåværende.periode.fom.withDayOfMonth(1).plusMonths(4)
-        } else {
-            val forrige = sortert[index - 1]
-            val treMånederEtterForrigeUtskrivelse = forrige.periode.tom.plusMonths(3)
-            val erInnenTreMåneder = !nåværende.periode.fom.isAfter(treMånederEtterForrigeUtskrivelse)
-
-            if (erInnenTreMåneder) {
-                // Nytt opphold innen tre måneder: reduksjon kan starte fra innleggelsesdato
-                nåværende.periode.fom
-            } else {
-                // Mer enn tre måneder siden forrige: innleggelsesmåned + 3 måneder
-                nåværende.periode.fom.withDayOfMonth(1).plusMonths(4)
-            }
-        }
-        result[nåværende] = tidligsteReduksjonsdato
-    }
-
     return result
 }

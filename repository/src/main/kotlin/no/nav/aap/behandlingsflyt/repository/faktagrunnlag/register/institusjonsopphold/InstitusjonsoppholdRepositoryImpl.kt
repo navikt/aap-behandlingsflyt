@@ -292,7 +292,6 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
     private fun lagreHelseoppholdVurderinger(
         oppholdPersonId: Long?,
         helseoppholdVurderinger: List<HelseinstitusjonVurdering>,
-        sammenhengendeOppholdEnabled: Boolean
     ): Long? {
         if (helseoppholdVurderinger.isEmpty()) return null
 
@@ -301,16 +300,6 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
         val oppholdPersonIdCache = mutableMapOf<BehandlingId, List<Periode>>()
         fun hentSammenhengendeOppholdsperioder(behandlingId: BehandlingId): List<Periode> {
             val relevanteOppholdPersonId = hentOppholdPersonIdForBehandling(behandlingId) ?: oppholdPersonId
-
-            if (!sammenhengendeOppholdEnabled) {
-                return connection.queryList(
-                    """SELECT LOWER(PERIODE) AS FOM, UPPER(PERIODE) - 1 AS TOM FROM OPPHOLD 
-                       WHERE OPPHOLD_PERSON_ID = ? AND INSTITUSJONSTYPE = 'HS'""".trimIndent()
-                ) {
-                    setParams { setLong(1, relevanteOppholdPersonId) }
-                    setRowMapper { Periode(it.getLocalDate("FOM"), it.getLocalDate("TOM")) }
-                }
-            }
 
             val alleSegmentPerioder = connection.queryList(
                 """
@@ -409,8 +398,7 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
 
     override fun lagreHelseVurdering(
         behandlingId: BehandlingId,
-        helseinstitusjonVurderinger: List<HelseinstitusjonVurdering>,
-        sammenhengendeOppholdEnabled: Boolean
+        helseinstitusjonVurderinger: List<HelseinstitusjonVurdering>
     ) {
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
 
@@ -422,7 +410,6 @@ class InstitusjonsoppholdRepositoryImpl(private val connection: DBConnection) :
             lagreHelseoppholdVurderinger(
                 eksisterendeGrunnlag?.oppholdene?.id,
                 helseinstitusjonVurderinger,
-                sammenhengendeOppholdEnabled
             )
         connection.execute(
             """

@@ -30,6 +30,9 @@ enum class BehandlingsflytFeature(
     KravManuellVurdering,
     NyttKravPeriodiserteAvklaringsbehov,
 
+    // --- Utbetaling ---
+    SimuleringStegForNyttUtbetalingsgrensesnitt,
+
     // --- Migrering ---
     MigererSykdomFraArenaAutomatisk,
     MigrerRefusjonskravFraArenaAutomatisk,
@@ -39,18 +42,13 @@ enum class BehandlingsflytFeature(
     MigrererVedtakslengdeFraArenaAutomatisk,
     MigrererBeregningstidspunktFraArenaAutomatisk,
 
-    // --- Utbetaling ---
-    FjerneAvventUtbetalingForSamordningArbeidsgiver,
-
     // ------
     Avslag11_27,
     BosattStatsborgerskapGjennomslipp,
     KanVurdereRefusjonIRevurdering,
     KunEnAktivKlagebehandling,
     KlagePaaTilbakekreving,
-    SammenhengendeInstitusjonsopphold,
     DatadelingBehandlingVisning,
-    Helseinstitusjon1Manedsregel,
     OvergangUfoereBrevbygger,
     BackfillRedusertDagsats,
     

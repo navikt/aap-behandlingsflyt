@@ -62,23 +62,20 @@ class VarsleVedtakJobbUtfører(
         val behandlingId = input.payload<BehandlingId>()
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
-        val vedtak = vedtakRepository.hent(behandling.id)
-        val vedtakId =
-            requireNotNull(vedtakRepository.hentId(behandling.id)) { "Fant ikke vedtak for behandlingId $behandlingId." }
+        val vedtak =
+            requireNotNull(vedtakRepository.hent(behandling.id)) { "Forventer at vedtak-objekter er lagret når denne jobben kjøres." }
+        val vedtakId = vedtak.id
         val forrigeBehandlingId = behandling.forrigeBehandlingId
 
         val forrigeUnderveisGrunnlag = forrigeBehandlingId?.let { underveisRepository.hentHvisEksisterer(it) }
         val nåværendeUnderveisGrunnlag = underveisRepository.hent(behandling.id)
-
-
-        requireNotNull(vedtak) { "Forventer at vedtak-objekter er lagret når denne jobben kjøres." }
 
         // Hvis avslag, bruk vedtakstidspunkt som fallback
         val virkFom = vedtak.virkningstidspunkt ?: vedtak.vedtakstidspunkt.toLocalDate()
 
         val request = SamordneVedtakRequest(
             pid = sak.person.aktivIdent().identifikator,
-            vedtakId = vedtakId.toString(),
+            vedtakId = vedtakId.id.toString(),
             sakId = sak.id.id,
             virkFom = virkFom,
             virkTom = sak.rettighetsperiode.tom, // alltid 01-01-2999
@@ -108,9 +105,11 @@ class VarsleVedtakJobbUtfører(
 
         val tpYtelser by lazy { tjenestePensjonGateway.hentTjenestePensjon(ident.identifikator).flatMap { it.ytelser } }
 
+        val harRett = nåværendeUnderveisGrunnlag.rettighetstyper().isNotEmpty()
+
         val relevantEndring =
             listOf(
-                førstegangsbehandling,
+                førstegangsbehandling && harRett,
                 endringIRettighetsTypeTidslinje
             )
 
@@ -134,7 +133,7 @@ class VarsleVedtakJobbUtfører(
         samVarslingRepository.lagre(
             behandling.id,
             SamVarsling(
-                vedtakId = vedtakId,
+                vedtakId = vedtakId.id,
                 varslet = skalVarsle,
                 førstegangsbehandling = førstegangsbehandling,
                 endringIRettighetstype = endringIRettighetsTypeTidslinje,
@@ -151,7 +150,9 @@ class VarsleVedtakJobbUtfører(
         ).increment()
 
         // Trigger henting av samordnings-ID, som igjen trigger datadelingsjobb. Chainet, fordi datadelingsjobben trenger sam-id.
-        flytJobbRepository.leggTil(JobbInput(HentSamIdJobbUtfører).medPayload(behandling.id).forSak(sak.id.id).medPrioritet(Prioritet.LAV))
+        flytJobbRepository.leggTil(
+            JobbInput(HentSamIdJobbUtfører).medPayload(behandling.id).forSak(sak.id.id).medPrioritet(Prioritet.LAV)
+        )
     }
 
     companion object : ProvidersJobbSpesifikasjon {

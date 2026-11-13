@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.barnetillegg.BarnGateway
 import no.nav.aap.barnetillegg.BarnInformasjonskrav
 import no.nav.aap.barnetillegg.BarnInnhentingRespons
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdInformasjonskrav
@@ -94,6 +95,10 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
 
     object FakeSykepengerGateway : SykepengerGateway {
         var sykepengerRespons = SykepengerResponse(emptyList())
+        override fun hentGjenståendeSykedager(fødselsnummer: String): GjenståendeSykedager {
+            TODO("Not yet implemented")
+        }
+
         override fun hentYtelseSykepenger(
             personidentifikatorer: Set<String>,
             fom: LocalDate,

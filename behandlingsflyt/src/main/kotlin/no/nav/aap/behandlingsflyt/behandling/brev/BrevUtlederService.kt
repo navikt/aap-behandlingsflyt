@@ -86,6 +86,7 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.meldeplikt.MeldepliktRepository
+import no.nav.aap.student.StudentRepository
 import org.slf4j.LoggerFactory
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -115,6 +116,7 @@ class BrevUtlederService(
     private val barnepensjonRepository: BarnepensjonRepository,
     private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
     private val sykdomRepository: SykdomRepository,
+    private val studentRepository: StudentRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val barnRepository: BarnRepository,
     private val meldepliktRepository: MeldepliktRepository,
@@ -149,6 +151,7 @@ class BrevUtlederService(
         barnepensjonRepository = repositoryProvider.provide(),
         samordningAndreStatligeYtelserRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
+        studentRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
         barnRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
@@ -201,10 +204,10 @@ class BrevUtlederService(
                             perioder.any { it.rettighetsType == RettighetsType.VURDERES_FOR_UFØRETRYGD }
 
                         // Nytt brev takler at bruker kan ha en periode med ordinær aap før overgang jmf 11-18
-                        if (harUføretrygd && !harOrdinærAAP) {
-                            brevBehovVurderesForUføretrygd(behandling)
-                        } else if (harUføretrygd && unleashGateway.isEnabled(BehandlingsflytFeature.OvergangUfoereBrevbygger)) {
+                        if (harUføretrygd && unleashGateway.isEnabled(BehandlingsflytFeature.OvergangUfoereBrevbygger)) {
                             brevBehovVurderesForUføretrygdV2(behandling, erRevurdering = false)
+                        } else if (harUføretrygd && !harOrdinærAAP) {
+                            brevBehovVurderesForUføretrygd(behandling)
                         } else {
                             brevBehovInnvilgelse(behandling)
                         }
@@ -492,6 +495,9 @@ class BrevUtlederService(
     }
 
     private fun brevBehovAvslag(behandling: Behandling): AvslagBrev {
+        val sykdomGrunnlag by lazy { sykdomRepository.hentHvisEksisterer(behandling.id) }
+        val studentGrunnlag by lazy { studentRepository.hentHvisEksisterer(behandling.id) }
+
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
         val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
         val vedtaksdato = checkNotNull(vedtakRepository.hent(behandling.id)?.vedtakstidspunkt) {
@@ -509,14 +515,19 @@ class BrevUtlederService(
             avslagsårsak
         )
         if (avslagsårsak != null && !sykdomsvurdering.isNullOrBlank()) {
-            /*if (avslagsårsak == Avslagsårsak.BRUKER_UNDER_18) {
-                return AvslagBrev.AvslagUnder17År9Måneder(sykdomsvurdering = sykdomsvurdering)
-            }*/
-            if (avslagsårsak == Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET ||
-                avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE ||
-                avslagsårsak == Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL ||
-                avslagsårsak == Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
-            ) {
+            val erAvslag11_5 = avslagsårsak in setOf(
+                Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
+                Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
+                Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE_VESENTLIGDEL,
+                Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
+            )
+
+            val yrkesskadeVurdert = sykdomGrunnlag?.yrkesskadevurdering?.vurdertTidspunkt
+                ?.let { it >= behandling.opprettetTidspunkt }
+                ?: false
+            val studentVurdert = studentGrunnlag?.vurderinger?.any { it.vurdertIBehandling == behandling.id } ?: false
+
+            if (erAvslag11_5 && !yrkesskadeVurdert && !studentVurdert) {
                 return AvslagBrev.AvslagSykdomsvilkåret(
                     sykdomsvurdering = sykdomsvurdering,
                     yrkesSkadeISøknadIkkeIRegister = yrkesSkadeISøknadIkkeIRegister
@@ -586,7 +597,7 @@ class BrevUtlederService(
                 kravdatoUføretrygd = kravdatoUføretrygd,
                 sisteDagMedYtelse = maksDatoOvergangUføre
             ),
-            ordinærAAP = when (erRevurdering) {
+            ordinærAAP = when (erRevurdering || !harRettighetsType(behandling.id, RettighetsType.BISTANDSBEHOV)) {
                 true -> null
                 false -> OrdinærInnvilgelse(
                     virkningstidspunkt = innvilgelse.virkningstidspunkt,

@@ -65,7 +65,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
 
     data class LovvalgInput(
         val sak: Sak,
-        val datoerSomInformasjonskravSkalHentesFor: Set<LocalDate>,
+        val datoerSomInntektSkalHentesIForholdTil: Set<LocalDate>,
         val kravViKreverVurderingFor: List<StønadsperiodeVurdering>,
         val eksisterendeData: LovvalgMedlemskapGrunnlag?,
         val skalHentePerKrav: Boolean
@@ -109,7 +109,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
 
         return LovvalgInput(
             sak = sak,
-            datoerSomInformasjonskravSkalHentesFor = utledDatoerDetSkalInnhentesNyRegisterdataFor(
+            datoerSomInntektSkalHentesIForholdTil = utledDatoerDetSkalInnhentesNyRegisterdataFor(
                 eksisterendeData?.registerGrunnlag?.inntekterINorgeGrunnlag,
                 relevanteKrav
             ),
@@ -155,7 +155,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
 
     override fun hentData(input: LovvalgInput): LovvalgRegisterData {
         val sak = input.sak
-        val datoerSomInformasjonskravSkalHentesFor = input.datoerSomInformasjonskravSkalHentesFor
+        val datoerSomInntektSkalHentesIForholdTil = input.datoerSomInntektSkalHentesIForholdTil
 
         val executor = informasjonskravExecutor
         val medlemskapPerioderFuture = CompletableFuture
@@ -164,7 +164,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
             .supplyAsync(withMdc { innhentAARegisterGrunnlag(sak) }, executor)
 
         val inntektGrunnlagFutures = if (input.skalHentePerKrav) {
-            datoerSomInformasjonskravSkalHentesFor.map { dato ->
+            datoerSomInntektSkalHentesIForholdTil.map { dato ->
                 Pair(dato, CompletableFuture.supplyAsync(withMdc {
                     innhentAInntekt(
                         årMånedFom = YearMonth.from(dato.minusMonths(2)),
@@ -210,7 +210,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         val eksisterendeRelevanteInntekter =
             eksisterendeData?.registerGrunnlag?.inntekterINorgeGrunnlag?.inntekterForKrav.orEmpty()
                 .filter { inntekter -> inntekter.relevantDato in datoerViKreverVurderingFor }
-                .filterNot { inntekter -> inntekter.relevantDato in input.datoerSomInformasjonskravSkalHentesFor }
+                .filterNot { inntekter -> inntekter.relevantDato in input.datoerSomInntektSkalHentesIForholdTil }
                 .toSet()
 
 
