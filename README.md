@@ -35,6 +35,33 @@ For macOS og Linux anbefaler vi Colima. Det kan være nødvendig med et par tilp
 - `export DOCKER_HOST=unix://$TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE`
 - `export TESTCONTAINERS_RYUK_DISABLED=true`
 
+### Tester
+
+```bash
+./gradlew coreTest                     # kjernetestene i alle moduler, uten Docker (~20 s)
+./gradlew :behandlingsflyt:coreTest    # kjernetestene i én modul (~13 s, ~15 s med en endring i main)
+./gradlew test                         # alle testene, slik CI kjører dem (~5 min lokalt)
+./gradlew :behandlingsflyt:test --tests "*VurderAlderStegTest"
+```
+
+Testklasser som trenger Docker (Testcontainers) er tagget, og `coreTest` hopper over dem:
+
+- `@Tag("db")`: bruker Postgres via `TestDataSource`, `DatabaseSnapshot` eller `postgreSQLContainer()`.
+- `@Tag("kafka")`: bruker Kafka-containeren.
+- `@Tag("flyt")` (og `db`): ende-til-ende-tester som arver `AbstraktFlytOrkestratorTest`, tagget i baseklassen.
+
+En ny test som bruker Docker uten tag feiler i `coreTest` med en melding om hvilken tag som mangler, så kjernetestene
+forblir raske og kan kjøres uten Docker. `coreTest` er et alias for `test` med filter og kan ikke kombineres med
+`test`/`check`/`build` i samme kommando.
+
+Testdatabasene kjører uten fsync (`lib-test/src/main/resources/flyway/beforeMigrate__*.sql`), siden de kastes etter
+hver kjøring. Antall parallelle test-JVM-er lokalt er 4; `-PtestForks=8` gjør `:behandlingsflyt:test` ca. 20 %
+raskere, men med alle moduler samtidig tåler ikke Docker Desktop flere containere enn 4 per modul.
+
+Lokalt kjører testene uten Ryuk (Testcontainers sin opprydder), fordi den har feilet under last i Docker Desktop.
+Containerne stoppes da når test-JVM-en avslutter. Blir det likevel liggende igjen containere (f.eks. etter `kill -9`):
+`docker rm -f $(docker ps -aq --filter label=org.testcontainers)`.
+
 ### Code quality
 
 Prosjektet bruker [detekt](https://detekt.dev/) for statisk kodeanalyse. Detekt er automatisk aktivert på alle moduler.

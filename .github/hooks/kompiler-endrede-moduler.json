@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "hooks": {
+    "agentStop": [
+      {
+        "type": "command",
+        "bash": "d=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f \"$d/.github/hooks/kompiler-endrede-moduler.sh\" ] && exec bash \"$d/.github/hooks/kompiler-endrede-moduler.sh\"; echo \"kompiler-endrede-moduler.sh ble ikke funnet fra $PWD\" >&2",
+        "powershell": "exit 0",
+        "timeoutSec": 600
+      }
+    ]
+  }
+}

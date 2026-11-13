@@ -166,6 +166,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.params.provider.Arguments
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -176,7 +177,13 @@ import kotlin.reflect.KClass
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
 
+/**
+ * Ende-til-ende-tester av flyten mot Postgres (Testcontainers), fakes og motor.
+ * Taggene arves av alle subklasser; `coreTest` utelater dem.
+ */
 @Fakes
+@Tag("db")
+@Tag("flyt")
 open class AbstraktFlytOrkestratorTest(
     private val configuredUnleashGateway: KClass<out UnleashGateway>,
 ) {
@@ -204,12 +211,15 @@ open class AbstraktFlytOrkestratorTest(
         }
     }
 
-    protected open val motor: ManuellMotorImpl by lazy {
-        ManuellMotorImpl(
+    protected open val motor: FlytTestMotor by lazy {
+        FlytTestMotor(
             dataSource,
-            jobber = ProsesseringsJobber.alle(),
-            repositoryRegistry = postgresRepositoryRegistry,
-            gatewayProvider = gatewayProvider
+            ManuellMotorImpl(
+                dataSource,
+                jobber = ProsesseringsJobber.alle(),
+                repositoryRegistry = postgresRepositoryRegistry,
+                gatewayProvider = gatewayProvider
+            )
         )
     }
 
@@ -232,6 +242,11 @@ open class AbstraktFlytOrkestratorTest(
 
     protected fun journalpostId() = nesteJournalpostId.next()
 
+    /**
+     * Tømmer, i én TRUNCATE, alle tabeller som er skrevet til siden forrige gang (de har sider på disk, også om radene
+     * er slettet). Da starter hver test med samme tomme tabeller som før, men uten å trunkere alle 289 én og én:
+     * det tok 300 ms per test, dette tar under 100 ms.
+     */
     @BeforeEach
     open fun beforeEachClearDatabase() {
         dataSource.connection.use { conn ->
@@ -239,11 +254,16 @@ open class AbstraktFlytOrkestratorTest(
                 """
                 DO $$
                 DECLARE
-                    r RECORD;
+                    tabeller TEXT;
                 BEGIN
-                    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename NOT LIKE 'flyway_%') LOOP
-                        EXECUTE 'TRUNCATE TABLE public.' || quote_ident(r.tablename) || ' RESTART IDENTITY CASCADE';
-                    END LOOP;
+                    SELECT string_agg('public.' || quote_ident(c.relname), ', ') INTO tabeller
+                    FROM pg_class c
+                    JOIN pg_namespace n ON n.oid = c.relnamespace
+                    WHERE n.nspname = 'public' AND c.relkind = 'r' AND c.relname NOT LIKE 'flyway_%'
+                      AND pg_relation_size(c.oid) > 0;
+                    IF tabeller IS NOT NULL THEN
+                        EXECUTE 'TRUNCATE TABLE ' || tabeller || ' RESTART IDENTITY CASCADE';
+                    END IF;
                 END;
                 $$;
             """.trimIndent()

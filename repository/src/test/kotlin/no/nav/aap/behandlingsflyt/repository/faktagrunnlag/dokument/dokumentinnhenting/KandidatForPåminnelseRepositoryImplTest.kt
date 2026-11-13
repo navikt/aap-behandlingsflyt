@@ -20,9 +20,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Tag
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+@Tag("db")
 internal class KandidatForPåminnelseRepositoryImplTest {
     private val clockTreUkerOgEnDagFremITid = fixedClock(LocalDate.now().plusWeeks(3).plusDays(1))
 

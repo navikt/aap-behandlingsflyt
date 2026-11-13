@@ -29,6 +29,7 @@ import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import no.nav.aap.behandlingsflyt.help.ident
@@ -36,6 +37,7 @@ import java.time.DayOfWeek
 import java.time.temporal.TemporalAdjusters
 
 
+@Tag("db")
 class DatadelingMeldekortServiceTest {
     private companion object {
         private val testPeriode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))

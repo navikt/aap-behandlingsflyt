@@ -32,5 +32,6 @@ dokumentinnhentingKontrakt = { module = "no.nav.aap.dokumentinnhenting:kontrakt"
 arenaoppslag-kontrakt = { module = "no.nav.aap.arenaoppslag:kontrakt", version.ref = "arenaoppslag" }
 
 bekk-nocommons = { module = "no.bekk.bekkopen:nocommons", version = "0.17.0" }
+konsist = { module = "com.lemonappdev:konsist", version = "0.17.3" }
 
 ktorOpenApiGenerator = { module = "no.nav.aap.kelvin:ktor-openapi-generator", version.ref = "komponenter" }

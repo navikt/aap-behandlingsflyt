@@ -12,11 +12,13 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
+@Tag("db")
 internal class TrekkKlageRepositoryImplTest {
     companion object {
         private val søknadsdato = LocalDate.now()

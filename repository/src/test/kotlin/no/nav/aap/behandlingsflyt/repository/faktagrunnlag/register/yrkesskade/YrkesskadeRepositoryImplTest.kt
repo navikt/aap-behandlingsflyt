@@ -16,10 +16,12 @@ import no.nav.aap.komponenter.dbtest.TestDataSource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 
+@Tag("db")
 class YrkesskadeRepositoryImplTest {
     companion object {
         private lateinit var dataSource: TestDataSource

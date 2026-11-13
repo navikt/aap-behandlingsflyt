@@ -18,9 +18,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Tag
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
+@Tag("db")
 class StansOpphørRepositoryImplTest {
     companion object {
         private lateinit var dataSource: TestDataSource
