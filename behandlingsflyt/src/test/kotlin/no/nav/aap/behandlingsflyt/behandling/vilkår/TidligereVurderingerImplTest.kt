@@ -11,14 +11,23 @@ import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Repository
 import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Vurdering
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkår
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurderer
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.bistandsbehov.BistandRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
@@ -31,24 +40,19 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurderer
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
+import no.nav.aap.bistandsbehov.BistandRepository
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.Instant
 import java.time.LocalDate
-import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.verdityper.dokument.JournalpostId
 
 class TidligereVurderingerImplTest {
 
@@ -72,6 +76,7 @@ class TidligereVurderingerImplTest {
         every { unleashGateway.isEnabled(BehandlingsflytFeature.Avslag11_27) } returns false
         every { avbrytRevurderingService.revurderingErAvbrutt(any()) } returns false
         every { trukketSøknadService.søknadErTrukket(any()) } returns false
+        every { sykdomRepository.hentHvisEksisterer(any()) } returns null
         every { bistandRepository.hentHvisEksisterer(any()) } returns null
         every { avslag11_27repository.hentHvisEksisterer(any()) } returns null
         every { kravRepository.hentHvisEksisterer(any()) } returns null
@@ -328,6 +333,79 @@ class TidligereVurderingerImplTest {
         assertThat(resultat.segmenter()).noneMatch { it.verdi is TidligereVurderinger.UunngåeligAvslag }
     }
 
+    @ParameterizedTest
+    @MethodSource("nyeAvslagsvilkår")
+    fun `gir UunngåeligAvslag når vilkåret ikke er oppfylt`(
+        vilkårtype: Vilkårtype,
+        førSteg: StegType,
+        avslagsårsak: Avslagsårsak,
+    ) {
+        every { vilkårsresultatRepository.hent(behandlingId) } returns
+                vilkårsresultatMedMuligRettighet(vilkårtype, rettighetsperiode, Utfall.IKKE_OPPFYLT, avslagsårsak)
+
+        val resultat = opprettTidligereVurderinger().behandlingsutfall(kontekst(), førSteg)
+
+        assertThat(resultat.segmenter()).isNotEmpty.allSatisfy {
+            assertThat(it.verdi).isInstanceOf(TidligereVurderinger.UunngåeligAvslag::class.java)
+            assertThat((it.verdi as TidligereVurderinger.UunngåeligAvslag).vilkårtype).isEqualTo(vilkårtype)
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("nyeAvslagsvilkår")
+    fun `gir PotensieltOppfylt når vilkåret er oppfylt`(
+        vilkårtype: Vilkårtype,
+        førSteg: StegType,
+        @Suppress("UNUSED_PARAMETER") avslagsårsak: Avslagsårsak,
+    ) {
+        every { vilkårsresultatRepository.hent(behandlingId) } returns
+                vilkårsresultatMedMuligRettighet(vilkårtype, rettighetsperiode, Utfall.OPPFYLT, null)
+
+        val resultat = opprettTidligereVurderinger().behandlingsutfall(kontekst(), førSteg)
+
+        assertThat(resultat.segmenter()).noneMatch { it.verdi is TidligereVurderinger.UunngåeligAvslag }
+    }
+
+    @Test
+    fun `girAvslag er false når soning bare gjelder deler av perioden`() {
+        every { vilkårsresultatRepository.hent(behandlingId) } returns
+                vilkårsresultatMedMuligRettighet(
+                    Vilkårtype.STRAFFEGJENNOMFØRING,
+                    Periode(søknadsdato, søknadsdato.plusMonths(1)),
+                    Utfall.IKKE_OPPFYLT,
+                    Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING,
+                )
+
+        assertThat(opprettTidligereVurderinger().girAvslag(kontekst(), StegType.FORESLÅ_VEDTAK)).isFalse()
+    }
+
+    companion object {
+        @JvmStatic
+        fun nyeAvslagsvilkår() = listOf(
+            Arguments.of(
+                Vilkårtype.OPPHOLDSKRAV,
+                StegType.DU_ER_ET_ANNET_STED,
+                Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS
+            ),
+            Arguments.of(
+                Vilkårtype.STRAFFEGJENNOMFØRING,
+                StegType.SAMORDNING_AVSLAG,
+                Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING
+            ),
+            Arguments.of(
+                Vilkårtype.AKTIVITETSPLIKT,
+                StegType.FASTSETT_RETTIGHETSTYPE,
+                Avslagsårsak.BRUDD_PÅ_AKTIVITETSPLIKT_STANS
+            ),
+            Arguments.of(Vilkårtype.ORDINÆR_KVOTE, StegType.FORESLÅ_VEDTAK, Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP),
+            Arguments.of(
+                Vilkårtype.SYKEPENGEERSTATNING_KVOTE,
+                StegType.FORESLÅ_VEDTAK,
+                Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP
+            ),
+        )
+    }
+
     private fun kontekst(): FlytKontekstMedPerioder = FlytKontekstMedPerioder(
         sakId = sakId,
         behandlingId = behandlingId,
@@ -361,6 +439,39 @@ class TidligereVurderingerImplTest {
     )
 
     private object TestGrunnlag : Faktagrunnlag
+
+    private fun vilkårsresultatMedMuligRettighet(
+        vilkårtype: Vilkårtype,
+        periode: Periode,
+        utfall: Utfall,
+        avslagsårsak: Avslagsårsak? = null,
+    ) = Vilkårsresultat(
+        vilkår = listOf(
+            Vilkår(
+                Vilkårtype.OVERGANGUFØREVILKÅRET,
+                setOf(
+                    Vilkårsperiode(
+                        periode = rettighetsperiode,
+                        utfall = Utfall.OPPFYLT,
+                        manuellVurdering = true,
+                        begrunnelse = null,
+                    )
+                )
+            ),
+            Vilkår(
+                vilkårtype,
+                setOf(
+                    Vilkårsperiode(
+                        periode = periode,
+                        utfall = utfall,
+                        manuellVurdering = true,
+                        begrunnelse = null,
+                        avslagsårsak = avslagsårsak,
+                    )
+                )
+            ),
+        )
+    )
 
     private fun vilkårMedPeriode(
         type: Vilkårtype,

@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.bistandsbehov.BistandRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
@@ -18,6 +17,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.bistandsbehov.BistandRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
@@ -282,12 +282,32 @@ class TidligereVurderingerImpl(
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.MEDLEMSKAP, vilkårsresultat)
             },
 
+            Sjekk(StegType.VURDER_OPPHOLDSKRAV) { vilkårsresultat, _, _ ->
+                ikkeOppfyltFørerTilAvslag(Vilkårtype.OPPHOLDSKRAV, vilkårsresultat)
+            },
+
+            Sjekk(StegType.DU_ER_ET_ANNET_STED) { vilkårsresultat, _, _ ->
+                ikkeOppfyltFørerTilAvslag(Vilkårtype.STRAFFEGJENNOMFØRING, vilkårsresultat)
+            },
+
             Sjekk(StegType.SAMORDNING_AVSLAG) { vilkårsresultat, _, _ ->
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.SAMORDNING, vilkårsresultat)
             },
 
             Sjekk(StegType.SAMORDNING_SYKESTIPEND) { vilkårsresultat, _, _ ->
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.SAMORDNING_ANNEN_LOVGIVNING, vilkårsresultat)
+            },
+            Sjekk(StegType.EFFEKTUER_11_7) { vilkårsresultat, _, _ ->
+                ikkeOppfyltFørerTilAvslag(Vilkårtype.AKTIVITETSPLIKT, vilkårsresultat)
+            },
+
+            Sjekk(StegType.FASTSETT_RETTIGHETSTYPE) { vilkårsresultat, _, _ ->
+                ikkeOppfyltFørerTilAvslag(Vilkårtype.ORDINÆR_KVOTE, vilkårsresultat)
+                    .outerJoin(
+                        ikkeOppfyltFørerTilAvslag(Vilkårtype.SYKEPENGEERSTATNING_KVOTE, vilkårsresultat)
+                    ) { a, b ->
+                        a ?: b ?: TidligereVurderinger.PotensieltOppfylt(null)
+                    }
             },
         )
     )
@@ -440,7 +460,7 @@ class TidligereVurderingerImpl(
     private fun potensieltOppfyltOvergangArbeid(
         rettighetsperiode: Periode, segmentPeriode: Periode, sykdomstidslinje: Tidslinje<Sykdomsvurdering>
     ): Boolean {
-         // Trukkede søknader satt tilbake til Tid.MIN har ikke potensielt oppfylt overgang arbeid
+        // Trukkede søknader satt tilbake til Tid.MIN har ikke potensielt oppfylt overgang arbeid
         if (segmentPeriode.fom == Tid.MIN) {
             return false
         }
