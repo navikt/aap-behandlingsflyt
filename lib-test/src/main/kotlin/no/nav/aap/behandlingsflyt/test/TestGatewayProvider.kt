@@ -63,7 +63,7 @@ fun testGatewayProvider(
         register<MedlemskapGateway>()
         register<FakeApiInternGateway>()
         register<ArenaOppslagGatewayImpl>()
-        register<UtbetalingGatewayImpl>()
+        register<FakeUtbetalingGateway>()
         register<AARegisterGateway>()
         register<EREGGateway>()
         register<StatistikkGatewayImpl>()

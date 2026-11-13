@@ -218,7 +218,10 @@ object InMemoryBehandlingRepository : BehandlingRepository {
     }
 
     override fun finnGjeldendeVedtattBehandlingForSak(sakId: SakId): SakOgBehandling? {
-        TODO("Not yet implemented")
+        return hentAlleMedVedtakFor(sakId, TypeBehandling.ytelseBehandlingstyper())
+            .filter { it.status.erAvsluttet() }
+            .maxByOrNull { it.vedtakstidspunkt }
+            ?.let { SakOgBehandling(sakId, it.id) }
     }
 
     override fun finnBehandlingerSomManglerRedusertDagsats(sakId: SakId): List<BehandlingId> {

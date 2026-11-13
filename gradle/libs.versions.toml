@@ -5,7 +5,7 @@ utbetaling = "0.0.140"
 brev = "0.0.293"
 meldekort = "0.0.238"
 apiIntern = "0.0.114"
-dokumentinnhenting = "0.0.9"
+dokumentinnhenting = "0.0.10"
 arenaoppslag = "0.7.30"
 
 [libraries]

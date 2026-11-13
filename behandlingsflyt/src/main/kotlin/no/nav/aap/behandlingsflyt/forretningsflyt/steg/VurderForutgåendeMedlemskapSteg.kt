@@ -70,7 +70,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             migrerVurderingFraArena(kontekst)
         }
 
-        val grunnlag = lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
+        val grunnlag by lazy { hentGrunnlag(kontekst.sakId, kontekst.behandlingId) }
 
         avklaringsbehovService.oppdaterAvklaringsbehovForPeriodisertYtelsesvilkårTilstrekkeligVurdert(
             definisjon = Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP,
@@ -83,7 +83,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
                     .orEmpty()
             },
             kontekst = kontekst,
-            tilbakestillGrunnlag = { tilbakestillGrunnlagNy(kontekst, grunnlag.value.forutgåendeMedlemskapGrunnlag) },
+            tilbakestillGrunnlag = { tilbakestillGrunnlagNy(kontekst, grunnlag.forutgåendeMedlemskapGrunnlag) },
         )
 
         when (kontekst.vurderingType) {
@@ -255,6 +255,7 @@ class VurderForutgåendeMedlemskapSteg private constructor(
             fraArena = forutgåendeMedlemskap,
             behandlingId = kontekst.behandlingId,
             fom = kontekst.rettighetsperiode.fom,
+            virkningstidspunkt = arenaMigreringService.hentVirkningstidspunkt(kontekst.behandlingId),
         )
 
         forutgåendeMedlemskapRepository.lagreVurderinger(kontekst.behandlingId, listOf(vurdering))

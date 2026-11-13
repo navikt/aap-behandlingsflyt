@@ -32,8 +32,6 @@ class StartBehandlingSteg private constructor(
             vilkårsresultatRepository.lagre(kontekst.behandlingId, vilkårsresultat)
         }
 
-        if (kontekst.behandlingType == TypeBehandling.SvarFraAndreinstans) return Fullført
-
         return Fullført
     }
 

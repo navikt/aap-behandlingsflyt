@@ -1,11 +1,17 @@
 package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.utbetal.simulering.UtbetalingOgSimuleringDto
+import no.nav.aap.utbetal.simuleringv2.SimuleringDto
+import no.nav.aap.utbetal.simuleringv2.SimuleringsresponseDto
+import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
+import no.nav.aap.utbetal.trekk.TrekkResponsDto
 
 open class FakeUnleashBase(
     private val flags: Map<BehandlingsflytFeature, Boolean>,
@@ -79,6 +85,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.SynkroniserArenaMeldeperiodesyklus to false,
         BehandlingsflytFeature.HandtereMaksdatoForKantTilKant to true,
         BehandlingsflytFeature.DynamiskFrivilligSykestipend to true,
+        BehandlingsflytFeature.MaksdatoSykepenger to true,
         
         // --- Krav ---
         BehandlingsflytFeature.KravSteg to true,
@@ -94,15 +101,17 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigrererVedtakslengdeFraArenaAutomatisk to true,
         BehandlingsflytFeature.MigrererBeregningstidspunktFraArenaAutomatisk to true,
 
+        // --- Utbetaling ---
+        BehandlingsflytFeature.SimuleringStegForNyttUtbetalingsgrensesnitt to true,
+
         // ------
         BehandlingsflytFeature.Avslag11_27 to true,
         BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp to true,
         BehandlingsflytFeature.KanVurdereRefusjonIRevurdering to false,
         BehandlingsflytFeature.KunEnAktivKlagebehandling to true,
         BehandlingsflytFeature.KlagePaaTilbakekreving to true,
-        BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true,
         BehandlingsflytFeature.DatadelingBehandlingVisning to true,
-        BehandlingsflytFeature.Helseinstitusjon1Manedsregel to true,
+        BehandlingsflytFeature.HentInnLovvalgRegisterdataForNyesteAktuelleKrav to true,
         BehandlingsflytFeature.OvergangUfoereBrevbygger to true,
     )
 ) {
@@ -135,3 +144,26 @@ object AlleAvskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
         BehandlingsflytFeature.IngenValidering, // Vi må ha på validering, slik oppførselen er i prod. Dette er egentlig for å støtte superbruker
     )
 )
+
+object FakeUtbetalingGateway : UtbetalingGateway {
+    override fun utbetal(tilkjentYtelseDto: TilkjentYtelseDto) {
+        TODO("Not yet implemented")
+    }
+
+    override fun simulering(tilkjentYtelseDto: TilkjentYtelseDto): List<UtbetalingOgSimuleringDto> {
+        TODO("Not yet implemented")
+    }
+
+    override fun simuleringV2(tilkjentYtelseDto: TilkjentYtelseDto): SimuleringsresponseDto {
+        return SimuleringDto(perioder = emptyList())
+    }
+
+    override fun hentTrekk(saksnummer: String): TrekkResponsDto {
+        TODO("Not yet implemented")
+    }
+
+    override fun erMigrert(personIdent: String, saksnummer: String): Boolean {
+        return true
+    }
+
+}

@@ -9,6 +9,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarHels
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
@@ -25,7 +27,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.august
@@ -39,7 +41,6 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.test.september
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -48,7 +49,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjonsoppholdUnleash::class) {
+class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Stopper opp på institusjonssteget i førstegangsbehandling når innleggelsesdato er mer enn 2 mnd siden`() {
         val søknadsdato = LocalDate.now()
@@ -684,10 +685,12 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
         val revurdering =
             sak.opprettManuellRevurdering(listOf(Vurderingsbehov.BARNETILLEGG))
 
+        val sluttdatoFørsteInnvilgelse = fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
         revurdering
             .løsAvklaringsBehov(løsNeiTilBarnetillegg(barn, barnetilleggFom))
             .løsAvklaringsBehov(løsHelseinstitusjonMedReduksjon(fom, oppholdTom))
             .løsAndreStatligeYtelser()
+            .løsVedtakslengde(sluttdatoFørsteInnvilgelse, sluttdatoFørsteInnvilgelse.plussEtÅrMedHverdager(ÅrMedHverdager.ANDRE_ÅR))
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .medKontekst {
@@ -1120,7 +1123,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
                 assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
 
                 // Det er selve PERIODEN til det nye, korte oppholdet som IKKE skal trenge vurdering.
-                val utlederService = InstitusjonsoppholdUtlederService(repositoryProvider, gatewayProvider)
+                val utlederService = InstitusjonsoppholdUtlederService(repositoryProvider)
                 val behov = utlederService.utled(revurdering.id)
 
                 val perioderSomTrengerVurdering = behov.perioderTilVurdering.segmenter()
@@ -1341,11 +1344,4 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
             )
         )
     }
-
-    object SammenhengendeInstitusjonsoppholdUnleash : FakeUnleashBaseWithDefaultDisabled(
-        listOf(
-            BehandlingsflytFeature.SammenhengendeInstitusjonsopphold,
-            BehandlingsflytFeature.Helseinstitusjon1Manedsregel,
-        )
-    )
 }

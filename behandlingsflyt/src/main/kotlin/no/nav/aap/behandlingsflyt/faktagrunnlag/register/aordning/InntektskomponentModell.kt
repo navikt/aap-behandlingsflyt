@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterForKrav
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 import java.time.YearMonth
@@ -36,7 +37,14 @@ data class ArbeidsInntektMåned(
     }
 }
 
-fun List<ArbeidsInntektMåned>.tilDomene(enhetGrunnlag: List<EnhetGrunnlag>): List<InntektINorgeGrunnlag> {
+
+fun Map<LocalDate, List<ArbeidsInntektMåned>>.tilDomene(enhetGrunnlag: List<EnhetGrunnlag>): Set<InntekterForKrav> {
+    return this.map { (dato, inntekter) ->
+        InntekterForKrav(dato, inntekter.tilDomene(enhetGrunnlag).toSet())
+    }.toSet()
+}
+
+private fun List<ArbeidsInntektMåned>.tilDomene(enhetGrunnlag: List<EnhetGrunnlag>): List<InntektINorgeGrunnlag> {
     return this.flatMap { it.tilDomene(enhetGrunnlag) }
 }
 

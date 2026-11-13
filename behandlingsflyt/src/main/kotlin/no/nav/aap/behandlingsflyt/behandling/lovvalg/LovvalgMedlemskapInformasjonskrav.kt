@@ -26,7 +26,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapGa
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.tilDomene
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -41,7 +48,6 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.util.concurrent.*
 
-
 class LovvalgMedlemskapInformasjonskrav internal constructor(
     private val sakService: SakService,
     private val lovvalgMedlemskapRepository: LovvalgMedlemskapRepository,
@@ -51,19 +57,24 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
     private val arbeidsForholdGateway: ArbeidsforholdGateway,
     private val enhetsregisteretGateway: EnhetsregisteretGateway,
     private val inntektskomponentenGateway: InntektkomponentenGateway,
+    private val stønadsperiodeRepository: StønadsperiodeRepository,
+    private val kravRepository: KravRepository,
     private val unleashGateway: UnleashGateway,
 ) : Informasjonskrav<LovvalgMedlemskapInformasjonskrav.LovvalgInput, LovvalgMedlemskapInformasjonskrav.LovvalgRegisterData> {
     private val log = LoggerFactory.getLogger(javaClass)
 
     data class LovvalgInput(
         val sak: Sak,
-        val eksisterendeData: LovvalgMedlemskapGrunnlag?
+        val datoerSomInntektSkalHentesIForholdTil: Set<LocalDate>,
+        val kravViKreverVurderingFor: List<StønadsperiodeVurdering>,
+        val eksisterendeData: LovvalgMedlemskapGrunnlag?,
+        val skalHentePerKrav: Boolean
     ) : InformasjonskravInput
 
     data class LovvalgRegisterData(
         val medlemskapPerioder: List<MedlemskapDataIntern>,
         val arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
-        val inntektGrunnlag: List<ArbeidsInntektMåned>,
+        val inntektPerDato: Map<LocalDate, List<ArbeidsInntektMåned>>,
         val enhetGrunnlag: List<EnhetGrunnlag>
     ) : InformasjonskravRegisterdata
 
@@ -88,31 +99,97 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
     override fun klargjør(kontekst: FlytKontekstMedPerioder): LovvalgInput {
         val sak = sakService.hent(kontekst.sakId)
         val eksisterendeData = lovvalgMedlemskapRepository.hentHvisEksisterer(kontekst.behandlingId)
+
+        val gjeldendeStønadsperiodeGrunnlag = stønadsperiodeRepository.hentHvisEksisterer(kontekst.behandlingId)
+        val gjeldendeKravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
+        requireNotNull(gjeldendeStønadsperiodeGrunnlag)
+        requireNotNull(gjeldendeKravGrunnlag)
+
+        val relevanteKrav = utledKravViKreverVurderingerFor(gjeldendeStønadsperiodeGrunnlag, gjeldendeKravGrunnlag)
+
         return LovvalgInput(
             sak = sak,
-            eksisterendeData = eksisterendeData
+            datoerSomInntektSkalHentesIForholdTil = utledDatoerDetSkalInnhentesNyRegisterdataFor(
+                eksisterendeData?.registerGrunnlag?.inntekterINorgeGrunnlag,
+                relevanteKrav
+            ),
+            kravViKreverVurderingFor = relevanteKrav,
+            eksisterendeData = eksisterendeData,
+            skalHentePerKrav = unleashGateway.isEnabled(
+                BehandlingsflytFeature.HentInnLovvalgRegisterdataForNyesteAktuelleKrav
+            )
         )
+    }
+
+    private fun utledKravViKreverVurderingerFor(
+        stønadsperiodeGrunnlag: StønadsperiodeGrunnlag,
+        kravGrunnlag: KravGrunnlag
+    ): List<StønadsperiodeVurdering> {
+        val skalVurdereLovvalgVed =
+            listOf(
+                RelevantKravType.NY_STØNADSPERIODE,
+                RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR,
+                RelevantKravType.MIGRERT_STØNADSPERIODE
+            )
+
+        return stønadsperiodeGrunnlag
+            .gjeldendeVurderingerForGjeldendeKrav(kravGrunnlag)
+            .filter { it.relevantKravType in skalVurdereLovvalgVed }
+    }
+
+    private fun utledDatoerDetSkalInnhentesNyRegisterdataFor(
+        ekisterndeInntektData: InntekterINorgeRegisterGrunnlag?,
+        kravViKreverVurderingerFor: List<StønadsperiodeVurdering>
+    ): Set<LocalDate> {
+        val datoerViHar = ekisterndeInntektData?.inntekterForKrav?.map { it.relevantDato }?.toSet().orEmpty()
+        val nyeDatoer: Set<LocalDate> =
+            kravViKreverVurderingerFor.map { it.startDato }.toSet() - datoerViHar
+
+        // Vi skal alltid hente inn siste uansett (med mindre vi støtter eksplisitt revurdering av tidligere stønadsperiode)
+        val siste = kravViKreverVurderingerFor.maxOf { krav -> krav.startDato }
+
+        return nyeDatoer + siste
     }
 
     override fun hentData(input: LovvalgInput): LovvalgRegisterData {
         val sak = input.sak
+        val datoerSomInntektSkalHentesIForholdTil = input.datoerSomInntektSkalHentesIForholdTil
+
         val executor = informasjonskravExecutor
         val medlemskapPerioderFuture = CompletableFuture
             .supplyAsync(withMdc { medlemskapGateway.innhent(sak.person, sak.rettighetsperiode) }, executor)
         val arbeidGrunnlagFuture = CompletableFuture
             .supplyAsync(withMdc { innhentAARegisterGrunnlag(sak) }, executor)
-        val inntektGrunnlagFuture = CompletableFuture
-            .supplyAsync(withMdc { innhentAInntektGrunnlag(sak) }, executor)
+
+        val inntektGrunnlagFutures = if (input.skalHentePerKrav) {
+            datoerSomInntektSkalHentesIForholdTil.map { dato ->
+                Pair(dato, CompletableFuture.supplyAsync(withMdc {
+                    innhentAInntekt(
+                        årMånedFom = YearMonth.from(dato.minusMonths(2)),
+                        årMånedTom = YearMonth.from(dato),
+                        ident = sak.person.aktivIdent()
+                    )
+                }, executor))
+            }
+        } else {
+            listOf(
+                Pair(
+                    sak.rettighetsperiode.fom,
+                    CompletableFuture.supplyAsync(withMdc { innhentAInntektGrunnlag(sak) }, executor)
+                )
+            )
+        }
 
         val medlemskapPerioder = medlemskapPerioderFuture.get()
         val arbeidGrunnlag = arbeidGrunnlagFuture.get()
-        val inntektGrunnlag = inntektGrunnlagFuture.get()
-        val enhetGrunnlag = innhentEREGGrunnlag(inntektGrunnlag)
+
+        val inntektPerDato = inntektGrunnlagFutures.associate { it.first to it.second.get() }
+        val enhetGrunnlag = innhentEREGGrunnlag(inntektPerDato.flatMap { it.value })
 
         return LovvalgRegisterData(
             medlemskapPerioder = medlemskapPerioder,
             arbeidGrunnlag = arbeidGrunnlag,
-            inntektGrunnlag = inntektGrunnlag,
+            inntektPerDato = inntektPerDato,
             enhetGrunnlag = enhetGrunnlag
         )
     }
@@ -126,8 +203,19 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
 
         val eksisterendeData = input.eksisterendeData
 
+        val datoerViKreverVurderingFor = input.kravViKreverVurderingFor.map { it.startDato }
+
+        val eksisterendeRelevanteInntekter =
+            eksisterendeData?.registerGrunnlag?.inntekterINorgeGrunnlag?.inntekterForKrav.orEmpty()
+                .filter { inntekter -> inntekter.relevantDato in datoerViKreverVurderingFor }
+                .filterNot { inntekter -> inntekter.relevantDato in input.datoerSomInntektSkalHentesIForholdTil }
+                .toSet()
+
+
+        val gjeldendeInntekter = eksisterendeRelevanteInntekter + inntektGrunnlag.tilDomene(enhetGrunnlag).toSet()
+
         val nyRegisterdata = LovvalgMedlemskapRegisterGrunnlag(
-            inntekterINorgeGrunnlag = inntektGrunnlag.tilDomene(enhetGrunnlag),
+            inntekterINorgeGrunnlag = InntekterINorgeRegisterGrunnlag(gjeldendeInntekter),
             arbeiderINorgeGrunnlag = arbeidGrunnlag,
             medlemskapUnntakGrunnlag = medlemskapPerioder
                 .takeIf { it.isNotEmpty() }
@@ -137,8 +225,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         if (nyRegisterdata != eksisterendeData?.registerGrunnlag) {
             lagre(
                 behandlingId = kontekst.behandlingId,
-                relevantDato = input.sak.rettighetsperiode.fom,
-                registerGrunnlag = nyRegisterdata
+                registerGrunnlag = nyRegisterdata,
             )
 
             return ENDRET
@@ -180,16 +267,23 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
     }
 
     private fun innhentAInntektGrunnlag(sak: Sak): List<ArbeidsInntektMåned> {
+        return innhentAInntekt(
+            ident = sak.person.aktivIdent(),
+            årMånedFom = YearMonth.from(sak.rettighetsperiode.fom.minusMonths(2)),
+            årMånedTom = YearMonth.from(sak.rettighetsperiode.fom)
+        )
+    }
+
+    private fun innhentAInntekt(ident: Ident, årMånedFom: YearMonth, årMånedTom: YearMonth): List<ArbeidsInntektMåned> {
         return inntektskomponentenGateway.hentAInntekt(
-            fnr = sak.person.aktivIdent().identifikator,
-            fom = YearMonth.from(sak.rettighetsperiode.fom.minusMonths(2)),
-            tom = YearMonth.from(sak.rettighetsperiode.fom)
+            fnr = ident.identifikator,
+            fom = årMånedFom,
+            tom = årMånedTom
         ).arbeidsInntektMåned
     }
 
     private fun lagre(
         behandlingId: BehandlingId,
-        relevantDato: LocalDate, // TODO: Denne vil etterhvert være på registergrunnlagnivå
         registerGrunnlag: LovvalgMedlemskapRegisterGrunnlag
     ) {
         val medlemskapUnntakGrunnlag = registerGrunnlag.medlemskapUnntakGrunnlag
@@ -200,7 +294,6 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
 
         lovvalgMedlemskapRepository.lagreRegisterGrunnlag(
             behandlingId,
-            relevantDato,
             registerGrunnlag,
             medlId,
         )
@@ -225,6 +318,8 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
                 enhetsregisteretGateway = gatewayProvider.provide(),
                 inntektskomponentenGateway = gatewayProvider.provide(),
                 unleashGateway = gatewayProvider.provide(),
+                stønadsperiodeRepository = repositoryProvider.provide(),
+                kravRepository = repositoryProvider.provide()
             )
         }
     }
