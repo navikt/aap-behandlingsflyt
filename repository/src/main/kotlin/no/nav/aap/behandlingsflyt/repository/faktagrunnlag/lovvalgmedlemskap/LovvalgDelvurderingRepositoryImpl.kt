@@ -69,22 +69,20 @@ class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : 
             setResultValidator { require(it == 1) }
         }
 
-        delvurderinger.forEach { delvurdering ->
-            connection.execute(
-                """
-                INSERT INTO LOVVALG_DELVURDERING
-                    (vurderinger_id, vurdert_i_behandling, versjon, vurdering, relevant_dato)
-                VALUES (?, ?, ?, ?::jsonb, ?)
-                """.trimIndent()
-            ) {
-                setParams {
-                    setLong(1, vurderingerId)
-                    setLong(2, delvurdering.vurdertIBehandling.toLong())
-                    setInt(3, LovvalgDelvurderingJson.versjon)
-                    setString(4, LovvalgDelvurderingJson.serialiser(delvurdering.vurdering()))
-                    setLocalDate(5, delvurdering.relevantDato)
-                }
-                setResultValidator { require(it == 1) }
+        connection.executeBatch(
+            """
+            INSERT INTO LOVVALG_DELVURDERING
+                (vurderinger_id, vurdert_i_behandling, versjon, vurdering, relevant_dato)
+            VALUES (?, ?, ?, ?::jsonb, ?)
+            """.trimIndent(),
+            delvurderinger
+        ) {
+            setParams { delvurdering ->
+                setLong(1, vurderingerId)
+                setLong(2, delvurdering.vurdertIBehandling.toLong())
+                setInt(3, LovvalgDelvurderingJson.versjon)
+                setString(4, LovvalgDelvurderingJson.serialiser(delvurdering.vurdering()))
+                setLocalDate(5, delvurdering.relevantDato)
             }
         }
     }
