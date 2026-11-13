@@ -63,7 +63,7 @@ public data class StoppetBehandling(
 
 
 /**
- * Eksponert versjon av [no.nav.aap.behandlingsflyt.sakogbehandling.flyt.ÅrsakTilBehandling] til kontrakt.
+ * Vurderingsbehov som eksponeres i statistikk-kontrakten.
  */
 public enum class Vurderingsbehov {
     SØKNAD,
@@ -109,7 +109,7 @@ public enum class Vurderingsbehov {
     REVURDERING_AVBRUTT,
 
     /**
-     * Opprettes av [no.nav.aap.behandlingsflyt.prosessering.OpprettBehandlingFritakMeldepliktJobbUtfører].
+     * Opprettes av [OpprettBehandlingFritakMeldepliktJobbUtfører](https://github.com/navikt/aap-behandlingsflyt/blob/main/behandlingsflyt/src/main/kotlin/no/nav/aap/meldeplikt/OpprettBehandlingFritakMeldepliktJobbUtfører.kt).
      */
     FRITAK_MELDEPLIKT,
 
@@ -151,7 +151,7 @@ public enum class Vurderingsbehov {
 }
 
 /**
- * Eksponert versjon av [no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType].
+ * Eksponert versjon av [RettighetsType](https://github.com/navikt/aap-behandlingsflyt/blob/main/behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/faktagrunnlag/delvurdering/vilkårsresultat/RettighetsType.kt).
  *
  * @param hjemmel Hvilken paragraf
  */
