@@ -67,9 +67,10 @@ class AvklarStønadsperiodeSteg(
             .map { krav -> vurderStønadsperiode(krav, kantIKantKrav, arenaMaksdato, kontekst) }
             .filter { trengerNyVurdering(vedtatteVurderinger[it.referanse], it) }
 
-        val forrigeVarKantIKant = erKantIKant(kontekst.behandlingId)
+        // Svarer på om forrige lagrede vurdering var kant-i-kant. Må hentes før nye vurderinger lagres.
+        val forrigeVurderingVarKantIKant = erKantIKant(kontekst.behandlingId)
         stønadsperiodeRepository.lagre(kontekst.behandlingId, vedtattGrunnlag?.vurderinger.orEmpty() + nyeVurderinger)
-        oppdaterRettighetsperiodeVedKantIKant(kontekst, forrigeVarKantIKant, arenaMaksdato)
+        oppdaterRettighetsperiodeVedKantIKant(kontekst, forrigeVurderingVarKantIKant, arenaMaksdato)
     }
 
     private fun erKantIKant(behandlingId: BehandlingId): Boolean =
@@ -86,7 +87,7 @@ class AvklarStønadsperiodeSteg(
      */
     private fun oppdaterRettighetsperiodeVedKantIKant(
         kontekst: FlytKontekstMedPerioder,
-        forrigeVarKantIKant: Boolean,
+        forrigeVurderingVarKantIKant: Boolean,
         arenaMaksdato: ArenaMaksdato?,
     ) {
         // Rettighetsperioden ligger på saken. Vedtatte saker skal ikke få den flyttet med tilbakevirkning.
@@ -96,7 +97,7 @@ class AvklarStønadsperiodeSteg(
         val vurderinger = stønadsperiodeRepository.hentHvisEksisterer(kontekst.behandlingId)
             ?.gjeldendeVurderinger().orEmpty()
         val erKantIKant = vurderinger.any { it.erKantIKantMedArena }
-        if (!erKantIKant && !forrigeVarKantIKant) return
+        if (!erKantIKant && !forrigeVurderingVarKantIKant) return
 
         val nyFom = vurderinger.minOfOrNull { it.startDato } ?: return
         val sak = sakService.hent(kontekst.sakId)
