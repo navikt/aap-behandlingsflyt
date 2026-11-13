@@ -8,9 +8,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerGateway
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -36,7 +36,7 @@ class GjenståendeSykedagerInformasjonskrav(
         kontekst: FlytKontekstMedPerioder,
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?,
-    ): Boolean = kontekst.behandlingType == TypeBehandling.Førstegangsbehandling
+    ): Boolean = kontekst.vurderingType == VurderingType.FØRSTEGANGSBEHANDLING
             && (oppdatert == null || oppdatert.behandlingId != kontekst.behandlingId)
             && unleashGateway.isEnabled(BehandlingsflytFeature.MaksdatoSykepenger)
 

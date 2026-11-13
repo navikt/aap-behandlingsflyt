@@ -82,6 +82,8 @@ class BehandlingHendelseServiceImpl(
         val uføreVedtak = hentUføreVedtak(behandling)
         val aktivtAvklaringsbehov = avklaringsbehovService.finnAktivtAvklaringsbehov(behandling)
 
+        val faktiskBehandlingstype = behandlingService.utledFaktiskBehandlingstype(behandling)
+
         val hendelse = BehandlingFlytStoppetHendelse(
             personIdent = sak.person.aktivIdent().identifikator,
             saksnummer = sak.saksnummer,
@@ -103,8 +105,8 @@ class BehandlingHendelseServiceImpl(
             opprettetTidspunkt = behandling.opprettetTidspunkt,
             hendelsesTidspunkt = LocalDateTime.now(),
             versjon = ApplikasjonsVersjon.versjon,
-            gjenståendeSykedager = hentGjenståendeSykedager(behandling),
-        ).copy(behandlingType = behandlingService.utledFaktiskBehandlingstype(behandling))
+            gjenståendeSykedager = hentGjenståendeSykedager(behandling, faktiskBehandlingstype),
+        ).copy(behandlingType = faktiskBehandlingstype)
 
         log.info("Legger til flytjobber til statistikk og stoppethendelse for behandling: ${behandling.id}")
         /**
@@ -154,8 +156,11 @@ class BehandlingHendelseServiceImpl(
         }
     }
 
-    private fun hentGjenståendeSykedager(behandling: Behandling): GjenståendeSykedagerDto? {
-        if (behandling.typeBehandling() != TypeBehandling.Førstegangsbehandling) return null
+    private fun hentGjenståendeSykedager(
+        behandling: Behandling,
+        faktiskBehandlingstype: TypeBehandling
+    ): GjenståendeSykedagerDto? {
+        if (faktiskBehandlingstype != TypeBehandling.Førstegangsbehandling) return null
         return gjenståendeSykedagerRepository.hentHvisEksisterer(behandling.id)?.tilDto()
     }
 

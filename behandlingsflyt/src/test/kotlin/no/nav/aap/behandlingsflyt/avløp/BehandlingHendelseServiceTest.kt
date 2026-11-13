@@ -301,7 +301,8 @@ class BehandlingHendelseServiceTest {
     }
 
     private fun settOppFlyt(
-        typeBehandling: TypeBehandling = TypeBehandling.Førstegangsbehandling
+        typeBehandling: TypeBehandling = TypeBehandling.Førstegangsbehandling,
+        faktiskBehandlingstype: TypeBehandling = typeBehandling,
     ): Pair<BehandlingHendelseServiceImpl, Behandling> {
         every { flytJobbRepository.leggTil(any()) } returns Unit
 
@@ -359,7 +360,7 @@ class BehandlingHendelseServiceTest {
             versjon = 1
         )
 
-        every { behandlingService.utledFaktiskBehandlingstype(behandling) }.returns(behandling.typeBehandling())
+        every { behandlingService.utledFaktiskBehandlingstype(behandling) }.returns(faktiskBehandlingstype)
 
         every { sakService.hent(SakId(1)) } returns Sak(
             id = SakId(1),
