@@ -17,6 +17,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.utils.tilNorskFormat
 import no.nav.aap.bistandsbehov.Bistandsvurdering
 import java.time.Instant
 import java.time.LocalDate
@@ -88,6 +89,7 @@ object ArenaMigreringMapper {
         fraArena: ArenaSykdomsvurdering,
         behandlingId: BehandlingId,
         vurderingenGjelderFra: LocalDate,
+        virkningstidspunkt: LocalDate,
     ): Sykdomsvurdering {
         // TODO denne mappingen er ikke landet
         val hoveddiagnose = requireNotNull(
@@ -107,7 +109,11 @@ object ArenaMigreringMapper {
         // Kodeverk i Kelvin har ikke bindestrek, men Arena har det. F.eks. "ICPC-2" vs "ICPC2"
         val kodeverk = hoveddiagnose.kodeverk.replace("-", "")
 
-        val begrunnelse = fraArena.begrunnelse ?: "Automatisk migrert fra Arena"
+        val innledning = "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet " +
+                "${virkningstidspunkt.tilNorskFormat()} i Arena."
+        val begrunnelse = fraArena.begrunnelse?.let {
+            "$innledning Teksten under er overført fra vedtaksbegrunnelsen i Arena:\n\n$it"
+        } ?: innledning
 
         return Sykdomsvurdering(
             begrunnelse = begrunnelse,
@@ -138,17 +144,13 @@ object ArenaMigreringMapper {
         fraArena: ArenaOppholdskrav,
         behandlingId: BehandlingId,
         fom: LocalDate,
+        virkningstidspunkt: LocalDate,
     ): OppholdskravVurdering {
         require(fraArena.erOppfyltEllerIkkeVurdert()) {
             "Kan ikke mappe oppholdskrav med vilkårkode ${fraArena.vilkår?.kode} og status ${fraArena.vilkår?.status}"
         }
-        val status = fraArena.vilkår?.status
-        val begrunnelse = when (status) {
-            "J" -> "Oppholdskravet er oppfylt i Arena"
-            "V" -> "Oppholdskravet er ikke vurdert i Arena, " +
-                    "men oppfylles automatisk fordi det må være oppfylt for at vedtaket skal være innvilget i Arena"
-            else -> error("Uventet status etter validering: $status")
-        }
+        val begrunnelse = "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet " +
+                "${virkningstidspunkt.tilNorskFormat()} i Arena."
 
         return OppholdskravVurdering(
             vurdertAv = ARENA_MIGRERING_BRUKER,
@@ -173,12 +175,16 @@ object ArenaMigreringMapper {
         fraArena: ArenaForutgåendeMedlemskap,
         behandlingId: BehandlingId,
         fom: LocalDate,
+        virkningstidspunkt: LocalDate,
     ): ManuellVurderingForForutgåendeMedlemskap {
         require(fraArena.erOppfylt()) {
             "Kan ikke mappe forutgående medlemskap med vilkårkode ${fraArena.vilkår?.kode} og status ${fraArena.vilkår?.status}"
         }
         return ManuellVurderingForForutgåendeMedlemskap(
-            begrunnelse = "Forutgående medlemskap er oppfylt i Arena",
+            begrunnelse = "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet " +
+                    "${virkningstidspunkt.tilNorskFormat()} i Arena. " +
+                    "Vilkår om forutgående medlemskap er huket av som oppfylt etter § 11-2 første ledd. " +
+                    "Dette er gjort for at saken skal kunne bytte fagsystem og endrer ikke vurderingen gjort i Arena.",
             harForutgåendeMedlemskap = true,
             varMedlemMedNedsattArbeidsevne = null,
             medlemMedUnntakAvMaksFemAar = null,
@@ -198,8 +204,12 @@ object ArenaMigreringMapper {
     fun tilOppfyltBistandsvurdering(
         behandlingId: BehandlingId,
         fom: LocalDate,
+        virkningstidspunkt: LocalDate,
     ): Bistandsvurdering {
-        val begrunnelse = "Ikke vurdert i Arena, men oppfylles automatisk ved at bruker har ordinær AAP i Arena på migreringstidspunktet"
+        val begrunnelse = "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet " +
+                "${virkningstidspunkt.tilNorskFormat()} i Arena. " +
+                "I Kelvin er vilkårene huket av som oppfylt på § 11-6 bokstav a og b. " +
+                "Dette er gjort for at saken skal kunne bytte fagsystem og endrer ikke vurderingen gjort i Arena."
 
         return Bistandsvurdering(
             begrunnelse = begrunnelse,
@@ -232,9 +242,13 @@ object ArenaMigreringMapper {
         )
     }
 
-    fun tilBeregningstidspunktVurdering(fraArena: ArenaBeregningstidspunkt): BeregningstidspunktVurdering {
+    fun tilBeregningstidspunktVurdering(
+        fraArena: ArenaBeregningstidspunkt,
+        virkningstidspunkt: LocalDate,
+    ): BeregningstidspunktVurdering {
         return BeregningstidspunktVurdering(
-            begrunnelse = "Migrert fra Arena",
+            begrunnelse = "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet " +
+                    "${virkningstidspunkt.tilNorskFormat()} i Arena. Forvaltningsnotat finnes i Gosys.",
             nedsattArbeidsevneEllerStudieevneDato = fraArena.beregningstidspunkt,
             ytterligereNedsattBegrunnelse = null,
             ytterligereNedsattArbeidsevneDato = null,

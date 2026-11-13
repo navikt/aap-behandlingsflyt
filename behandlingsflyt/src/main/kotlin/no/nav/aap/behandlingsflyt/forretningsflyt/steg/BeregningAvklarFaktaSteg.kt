@@ -165,7 +165,10 @@ class BeregningAvklarFaktaSteg private constructor(
 
         beregningVurderingRepository.lagre(
             kontekst.behandlingId,
-            ArenaMigreringMapper.tilBeregningstidspunktVurdering(beregningstidspunkt)
+            ArenaMigreringMapper.tilBeregningstidspunktVurdering(
+                fraArena = beregningstidspunkt,
+                virkningstidspunkt = arenaMigreringService.hentVirkningstidspunkt(kontekst.behandlingId),
+            )
         )
     }
 
