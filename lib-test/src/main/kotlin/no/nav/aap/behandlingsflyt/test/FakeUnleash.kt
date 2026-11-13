@@ -111,6 +111,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.KunEnAktivKlagebehandling to true,
         BehandlingsflytFeature.KlagePaaTilbakekreving to true,
         BehandlingsflytFeature.DatadelingBehandlingVisning to true,
+        BehandlingsflytFeature.HentInnLovvalgRegisterdataForNyesteAktuelleKrav to true,
         BehandlingsflytFeature.OvergangUfoereBrevbygger to true,
     )
 ) {
