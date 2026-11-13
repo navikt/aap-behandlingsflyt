@@ -340,6 +340,9 @@ class BrevUtlederService(
 
             TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling, TypeBehandling.Aktivitetsplikt11_9 ->
                 return null // TODO
+
+            // Brevet sendes manuelt utenfor Kelvin
+            TypeBehandling.Utenlandsopphold -> return null
         }
     }
 
