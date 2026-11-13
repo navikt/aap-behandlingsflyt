@@ -230,6 +230,22 @@ class EtableringEgenVirksomhetServiceTest {
     }
 
     @Test
+    fun `tom liste av vurderinger gyldig, også når sykdom og bistand ikke er oppfylt`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling(LocalDate.now())
+
+        val service = EtableringEgenVirksomhetService(
+            InMemoryEtableringEgenVirksomRepository,
+            InMemoryBehandlingRepository,
+            InMemoryBistandRepository,
+            InMemorySykdomRepository
+        )
+
+        val res = service.beregnOgValider(behandling.id, emptyList())
+
+        assertThat(res).isInstanceOf(VirksomhetEtableringResultat.Gyldig::class.java)
+    }
+
+    @Test
     fun `utleder ikke vurderbare perioder`() {
         val (_, behandling) = opprettInMemorySakOgBehandling(LocalDate.of(2026, 1, 1))
 
