@@ -16,11 +16,15 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.time.Instant
 
 class AvklarStønadsperiodeSteg(
@@ -28,7 +32,10 @@ class AvklarStønadsperiodeSteg(
     private val kravRepository: KravRepository,
     private val stønadsperiodeRepository: StønadsperiodeRepository,
     private val arenaMaksdatoRepository: ArenaMaksdatoRepository,
+    private val sakService: SakService,
 ) : BehandlingSteg {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         when (kontekst.behandlingType) {
             TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
@@ -60,8 +67,53 @@ class AvklarStønadsperiodeSteg(
             .map { krav -> vurderStønadsperiode(krav, kantIKantKrav, arenaMaksdato, kontekst) }
             .filter { trengerNyVurdering(vedtatteVurderinger[it.referanse], it) }
 
+        // Svarer på om forrige lagrede vurdering var kant-i-kant. Må hentes før nye vurderinger lagres.
+        val forrigeVurderingVarKantIKant = erKantIKant(kontekst.behandlingId)
         stønadsperiodeRepository.lagre(kontekst.behandlingId, vedtattGrunnlag?.vurderinger.orEmpty() + nyeVurderinger)
+        oppdaterRettighetsperiodeVedKantIKant(kontekst, forrigeVurderingVarKantIKant, arenaMaksdato)
     }
+
+    private fun erKantIKant(behandlingId: BehandlingId): Boolean =
+        stønadsperiodeRepository.hentHvisEksisterer(behandlingId)
+            ?.gjeldendeVurderinger().orEmpty()
+            .any { it.erKantIKantMedArena }
+
+    /**
+     * TODO: Midlertidig til stønadsperioden er fasit i hele flyten. Rydder ikke vilkårsresultatet.
+     *
+     * Setter fom i rettighetsperioden lik tidligste startdato i stønadsperioden når saken er kant i kant,
+     * eller når forrige vurdering i behandlingen var kant i kant (tilbakestilling). Saker som verken er
+     * eller var kant i kant røres ikke. Med toggle av skjer verken overstyring eller tilbakestilling.
+     */
+    private fun oppdaterRettighetsperiodeVedKantIKant(
+        kontekst: FlytKontekstMedPerioder,
+        forrigeVurderingVarKantIKant: Boolean,
+        arenaMaksdato: ArenaMaksdato?,
+    ) {
+        // Rettighetsperioden ligger på saken. Vedtatte saker skal ikke få den flyttet med tilbakevirkning.
+        if (kontekst.forrigeBehandlingId != null) return
+        if (!unleashGateway.isEnabled(BehandlingsflytFeature.HandtereMaksdatoForKantTilKant)) return
+
+        val vurderinger = stønadsperiodeRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?.gjeldendeVurderinger().orEmpty()
+        val erKantIKant = vurderinger.any { it.erKantIKantMedArena }
+        if (!erKantIKant && !forrigeVurderingVarKantIKant) return
+
+        val nyFom = vurderinger.minOfOrNull { it.startDato } ?: return
+        val sak = sakService.hent(kontekst.sakId)
+        val gjeldendeFom = sak.rettighetsperiode.fom
+        if (nyFom == gjeldendeFom) return
+
+        log.info(
+            "Endrer fom i rettighetsperioden for sak ${sak.saksnummer} fra $gjeldendeFom til $nyFom. " +
+                    "Årsak: ${årsakTilEndring(erKantIKant, arenaMaksdato)}"
+        )
+        sakService.overstyrRettighetsperioden(sak, nyFom, Tid.MAKS)
+    }
+
+    private fun årsakTilEndring(erKantIKant: Boolean, arenaMaksdato: ArenaMaksdato?): String =
+        if (erKantIKant) "kant i kant med Arena-sak ${arenaMaksdato?.arenaSaksnummer}"
+        else "tilbakestilt, ikke lenger kant i kant (Arena-sak ${arenaMaksdato?.arenaSaksnummer})"
 
     private fun trengerNyVurdering(vedtatt: StønadsperiodeVurdering?, forslag: StønadsperiodeVurdering) =
         vedtatt == null || (vedtatt.vurdertAv.erSystembruker() && vedtatt.startDato != forslag.startDato)
@@ -165,6 +217,7 @@ class AvklarStønadsperiodeSteg(
                 kravRepository = repositoryProvider.provide(),
                 stønadsperiodeRepository = repositoryProvider.provide(),
                 arenaMaksdatoRepository = repositoryProvider.provide(),
+                sakService = SakService(repositoryProvider, gatewayProvider),
             )
         }
 
