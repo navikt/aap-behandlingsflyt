@@ -27,4 +27,6 @@ dependencies {
     implementation(kelvinLibs.nimbus.jose.jwt)
 
     implementation(kelvinLibs.bundles.junit)
+
+    testImplementation(libs.archunit)
 }

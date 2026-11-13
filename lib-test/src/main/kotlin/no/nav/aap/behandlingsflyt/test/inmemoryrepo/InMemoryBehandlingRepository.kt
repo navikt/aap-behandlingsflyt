@@ -81,6 +81,8 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
+    internal fun alle(): List<Behandling> = synchronized(lock) { memory.values.toList() }
+
     override fun hentReferanse(behandlingId: BehandlingId): BehandlingReferanse {
         return hent(behandlingId).referanse
     }
