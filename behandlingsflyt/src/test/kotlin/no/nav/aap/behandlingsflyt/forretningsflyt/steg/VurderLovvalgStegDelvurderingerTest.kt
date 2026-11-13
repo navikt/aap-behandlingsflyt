@@ -4,7 +4,10 @@ import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingerGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
@@ -13,6 +16,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryLovvalgDelvurderingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryOppgittUtenlandsopplysningerRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryStønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
@@ -160,22 +164,36 @@ class VurderLovvalgStegDelvurderingerTest {
     }
 
     private fun stønadsperioder(behandling: Behandling, vararg perioder: Pair<LocalDate, RelevantKravType>) {
+        val kravOgStønadsperioder = perioder.map { (startDato, type) ->
+            val referanse = Kravreferanse.ny()
+            val krav = RelevantKrav(
+                referanse = referanse,
+                journalpostId = JournalpostId(startDato.toString()),
+                vurdertAv = SYSTEMBRUKER,
+                begrunnelse = "Test",
+                vurdertIBehandling = behandling.id,
+                opprettet = Instant.now(),
+                søknadsdato = Søknadsdato(startDato, SøknadsdatoÅrsak.SøknadMottatt, "Test"),
+                overstyrMuligRettFra = null,
+                muligRettFra = startDato,
+            )
+            val gjeninntreden = type == RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR
+            krav to StønadsperiodeVurdering(
+                referanse = referanse,
+                opprettet = Instant.now(),
+                vurdertIBehandling = behandling.id,
+                vurdertAv = SYSTEMBRUKER,
+                begrunnelse = "Test",
+                harHattOrdinærSiste52Uker = gjeninntreden,
+                harGjenværendeKvote = gjeninntreden,
+                relevantKravType = type,
+                startDato = startDato,
+            )
+        }
+        InMemoryKravRepository.lagre(behandling.id, kravOgStønadsperioder.map { it.first }.toSet())
         InMemoryStønadsperiodeRepository.lagre(
             behandling.id,
-            perioder.map { (startDato, type) ->
-                val gjeninntreden = type == RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR
-                StønadsperiodeVurdering(
-                    referanse = Kravreferanse.ny(),
-                    opprettet = Instant.now(),
-                    vurdertIBehandling = behandling.id,
-                    vurdertAv = SYSTEMBRUKER,
-                    begrunnelse = "Test",
-                    harHattOrdinærSiste52Uker = gjeninntreden,
-                    harGjenværendeKvote = gjeninntreden,
-                    relevantKravType = type,
-                    startDato = startDato,
-                )
-            }.toSet()
+            kravOgStønadsperioder.map { it.second }.toSet()
         )
     }
 }
