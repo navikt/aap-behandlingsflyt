@@ -51,7 +51,7 @@ class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : 
         }
 
         val eksisterende = hentAlle(behandlingId)
-        if (eksisterende.toSet() == delvurderinger.toSet()) return
+        if (eksisterende == delvurderinger) return
 
         if (eksisterende.isNotEmpty()) {
             deaktiverGrunnlag(behandlingId)
