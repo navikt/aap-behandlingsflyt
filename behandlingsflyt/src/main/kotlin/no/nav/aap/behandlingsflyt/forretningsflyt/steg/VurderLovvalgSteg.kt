@@ -122,7 +122,9 @@ class VurderLovvalgSteg private constructor(
             VurderingType.MIGRER_RETTIGHETSPERIODE,
             VurderingType.MIGERING_FRA_ARENA,
             VurderingType.REVURDERING -> {
-                oppdaterDelvurderinger(kontekst, registerGrunnlag)
+                if (tidligereVurderinger.harBehandlingsgrunnlag(kontekst, type())) {
+                    oppdaterDelvurderinger(kontekst, registerGrunnlag)
+                }
             }
 
             else -> {
