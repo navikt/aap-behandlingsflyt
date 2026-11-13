@@ -11,7 +11,7 @@ import java.time.LocalDate
 
 interface LovvalgMedlemskapRepository : Repository {
     fun hentHvisEksisterer(behandlingId: BehandlingId): LovvalgMedlemskapGrunnlag?
-    fun lagreRegisterGrunnlag(behandlingId: BehandlingId, relevantDato: LocalDate, registerGrunnlag: LovvalgMedlemskapRegisterGrunnlag, medlId: Long?)
+    fun lagreRegisterGrunnlag(behandlingId: BehandlingId, registerGrunnlag: LovvalgMedlemskapRegisterGrunnlag, medlId: Long?)
     fun lagreVurderinger(behandlingId: BehandlingId, vurderinger: List<ManuellVurderingForLovvalgMedlemskap>)
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

@@ -158,7 +158,7 @@ class MeldingOmVedtakBrevSteg(
     }
 
     private fun unikReferanse(brevBehov: BrevBehov, kontekst: FlytKontekstMedPerioder): String {
-        val behandling = behandlingRepository.hent(kontekst.behandlingId)
+        val referanse = behandlingRepository.hentReferanse(kontekst.behandlingId)
 
         return when (brevBehov) {
             is BarnetilleggSatsRegulering -> {
@@ -172,7 +172,7 @@ class MeldingOmVedtakBrevSteg(
             }
 
             else -> {
-                "${behandling.referanse}-${brevBehov.typeBrev}"
+                "$referanse-${brevBehov.typeBrev}"
             }
         }
     }
@@ -210,7 +210,7 @@ class MeldingOmVedtakBrevSteg(
             "Z990265"
         )
         val brevtyperSomSkalBrukeBrevbygger = listOf(TypeBrev.VEDTAK_INNVILGELSE)
-        return typeBrev in brevtyperSomSkalBrukeBrevbygger && bruker.ident in brukereSomSkalBrukeBrevbygger
+        return typeBrev in brevtyperSomSkalBrukeBrevbygger && (bruker.ident in brukereSomSkalBrukeBrevbygger || Miljø.erDev())
     }
 
     companion object : FlytSteg {

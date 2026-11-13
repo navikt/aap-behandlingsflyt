@@ -12,5 +12,9 @@ data class MeldingDto(
     val tekst: String?,
     val meldingStatus: DialogmeldingLeveringStatus?,
     val journalpostId: String?,
-    val påminnelseAvbrutt: Boolean? = null
+    val påminnelseAvbrutt: Boolean? = null,
+    val bestillerNavn: String? = null,
+    val bestillerNavIdent: String? = null,
+    val kanSendeManuellPåminnelse: Boolean,
+    val sisteForespørselSendt: LocalDateTime? = null
 )

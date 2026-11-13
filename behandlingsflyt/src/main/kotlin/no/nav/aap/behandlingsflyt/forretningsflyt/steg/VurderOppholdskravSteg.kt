@@ -143,6 +143,7 @@ class VurderOppholdskravSteg private constructor(
             fraArena = oppholdskrav,
             behandlingId = kontekst.behandlingId,
             fom = kontekst.rettighetsperiode.fom,
+            virkningstidspunkt = arenaMigreringService.hentVirkningstidspunkt(kontekst.behandlingId),
         )
 
         oppholdskravGrunnlagRepository.lagre(

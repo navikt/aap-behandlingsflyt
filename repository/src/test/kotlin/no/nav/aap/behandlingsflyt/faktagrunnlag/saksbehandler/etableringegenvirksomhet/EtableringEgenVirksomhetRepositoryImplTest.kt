@@ -15,7 +15,7 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.Instant
 import java.time.LocalDate
 
-class EtableringEgenVirksomhetRepositoryTest {
+class EtableringEgenVirksomhetRepositoryImplTest {
     companion object {
         private lateinit var dataSource: TestDataSource
 

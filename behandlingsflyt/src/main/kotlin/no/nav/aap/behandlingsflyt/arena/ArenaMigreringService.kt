@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.arena
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.ArenaMigreringRepository
@@ -8,11 +9,13 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.Instant
+import java.time.LocalDate
 
 class ArenaMigreringService(
     private val arenaMigreringRepository: ArenaMigreringRepository,
     private val arenaMigreringsdataRepository: ArenaMigreringsdataRepository,
     private val arenaOppslagGateway: ArenaOppslagGateway,
+    private val kravRepository: KravRepository,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -20,6 +23,7 @@ class ArenaMigreringService(
         arenaMigreringRepository = repositoryProvider.provide(),
         arenaMigreringsdataRepository = repositoryProvider.provide(),
         arenaOppslagGateway = gatewayProvider.provide(),
+        kravRepository = repositoryProvider.provide(),
     )
 
     fun hentSaksnummerArena(sakId: SakId): String {
@@ -76,6 +80,13 @@ class ArenaMigreringService(
         return arenaMigreringRepository.hentForSakHvisEksisterer(sakId)?.let {
             arenaOppslagGateway.hentKravDataForSak(it.saksnummerArena).tilDomene()
         }
+    }
+
+    fun hentVirkningstidspunkt(behandlingId: BehandlingId): LocalDate {
+        val migrertKrav = kravRepository.hentHvisEksisterer(behandlingId)?.gjeldendeMigrertKrav()
+        return requireNotNull(migrertKrav) {
+            "Fant ikke migrert krav for behandling $behandlingId"
+        }.virkningstidspunktArena
     }
 
     fun lagreMigreringsdataForSporing(behandlingId: BehandlingId, steg: StegType, data: Any?) {

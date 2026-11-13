@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettRevurdering
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.help.sak
-import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -96,6 +95,19 @@ internal class BehandlingRepositoryImplTest {
         @AfterAll
         @JvmStatic
         fun tearDown() = dataSource.close()
+    }
+
+    @Test
+    fun `Kan hente referanse med behandlingId`() {
+        val behandling = dataSource.transaction { connection ->
+            finnEllerOpprettBehandling(connection, sak(connection))
+        }
+
+        dataSource.transaction(readOnly = true) { connection ->
+            val referanse = BehandlingRepositoryImpl(connection).hentReferanse(behandling.id)
+
+            assertThat(referanse).isEqualTo(behandling.referanse)
+        }
     }
 
     @Test
@@ -676,7 +688,7 @@ internal class BehandlingRepositoryImplTest {
                 tilkjent.copy(dagsats = Beløp(999 + index * 100)),
             )
         })
-        TilkjentYtelseRepositoryImpl(connection).lagre(behandlingId, perioder, tomtTilkjentYtelseGrunnlag, "")
+        TilkjentYtelseRepositoryImpl(connection).lagre(behandlingId, perioder)
         if (manglerRedusertDagsats) {
             connection.execute(
                 """

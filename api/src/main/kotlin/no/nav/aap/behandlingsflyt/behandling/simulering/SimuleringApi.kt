@@ -2,7 +2,9 @@ package no.nav.aap.behandlingsflyt.behandling.simulering
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
+import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
+import io.ktor.http.HttpStatusCode
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -15,8 +17,8 @@ import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.authorizedGet
-import no.nav.aap.utbetal.simulering.SimuleringDto
 import no.nav.aap.utbetal.simulering.UtbetalingOgSimuleringDto
+import no.nav.aap.utbetal.simuleringv2.SimuleringsresponseDto
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.simuleringApi(
@@ -56,8 +58,9 @@ fun NormalOpenAPIRoute.simuleringApi(
 
         // v2: eksponerer aap-utbetal sitt nye /simulering/v2-endepunkt. Lever i parallell
         // med v1-ruten over inntil alle saker er migrert til nytt utbetalings-api.
+        // NB: Mulig denne utgår siden vi skal kalle simulering i eget steg. Da kommer det eget endepunkt for å hente den lagrede simuleringen.
         route("/{referanse}/utbetaling/simulering/v2") {
-            authorizedGet<BehandlingReferanse, SimuleringDto>(
+            authorizedGet<BehandlingReferanse, SimuleringsresponseDto>(
                 AuthorizationParamPathConfig(
                     relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
                     operasjon = Operasjon.SE,
@@ -78,7 +81,7 @@ fun NormalOpenAPIRoute.simuleringApi(
                     val simulering = utbetalingGateway.simuleringV2(tilkjentYtelseDto)
                     respond(simulering)
                 } else {
-                    respond(SimuleringDto(perioder = emptyList()))
+                    respondWithStatus(HttpStatusCode.NotFound)
                 }
             }
         }

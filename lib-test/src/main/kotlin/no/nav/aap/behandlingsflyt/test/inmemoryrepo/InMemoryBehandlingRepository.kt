@@ -81,6 +81,10 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
+    override fun hentReferanse(behandlingId: BehandlingId): BehandlingReferanse {
+        return hent(behandlingId).referanse
+    }
+
     override fun hentStegHistorikk(behandlingId: BehandlingId): List<StegTilstand> {
         synchronized(lock) {
             return memoryStegHistorikk[behandlingId].orEmpty()
@@ -214,7 +218,10 @@ object InMemoryBehandlingRepository : BehandlingRepository {
     }
 
     override fun finnGjeldendeVedtattBehandlingForSak(sakId: SakId): SakOgBehandling? {
-        TODO("Not yet implemented")
+        return hentAlleMedVedtakFor(sakId, TypeBehandling.ytelseBehandlingstyper())
+            .filter { it.status.erAvsluttet() }
+            .maxByOrNull { it.vedtakstidspunkt }
+            ?.let { SakOgBehandling(sakId, it.id) }
     }
 
     override fun finnBehandlingerSomManglerRedusertDagsats(sakId: SakId): List<BehandlingId> {

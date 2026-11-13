@@ -17,14 +17,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Av
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.bistandsbehov.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -51,6 +49,7 @@ import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.utils.toHumanReadable
+import no.nav.aap.bistandsbehov.BistandLøsningDto
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.type.Periode
@@ -191,7 +190,8 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             dataSource.transaction {
                 ResultatUtleder(
                     postgresRepositoryRegistry.provider(it),
-                    minimalGatewayProvider()).utledResultatFørstegangsBehandling(
+                    minimalGatewayProvider()
+                ).utledResultatFørstegangsBehandling(
                     behandling.id
                 )
             }
@@ -218,7 +218,8 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             dataSource.transaction {
                 ResultatUtleder(
                     postgresRepositoryRegistry.provider(it),
-                    minimalGatewayProvider()).utledResultatFørstegangsBehandling(
+                    minimalGatewayProvider()
+                ).utledResultatFørstegangsBehandling(
                     behandling.id
                 )
             }
@@ -227,7 +228,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
 
         behandling.assertRettighetstype(
             Periode(søknadstidspunkt, virkningsdatoAndreLøsningOvergangUføre.plusMonths(8).minusDays(1)) to
-                RettighetsType.VURDERES_FOR_UFØRETRYGD
+                    RettighetsType.VURDERES_FOR_UFØRETRYGD
         )
     }
 
@@ -348,7 +349,6 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
-            .fattVedtak()
 
         val (_, revurdering) = opprettUførevedtakshendelse(sak, behandling)
         assertThat(revurdering.årsakTilOpprettelse).isNotEqualTo(ÅrsakTilOpprettelse.ENDRING_I_REGISTERDATA)
@@ -641,16 +641,16 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
         val revurderingDødsfall = opprettDødshendelse(sak)
 
         assertThat(revurderingDødsfall.status()).isEqualTo(Status.UTREDES)
-            revurderingDødsfall.løsSykdom(
-                vurderingGjelderFra = dødsdato,
-                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
-                erOppfylt = false,
-                vissVarighet = false
-            )
-                .løsBistand(dødsdato, false)
-                .løsSykdomsvurderingBrev()
-                .bekreftVurderinger()
-                .fattVedtak()
+        revurderingDødsfall.løsSykdom(
+            vurderingGjelderFra = dødsdato,
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = false,
+            erOppfylt = false,
+            vissVarighet = false
+        )
+            .løsBistand(dødsdato, false)
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .fattVedtak()
         dataSource.transaction { connection ->
             val oppdatertRevurdering = BehandlingRepositoryImpl(connection).hent(revurderingDødsfall.id)
             assertThat(oppdatertRevurdering.status().erAvsluttet()).isTrue()
@@ -738,7 +738,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             opprettet = Instant.now(),
             opplysningstype = Opplysningstype.DOEDSFALL_V1,
             endringstype = Endringstype.OPPRETTET,
-            ).tilInnsendingDødsfallBruker(sak.saksnummer, null, personidenter)
+        ).tilInnsendingDødsfallBruker(sak.saksnummer, null, personidenter)
         dataSource.transaction { connection ->
             val flytJobbRepository = FlytJobbRepository(connection)
             flytJobbRepository.leggTil(

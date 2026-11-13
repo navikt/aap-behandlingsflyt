@@ -173,6 +173,7 @@ fun NormalOpenAPIRoute.behandlingApi(
                     BehandlingEgenskaperDTO(
                         erMigrertFraArena = egenskaper.erMigrertFraArena,
                         harArenaHistorikk = egenskaper.harArenaHistorikk,
+                        erKantIKantMedArena = egenskaper.erKantIKantMedArena,
                     )
                 )
             }

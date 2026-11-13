@@ -163,7 +163,7 @@ fun NormalOpenAPIRoute.saksApi(
                         log.info("Fant ${sakerForPerson.size} saker for person. Mottattidspunkt: ${dto.mottattTidspunkt}")
 
                         val sak = sakerForPerson.filter { sak ->
-                            sak.rettighetsperiode.inneholder(dto.mottattTidspunkt) && sak.status() != Status.AVSLUTTET
+                            sak.rettighetsperiode.inneholder(dto.mottattTidspunkt)
                         }.minByOrNull { it.opprettetTidspunkt }
 
                         if (sak == null) {
@@ -339,7 +339,7 @@ fun NormalOpenAPIRoute.saksApi(
                         periode = sak.rettighetsperiode,
                         ident = sak.person.aktivIdent().identifikator,
                         behandlinger = behandlinger,
-                        status = sak.status(),
+                        status = Status.UTREDES,
                         virkningstidspunkt = virkningstidspunkt,
                         søknadErTrukket = søknadErTrukket
                     )

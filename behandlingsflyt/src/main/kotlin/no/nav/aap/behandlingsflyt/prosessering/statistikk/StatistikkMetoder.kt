@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status.AVSLUTTET
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.MeldekortDTO
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.StoppetBehandling
@@ -86,7 +87,7 @@ class StatistikkMetoder(
             soknadsFormat = kanal,
             versjon = hendelse.versjon,
             mottattTid = mottattTidspunkt,
-            sakStatus = sak.status(),
+            sakStatus = Status.UTREDES,
             hendelsesTidspunkt = hendelse.hendelsesTidspunkt,
             avsluttetBehandling = if (hendelse.status == AVSLUTTET) avsluttetBehandlingTilStatistikk.hentAvsluttetBehandlingDTO(
                 hendelse
@@ -112,7 +113,7 @@ class StatistikkMetoder(
             TypeBehandling.Førstegangsbehandling -> null
             TypeBehandling.Revurdering ->
                 behandling.forrigeBehandlingId
-                    ?.let { behandlingRepository.hent(it).referanse.referanse }
+                    ?.let { behandlingRepository.hentReferanse(it).referanse }
 
             TypeBehandling.Tilbakekreving -> TODO()
             TypeBehandling.Klage -> {

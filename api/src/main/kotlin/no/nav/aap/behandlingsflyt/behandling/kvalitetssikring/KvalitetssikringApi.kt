@@ -92,8 +92,7 @@ fun NormalOpenAPIRoute.kvalitetssikringApi(
                             avklaringsbehovene,
                             bruker()
                         ),
-                        kvalitetssikrerFatterVedtak = unleashGateway.isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)
-                                && utledKvalitetssikrerFatterVedtak(
+                        kvalitetssikrerFatterVedtak = utledKvalitetssikrerFatterVedtak(
                             sykdomGrunnlag,
                             rettighetsperiode,
                             behandlingService.utledFaktiskBehandlingstype(behandling)

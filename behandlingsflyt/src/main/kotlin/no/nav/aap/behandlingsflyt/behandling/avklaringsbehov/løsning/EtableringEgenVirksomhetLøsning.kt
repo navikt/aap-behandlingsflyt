@@ -30,6 +30,7 @@ class EtableringEgenVirksomhetLøsning(
         kontekst: AvklaringsbehovKontekst,
         gatewayProvider: GatewayProvider
     ): LøsningsResultat {
+        // avgrense vurderingene uten sluttdato til dagen før neste vurdering under valideringa, slik at de ikkje blir avviste som overlappende.
         val sorterteVurderinger = løsningerForPerioder.sortedBy { it.fom }
         val perioderTilValidering = sorterteVurderinger.mapIndexed { index, vurdering ->
             val nesteVurdering = sorterteVurderinger.getOrNull(index + 1)

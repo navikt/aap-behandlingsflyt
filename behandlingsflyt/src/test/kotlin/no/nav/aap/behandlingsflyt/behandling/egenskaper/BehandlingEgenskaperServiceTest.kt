@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettig
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -15,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.FakeArenaOppslagGateway
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryStønadsperiodeRepository
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -23,7 +26,11 @@ import java.time.LocalDate
 
 class BehandlingEgenskaperServiceTest {
 
-    private val grunnlagService = BehandlingEgenskaperGrunnlagService(InMemoryKravRepository, InMemorySakRepository)
+    private val grunnlagService = BehandlingEgenskaperGrunnlagService(
+        InMemoryKravRepository,
+        InMemorySakRepository,
+        InMemoryStønadsperiodeRepository,
+    )
     private val service = lagService(harArenaHistorikk = false)
 
     @Test
@@ -55,6 +62,53 @@ class BehandlingEgenskaperServiceTest {
 
         assertThat(hentEgenskaper(behandling, lagService(harArenaHistorikk = true)).harArenaHistorikk).isTrue()
         assertThat(hentEgenskaper(behandling, lagService(harArenaHistorikk = false)).harArenaHistorikk).isFalse()
+    }
+
+    @Test
+    fun `behandling uten stønadsperiodevurdering er ikke kant i kant med Arena`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        InMemoryKravRepository.lagre(behandling.id, setOf(lagRelevantKrav(behandling.id, Kravreferanse.ny())))
+
+        assertThat(hentEgenskaper(behandling).erKantIKantMedArena).isFalse()
+    }
+
+    @Test
+    fun `behandling med vanlig stønadsperiodevurdering er ikke kant i kant med Arena`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        val krav = lagRelevantKrav(behandling.id, Kravreferanse.ny())
+        InMemoryKravRepository.lagre(behandling.id, setOf(krav))
+        InMemoryStønadsperiodeRepository.lagre(
+            behandling.id,
+            setOf(lagStønadsperiodeVurdering(behandling.id, krav.referanse, erKantIKantMedArena = false)),
+        )
+
+        assertThat(hentEgenskaper(behandling).erKantIKantMedArena).isFalse()
+    }
+
+    @Test
+    fun `behandling med kant i kant-vurdering på gjeldende krav er kant i kant med Arena`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        val krav = lagRelevantKrav(behandling.id, Kravreferanse.ny())
+        InMemoryKravRepository.lagre(behandling.id, setOf(krav))
+        InMemoryStønadsperiodeRepository.lagre(
+            behandling.id,
+            setOf(lagStønadsperiodeVurdering(behandling.id, krav.referanse, erKantIKantMedArena = true)),
+        )
+
+        assertThat(hentEgenskaper(behandling).erKantIKantMedArena).isTrue()
+    }
+
+    @Test
+    fun `kant i kant-vurdering på krav som ikke lenger er gjeldende gir ikke kant i kant`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        val krav = lagRelevantKrav(behandling.id, Kravreferanse.ny())
+        InMemoryKravRepository.lagre(behandling.id, setOf(krav))
+        InMemoryStønadsperiodeRepository.lagre(
+            behandling.id,
+            setOf(lagStønadsperiodeVurdering(behandling.id, Kravreferanse.ny(), erKantIKantMedArena = true)),
+        )
+
+        assertThat(hentEgenskaper(behandling).erKantIKantMedArena).isFalse()
     }
 
     private fun hentEgenskaper(behandling: Behandling, service: BehandlingEgenskaperService = this.service) =
@@ -97,6 +151,23 @@ class BehandlingEgenskaperServiceTest {
         arenaSaksnummer = "ARENA-4711",
         rettighetstype = MigrertRettighetstype.ORDINÆR,
         resterendeKvoteOrdinær = 0,
+    )
+
+    private fun lagStønadsperiodeVurdering(
+        behandlingId: BehandlingId,
+        referanse: Kravreferanse,
+        erKantIKantMedArena: Boolean,
+    ) = StønadsperiodeVurdering(
+        referanse = referanse,
+        opprettet = Instant.now(),
+        vurdertIBehandling = behandlingId,
+        vurdertAv = SYSTEMBRUKER,
+        begrunnelse = "Test",
+        harHattOrdinærSiste52Uker = erKantIKantMedArena,
+        harGjenværendeKvote = false,
+        relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
+        startDato = MULIG_RETT_FRA,
+        erKantIKantMedArena = erKantIKantMedArena,
     )
 
     private companion object {
