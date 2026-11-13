@@ -115,10 +115,8 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
             ),
             kravViKreverVurderingFor = relevanteKrav,
             eksisterendeData = eksisterendeData,
-            skalHentePerKrav = unleashGateway.erPåskruddForSak(
-                BehandlingsflytFeature.HentInnLovvalgRegisterdataForNyesteAktuelleKrav,
-                "saksnummer",
-                sak.saksnummer
+            skalHentePerKrav = unleashGateway.isEnabled(
+                BehandlingsflytFeature.HentInnLovvalgRegisterdataForNyesteAktuelleKrav
             )
         )
     }
