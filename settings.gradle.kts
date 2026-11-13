@@ -26,8 +26,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "behandlingsflyt"
 
-includeBuild("../aap-meldekort-backend")
-
 include(
     "app",
     "behandlingsflyt",
