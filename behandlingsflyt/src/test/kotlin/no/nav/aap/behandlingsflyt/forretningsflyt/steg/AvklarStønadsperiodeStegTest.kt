@@ -20,10 +20,17 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juni
+import no.nav.aap.behandlingsflyt.test.juli
+import no.nav.aap.behandlingsflyt.test.mai
+import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.test.september
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryArenaMaksdatoRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
@@ -41,16 +48,20 @@ import java.time.LocalDate
 class AvklarStønadsperiodeStegTest {
 
     private lateinit var steg: AvklarStønadsperiodeSteg
+    private val sakService = SakService(InMemorySakRepository, InMemoryBehandlingRepository)
 
     @BeforeEach
     fun setup() {
-        steg = AvklarStønadsperiodeSteg(
-            unleashGateway = KantIKantPåskruddUnleash,
-            kravRepository = InMemoryKravRepository,
-            stønadsperiodeRepository = InMemoryStønadsperiodeRepository,
-            arenaMaksdatoRepository = InMemoryArenaMaksdatoRepository,
-        )
+        steg = lagSteg(KantIKantPåskruddUnleash)
     }
+
+    private fun lagSteg(unleash: UnleashGateway) = AvklarStønadsperiodeSteg(
+        unleashGateway = unleash,
+        kravRepository = InMemoryKravRepository,
+        stønadsperiodeRepository = InMemoryStønadsperiodeRepository,
+        arenaMaksdatoRepository = InMemoryArenaMaksdatoRepository,
+        sakService = sakService,
+    )
 
     @Test
     fun `ingen relevante krav - lagrer tomt grunnlag`() {
@@ -304,12 +315,7 @@ class AvklarStønadsperiodeStegTest {
 
     @Test
     fun `toggle av - maksdato fra Arena brukes ikke og sperren slår ikke til`() {
-        val stegUtenToggle = AvklarStønadsperiodeSteg(
-            unleashGateway = KravStegPåskruddUnleash,
-            kravRepository = InMemoryKravRepository,
-            stønadsperiodeRepository = InMemoryStønadsperiodeRepository,
-            arenaMaksdatoRepository = InMemoryArenaMaksdatoRepository,
-        )
+        val stegUtenToggle = lagSteg(KravStegPåskruddUnleash)
         val behandling = opprettFørstegangsbehandling(opprettInMemorySak().id)
         val førsteKrav = lagRelevantKrav(behandling.id, 1 januar 2024)
         val andreKrav = lagRelevantKrav(behandling.id, 1 juni 2024)
@@ -353,6 +359,138 @@ class AvklarStønadsperiodeStegTest {
             .ignoringFields("opprettet")
             .isEqualTo(førsteKjøring.single())
         assertKantIKant(andreKjøring.single())
+    }
+
+    @Test
+    fun `kant i kant - flytter rettighetsperioden til dagen etter maksdato`() {
+        val sak = opprettInMemorySak(søknadsdato = 1 juni 2024)
+        val behandling = opprettFørstegangsbehandling(sak.id)
+
+        utførMedKravOgMaksdato(behandling.id, setOf(lagRelevantKrav(behandling.id, 1 juni 2024)), MAKSDATO)
+
+        assertThat(sakService.hent(sak.id).rettighetsperiode)
+            .isEqualTo(Periode(DAGEN_ETTER_MAKSDATO, Tid.MAKS))
+    }
+
+    @Test
+    fun `kant i kant - re-kjøring gir samme rettighetsperiode`() {
+        val sak = opprettInMemorySak(søknadsdato = 1 juni 2024)
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        val krav = lagRelevantKrav(behandling.id, 1 juni 2024)
+
+        utførMedKravOgMaksdato(behandling.id, setOf(krav), MAKSDATO)
+        utførMedKravOgMaksdato(behandling.id, setOf(krav), MAKSDATO)
+
+        assertThat(sakService.hent(sak.id).rettighetsperiode.fom).isEqualTo(DAGEN_ETTER_MAKSDATO)
+    }
+
+    @Test
+    fun `revurdering - guard hindrer at rettighetsperioden flyttes for vedtatt sak`() {
+        val sak = opprettInMemorySak(søknadsdato = 1 juni 2024)
+        val forrigeBehandling = opprettFørstegangsbehandling(sak.id)
+        val krav = lagRelevantKrav(forrigeBehandling.id, 1 juni 2024)
+        utførMedKravOgMaksdato(forrigeBehandling.id, setOf(krav), maksdato = null)
+
+        val behandling = opprettRevurdering(sak.id, forrigeBehandling.id)
+        utførMedKravOgMaksdato(behandling.id, setOf(krav), MAKSDATO)
+
+        assertKantIKant(hentVurdering(behandling.id, krav))
+        assertThat(sakService.hent(sak.id).rettighetsperiode.fom).isEqualTo(1 juni 2024)
+    }
+
+    @Test
+    fun `maksdato fjernet ved re-kjøring - setter rettighetsperioden tilbake til kravdato`() {
+        val sak = opprettInMemorySak(søknadsdato = 1 juni 2024)
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        val krav = lagRelevantKrav(behandling.id, 1 juni 2024)
+
+        utførMedKravOgMaksdato(behandling.id, setOf(krav), MAKSDATO)
+        utførMedKravOgMaksdato(behandling.id, setOf(krav), maksdato = null)
+
+        assertThat(sakService.hent(sak.id).rettighetsperiode)
+            .isEqualTo(Periode(1 juni 2024, Tid.MAKS))
+    }
+
+    @Test
+    fun `maksdato flyttet senere - rettighetsperioden følger ny maksdato`() {
+        val sak = opprettInMemorySak(søknadsdato = 1 juni 2024)
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        val krav = lagRelevantKrav(behandling.id, 1 juni 2024)
+
+        utførMedKravOgMaksdato(behandling.id, setOf(krav), MAKSDATO)
+        utførMedKravOgMaksdato(behandling.id, setOf(krav), 15 august 2024)
+
+        assertThat(sakService.hent(sak.id).rettighetsperiode.fom).isEqualTo(16 august 2024)
+    }
+
+    @Test
+    fun `maksdato flyttet tidligere - rettighetsperioden følger ny maksdato`() {
+        val sak = opprettInMemorySak(søknadsdato = 1 juni 2024)
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        val krav = lagRelevantKrav(behandling.id, 1 juni 2024)
+
+        utførMedKravOgMaksdato(behandling.id, setOf(krav), MAKSDATO)
+        utførMedKravOgMaksdato(behandling.id, setOf(krav), 15 juli 2024)
+
+        assertThat(sakService.hent(sak.id).rettighetsperiode.fom).isEqualTo(16 juli 2024)
+    }
+
+    @Test
+    fun `toggle slått av etter første kjøring - rettighetsperioden endres ikke`() {
+        val sak = opprettInMemorySak(søknadsdato = 1 juni 2024)
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        val krav = lagRelevantKrav(behandling.id, 1 juni 2024)
+        utførMedKravOgMaksdato(behandling.id, setOf(krav), MAKSDATO)
+
+        lagSteg(KravStegPåskruddUnleash).utfør(flytKontekstMedPerioder { this.behandling = behandling })
+
+        assertThat(sakService.hent(sak.id).rettighetsperiode.fom).isEqualTo(DAGEN_ETTER_MAKSDATO)
+    }
+
+    @Test
+    fun `avvik uten kant i kant - rettighetsperioden endres ikke`() {
+        val sak = opprettInMemorySak(søknadsdato = 1 mai 2024)
+        val behandling = opprettFørstegangsbehandling(sak.id)
+
+        utførMedKravOgMaksdato(behandling.id, setOf(lagRelevantKrav(behandling.id, 1 juni 2024)), maksdato = null)
+
+        assertThat(sakService.hent(sak.id).rettighetsperiode.fom).isEqualTo(1 mai 2024)
+    }
+
+    @Test
+    fun `fom endret av andre etter kant i kant - settes ikke tilbake`() {
+        val sak = opprettInMemorySak(søknadsdato = 1 juni 2024)
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        val krav = lagRelevantKrav(behandling.id, 1 juni 2024)
+        utførMedKravOgMaksdato(behandling.id, setOf(krav), MAKSDATO)
+        sakService.overstyrRettighetsperioden(sakService.hent(sak.id), 1 mai 2024, Tid.MAKS)
+
+        utførMedKravOgMaksdato(behandling.id, setOf(krav), maksdato = null)
+
+        assertThat(sakService.hent(sak.id).rettighetsperiode.fom).isEqualTo(1 mai 2024)
+    }
+
+    @Test
+    fun `ikke kant i kant - rettighetsperioden endres ikke`() {
+        val sak = opprettInMemorySak(søknadsdato = 1 juni 2024)
+        val behandling = opprettFørstegangsbehandling(sak.id)
+
+        utførMedKravOgMaksdato(behandling.id, setOf(lagRelevantKrav(behandling.id, 1 juni 2024)), maksdato = null)
+
+        assertThat(sakService.hent(sak.id).rettighetsperiode.fom).isEqualTo(1 juni 2024)
+    }
+
+    @Test
+    fun `toggle av - rettighetsperioden endres ikke`() {
+        val stegUtenToggle = lagSteg(KravStegPåskruddUnleash)
+        val sak = opprettInMemorySak(søknadsdato = 1 juni 2024)
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        InMemoryKravRepository.lagre(behandling.id, setOf(lagRelevantKrav(behandling.id, 1 juni 2024)))
+        InMemoryArenaMaksdatoRepository.lagre(behandling.id, lagArenaMaksdato(MAKSDATO))
+
+        stegUtenToggle.utfør(flytKontekstMedPerioder { this.behandling = behandling })
+
+        assertThat(sakService.hent(sak.id).rettighetsperiode.fom).isEqualTo(1 juni 2024)
     }
 
     private fun utførMedKravOgMaksdato(behandlingId: BehandlingId, krav: Set<RelevantKrav>, maksdato: LocalDate?) {

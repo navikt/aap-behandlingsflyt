@@ -17,10 +17,13 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
+import org.slf4j.LoggerFactory
 import java.time.Instant
 
 class AvklarStønadsperiodeSteg(
@@ -28,7 +31,10 @@ class AvklarStønadsperiodeSteg(
     private val kravRepository: KravRepository,
     private val stønadsperiodeRepository: StønadsperiodeRepository,
     private val arenaMaksdatoRepository: ArenaMaksdatoRepository,
+    private val sakService: SakService,
 ) : BehandlingSteg {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         when (kontekst.behandlingType) {
             TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
@@ -61,6 +67,60 @@ class AvklarStønadsperiodeSteg(
             .filter { trengerNyVurdering(vedtatteVurderinger[it.referanse], it) }
 
         stønadsperiodeRepository.lagre(kontekst.behandlingId, vedtattGrunnlag?.vurderinger.orEmpty() + nyeVurderinger)
+        oppdaterRettighetsperiodeVedKantIKant(kontekst, gjeldendeRelevanteKrav, arenaMaksdato)
+    }
+
+    /**
+     * TODO: Midlertidig til stønadsperioden er fasit i hele flyten. Rydder ikke vilkårsresultatet.
+     *
+     * Setter fom i rettighetsperioden lik tidligste startdato i stønadsperioden, men kun når saken er
+     * kant i kant, eller når fom ligger etter tidligste krav. Det siste antas å bety at kant i kant
+     * tidligere har flyttet fom, og at fom skal tilbakestilles.
+     * Unntak: VurderKravLøser oppdaterer ikke fom når muligRettFra på et relevant krav endres. Da blir fom
+     * også satt lik kravet her. Det logges som egen årsak.
+     * Med toggle av skjer verken overstyring eller tilbakestilling.
+     */
+    private fun oppdaterRettighetsperiodeVedKantIKant(
+        kontekst: FlytKontekstMedPerioder,
+        gjeldendeRelevanteKrav: Set<RelevantKrav>,
+        arenaMaksdato: ArenaMaksdato?,
+    ) {
+        // Rettighetsperioden ligger på saken. Vedtatte saker skal ikke få den flyttet med tilbakevirkning.
+        if (kontekst.forrigeBehandlingId != null) return
+        if (!unleashGateway.isEnabled(BehandlingsflytFeature.HandtereMaksdatoForKantTilKant)) return
+
+        val tidligsteKrav = gjeldendeRelevanteKrav.minOfOrNull { it.muligRettFra } ?: return
+        val gjeldendeVurderinger = stønadsperiodeRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?.gjeldendeVurderinger()
+            .orEmpty()
+        val nyFom = gjeldendeVurderinger.minOfOrNull { it.startDato } ?: return
+        val erKantIKant = gjeldendeVurderinger.any { it.erKantIKantMedArena }
+
+        val sak = sakService.hent(kontekst.sakId)
+        val gjeldendeFom = sak.rettighetsperiode.fom
+        if (nyFom == gjeldendeFom) return
+
+        val varFlyttetAvKantIKant = gjeldendeFom.isAfter(tidligsteKrav)
+        if (!erKantIKant && !varFlyttetAvKantIKant) {
+            log.info(
+                "Startdato i stønadsperioden ($nyFom) avviker fra fom i rettighetsperioden ($gjeldendeFom) " +
+                        "for sak ${sak.saksnummer} uten kant i kant. Overstyrer ikke."
+            )
+            return
+        }
+
+        log.info(
+            "Endrer fom i rettighetsperioden for sak ${sak.saksnummer} fra $gjeldendeFom til $nyFom. " +
+                    "Årsak: ${årsakTilEndring(erKantIKant, arenaMaksdato)}"
+        )
+        sakService.overstyrRettighetsperioden(sak, nyFom, Tid.MAKS)
+    }
+
+    private fun årsakTilEndring(erKantIKant: Boolean, arenaMaksdato: ArenaMaksdato?): String = when {
+        erKantIKant -> "kant i kant med Arena-sak ${arenaMaksdato?.arenaSaksnummer}"
+        arenaMaksdato?.maksdato != null ->
+            "tilbakestilt etter kant i kant, ikke lenger kant i kant med Arena-sak ${arenaMaksdato.arenaSaksnummer}"
+        else -> "fom etter tidligste krav uten Arena-maksdato, antatt tilbakestilling etter kant i kant"
     }
 
     private fun trengerNyVurdering(vedtatt: StønadsperiodeVurdering?, forslag: StønadsperiodeVurdering) =
@@ -165,6 +225,7 @@ class AvklarStønadsperiodeSteg(
                 kravRepository = repositoryProvider.provide(),
                 stønadsperiodeRepository = repositoryProvider.provide(),
                 arenaMaksdatoRepository = repositoryProvider.provide(),
+                sakService = SakService(repositoryProvider, gatewayProvider),
             )
         }
 
