@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdatoInfo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.DagpengerInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.TiltakspengerInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.GjenståendeSykedagerInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Aktivitetsplikt11_7Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Aktivitetsplikt11_9Informasjonskrav
@@ -89,7 +90,7 @@ object Revurdering : BehandlingType {
         return BehandlingFlytBuilder()
             .medSteg(
                 steg = StartBehandlingSteg,
-                informasjonskrav = listOf(SøknadInformasjonskrav, BarnInformasjonskrav),  // TODO: Mulig vi ønsker å endre disse ifb krav?
+                informasjonskrav = listOf(SøknadInformasjonskrav, BarnInformasjonskrav, GjenståendeSykedagerInformasjonskrav),  // TODO: Mulig vi ønsker å endre disse ifb krav?
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle()
             )
             .medSteg(

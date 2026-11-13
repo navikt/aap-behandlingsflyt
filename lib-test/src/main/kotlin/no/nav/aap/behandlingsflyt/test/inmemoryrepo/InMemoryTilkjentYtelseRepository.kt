@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentForRedusertDagsatsBackfill
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Tidslinje
@@ -46,12 +45,10 @@ object InMemoryTilkjentYtelseRepository : TilkjentYtelseRepository {
 
     override fun lagre(
         behandlingId: BehandlingId,
-        tilkjent: Tidslinje<Tilkjent>,
-        faktagrunnlag: TilkjentYtelseGrunnlag,
-        versjon: String
+        resultat: Tidslinje<Tilkjent>,
     ) {
         synchronized(lock) {
-            tilkjentYtelse[behandlingId] = tilkjent.map {
+            tilkjentYtelse[behandlingId] = resultat.map {
                 LagretTilkjentYtelse(tilkjentPeriodeId.incrementAndGet(), it)
             }
         }

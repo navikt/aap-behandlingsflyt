@@ -140,6 +140,7 @@ class VurderSykdomSteg(
             fraArena = sykdomsvurderingFraArena,
             behandlingId = kontekst.behandlingId,
             vurderingenGjelderFra = kontekst.rettighetsperiode.fom,
+            virkningstidspunkt = arenaMigreringService.hentVirkningstidspunkt(kontekst.behandlingId),
         )
 
         require(vurdering.erOppfyltOrdinærMedUtlededeFelter()) {

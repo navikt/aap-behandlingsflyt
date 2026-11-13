@@ -41,6 +41,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -383,19 +385,19 @@ fun NormalOpenAPIRoute.driftApi(
         }
 
         route("/behandling/{referanse}/yrkesskade") {
-            authorizedGet<BehandlingReferanse, List<YrkesskadeDriftsinfoDto>>(
+            authorizedGet<BehandlingReferanse, YrkesskadeGrunnlagDriftsinfoDto>(
                 AuthorizationParamPathConfig(
                     behandlingPathParam = BehandlingPathParam("referanse"),
                     operasjon = Operasjon.DRIFT_LES
                 )
             ) { behandlingReferanse ->
-                val yrkesskader = dataSource.transaction(readOnly = true) { connection ->
+                val grunnlag = dataSource.transaction(readOnly = true) { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
 
                     val behandling = repositoryProvider.provide<BehandlingRepository>()
                         .hent(behandlingReferanse)
 
-                    repositoryProvider.provide<YrkesskadeRepository>()
+                    val yrkesskader = repositoryProvider.provide<YrkesskadeRepository>()
                         .hentHvisEksisterer(behandling.id)
                         ?.yrkesskader
                         ?.yrkesskader
@@ -408,11 +410,20 @@ fun NormalOpenAPIRoute.driftApi(
                                 vedtaksdato = it.vedtaksdato,
                             )
                         }
-                        ?.also { krevDtoErUtenFødselsnummer(it) }
                         .orEmpty()
+                    val skadereferanser = yrkesskader.map { it.ref }.toSet()
+                    val vurdering = repositoryProvider.provide<SykdomRepository>()
+                        .hentHvisEksisterer(behandling.id)
+                        ?.yrkesskadevurdering
+
+                    YrkesskadeGrunnlagDriftsinfoDto(
+                        yrkesskader = yrkesskader,
+                        vurdering = vurdering?.tilDriftsinfoDto(skadereferanser),
+                    )
                 }
 
-                respond(yrkesskader)
+                krevDtoErUtenFødselsnummer(grunnlag)
+                respond(grunnlag)
             }
         }
 
@@ -596,7 +607,7 @@ fun NormalOpenAPIRoute.driftApi(
                             personId = sak.person.id.id,
                             antallIdenter = sak.person.identer().size,
                         ),
-                        status = sak.status(),
+                        status = SakStatus.UTREDES,
                         rettighetsperiode = sak.rettighetsperiode,
                         opprettetTidspunkt = sak.opprettetTidspunkt,
                         behandlinger = behandlinger,
@@ -622,6 +633,7 @@ fun NormalOpenAPIRoute.driftApi(
 
                     val sakRepository = repositoryProvider.provide<SakRepository>()
                     val mottattDokumentRepository = repositoryProvider.provide<MottattDokumentRepository>()
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
 
                     val sak = sakRepository.hentHvisFinnes(Saksnummer(params.saksnummer))
                         ?: throw VerdiIkkeFunnetException("Sak med saksnummer ${params.saksnummer} finnes ikke")
@@ -633,7 +645,8 @@ fun NormalOpenAPIRoute.driftApi(
                                 mottattTidspunkt = dokument.mottattTidspunkt,
                                 type = dokument.type,
                                 kanal = dokument.kanal,
-                                status = dokument.status
+                                status = dokument.status,
+                                behandlingReferanse = dokument.behandlingId?.let { behandlingRepository.hentReferanse(it).referanse }
                             )
                         }
                         .sortedByDescending { it.mottattTidspunkt }
@@ -843,8 +856,42 @@ private data class MottattDokumentDriftsinfoDTO(
     val mottattTidspunkt: LocalDateTime,
     val type: InnsendingType,
     val kanal: Kanal,
+    val behandlingReferanse: UUID?,
     val status: MottattDokumentStatus = MottattDokumentStatus.MOTTATT,
 )
+
+private data class YrkesskadeGrunnlagDriftsinfoDto(
+    val yrkesskader: List<YrkesskadeDriftsinfoDto>,
+    val vurdering: YrkesskadevurderingDriftsinfoDto?,
+)
+
+private data class YrkesskadevurderingDriftsinfoDto(
+    val erÅrsakssammenheng: Boolean,
+    val andelAvNedsettelsen: Int?,
+    val harBegrunnelse: Boolean,
+    val relevanteSaker: List<RelevantYrkesskadeSakDriftsinfoDto>,
+)
+
+private data class RelevantYrkesskadeSakDriftsinfoDto(
+    val referanse: String?,
+    val referanseSkjermet: Boolean,
+    val manuellYrkesskadeDato: LocalDate?,
+)
+
+private fun Yrkesskadevurdering.tilDriftsinfoDto(skadereferanser: Set<String>) =
+    YrkesskadevurderingDriftsinfoDto(
+        erÅrsakssammenheng = erÅrsakssammenheng,
+        andelAvNedsettelsen = andelAvNedsettelsen?.prosentverdi(),
+        harBegrunnelse = begrunnelse.isNotBlank(),
+        relevanteSaker = relevanteSaker.map { sak ->
+            val finnesIRegister = sak.referanse in skadereferanser
+            RelevantYrkesskadeSakDriftsinfoDto(
+                referanse = sak.referanse.takeIf { finnesIRegister },
+                referanseSkjermet = !finnesIRegister,
+                manuellYrkesskadeDato = sak.manuellYrkesskadeDato,
+            )
+        },
+    )
 
 private data class YrkesskadeDriftsinfoDto(
     val ref: String,

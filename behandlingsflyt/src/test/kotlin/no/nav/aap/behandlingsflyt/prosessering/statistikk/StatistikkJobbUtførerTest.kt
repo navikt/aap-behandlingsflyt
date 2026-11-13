@@ -698,7 +698,7 @@ class StatistikkJobbUtførerTest {
                 versjon = ApplikasjonsVersjon.versjon,
                 soknadsFormat = Kanal.PAPIR,
                 mottattTid = tidligsteMottattTid,
-                sakStatus = no.nav.aap.behandlingsflyt.kontrakt.sak.Status.OPPRETTET,
+                sakStatus = no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES,
                 hendelsesTidspunkt = hendelsesTidspunkt,
                 identerForSak = listOf("1234"),
                 årsakTilOpprettelse = no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.SØKNAD,

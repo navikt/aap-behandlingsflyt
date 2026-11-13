@@ -22,6 +22,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -29,6 +30,7 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
@@ -41,37 +43,38 @@ class MigrerKravServiceTest {
 
     @Test
     fun `oppdater 22-13 - ingen eksisterende kravgrunnlag noop`() {
-        val (sakId, behandlingId) = opprettSakOgBehandling()
+        val (sak, behandlingId) = opprettSakOgBehandling()
 
         val vurdering = lagRettighetsperiodeVurdering(
             harRett = RettighetsperiodeHarRett.HarRettIkkeIStandTilÅSøkeTidligere,
             startDato = 1 juni 2023,
         )
 
-        service.oppdaterKravForOverstyrtMuligRett(sakId, behandlingId, vurdering)
+        service.oppdaterKravForOverstyrtMuligRett(sak.id, behandlingId, vurdering)
 
         assertThat(InMemoryKravRepository.hentHvisEksisterer(behandlingId)).isNull()
     }
 
     @Test
     fun `reverser 22-13 - ingen eksisterende kravgrunnlag noop`() {
-        val (_, behandlingId) = opprettSakOgBehandling()
+        val (sak, behandlingId) = opprettSakOgBehandling()
 
         val vurdering = lagRettighetsperiodeVurdering(
             harRett = RettighetsperiodeHarRett.Nei,
             startDato = null,
         )
 
-        service.reverserKravForOverstyrtMuligRett(behandlingId, vurdering)
+        service.reverserKravForOverstyrtMuligRett(behandlingId, vurdering, sak.rettighetsperiode.fom)
 
         assertThat(InMemoryKravRepository.hentHvisEksisterer(behandlingId)).isNull()
     }
 
     @Test
     fun `reverser - kravgrunnlag uten overstyrt krav returnerer stille`() {
-        val (_, behandlingId) = opprettSakOgBehandling()
+        val søknadsdato = 15 januar 2024
+        val (sak, behandlingId) = opprettSakOgBehandling(søknadsdato)
 
-        val krav = lagNyttKrav(behandlingId, overstyrMuligRettFra = null)
+        val krav = lagNyttKrav(behandlingId, søknadsdato = søknadsdato, overstyrMuligRettFra = null)
         InMemoryKravRepository.lagre(behandlingId, setOf(krav))
 
         val vurdering = lagRettighetsperiodeVurdering(
@@ -80,7 +83,7 @@ class MigrerKravServiceTest {
         )
 
         val antallFør = InMemoryKravRepository.hent(behandlingId).vurderinger.size
-        service.reverserKravForOverstyrtMuligRett(behandlingId, vurdering)
+        service.reverserKravForOverstyrtMuligRett(behandlingId, vurdering, sak.rettighetsperiode.fom)
 
         assertThat(InMemoryKravRepository.hent(behandlingId).vurderinger).hasSize(antallFør)
         assertThat(
@@ -92,8 +95,9 @@ class MigrerKravServiceTest {
 
     @Test
     fun `oppdater og reverser - full round-trip setter og nullstiller overstyrMuligRettFra`() {
-        val (sakId, behandlingId) = opprettSakOgBehandling()
-        val krav = lagNyttKrav(behandlingId)
+        val søknadsdato = 15 januar 2024
+        val (sak, behandlingId) = opprettSakOgBehandling(søknadsdato)
+        val krav = lagNyttKrav(behandlingId, søknadsdato = søknadsdato)
         InMemoryKravRepository.lagre(behandlingId, setOf(krav))
 
         val overstyrtDato = 1 juni 2023
@@ -102,7 +106,7 @@ class MigrerKravServiceTest {
             startDato = overstyrtDato,
         )
 
-        service.oppdaterKravForOverstyrtMuligRett(sakId, behandlingId, oppdaterVurdering)
+        service.oppdaterKravForOverstyrtMuligRett(sak.id, behandlingId, oppdaterVurdering)
 
         val etterOppdatering =
             InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantKrav>().single()
@@ -115,18 +119,20 @@ class MigrerKravServiceTest {
             startDato = null,
         )
 
-        service.reverserKravForOverstyrtMuligRett(behandlingId, reverserVurdering)
+        service.reverserKravForOverstyrtMuligRett(behandlingId, reverserVurdering, sak.rettighetsperiode.fom)
 
         val etterReversering =
             InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantKrav>().single()
         assertThat(etterReversering.overstyrMuligRettFra).isNull()
-        assertThat(etterReversering.muligRettFra).isEqualTo(overstyrtDato)
+        assertThat(etterReversering.muligRettFra).isEqualTo(søknadsdato)
+        assertThat(etterReversering.søknadsdato.dato).isEqualTo(søknadsdato)
     }
 
     @Test
     fun `oppdater to ganger med samme referanse og reverser - ingen duplikater, riktig krav fjernes`() {
-        val (sakId, behandlingId) = opprettSakOgBehandling()
-        val krav = lagNyttKrav(behandlingId)
+        val søknadsdato = 15 januar 2024
+        val (sak, behandlingId) = opprettSakOgBehandling(søknadsdato)
+        val krav = lagNyttKrav(behandlingId, søknadsdato)
         InMemoryKravRepository.lagre(behandlingId, setOf(krav))
 
         val oppdaterVurdering = lagRettighetsperiodeVurdering(
@@ -134,29 +140,33 @@ class MigrerKravServiceTest {
             startDato = 1 juni 2023,
         )
 
-        service.oppdaterKravForOverstyrtMuligRett(sakId, behandlingId, oppdaterVurdering)
-        service.oppdaterKravForOverstyrtMuligRett(sakId, behandlingId, oppdaterVurdering)
+        service.oppdaterKravForOverstyrtMuligRett(sak.id, behandlingId, oppdaterVurdering)
+        service.oppdaterKravForOverstyrtMuligRett(sak.id, behandlingId, oppdaterVurdering)
 
         assertThat(InMemoryKravRepository.hent(behandlingId).vurderinger).hasSize(1)
 
         service.reverserKravForOverstyrtMuligRett(
             behandlingId,
-            lagRettighetsperiodeVurdering(harRett = RettighetsperiodeHarRett.Nei, startDato = null)
+            lagRettighetsperiodeVurdering(harRett = RettighetsperiodeHarRett.Nei, startDato = null),
+            sak.rettighetsperiode.fom
         )
 
         val etterReversering =
             InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantKrav>().single()
         assertThat(etterReversering.overstyrMuligRettFra).isNull()
+        assertThat(etterReversering.søknadsdato.dato).isEqualTo(sak.rettighetsperiode.fom)
+        assertThat(etterReversering.muligRettFra).isEqualTo(sak.rettighetsperiode.fom)
     }
 
     @Test
     fun `reverser isolerer til inneværende behandling, krav fra annen behandling bevares`() {
-        val (sakId, behandlingIdA) = opprettSakOgBehandling()
-        val (_, behandlingIdB) = opprettRevurdering(sakId)
+        val søknadsdato = 15 januar 2024
+        val (sak, behandlingIdA) = opprettSakOgBehandling(søknadsdato)
+        val (_, behandlingIdB) = opprettRevurdering(sak.id)
         
         val vedtattOverstyrtKrav = lagNyttKrav(
             behandlingIdA,
-            søknadsdato = 15 april 2024,
+            søknadsdato = søknadsdato,
             overstyrMuligRettFra = OverstyrMuligRettFra(
                 1 mars 2023,
                 OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere,
@@ -168,7 +178,8 @@ class MigrerKravServiceTest {
         val rettighetsperiodeVurdering = lagRettighetsperiodeVurdering(harRett = RettighetsperiodeHarRett.Nei, startDato = null)
         service.reverserKravForOverstyrtMuligRett(
             behandlingIdB,
-            rettighetsperiodeVurdering
+            rettighetsperiodeVurdering,
+            sak.rettighetsperiode.fom
         )
         
         val forventetReversertVurdering = RelevantKrav(
@@ -199,13 +210,14 @@ class MigrerKravServiceTest {
 
     @Test
     fun `oppdater og reverser - reversert krav beholder muligRettFra fra overstyrt krav`() {
-        val (sakId, behandlingId) = opprettSakOgBehandling()
+        val søknadsdato = 15 januar 2024
+        val (sak, behandlingId) = opprettSakOgBehandling(søknadsdato)
         val overstyrtDato = 1 juni 2023
-        val krav = lagNyttKrav(behandlingId, søknadsdato = 15 januar 2024, muligRettFra = 15 januar 2024)
+        val krav = lagNyttKrav(behandlingId, søknadsdato = søknadsdato, muligRettFra = søknadsdato)
         InMemoryKravRepository.lagre(behandlingId, setOf(krav))
 
         service.oppdaterKravForOverstyrtMuligRett(
-            sakId, behandlingId,
+            sak.id, behandlingId,
             lagRettighetsperiodeVurdering(
                 harRett = RettighetsperiodeHarRett.HarRettIkkeIStandTilÅSøkeTidligere,
                 startDato = overstyrtDato,
@@ -218,19 +230,21 @@ class MigrerKravServiceTest {
 
         service.reverserKravForOverstyrtMuligRett(
             behandlingId,
-            lagRettighetsperiodeVurdering(harRett = RettighetsperiodeHarRett.Nei, startDato = null)
+            lagRettighetsperiodeVurdering(harRett = RettighetsperiodeHarRett.Nei, startDato = null),
+            sak.rettighetsperiode.fom
         )
 
-        // etter reverser: muligRettFra bevares fra det overstyrt kravet (ikke tilbakestilt til original søknadsdato)
+        // etter reverser: tilbakestille muligRettFra til søknadsdato fra mottatt dokument
         val reversert = InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantKrav>().single()
         assertThat(reversert.overstyrMuligRettFra).isNull()
-        assertThat(reversert.muligRettFra).isEqualTo(overstyrtDato)
+        assertThat(reversert.muligRettFra).isEqualTo(sak.rettighetsperiode.fom)
+        assertThat(reversert.søknadsdato.dato).isEqualTo(sak.rettighetsperiode.fom)
     }
 
     // --- Hjelpefunksjoner ---
 
-    private fun opprettSakOgBehandling(): Pair<SakId, BehandlingId> {
-        val sak = opprettInMemorySak()
+    private fun opprettSakOgBehandling(søknadsdato: LocalDate = LocalDate.now()): Pair<Sak, BehandlingId> {
+        val sak = opprettInMemorySak(søknadsdato = søknadsdato)
         val behandling = InMemoryBehandlingRepository.opprettBehandling(
             sakId = sak.id,
             typeBehandling = TypeBehandling.Førstegangsbehandling,
@@ -240,7 +254,7 @@ class MigrerKravServiceTest {
                 årsak = ÅrsakTilOpprettelse.SØKNAD,
             ),
         )
-        return sak.id to behandling.id
+        return sak to behandling.id
     }
     private fun opprettRevurdering(sakId: SakId): Pair<SakId, BehandlingId> {
         val behandling = InMemoryBehandlingRepository.opprettBehandling(
@@ -257,8 +271,8 @@ class MigrerKravServiceTest {
 
     private fun lagNyttKrav(
         behandlingId: BehandlingId,
-        søknadsdato: java.time.LocalDate = 15 januar 2024,
-        muligRettFra: java.time.LocalDate = søknadsdato,
+        søknadsdato: LocalDate,
+        muligRettFra: LocalDate = søknadsdato,
         overstyrMuligRettFra: OverstyrMuligRettFra? = null,
     ) = RelevantKrav(
         referanse = Kravreferanse.ny(),
@@ -274,7 +288,7 @@ class MigrerKravServiceTest {
 
     private fun lagRettighetsperiodeVurdering(
         harRett: RettighetsperiodeHarRett,
-        startDato: java.time.LocalDate?,
+        startDato: LocalDate?,
     ) = RettighetsperiodeVurdering(
         startDato = startDato,
         begrunnelse = "Testbegrunnelse",

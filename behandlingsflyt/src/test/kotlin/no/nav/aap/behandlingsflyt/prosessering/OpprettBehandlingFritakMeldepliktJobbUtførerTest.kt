@@ -87,7 +87,6 @@ class OpprettBehandlingFritakMeldepliktJobbUtførerTest {
             saksnummer = Saksnummer("BLABLA"),
             person = person(),
             rettighetsperiode = Periode(LocalDate.now().minusDays(14), LocalDate.now().plusDays(14)),
-            status = no.nav.aap.behandlingsflyt.kontrakt.sak.Status.OPPRETTET,
             opprettetTidspunkt = LocalDateTime.now(),
         )
 

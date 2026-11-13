@@ -41,12 +41,19 @@ spec:
           - name: cloudsql.enable_pgaudit
             value: "true"
   terminationGracePeriodSeconds: 30
+  startup:
+    path: /actuator/live
+    initialDelay: 25
+    periodSeconds: 5
+    failureThreshold: 8
   liveness:
     path: /actuator/live
-    initialDelay: 15
+    periodSeconds: 3
+    failureThreshold: 3
   readiness:
     path: /actuator/ready
-    initialDelay: 15
+    periodSeconds: 3
+    failureThreshold: 3
   prometheus:
     enabled: true
     path: /actuator/metrics

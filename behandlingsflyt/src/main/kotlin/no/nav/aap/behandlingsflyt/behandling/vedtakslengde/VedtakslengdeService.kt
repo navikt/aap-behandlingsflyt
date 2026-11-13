@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 class VedtakslengdeService(
     private val vedtakslengdeRepository: VedtakslengdeRepository,
@@ -164,6 +165,30 @@ class VedtakslengdeService(
         log.info("Siste rettighetstype i forrige behandling $forrigeBehandlingId: $forrigeSisteRettighet, i behandling $behandlingId: $sisteRettighet. Overgang fra unntak til bistandsbehov: $harOvergang")
 
         return harOvergang
+    }
+
+    /**
+     * Dersom det finnes en vedtatt sluttdato fra forrige behandling som har mindre enn
+     * [ANTALL_DAGER_FØR_UTVIDELSE] dager igjen, og rettighetstype i gjeldende behandling er lengre enn dette.
+     */
+    fun vedtakslengdeNærmerSegSluttOgRettighetGårLenger(
+        behandlingId: BehandlingId,
+        forrigeBehandlingId: BehandlingId?,
+    ): Boolean {
+        if (forrigeBehandlingId == null) return false
+
+        val vedtattSluttdato = hentVedtattSluttdato(
+            forrigeBehandlingId,
+            vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId)
+        ) ?: return false
+
+        val dagerIgjen = ChronoUnit.DAYS.between(LocalDate.now(clock), vedtattSluttdato)
+        if (dagerIgjen >= ANTALL_DAGER_FØR_UTVIDELSE) return false
+
+        val sluttdatoGjeldendeRettighet = rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandlingId)
+            .segmenter().lastOrNull()?.periode?.tom
+
+        return sluttdatoGjeldendeRettighet != null && sluttdatoGjeldendeRettighet > vedtattSluttdato
     }
 
     fun hentAvslagsårsakerVedStansEllerOpphør(

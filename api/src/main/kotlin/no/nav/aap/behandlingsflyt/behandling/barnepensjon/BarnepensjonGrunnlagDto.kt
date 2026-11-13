@@ -10,14 +10,16 @@ import no.nav.aap.komponenter.verdityper.Beløp
 data class BarnepensjonGrunnlagDto(
     val harTilgangTilÅSaksbehandle: Boolean,
     val vurdering: BarnepensjonVurderingDto?,
-    val historiskeVurderinger: List<BarnepensjonVurderingDto>
+    val historiskeVurderinger: List<BarnepensjonVurderingDto>,
+    val vedtattePerioder: List<BarnepensjonVurderingPeriodeDto> = emptyList(),
 ) {
     companion object {
         fun fraDomene(
             kanSaksbehandle: Boolean,
             vurdertAvService: VurdertAvService,
             grunnlag: BarnepensjonGrunnlag?,
-            historiskeVurderinger: List<BarnepensjonGrunnlag>
+            historiskeVurderinger: List<BarnepensjonGrunnlag>,
+            vedtattGrunnlag: BarnepensjonGrunnlag? = null,
         ): BarnepensjonGrunnlagDto {
             return BarnepensjonGrunnlagDto(
                 harTilgangTilÅSaksbehandle = kanSaksbehandle,
@@ -29,7 +31,10 @@ data class BarnepensjonGrunnlagDto(
                         it.vurdering,
                         vurdertAvService
                     )
-                }
+                },
+                vedtattePerioder = vedtattGrunnlag?.vurdering?.let {
+                    BarnepensjonVurderingDto.fraDomene(it, vurdertAvService).perioder
+                }.orEmpty(),
             )
         }
     }

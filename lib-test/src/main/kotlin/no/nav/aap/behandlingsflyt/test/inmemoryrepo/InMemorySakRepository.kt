@@ -107,26 +107,6 @@ object InMemorySakRepository : SakRepository {
         // Sletter ikke saker.
     }
 
-    override fun oppdaterSakStatus(
-        sakId: SakId,
-        status: Status
-    ) {
-        synchronized(lock) {
-            // ** Disclainer **
-            // Benytter reflection her for å ikke kompromitere produksjonskode
-            // Anser det som bedre enn å tilpasse produksjonskode til testing
-            // da tilpassing av koden vil tilgjengliggjøre funksjonalitet på saken
-            // som ikke er tiltenkt at man skal manipulere på.
-            //
-            // Før du vurderer å gjøre noe tilsvarende, ta en prat med tech-lead.
-
-            val sak = memory.getValue(sakId)
-            val field = sak::class.java.getDeclaredField("status")
-            field.trySetAccessible()
-            field.set(sak, status)
-        }
-    }
-
     override fun finnSakerMedFritakMeldeplikt(): List<SakId> {
         TODO("Not yet implemented")
     }

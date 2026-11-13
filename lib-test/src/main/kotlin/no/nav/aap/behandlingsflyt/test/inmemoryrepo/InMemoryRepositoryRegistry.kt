@@ -34,6 +34,7 @@ val inMemoryRepositoryRegistry = RepositoryRegistry().apply {
     register<InMemorySamordningRepository>()
     register<InMemorySamordningVurderingRepository>()
     register<InMemorySamordningYtelseRepository>()
+    register<InMemoryGjenståendeSykedagerRepository>()
     register<InMemoryTilkjentYtelseRepository>()
     register<InMemoryTjenestePensjonRepository>()
     register<InMemorySamVarslingRepository>()
@@ -81,6 +82,8 @@ val inMemoryRepositoryRegistry = RepositoryRegistry().apply {
     register<InMemoryEtableringEgenVirksomRepository>()
     register<InMemoryStønadsperiodeRepository>()
     register<InMemoryArenaMaksdatoRepository>()
+    register<InMemoryLovvalgMedlemskapRepository>()
+    register<InMemoryMedlemskapUnntakRepository>()
 }
 
 val inMemoryRepositoryProvider = inMemoryRepositoryRegistry.provider(MockConnection().toDBConnection())
