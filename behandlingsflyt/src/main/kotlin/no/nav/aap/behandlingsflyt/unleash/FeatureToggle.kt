@@ -27,6 +27,7 @@ enum class BehandlingsflytFeature(
     MaksdatoSykepenger,
 
     // --- Krav ---
+    BackfillKrav,
     KravSteg, // Visning
     KravManuellVurdering,
     NyttKravPeriodiserteAvklaringsbehov,
