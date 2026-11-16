@@ -100,7 +100,7 @@ Parametertyper må være marker-grensesnittet, aldri `*Impl`. Nytt repository m�
 
 Regler for enkeltområder (steg, avklaringsbehov, informasjonskrav, repository, migrasjoner, kontrakt, api) ligger i
 `.github/instructions/` og gjelder når du lager eller endrer filer i området.
-Oppskrifter for vanlige endringer finnes som skills i `.github/skills/`: `nytt-steg`, `nytt-avklaringsbehov`,
+Oppskrifter for vanlige endringer finnes som skills i `.agents/skills/`: `nytt-steg`, `nytt-avklaringsbehov`,
 `nytt-informasjonskrav`, `nytt-grunnlag`, `ny-jobb`. Bruk dem.
 Til gjennomgang av en diff: skillen `flyt-review` (sjekkliste).
 
