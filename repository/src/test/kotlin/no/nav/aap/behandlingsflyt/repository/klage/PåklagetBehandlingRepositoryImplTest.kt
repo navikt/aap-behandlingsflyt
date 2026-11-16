@@ -146,6 +146,48 @@ internal class PåklagetBehandlingRepositoryImplTest {
     }
 
     @Test
+    fun `henter null hvis det ikke finnes grunnlag`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection, søknadsdato)
+            finnEllerOpprettBehandling(connection, sak)
+            val klageBehandling = finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
+            val repository = PåklagetBehandlingRepositoryImpl(connection)
+
+            assertThat(repository.hentHvisEksisterer(klageBehandling.id)).isNull()
+        }
+    }
+
+    @Test
+    fun `henter null hvis bare inaktivt grunnlag finnes`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection, søknadsdato)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val klageBehandling = finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
+            val repository = PåklagetBehandlingRepositoryImpl(connection)
+
+            repository.lagre(
+                klageBehandling.id,
+                PåklagetBehandlingVurdering(
+                    påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
+                    påklagetBehandling = behandling.id,
+                    påklagetTilbakekrevingsbehandling = null,
+                    vurdertAv = Bruker("ident"),
+                    opprettet = Instant.now(),
+                ),
+            )
+            connection.execute(
+                "UPDATE PAAKLAGET_BEHANDLING_GRUNNLAG SET AKTIV = FALSE WHERE BEHANDLING_ID = ?"
+            ) {
+                setParams {
+                    setLong(1, klageBehandling.id.toLong())
+                }
+            }
+
+            assertThat(repository.hentHvisEksisterer(klageBehandling.id)).isNull()
+        }
+    }
+
+    @Test
     fun `Lagrer og henter påklagetbehandling med referanse`() {
         dataSource.transaction { connection ->
             val sak = sak(connection, søknadsdato)

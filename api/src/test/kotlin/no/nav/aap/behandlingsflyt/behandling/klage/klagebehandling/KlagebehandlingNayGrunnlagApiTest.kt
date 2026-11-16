@@ -76,6 +76,53 @@ class KlagebehandlingNayGrunnlagApiTest : BaseApiTest() {
         assertThat(respons.path("vurdering").isNull).isTrue()
     }
 
+    @Test
+    fun `skal returnere null påklaget vedtakstype uten grunnlag eller vurdering`() {
+        val klagebehandling = opprettBehandling(opprettInMemorySak(), TypeBehandling.Klage)
+
+        val respons = hentGrunnlag(klagebehandling.referanse.referanse.toString())
+
+        assertPåklagetVedtakstypeMangler(respons)
+        assertThat(respons.path("vurdering").isNull).isTrue()
+    }
+
+    @Test
+    fun `skal returnere null påklaget vedtakstype og bevare Nay-vurdering uten grunnlag`() {
+        val klagebehandling = opprettBehandling(opprettInMemorySak(), TypeBehandling.Klage)
+        val vurdering = klagevurdering()
+        ImMemoryKlagebehandlingNayRepository.lagre(klagebehandling.id, vurdering)
+
+        val respons = hentGrunnlag(klagebehandling.referanse.referanse.toString())
+
+        assertPåklagetVedtakstypeMangler(respons)
+        assertThat(respons.path("vurdering").path("begrunnelse").asText()).isEqualTo(vurdering.begrunnelse)
+    }
+
+    @Test
+    fun `skal returnere Arena som påklaget vedtakstype`() {
+        val klagebehandling = opprettBehandling(opprettInMemorySak(), TypeBehandling.Klage)
+        lagrePåklagetBehandling(
+            klagebehandling.id,
+            PåklagetBehandlingVurdering(
+                påklagetVedtakType = PåklagetVedtakType.ARENA_VEDTAK,
+                påklagetBehandling = null,
+                påklagetTilbakekrevingsbehandling = null,
+                vurdertAv = Bruker("Z123456"),
+                opprettet = Instant.now(),
+            ),
+        )
+
+        val respons = hentGrunnlag(klagebehandling.referanse.referanse.toString())
+
+        assertThat(respons.at("/påklagetVedtakType").asText())
+            .isEqualTo(PåklagetVedtakType.ARENA_VEDTAK.name)
+    }
+
+    private fun assertPåklagetVedtakstypeMangler(respons: JsonNode) {
+        assertThat(respons.has("påklagetVedtakType")).isTrue()
+        assertThat(respons.get("påklagetVedtakType").isNull).isTrue()
+    }
+
     private fun lagrePåklagetBehandling(
         behandlingId: BehandlingId,
         vurdering: PåklagetBehandlingVurdering,
