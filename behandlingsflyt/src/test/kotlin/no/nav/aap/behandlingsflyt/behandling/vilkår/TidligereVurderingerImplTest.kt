@@ -74,6 +74,7 @@ class TidligereVurderingerImplTest {
     @BeforeEach
     fun setup() {
         every { unleashGateway.isEnabled(BehandlingsflytFeature.Avslag11_27) } returns false
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.VedtaksperiodeBeslutter) } returns false
         every { avbrytRevurderingService.revurderingErAvbrutt(any()) } returns false
         every { trukketSøknadService.søknadErTrukket(any()) } returns false
         every { sykdomRepository.hentHvisEksisterer(any()) } returns null
@@ -340,6 +341,7 @@ class TidligereVurderingerImplTest {
         førSteg: StegType,
         avslagsårsak: Avslagsårsak,
     ) {
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.VedtaksperiodeBeslutter) } returns true
         every { vilkårsresultatRepository.hent(behandlingId) } returns
                 vilkårsresultatMedMuligRettighet(vilkårtype, rettighetsperiode, Utfall.IKKE_OPPFYLT, avslagsårsak)
 
@@ -353,11 +355,29 @@ class TidligereVurderingerImplTest {
 
     @ParameterizedTest
     @MethodSource("nyeAvslagsvilkår")
+    fun `gir PotensieltOppfylt for nye vilkår når feature toggle er av`(
+        vilkårtype: Vilkårtype,
+        førSteg: StegType,
+        avslagsårsak: Avslagsårsak,
+    ) {
+        every { vilkårsresultatRepository.hent(behandlingId) } returns
+                vilkårsresultatMedMuligRettighet(vilkårtype, rettighetsperiode, Utfall.IKKE_OPPFYLT, avslagsårsak)
+
+        val resultat = opprettTidligereVurderinger().behandlingsutfall(kontekst(), førSteg)
+
+        assertThat(resultat.segmenter()).isNotEmpty.allSatisfy {
+            assertThat(it.verdi).isInstanceOf(TidligereVurderinger.PotensieltOppfylt::class.java)
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("nyeAvslagsvilkår")
     fun `gir PotensieltOppfylt når vilkåret er oppfylt`(
         vilkårtype: Vilkårtype,
         førSteg: StegType,
         @Suppress("UNUSED_PARAMETER") avslagsårsak: Avslagsårsak,
     ) {
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.VedtaksperiodeBeslutter) } returns true
         every { vilkårsresultatRepository.hent(behandlingId) } returns
                 vilkårsresultatMedMuligRettighet(vilkårtype, rettighetsperiode, Utfall.OPPFYLT, null)
 
@@ -373,6 +393,7 @@ class TidligereVurderingerImplTest {
         annenKvote: Vilkårtype,
         avslagsårsak: Avslagsårsak,
     ) {
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.VedtaksperiodeBeslutter) } returns true
         val kvoteVilkår = listOf(
             Vilkår(
                 kvoteBruktOpp,
@@ -412,6 +433,7 @@ class TidligereVurderingerImplTest {
 
     @Test
     fun `girAvslag er false når soning bare gjelder deler av perioden`() {
+        every { unleashGateway.isEnabled(BehandlingsflytFeature.VedtaksperiodeBeslutter) } returns true
         every { vilkårsresultatRepository.hent(behandlingId) } returns
                 vilkårsresultatMedMuligRettighet(
                     Vilkårtype.STRAFFEGJENNOMFØRING,

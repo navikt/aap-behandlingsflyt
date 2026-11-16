@@ -329,6 +329,19 @@ class TidligereVurderingerImpl(
                 else
                     sjekker.filterNot { it.steg == StegType.VURDER_AVSLAG_11_27 }
             }
+            .let { sjekker ->
+                if (unleashGateway.isEnabled(BehandlingsflytFeature.VedtaksperiodeBeslutter))
+                    sjekker
+                else
+                    sjekker.filterNot {
+                        it.steg in setOf(
+                            StegType.VURDER_OPPHOLDSKRAV,
+                            StegType.DU_ER_ET_ANNET_STED,
+                            StegType.EFFEKTUER_11_7,
+                            StegType.FASTSETT_RETTIGHETSTYPE
+                        )
+                    }
+            }
 
         listeMedSjekker.windowed(2).forEach { (sjekk1, sjekk2) ->
             require(førstegangsbehandling.erStegFør(sjekk1.steg, sjekk2.steg)) {
