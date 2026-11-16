@@ -34,16 +34,13 @@ object BeregnLovvalgDelvurderinger :
         val forrige = grunnlag.forrigeBehandlingsVurderinger.associateBy { it.relevantDato }
         val eksisterende = grunnlag.eksisterendeVurderinger.associateBy { it.relevantDato }
 
-        // Tilstandsløs, og uten IO
-        val service = LovvalgMedlemskapVurderingService()
-
         return relevanteDatoer.map { dato ->
             val fraForrigeBehandling = forrige[dato]
             if (fraForrigeBehandling != null && dato != nyesteDato) {
                 return@map fraForrigeBehandling
             }
 
-            val vurdering = service.vurderTilhørighet(
+            val vurdering = LovvalgMedlemskapVurderingService.vurderTilhørighet(
                 grunnlag.register,
                 Periode(dato, maxOf(dato, grunnlag.rettighetsperiodeTom)),
             )

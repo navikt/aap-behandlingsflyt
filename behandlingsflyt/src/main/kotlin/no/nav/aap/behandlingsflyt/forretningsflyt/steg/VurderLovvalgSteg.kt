@@ -10,7 +10,6 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.BeregnLovvalgDel
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingRepository
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingerSporingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingerGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgMedlemskapVurderingService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.kanVurderesAutomatiskTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.Medlemskapvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository

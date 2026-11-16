@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class LovvalgMedlemskapVurderingServiceTest {
-    private val service = LovvalgMedlemskapVurderingService()
+    private val service = LovvalgMedlemskapVurderingService
 
     @Test
     fun `automatisk om alle krav er oppfylt`() {

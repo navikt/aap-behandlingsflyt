@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.erGy
 import no.nav.aap.komponenter.type.Periode
 import kotlin.enums.enumEntries
 
-class LovvalgMedlemskapVurderingService {
+object LovvalgMedlemskapVurderingService {
     /** Uten sideeffekter, slik at den kan kjøres under sporing. */
     fun vurderTilhørighet(
         grunnlag: MedlemskapLovvalgRegisterGrunnlag,
