@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.BackfillBehandlingResultat
 import no.nav.aap.behandlingsflyt.behandling.BackfillKravService
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -73,6 +74,11 @@ class BackfillKrav(
 
                 // Saker som stammer fra behandlinger som er opprettet i forbindelse med migrering fra arena skal ikke backfilles
                 if (behandlinger.any { it.årsakTilOpprettelse === ÅrsakTilOpprettelse.MIGRERING_FRA_ARENA }) {
+                    return@transaction
+                }
+
+                if (behandlinger.any { it.årsakTilOpprettelse === ÅrsakTilOpprettelse.HELSEOPPLYSNINGER && it.typeBehandling() == TypeBehandling.Førstegangsbehandling }) {
+                    log.warn("Backfiller ikke sak ${sak.saksnummer}; ble opprettet pga helseopplysninger")
                     return@transaction
                 }
 
