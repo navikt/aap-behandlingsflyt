@@ -8,7 +8,9 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.Fartsomraade
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipsregister
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Yrke
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
@@ -18,11 +20,16 @@ data class LovvalgDelvurderingerGrunnlag(
     val kanBehandlesAutomatisk: Boolean,
     val tilhørighetVurdering: List<TilhørighetVurdering>,
     val relevantDato: LocalDate,
+    val vurdertIBehandling: BehandlingId,
 ) {
     fun vurdering(): KanBehandlesAutomatiskVurdering = KanBehandlesAutomatiskVurdering(kanBehandlesAutomatisk, tilhørighetVurdering)
-
-    fun kanVurderesAutomatiskTidslinje(): Tidslinje<Boolean> = Tidslinje(Periode(relevantDato, Tid.MAKS), kanBehandlesAutomatisk)
 }
+
+/** Hver delvurdering gjelder fra sin relevante dato og til neste delvurdering overtar. */
+fun List<LovvalgDelvurderingerGrunnlag>.kanVurderesAutomatiskTidslinje(): Tidslinje<Boolean> =
+    sortedBy { it.relevantDato }
+        .somTidslinje { Periode(it.relevantDato, Tid.MAKS) }
+        .mapValue { it.kanBehandlesAutomatisk }
 
 data class KanBehandlesAutomatiskVurdering(
     val kanBehandlesAutomatisk: Boolean,

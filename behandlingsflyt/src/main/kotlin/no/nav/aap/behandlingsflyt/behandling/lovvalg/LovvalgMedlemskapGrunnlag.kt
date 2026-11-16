@@ -47,7 +47,7 @@ data class MedlemskapLovvalgRegisterGrunnlag(
  */
 data class MedlemskapLovvalgFaktagrunnlag(
     val register: MedlemskapLovvalgRegisterGrunnlag,
-    val delvurdering: LovvalgDelvurderingerGrunnlag?,
+    val delvurderinger: List<LovvalgDelvurderingerGrunnlag>,
     val manuelleVurderinger: List<ManuellVurderingForLovvalgMedlemskap>,
 ) : Faktagrunnlag {
     fun gjeldendeManuelleVurderinger(): Tidslinje<ManuellVurderingForLovvalgMedlemskap> {
