@@ -96,16 +96,13 @@ tasks.withType<Test>().configureEach {
 }
 
 tasks {
-    register<Test>("coreTest") {
-        description = "Kjører testene som ikke trenger Docker (alt uten taggene ${dockerTagger.joinToString()})."
-        group = LifecycleBasePlugin.VERIFICATION_GROUP
-        val testSourceSet = sourceSets.named("test")
-        testClassesDirs = files(testSourceSet.map { it.output.classesDirs })
-        classpath = files(testSourceSet.map { it.runtimeClasspath })
-        useJUnitPlatform {
-            excludeTags(*dockerTagger)
+    test {
+        if (providers.gradleProperty("coreTestsOnly").map(String::toBooleanStrict).getOrElse(false)) {
+            useJUnitPlatform {
+                excludeTags(*dockerTagger)
+            }
+            environment("TESTCONTAINERS_IMAGE_SUBSTITUTOR", "no.nav.aap.behandlingsflyt.test.DockerIkkeTillattIKjernetester")
         }
-        environment("TESTCONTAINERS_IMAGE_SUBSTITUTOR", "no.nav.aap.behandlingsflyt.test.DockerIkkeTillattIKjernetester")
     }
 
     (findByName("jar") as? Jar)?.apply {
