@@ -75,6 +75,27 @@ class ArenaMaksdatoRepositoryImplTest {
     }
 
     @Test
+    fun `hent med id gir også grunnlag som ikke lenger er aktivt`() {
+        val behandlingId = opprettBehandlingId()
+        val gammelt = ArenaMaksdato("123", "LØPENDE", LocalDate.of(2026, 12, 31), null, 42)
+        val nytt = gammelt.copy(status = "AVSLUTTET")
+
+        val gammeltId = dataSource.transaction { connection ->
+            val repository = ArenaMaksdatoRepositoryImpl(connection)
+            repository.lagre(behandlingId, gammelt)
+            val id = repository.hentHvisEksisterer(behandlingId)!!.id
+            repository.lagre(behandlingId, nytt)
+            id
+        }
+
+        val grunnlag = dataSource.transaction(readOnly = true) { connection ->
+            ArenaMaksdatoRepositoryImpl(connection).hent(gammeltId)
+        }
+
+        assertThat(grunnlag.arenaMaksdato).isEqualTo(gammelt)
+    }
+
+    @Test
     fun `lagre og hente grunnlag uten Arena-sak`() {
         val behandlingId = opprettBehandlingId()
 

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdatoGrunnlagId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.VurderingForKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.VurderingForKravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
@@ -45,12 +46,13 @@ data class StønadsperiodeVurdering(
     val relevantKravType: RelevantKravType,
     val startDato: LocalDate,
     /**
-     * Satt når startdatoen er dagen etter maksdato i tilstøtende Arena-sak.
+     * Arena-maksdatogrunnlaget vurderingen bygger på når startdatoen er dagen etter maksdato
+     * i tilstøtende Arena-sak. Null når vurderingen ikke er kant i kant med Arena.
      */
-    val kantIKantMedArena: KantIKantMedArena? = null,
+    val kantIKantMedArenaGrunnlag: ArenaMaksdatoGrunnlagId? = null,
 ) : VurderingForKrav {
     val erKantIKantMedArena: Boolean
-        get() = kantIKantMedArena != null
+        get() = kantIKantMedArenaGrunnlag != null
 
     init {
 

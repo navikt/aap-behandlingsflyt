@@ -174,7 +174,7 @@ fun NormalOpenAPIRoute.behandlingApi(
                         erMigrertFraArena = egenskaper.erMigrertFraArena,
                         harArenaHistorikk = egenskaper.harArenaHistorikk,
                         erKantIKantMedArena = egenskaper.kantIKantMedArena != null,
-                        kantIKantMedArena = egenskaper.kantIKantMedArena?.tilDTO(),
+                        kantIKantMedArena = egenskaper.kantIKantMedArena?.tilKantIKantMedArenaDTO(),
                     )
                 )
             }

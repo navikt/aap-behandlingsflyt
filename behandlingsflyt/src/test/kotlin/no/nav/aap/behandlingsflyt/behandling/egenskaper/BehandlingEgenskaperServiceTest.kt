@@ -2,13 +2,14 @@ package no.nav.aap.behandlingsflyt.behandling.egenskaper
 
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdatoGrunnlagId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.KantIKantMedArena
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
@@ -16,6 +17,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.FakeArenaOppslagGateway
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryArenaMaksdatoRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryStønadsperiodeRepository
@@ -31,6 +33,7 @@ class BehandlingEgenskaperServiceTest {
         InMemoryKravRepository,
         InMemorySakRepository,
         InMemoryStønadsperiodeRepository,
+        InMemoryArenaMaksdatoRepository,
     )
     private val service = lagService(harArenaHistorikk = false)
 
@@ -78,25 +81,44 @@ class BehandlingEgenskaperServiceTest {
         val (_, behandling) = opprettInMemorySakOgBehandling()
         val krav = lagRelevantKrav(behandling.id, Kravreferanse.ny())
         InMemoryKravRepository.lagre(behandling.id, setOf(krav))
+        InMemoryArenaMaksdatoRepository.lagre(behandling.id, ARENA_MAKSDATO)
         InMemoryStønadsperiodeRepository.lagre(
             behandling.id,
-            setOf(lagStønadsperiodeVurdering(behandling.id, krav.referanse, kantIKantMedArena = null)),
+            setOf(lagStønadsperiodeVurdering(behandling.id, krav.referanse, kantIKantMedArenaGrunnlag = null)),
         )
 
         assertThat(hentEgenskaper(behandling).kantIKantMedArena).isNull()
     }
 
     @Test
-    fun `behandling med kant i kant-vurdering på gjeldende krav er kant i kant med Arena`() {
+    fun `behandling med kant i kant-vurdering på gjeldende krav gir Arena-saken den er kant i kant med`() {
         val (_, behandling) = opprettInMemorySakOgBehandling()
         val krav = lagRelevantKrav(behandling.id, Kravreferanse.ny())
         InMemoryKravRepository.lagre(behandling.id, setOf(krav))
+        InMemoryArenaMaksdatoRepository.lagre(behandling.id, ARENA_MAKSDATO)
+        val arenaGrunnlagId = InMemoryArenaMaksdatoRepository.hentHvisEksisterer(behandling.id)!!.id
         InMemoryStønadsperiodeRepository.lagre(
             behandling.id,
-            setOf(lagStønadsperiodeVurdering(behandling.id, krav.referanse, kantIKantMedArena = KANT_I_KANT)),
+            setOf(lagStønadsperiodeVurdering(behandling.id, krav.referanse, arenaGrunnlagId)),
         )
 
-        assertThat(hentEgenskaper(behandling).kantIKantMedArena).isEqualTo(KANT_I_KANT)
+        assertThat(hentEgenskaper(behandling).kantIKantMedArena).isEqualTo(ARENA_MAKSDATO)
+    }
+
+    @Test
+    fun `kant i kant gir Arena-dataene vurderingen ble gjort på, selv om grunnlaget er hentet på nytt`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        val krav = lagRelevantKrav(behandling.id, Kravreferanse.ny())
+        InMemoryKravRepository.lagre(behandling.id, setOf(krav))
+        InMemoryArenaMaksdatoRepository.lagre(behandling.id, ARENA_MAKSDATO)
+        val arenaGrunnlagId = InMemoryArenaMaksdatoRepository.hentHvisEksisterer(behandling.id)!!.id
+        InMemoryStønadsperiodeRepository.lagre(
+            behandling.id,
+            setOf(lagStønadsperiodeVurdering(behandling.id, krav.referanse, arenaGrunnlagId)),
+        )
+        InMemoryArenaMaksdatoRepository.lagre(behandling.id, ARENA_MAKSDATO.copy(status = "AKTIV"))
+
+        assertThat(hentEgenskaper(behandling).kantIKantMedArena).isEqualTo(ARENA_MAKSDATO)
     }
 
     @Test
@@ -104,9 +126,11 @@ class BehandlingEgenskaperServiceTest {
         val (_, behandling) = opprettInMemorySakOgBehandling()
         val krav = lagRelevantKrav(behandling.id, Kravreferanse.ny())
         InMemoryKravRepository.lagre(behandling.id, setOf(krav))
+        InMemoryArenaMaksdatoRepository.lagre(behandling.id, ARENA_MAKSDATO)
+        val arenaGrunnlagId = InMemoryArenaMaksdatoRepository.hentHvisEksisterer(behandling.id)!!.id
         InMemoryStønadsperiodeRepository.lagre(
             behandling.id,
-            setOf(lagStønadsperiodeVurdering(behandling.id, Kravreferanse.ny(), kantIKantMedArena = KANT_I_KANT)),
+            setOf(lagStønadsperiodeVurdering(behandling.id, Kravreferanse.ny(), arenaGrunnlagId)),
         )
 
         assertThat(hentEgenskaper(behandling).kantIKantMedArena).isNull()
@@ -157,23 +181,23 @@ class BehandlingEgenskaperServiceTest {
     private fun lagStønadsperiodeVurdering(
         behandlingId: BehandlingId,
         referanse: Kravreferanse,
-        kantIKantMedArena: KantIKantMedArena?,
+        kantIKantMedArenaGrunnlag: ArenaMaksdatoGrunnlagId?,
     ) = StønadsperiodeVurdering(
         referanse = referanse,
         opprettet = Instant.now(),
         vurdertIBehandling = behandlingId,
         vurdertAv = SYSTEMBRUKER,
         begrunnelse = "Test",
-        harHattOrdinærSiste52Uker = kantIKantMedArena != null,
+        harHattOrdinærSiste52Uker = kantIKantMedArenaGrunnlag != null,
         harGjenværendeKvote = false,
         relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
         startDato = MULIG_RETT_FRA,
-        kantIKantMedArena = kantIKantMedArena,
+        kantIKantMedArenaGrunnlag = kantIKantMedArenaGrunnlag,
     )
 
     private companion object {
         val MULIG_RETT_FRA: LocalDate = LocalDate.of(2024, 1, 1)
-        val KANT_I_KANT = KantIKantMedArena(
+        val ARENA_MAKSDATO = ArenaMaksdato(
             arenaSaksnummer = "2023-5",
             status = "AVSLU",
             maksdato = MULIG_RETT_FRA.minusDays(1),

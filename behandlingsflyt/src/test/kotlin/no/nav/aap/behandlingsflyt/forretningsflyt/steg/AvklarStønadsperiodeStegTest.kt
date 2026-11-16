@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettig
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.KantIKantMedArena
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
@@ -370,21 +369,14 @@ class AvklarStønadsperiodeStegTest {
     private fun assertKantIKant(vurdering: StønadsperiodeVurdering) {
         assertThat(vurdering.startDato).isEqualTo(DAGEN_ETTER_MAKSDATO)
         assertThat(vurdering.harHattOrdinærSiste52Uker).isTrue()
-        assertThat(vurdering.kantIKantMedArena).isEqualTo(
-            KantIKantMedArena(
-                arenaSaksnummer = "2023-5",
-                status = "AVSLU",
-                maksdato = MAKSDATO,
-                vedtakTil = MAKSDATO,
-                vedtakId = 1,
-            )
-        )
+        assertThat(vurdering.kantIKantMedArenaGrunnlag?.let { InMemoryArenaMaksdatoRepository.hent(it).arenaMaksdato })
+            .isEqualTo(lagArenaMaksdato(MAKSDATO))
     }
 
     private fun assertVanligVurdering(vurdering: StønadsperiodeVurdering, startDato: LocalDate) {
         assertThat(vurdering.startDato).isEqualTo(startDato)
         assertThat(vurdering.harHattOrdinærSiste52Uker).isFalse()
-        assertThat(vurdering.kantIKantMedArena).isNull()
+        assertThat(vurdering.erKantIKantMedArena).isFalse()
     }
 
     private fun assertStopperPåTidligereKrav(behandlingId: BehandlingId, kravVedOvergang: RelevantKrav) {
