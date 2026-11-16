@@ -162,8 +162,8 @@ internal class LovvalgMedlemskapRepositoryImplTest {
                             enhetsGrunnlag()
                         )
                     ),
-                    arbeiderINorgeGrunnlag = arbeidGrunnlag()
-                ),
+
+                    ),
                 medlId = medlId,
             )
 
@@ -209,7 +209,6 @@ internal class LovvalgMedlemskapRepositoryImplTest {
                             enhetsGrunnlag()
                         )
                     ),
-                    arbeiderINorgeGrunnlag = arbeidGrunnlag()
                 ),
                 medlId = medlId,
             )
@@ -259,7 +258,6 @@ internal class LovvalgMedlemskapRepositoryImplTest {
             assertThat(lovvalgMedlemskapGrunnlag?.registerGrunnlag?.inntekterINorgeGrunnlag?.inntekterForKrav?.first()?.inntekter?.size).isEqualTo(
                 2
             )
-            assertThat(lovvalgMedlemskapGrunnlag?.registerGrunnlag?.arbeiderINorgeGrunnlag?.size).isEqualTo(1)
             assertThat(lovvalgMedlemskapGrunnlag?.registerGrunnlag?.medlemskapUnntakGrunnlag).isNotNull
             assertThat(lovvalgMedlemskapGrunnlag?.vurderinger?.size).isEqualTo(3)
         }
@@ -282,7 +280,6 @@ internal class LovvalgMedlemskapRepositoryImplTest {
                 registerGrunnlag = LovvalgMedlemskapRegisterGrunnlag(
                     medlemskapUnntakGrunnlag = null,
                     inntekterINorgeGrunnlag = forventetInntektGrunnlag,
-                    arbeiderINorgeGrunnlag = emptyList()
                 ),
                 medlId = null,
             )
@@ -336,9 +333,13 @@ internal class LovvalgMedlemskapRepositoryImplTest {
                 behandlingId = behandling.id,
                 registerGrunnlag = LovvalgMedlemskapRegisterGrunnlag(
                     medlemskapUnntakGrunnlag = null,
-                    inntekterINorgeGrunnlag = InntekterINorgeRegisterGrunnlag(mapOf(sak.rettighetsperiode.fom to inntektGrunnlag()).tilDomene(enhetsGrunnlag())),
-                    arbeiderINorgeGrunnlag = arbeidGrunnlag()
-                ),
+                    inntekterINorgeGrunnlag = InntekterINorgeRegisterGrunnlag(
+                        mapOf(sak.rettighetsperiode.fom to inntektGrunnlag()).tilDomene(
+                            enhetsGrunnlag()
+                        )
+                    ),
+
+                    ),
                 medlId = medlId,
             )
 
@@ -362,8 +363,11 @@ internal class LovvalgMedlemskapRepositoryImplTest {
             behandlingId = behandlingId,
             registerGrunnlag = LovvalgMedlemskapRegisterGrunnlag(
                 medlemskapUnntakGrunnlag = null,
-                inntekterINorgeGrunnlag = InntekterINorgeRegisterGrunnlag(mapOf(periode.fom to inntektGrunnlag()).tilDomene(enhetsGrunnlag())),
-                arbeiderINorgeGrunnlag = emptyList()
+                inntekterINorgeGrunnlag = InntekterINorgeRegisterGrunnlag(
+                    mapOf(periode.fom to inntektGrunnlag()).tilDomene(
+                        enhetsGrunnlag()
+                    )
+                ),
             ),
             medlId = null,
         )
@@ -397,15 +401,6 @@ internal class LovvalgMedlemskapRepositoryImplTest {
             vurdertDato = LocalDateTime.now(),
             vurdertIBehandling = vurdertIBehandling
         )
-
-    private fun arbeidGrunnlag(): List<ArbeidINorgeGrunnlag> = listOf(
-        ArbeidINorgeGrunnlag(
-            identifikator = "1234",
-            arbeidsforholdKode = Arbeidsforholdtype.ORDINAERT_ARBEIDSFORHOLD,
-            startdato = 1 mai 2020,
-            sluttdato = null
-        )
-    )
 
     private fun inntektGrunnlag(): List<ArbeidsInntektMåned> = listOf(
         ArbeidsInntektMåned(

@@ -322,7 +322,6 @@ class LovvalgMedlemskapInformasjonskravTest {
         informasjonskrav.oppdater(
             input, LovvalgMedlemskapInformasjonskrav.LovvalgRegisterData(
                 medlemskapPerioder = emptyList(),
-                arbeidGrunnlag = emptyList(),
                 inntektPerDato = input.datoerSomInntektSkalHentesIForholdTil.associate { dato ->
                     dato to listOf(
                         ArbeidsInntektMåned(
