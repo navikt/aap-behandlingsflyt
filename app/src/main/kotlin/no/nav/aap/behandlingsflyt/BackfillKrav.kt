@@ -124,7 +124,7 @@ class BackfillKrav(
         }
 
         log.info(
-            "Backfill krav ferdig: {} behandlinger for sak-ider $sakIder",
+            "Backfill krav ferdig: {} behandlinger for sak-ider $fra - $til",
             antallBackfillUtført
         )
         Thread.sleep(Duration.ofMinutes(5))
