@@ -80,11 +80,13 @@ class Avklaringsbehov(
         } else {
             Status.SENDT_TILBAKE_FRA_BESLUTTER
         }
-        historikk += Endring(
+        val sisteEndring = aktivHistorikk.last { it.status.erÅpent() }
+        historikk += sisteEndring.copy(
             status = status,
             begrunnelse = begrunnelse,
             endretAv = vurdertAv,
             årsakTilRetur = årsakTilRetur,
+            tidsstempel = LocalDateTime.now()
         )
     }
 
@@ -100,11 +102,13 @@ class Avklaringsbehov(
         } else {
             Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
         }
-        historikk += Endring(
+        val sisteEndring = aktivHistorikk.last { it.status.erÅpent() }
+        historikk += sisteEndring.copy(
             status = status,
             begrunnelse = begrunnelse,
             endretAv = vurdertAv,
             årsakTilRetur = årsakTilRetur,
+            tidsstempel = LocalDateTime.now()
         )
     }
 
