@@ -1,8 +1,6 @@
----
-applyTo: "behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/faktagrunnlag/**"
-description: "Informasjonskrav og grunnlag: de fire fasene, ENDRET og tilbakeføring, rate-limiting"
----
 # Regler for informasjonskrav og grunnlag
+
+Gjelder: `behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/faktagrunnlag/**`
 
 - Fire faser med streng arbeidsdeling (`Informasjonskrav.kt` KDoc): `erRelevant` (gate/rate-limit),
   `klargjør` (kun DB-lesing), `hentData` (kun eksternt kall; kjører på virtuell tråd uten DB-tilkobling),

@@ -1,8 +1,6 @@
----
-applyTo: "api/src/main/kotlin/**,app/src/main/kotlin/**"
-description: "Ktor-ruter og DTO-er i api og app: ingen logikk i rutefiler, transaksjon per kall, autorisasjon, montering i App.kt"
----
 # Regler for api og app
+
+Gjelder: `api/src/main/kotlin/**`, `app/src/main/kotlin/**`
 
 - Ingen forretningslogikk i rutefiler (standup-vedtak 2025-11-10). Ruten åpner transaksjon
   (`dataSource.transaction { connection -> … }`), lager `repositoryRegistry.provider(connection)`, kaller en

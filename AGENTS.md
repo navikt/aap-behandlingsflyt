@@ -98,8 +98,20 @@ Alle injiserbare klasser følger samme idiom: `private constructor(avhengigheter
 `constructor(repositoryProvider, gatewayProvider)` + `companion object : FlytSteg | Factory | Informasjonskravkonstruktør | ProvidersJobbSpesifikasjon`.
 Parametertyper må være marker-grensesnittet, aldri `*Impl`. Nytt repository må implementere `kopier` og `slett`.
 
-Regler for enkeltområder (steg, avklaringsbehov, informasjonskrav, repository, migrasjoner, kontrakt, api) ligger i
-`.github/instructions/` og gjelder når du lager eller endrer filer i området.
+Regler for enkeltområder ligger i en `AGENTS.md` i området, og agenten laster dem når den jobber med filer der:
+- `kontrakt/AGENTS.md`, `api/AGENTS.md`, `repository/AGENTS.md` og `repository/src/main/resources/flyway/AGENTS.md`
+- `behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/forretningsflyt/AGENTS.md` (steg og flytdefinisjoner)
+- `behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/behandling/avklaringsbehov/AGENTS.md`
+- `behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/faktagrunnlag/AGENTS.md` (informasjonskrav og grunnlag)
+
+Noen av reglene gjelder også filer utenfor mappa si. Les fila selv før du endrer:
+- `app/src/main/kotlin/`: `api/AGENTS.md`.
+- InMemory-repositories i `lib-test/.../inmemoryrepo/`: `repository/AGENTS.md`.
+- `*Steg.kt` i en feature-pakke (`no.nav.aap.<feature>`): `forretningsflyt/AGENTS.md`.
+- `Definisjon` og `AvklaringsbehovKode` i `kontrakt/`: `behandling/avklaringsbehov/AGENTS.md`.
+
+Endrer du reglene for et område, oppdater `AGENTS.md` i området.
+
 Oppskrifter for vanlige endringer finnes som skills i `.agents/skills/`: `nytt-steg`, `nytt-avklaringsbehov`,
 `nytt-informasjonskrav`, `nytt-grunnlag`, `ny-jobb`. Bruk dem.
 Til gjennomgang av en diff: skillen `flyt-review` (sjekkliste).

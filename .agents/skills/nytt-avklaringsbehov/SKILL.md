@@ -4,8 +4,9 @@ description: Oppskrift for nytt avklaringsbehov med Definisjon, AvklaringsbehovK
 ---
 # Nytt avklaringsbehov + løser
 
-Les `.github/instructions/avklaringsbehov.instructions.md` først. Reelt eksempel: commit `491c03f9b` (løser/løsning
-for avklar stønadsperiode) og den fulle skiven `6d0768796` (avslag 11-27, 44 filer).
+Les `behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/behandling/avklaringsbehov/AGENTS.md` først.
+Reelt eksempel: commit `491c03f9b` (løser/løsning for avklar stønadsperiode) og den fulle skiven `6d0768796`
+(avslag 11-27, 44 filer).
 
 1. `kontrakt/.../avklaringsbehov/AvklaringsbehovKode.kt`: ny enum-verdi `` `NNNN` `` **og** `const val XXX_KODE = "NNNN"`.
    Velg neste ledige firesifrede kode i riktig serie.

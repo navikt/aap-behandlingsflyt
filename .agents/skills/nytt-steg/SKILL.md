@@ -4,7 +4,8 @@ description: Oppskrift for å legge til et nytt steg i behandlingsflyten (StegTy
 ---
 # Nytt steg i flyten
 
-Før du starter: les `.github/instructions/steg.instructions.md`. Et nytt steg endrer publisert kontrakt (`StegType`)
+Før du starter: les `behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/forretningsflyt/AGENTS.md`.
+Et nytt steg endrer publisert kontrakt (`StegType`)
 og flytrekkefølgen, som brekker åpne behandlinger hvis det gjøres feil. Avklar med mennesket:
 1. Hvilken flyt (Revurdering/Klage/…) og **hvor** i rekkefølgen? Hvilke `Vurderingsbehov` gjør steget relevant?
 2. Skal steget vises i frontend, og i så fall på samme side som et eksisterende steg? `StegGruppe` grupperer steg

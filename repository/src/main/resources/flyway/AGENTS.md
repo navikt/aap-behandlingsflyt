@@ -1,8 +1,6 @@
----
-applyTo: "repository/src/main/resources/flyway/**"
-description: "Flyway-migrasjoner: navngiving og rullende deploy (nullable eller DEFAULT, ingen DROP sammen med koden)"
----
 # Regler for Flyway-migrasjoner
+
+Gjelder: `repository/src/main/resources/flyway/**`
 
 - Navn: `V1.<neste nummer>__beskrivelse_med_understrek.sql`. Sjekk høyeste eksisterende nummer; to PR-er med samme
   nummer kolliderer ved merge. Aldri rediger en migrasjon som er merget.

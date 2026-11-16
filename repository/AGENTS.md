@@ -1,8 +1,6 @@
----
-applyTo: "repository/src/main/kotlin/**,lib-test/src/main/kotlin/no/nav/aap/behandlingsflyt/test/inmemoryrepo/**"
-description: "Repositories: håndskrevet SQL, aktiv-flagg, kopier og slett, InMemory-variant og registrering"
----
 # Regler for repositories
+
+Gjelder: `repository/src/main/kotlin/**`, `lib-test/src/main/kotlin/no/nav/aap/behandlingsflyt/test/inmemoryrepo/**`
 
 - Håndskrevet SQL via `DBConnection` (`queryFirstOrNull`/`queryList`/`execute*` med `setParams` og `setRowMapper`).
   Ingen ORM, ingen query builder. Parametre er posisjonelle: setter du inn en kolonne midt i en INSERT, må alle

@@ -4,7 +4,7 @@ description: Oppskrift for nytt informasjonskrav / registeroppslag (gateway, fak
 ---
 # Nytt informasjonskrav
 
-Les `.github/instructions/informasjonskrav.instructions.md` og `.github/instructions/repository.instructions.md`.
+Les `behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/faktagrunnlag/AGENTS.md` og `repository/AGENTS.md`.
 Reelle eksempler: `a565fc176` (meldekortsyklus fra Arena, 8 filer) og `aead626f9` (tiltakspenger).
 `a565fc176` kom uten tester; de kom senere i `33b0dc091`. Skriv testene i punkt 7 fra start.
 

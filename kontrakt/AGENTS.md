@@ -1,8 +1,6 @@
----
-applyTo: "kontrakt/**"
-description: "kontrakt-modulen publiseres som bibliotek til andre apper: bare legg til, aldri endre eller fjerne"
----
 # Regler for kontrakt-modulen
+
+Gjelder: `kontrakt/**`
 
 - Alt her publiseres automatisk som `no.nav.aap.behandlingsflyt:kontrakt` (ny patch-versjon per commit som rører
   `kontrakt/`) og konsumeres av aap-oppgave, aap-tilgang, aap-statistikk og aap-postmottak. En "opprydding" her er en

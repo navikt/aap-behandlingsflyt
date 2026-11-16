@@ -1,8 +1,7 @@
----
-applyTo: "behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/behandling/avklaringsbehov/**,kontrakt/src/main/kotlin/no/nav/aap/behandlingsflyt/kontrakt/avklaringsbehov/**"
-description: "Definisjon, AvklaringsbehovKode, løsninger og løsere: publisert kontrakt, registrering og hva løseren gjør"
----
 # Regler for avklaringsbehov, løsere og løsninger
+
+Gjelder: `behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/behandling/avklaringsbehov/**`,
+`kontrakt/src/main/kotlin/no/nav/aap/behandlingsflyt/kontrakt/avklaringsbehov/**`
 
 - `Definisjon` og `AvklaringsbehovKode` er publisert kontrakt og lagret i DB. Eksisterende verdier endres aldri;
   nytt behov = ny kode + ny `Definisjon` + `@Deprecated` på den gamle om den erstattes. `init`-blokken kaster ved

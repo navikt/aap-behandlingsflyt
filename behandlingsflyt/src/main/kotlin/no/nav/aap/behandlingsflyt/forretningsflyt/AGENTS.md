@@ -1,8 +1,6 @@
----
-applyTo: "behandlingsflyt/src/main/kotlin/**/forretningsflyt/**,**/*Steg.kt"
-description: "Steg og flytdefinisjoner: idempotent utfør, vurderingType, avklaringsbehov via service, stegrekkefølge"
----
 # Regler for steg og flytdefinisjoner
+
+Gjelder: `behandlingsflyt/src/main/kotlin/**/forretningsflyt/**`, `**/*Steg.kt`
 
 - `utfør(kontekst)` kjøres mange ganger for samme behandling. Skriv den som en avstemming: les det som finnes,
   regn ut ønsket tilstand, skriv bare hvis noe er endret. Aldri "insert uten å sjekke".

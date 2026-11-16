@@ -4,7 +4,7 @@ description: Oppskrift for ny grunnlagstype med migrasjon, domenemodell, Reposit
 ---
 # Nytt grunnlag med repository
 
-Les `.github/instructions/repository.instructions.md` og `.github/instructions/migrasjoner.instructions.md`. Reelt
+Les `repository/AGENTS.md` og `repository/src/main/resources/flyway/AGENTS.md`. Reelt
 eksempel: `f84ecaaa3` (sykepenger/ferie fra søknaden, 9 filer). Kopier mønsteret fra `SykdomRepositoryImpl` +
 `SykdomRepositoryImplTest`.
 
