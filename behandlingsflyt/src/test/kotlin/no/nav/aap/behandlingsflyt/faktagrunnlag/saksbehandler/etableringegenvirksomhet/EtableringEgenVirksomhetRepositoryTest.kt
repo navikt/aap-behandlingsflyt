@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepositoryImpl
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -51,12 +50,10 @@ class EtableringEgenVirksomhetRepositoryTest {
                     virksomhetErNy = true,
                     brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
                     kanFøreTilSelvforsørget = true,
-                    utviklingsPerioder = emptyList(),
-                    oppstartsPerioder = emptyList(),
-                    fase = null,
-                    erRegistrertINødvendigeOffentligeRegister = null,
-                    jobberBrukerAktivMedVirksomheten = null,
-                    versjon = EtableringVersjon.V0,
+                    fase = EtableringFase.OPPSTART,
+                    erRegistrertINødvendigeOffentligeRegister = true,
+                    jobberBrukerAktivMedVirksomheten = true,
+                    versjon = EtableringVersjon.V1,
                 )
 
             repository.lagre(behandling.id, listOf(vurdering))
@@ -99,12 +96,10 @@ class EtableringEgenVirksomhetRepositoryTest {
                         virksomhetErNy = true,
                         brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
                         kanFøreTilSelvforsørget = true,
-                        utviklingsPerioder = listOf(Periode(LocalDate.now(), LocalDate.now().plusMonths(5))),
-                        oppstartsPerioder = listOf(Periode(LocalDate.now().plusMonths(6), LocalDate.now().plusMonths(9))),
-                        fase = null,
+                        fase = EtableringFase.OPPSTART,
                         erRegistrertINødvendigeOffentligeRegister = null,
-                        jobberBrukerAktivMedVirksomheten = null,
-                        versjon = EtableringVersjon.V0,
+                        jobberBrukerAktivMedVirksomheten = false,
+                        versjon = EtableringVersjon.V1,
                     )
                 )
             )

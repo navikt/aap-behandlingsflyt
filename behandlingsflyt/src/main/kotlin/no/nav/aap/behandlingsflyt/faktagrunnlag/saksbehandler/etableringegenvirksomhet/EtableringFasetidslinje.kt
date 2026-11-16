@@ -43,7 +43,7 @@ private fun List<EtableringEgenVirksomhetVurdering>.utledFasetidslinje(
     flatMapIndexed { index, vurdering ->
         val overstyrendePerioder = drop(index + 1)
             .map { Periode(it.fom, it.tom ?: Tid.MAKS) }
-        listOf(vurdering).tilNyttFormat().flatMap { fasevurdering ->
+        listOf(vurdering).flatMap { fasevurdering ->
             avsluttUtviklingVedFørsteOppstart(fasevurdering, førsteOppstart)
                 .utenPerioder(overstyrendePerioder)
         }

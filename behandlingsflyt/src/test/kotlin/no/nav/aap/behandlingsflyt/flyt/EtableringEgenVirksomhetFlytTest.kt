@@ -3,15 +3,15 @@ package no.nav.aap.behandlingsflyt.flyt
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.EtableringEgenVirksomhetLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetLøsningDto
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
-import no.nav.aap.komponenter.type.Periode
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -29,6 +29,7 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
                 EtableringEgenVirksomhetLøsning(
                     listOf(
                         EtableringEgenVirksomhetLøsningDto(
+                            versjon = EtableringVersjon.V1,
                             begrunnelse = "meee",
                             fom = sak.rettighetsperiode.fom.plusDays(1),
                             tom = null,
@@ -38,24 +39,13 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
                             virksomhetErNy = true,
                             brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
                             kanFøreTilSelvforsørget = true,
-                            utviklingsPerioder = listOf(
-                                Periode(
-                                    sak.rettighetsperiode.fom.plusDays(1),
-                                    sak.rettighetsperiode.fom.plusDays(4)
-                                ),
-                                Periode(
-                                    sak.rettighetsperiode.fom.plusDays(2),
-                                    sak.rettighetsperiode.fom.plusDays(3)
-                                )
-                            ),
-                            oppstartsPerioder = listOf(
-                                Periode(
-                                    sak.rettighetsperiode.fom.plusMonths(5),
-                                    sak.rettighetsperiode.fom.plusMonths(6)
-                                )
-                            )
+                            fase = EtableringFase.UTVIKLING,
+                            erRegistrertINødvendigeOffentligeRegister = null,
+                            jobberBrukerAktivMedVirksomheten = true
                         ),
+                        // Ikke oppfylt vurdering
                         EtableringEgenVirksomhetLøsningDto(
+                            versjon = EtableringVersjon.V1,
                             begrunnelse = "meee",
                             fom = sak.rettighetsperiode.fom.plusMonths(1),
                             tom = null,
@@ -65,18 +55,9 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
                             virksomhetErNy = false,
                             brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
                             kanFøreTilSelvforsørget = true,
-                            utviklingsPerioder = listOf(
-                                Periode(
-                                    sak.rettighetsperiode.fom.plusMonths(1),
-                                    sak.rettighetsperiode.fom.plusMonths(2)
-                                )
-                            ),
-                            oppstartsPerioder = listOf(
-                                Periode(
-                                    sak.rettighetsperiode.fom.plusMonths(3),
-                                    sak.rettighetsperiode.fom.plusMonths(4)
-                                )
-                            )
+                            erRegistrertINødvendigeOffentligeRegister = true,
+                            jobberBrukerAktivMedVirksomheten = true,
+                            fase = null
                         )
                     )
                 )
@@ -104,7 +85,7 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
 
         val oppfyltVurdering = requireNotNull(etableringGrunnlag?.vurderinger)
             .single { it.virksomhetErNy == true }
-        val ikkeOppfyltVurdering = requireNotNull(etableringGrunnlag?.vurderinger)
+        val ikkeOppfyltVurdering = requireNotNull(etableringGrunnlag.vurderinger)
             .single { it.virksomhetErNy == false }
 
         assertThat(oppfyltVurdering.evaluerVirksomhetVurdering()).isEqualTo(true)
@@ -135,51 +116,35 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
             .løsAvklaringsBehov(
                 EtableringEgenVirksomhetLøsning(
                     listOf(
+                        // Oppfylt
                         EtableringEgenVirksomhetLøsningDto(
+                            versjon = EtableringVersjon.V1,
                             begrunnelse = "meee",
                             fom = sak.rettighetsperiode.fom.plusDays(1),
                             tom = null,
                             virksomhetNavn = "peppas peppers",
                             orgNr = null,
                             foreliggerFagligVurdering = true,
+                            fase = EtableringFase.UTVIKLING,
+                            jobberBrukerAktivMedVirksomheten = true,
                             virksomhetErNy = true,
                             brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
                             kanFøreTilSelvforsørget = true,
-                            utviklingsPerioder = listOf(
-                                Periode(
-                                    sak.rettighetsperiode.fom.plusDays(1),
-                                    sak.rettighetsperiode.fom.plusDays(4)
-                                )
-                            ),
-                            oppstartsPerioder = listOf(
-                                Periode(
-                                    sak.rettighetsperiode.fom.plusMonths(5),
-                                    sak.rettighetsperiode.fom.plusMonths(6)
-                                )
-                            )
                         ),
+                        // Ikke oppfylt
                         EtableringEgenVirksomhetLøsningDto(
+                            versjon = EtableringVersjon.V1,
                             begrunnelse = "meee",
                             fom = sak.rettighetsperiode.fom.plusMonths(1),
                             tom = null,
                             virksomhetNavn = "peppas peppers",
                             orgNr = null,
                             foreliggerFagligVurdering = true,
+                            fase = null,
                             virksomhetErNy = false,
+                            jobberBrukerAktivMedVirksomheten = true,
                             brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
                             kanFøreTilSelvforsørget = true,
-                            utviklingsPerioder = listOf(
-                                Periode(
-                                    sak.rettighetsperiode.fom.plusMonths(1),
-                                    sak.rettighetsperiode.fom.plusMonths(2)
-                                )
-                            ),
-                            oppstartsPerioder = listOf(
-                                Periode(
-                                    sak.rettighetsperiode.fom.plusMonths(3),
-                                    sak.rettighetsperiode.fom.plusMonths(4)
-                                )
-                            )
                         )
                     )
                 )
@@ -233,6 +198,7 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
                     EtableringEgenVirksomhetLøsning(
                         listOf(
                             EtableringEgenVirksomhetLøsningDto(
+                                versjon = EtableringVersjon.V1,
                                 begrunnelse = "meee",
                                 fom = sak.rettighetsperiode.fom.plusDays(1),
                                 tom = null,
@@ -242,22 +208,9 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
                                 virksomhetErNy = true,
                                 brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
                                 kanFøreTilSelvforsørget = true,
-                                utviklingsPerioder = listOf(
-                                    Periode(
-                                        sak.rettighetsperiode.fom.plusDays(1),
-                                        sak.rettighetsperiode.fom.plusDays(4)
-                                    ),
-                                    Periode(
-                                        sak.rettighetsperiode.fom.plusMonths(1),
-                                        sak.rettighetsperiode.fom.plusMonths(10)
-                                    )
-                                ),
-                                oppstartsPerioder = listOf(
-                                    Periode(
-                                        sak.rettighetsperiode.fom.plusMonths(11),
-                                        sak.rettighetsperiode.fom.plusMonths(12)
-                                    )
-                                )
+                                fase = EtableringFase.UTVIKLING,
+                                jobberBrukerAktivMedVirksomheten = true,
+                                erRegistrertINødvendigeOffentligeRegister = true
                             )
                         )
                     )

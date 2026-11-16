@@ -146,8 +146,7 @@ class EtableringEgenVirksomhetService(
             val fase = vurdering.fase
             when {
                 vurdering.versjon == EtableringVersjon.V0 && fase == null &&
-                        vurdering.evaluerVirksomhetVurdering() && vurdering.utviklingsPerioder.isEmpty() &&
-                        vurdering.oppstartsPerioder.isEmpty() ->
+                        vurdering.evaluerVirksomhetVurdering() ->
                     VirksomhetEtableringResultat.Ugyldig.KreverPeriodeHvisVilkårOppfylt
                 vurdering.versjon == EtableringVersjon.V0 -> null
                 fase == null && !vurdering.erGrunnvilkårOppfylt() -> null

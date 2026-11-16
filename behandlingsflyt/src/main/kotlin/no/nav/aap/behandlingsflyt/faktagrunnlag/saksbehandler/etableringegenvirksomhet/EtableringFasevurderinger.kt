@@ -10,7 +10,7 @@ fun List<EtableringEgenVirksomhetVurdering>.gjeldendeFasevurderinger(): List<Eta
     val gjeldende = segmenter.map { it.verdi }.toSet()
     return filter { it in gjeldende }.flatMap { vurdering ->
         val andreVurderinger = segmenter.filter { it.verdi != vurdering }.map { it.periode }
-        listOf(vurdering).tilNyttFormat().flatMap { it.utenPerioder(andreVurderinger) }
+        listOf(vurdering).flatMap { it.utenPerioder(andreVurderinger) }
     }
 }
 

@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somLegacyVisning
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -40,8 +39,6 @@ data class EtableringEgenVirksomhetVurderingResponse(
     val virksomhetErNy: Boolean?,
     val brukerEierVirksomheten: EierVirksomhet?,
     val kanFøreTilSelvforsørget: Boolean?,
-    val utviklingsPeriode: List<Periode>?,
-    val oppstartsPeriode: List<Periode>?,
     val oppfylt: Boolean,
     val fase: EtableringFase?,
     val erRegistrertINødvendigeOffentligeRegister: Boolean?,
@@ -70,7 +67,6 @@ data class EtableringEgenVirksomhetVurderingResponse(
             fom: LocalDate = etableringEgenVirksomhetVurdering.fom,
             tom: LocalDate? = etableringEgenVirksomhetVurdering.tom
         ): EtableringEgenVirksomhetVurderingResponse {
-            val legacyVisning = etableringEgenVirksomhetVurdering.copy(fom = fom, tom = tom).somLegacyVisning()
             return EtableringEgenVirksomhetVurderingResponse(
                 begrunnelse = etableringEgenVirksomhetVurdering.begrunnelse,
                 virksomhetNavn = etableringEgenVirksomhetVurdering.virksomhetNavn,
@@ -79,8 +75,6 @@ data class EtableringEgenVirksomhetVurderingResponse(
                 virksomhetErNy = etableringEgenVirksomhetVurdering.virksomhetErNy,
                 brukerEierVirksomheten = etableringEgenVirksomhetVurdering.brukerEierVirksomheten,
                 kanFøreTilSelvforsørget = etableringEgenVirksomhetVurdering.kanFøreTilSelvforsørget,
-                utviklingsPeriode = legacyVisning.utviklingsPerioder,
-                oppstartsPeriode = legacyVisning.oppstartsPerioder,
                 vurderingerMeta = vurdertAvService.byggVurderingerMeta(
                     definisjon = Definisjon.ETABLERING_EGEN_VIRKSOMHET,
                     behandlingId = etableringEgenVirksomhetVurdering.vurdertIBehandling,

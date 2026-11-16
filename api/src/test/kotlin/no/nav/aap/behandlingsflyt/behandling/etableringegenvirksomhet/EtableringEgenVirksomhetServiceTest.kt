@@ -4,7 +4,6 @@ import no.nav.aap.bistandsbehov.Bistandsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
-import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgRevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.avsluttUtviklingVedFørsteOppstart
@@ -12,8 +11,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirk
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringVersjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.perioderForFase
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.somFasetidslinje
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tellDager
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.tilNyttFormat
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
@@ -112,22 +109,16 @@ class EtableringEgenVirksomhetServiceTest {
         val utvikling = fasevurdering(EtableringFase.UTVIKLING, 2 januar 2026, 31 januar 2026)
         val oppstart = fasevurdering(EtableringFase.OPPSTART, 10 januar 2026, 20 januar 2026)
             .copy(vurdertIBehandling = BehandlingId(2L), opprettet = Instant.parse("2026-01-02T00:00:00Z"))
-        val legacyUtvikling = utvikling.copy(
-            fase = null,
-            versjon = EtableringVersjon.V0,
-            utviklingsPerioder = listOf(Periode(2 januar 2026, 31 januar 2026)),
-        )
 
-        listOf(utvikling, legacyUtvikling).forEach { arvet ->
-            val vurderinger = listOf(arvet, oppstart)
-            val tidslinje = vurderinger.somFasetidslinje()
+        val vurderinger = listOf(utvikling, oppstart)
+        val tidslinje = vurderinger.somFasetidslinje()
 
-            assertThat(tidslinje.perioderForFase(EtableringFase.UTVIKLING))
-                .containsExactly(Periode(2 januar 2026, 9 januar 2026))
-            assertThat(tidslinje.perioderForFase(EtableringFase.OPPSTART))
-                .containsExactly(Periode(10 januar 2026, 20 januar 2026))
-            assertThat(arvet.tom).isEqualTo(31 januar 2026)
-        }
+        assertThat(tidslinje.perioderForFase(EtableringFase.UTVIKLING))
+            .containsExactly(Periode(2 januar 2026, 9 januar 2026))
+        assertThat(tidslinje.perioderForFase(EtableringFase.OPPSTART))
+            .containsExactly(Periode(10 januar 2026, 20 januar 2026))
+        assertThat(utvikling.tom).isEqualTo(31 januar 2026)
+
     }
 
     @Test
@@ -169,47 +160,6 @@ class EtableringEgenVirksomhetServiceTest {
             .containsExactly(Periode(utvikling.fom, requireNotNull(utvikling.tom)))
         assertThat(service.validerVurdering(behandling.id, vurderinger))
             .isEqualTo(VirksomhetEtableringResultat.Ugyldig.OppstartFørUtvikling)
-    }
-
-    @Test
-    fun `kvoter inkluderer migrerte vurderinger fra forrige behandling`() {
-        val (_, forrige, behandling) = opprettInMemorySakOgRevurdering()
-        oppfyllSykdomOgBistand(behandling)
-        val periode = Periode(LocalDate.now().plusDays(1), LocalDate.now().plusDays(200))
-        val gammel = EtableringEgenVirksomhetVurdering(
-            begrunnelse = "Historisk vurdering",
-            virksomhetNavn = "Virksomhet",
-            foreliggerFagligVurdering = true,
-            virksomhetErNy = true,
-            brukerEierVirksomheten = EierVirksomhet.EIER_MINST_50_PROSENT,
-            kanFøreTilSelvforsørget = true,
-            utviklingsPerioder = listOf(periode),
-            oppstartsPerioder = emptyList(),
-            vurdertAv = Bruker("Z123456"),
-            opprettet = Instant.now(),
-            vurdertIBehandling = forrige.id,
-            fom = periode.fom,
-            tom = periode.tom,
-            fase = null,
-            erRegistrertINødvendigeOffentligeRegister = null,
-            jobberBrukerAktivMedVirksomheten = null,
-            versjon = EtableringVersjon.V0,
-        )
-        val service = EtableringEgenVirksomhetService(
-            InMemoryEtableringEgenVirksomRepository,
-            InMemoryBehandlingRepository,
-            InMemoryBistandRepository,
-            InMemorySykdomRepository,
-        )
-        val forventet = VirksomhetEtableringResultat.Ugyldig.OverstigerKvoter(
-            EtableringFase.UTVIKLING, listOf(gammel).tellDager { it.utviklingsPerioder }
-        )
-        assertThat(forventet.brukteDager).isGreaterThan(131)
-
-        listOf(listOf(gammel), listOf(gammel).tilNyttFormat()).forEach { vurderinger ->
-            InMemoryEtableringEgenVirksomRepository.lagre(forrige.id, vurderinger)
-            assertThat(service.beregnOgValider(behandling.id, emptyList())).isEqualTo(forventet)
-        }
     }
 
     @Test
