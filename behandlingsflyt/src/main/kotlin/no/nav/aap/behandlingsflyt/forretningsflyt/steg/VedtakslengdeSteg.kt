@@ -62,7 +62,7 @@ class VedtakslengdeSteg(
                                         forrigeBehandlingId = kontekst.forrigeBehandlingId,
                                     ) -> true
 
-                            kontekst.vurderingType == VurderingType.REVURDERING && vedtakslengdeService.vedtakslengdeNærmerSegSluttOgRettighetGårLenger(
+                            vedtakslengdeService.vedtakslengdeNærmerSegSluttOgRettighetGårLenger(
                                 behandlingId = kontekst.behandlingId,
                                 forrigeBehandlingId = kontekst.forrigeBehandlingId,
                             ) -> true
