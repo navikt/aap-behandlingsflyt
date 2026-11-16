@@ -40,7 +40,7 @@ For macOS og Linux anbefaler vi Colima. Det kan være nødvendig med et par tilp
 Kjør de raske testene uten Docker:
 
 ```bash
-./gradlew coreTest
+./gradlew test -PcoreTestsOnly=true
 ```
 
 Kjør alle tester, inkludert de tregere integrasjons- og flyttestene (krever Docker):
