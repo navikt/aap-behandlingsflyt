@@ -65,7 +65,7 @@ class TrukketSøknadRepositoryImpl(
         ) {
             setParams { vurdering ->
                 setLong(1, vurderingerId)
-                setString(2, vurdering.journalpostId.identifikator)
+                setString(2, vurdering.journalpostId?.identifikator)
                 setString(3, vurdering.begrunnelse)
                 setBoolean(4, vurdering.skalTrekkes)
                 setString(5, vurdering.vurdertAv.ident)
@@ -113,7 +113,7 @@ class TrukketSøknadRepositoryImpl(
             }
             setRowMapper {
                 TrukketSøknadVurdering(
-                    journalpostId = JournalpostId(it.getString("journalpost_id")),
+                    journalpostId = it.getStringOrNull("journalpost_id")?.let(::JournalpostId),
                     begrunnelse = it.getString("begrunnelse"),
                     vurdertAv = Bruker(it.getString("vurdert_av")),
                     skalTrekkes = it.getBoolean("skal_trekkes"),
