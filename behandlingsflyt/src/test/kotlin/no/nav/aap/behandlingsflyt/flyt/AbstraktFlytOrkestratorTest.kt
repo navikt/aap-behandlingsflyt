@@ -973,16 +973,13 @@ open class AbstraktFlytOrkestratorTest(
         }
     }
 
-    protected fun hentAvklaringsbehovene(behandling: Behandling): Avklaringsbehovene {
+
+    protected fun hentAlleAvklaringsbehov(behandling: Behandling): List<Avklaringsbehov> {
         return dataSource.transaction(readOnly = true) {
             AvklaringsbehovRepositoryImpl(it).hentAvklaringsbehovene(
                 behandling.id
-            )
+            ).alle()
         }
-    }
-
-    protected fun hentAlleAvklaringsbehov(behandling: Behandling): List<Avklaringsbehov> {
-        return hentAvklaringsbehovene(behandling).alle()
     }
 
     protected fun sendInnFørsteSøknad(
@@ -1378,6 +1375,7 @@ open class AbstraktFlytOrkestratorTest(
     ): Behandling {
         val alleAvklaringsbehov =
             hentAlleAvklaringsbehov(this).filter { behov -> behov.definisjon in behovÅKvalitetssikre }
+                .filter { behov -> behov.kreverKvalitetssikring() && behov.aktivHistorikk.any { it.status.erAvsluttet() } }
         return løsAvklaringsBehov(
             this,
             KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
@@ -1489,11 +1487,12 @@ open class AbstraktFlytOrkestratorTest(
         behovÅKontrollere: List<Definisjon> = Definisjon.entries,
         underkjennVurderinger: List<Definisjon> = emptyList()
     ): Behandling {
-        val avklaringsbehovSomKreverTotrinn = hentAvklaringsbehovene(this).avklaringsbehovSomKreverToTrinn()
+        val alleAvklaringsbehov = hentAlleAvklaringsbehov(this)
             .filter { behov -> behov.definisjon in behovÅKontrollere }
+            .filter { behov -> behov.erTotrinn() && behov.aktivHistorikk.any { it.status.erAvsluttet() } }
         return this.løsAvklaringsBehov(
             FatteVedtakLøsning(
-                avklaringsbehovSomKreverTotrinn
+                alleAvklaringsbehov
                     .map { behov ->
                         TotrinnsVurdering(
                             behov.definisjon.kode,
