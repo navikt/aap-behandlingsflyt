@@ -16,5 +16,6 @@ Gjelder: `repository/src/main/kotlin/**`, `lib-test/src/main/kotlin/no/nav/aap/b
 - Gateways: grensesnitt `XxxGateway : Gateway` i domenet, `XxxGatewayImpl` i `integrasjon/<system>/`, registrer i
   `DefaultGatewayProvider.kt` **og** `TestGatewayProvider.kt`, og lag/utvid `Fake*` i `lib-test`.
   Gateway-kode er det mest feilutsatte området i historikken (25–41 % fiks-andel): skriv test mot fake-serveren.
-- Test: `XxxRepositoryImplTest` mot `TestDataSource()` (Postgres via Testcontainers) som dekker lagre/hent,
-  deaktivering, `kopier` og `slett` (idempotent). Repositories er den best testede kategorien i repoet; hold nivået.
+- Test: `XxxRepositoryImplTest` med `@Tag("db")` mot `TestDataSource()` (Postgres via Testcontainers) som dekker
+  lagre/hent, deaktivering, `kopier` og `slett` (idempotent). Repositories er den best testede kategorien i repoet;
+  hold nivået.

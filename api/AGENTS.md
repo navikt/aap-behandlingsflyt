@@ -14,5 +14,5 @@ Gjelder: `api/src/main/kotlin/**`, `app/src/main/kotlin/**`
 - `api/.../test/` er testendepunkter som bevisst ligger i `main` (skrudd av i prod). Ikke slett, ikke utvid med prodlogikk.
 - Kafka-konsumenter ligger i `api/.../hendelse/kafka/`. En uventet exception avslutter konsument-løkka; håndter
   forventede feil eksplisitt. Dette er det området som oftest får fiks-commits uten test (59 %).
-- Test: Ktor `testApplication` med `MockDataSource` tåler ingen transaksjon – bruk `TestDataSource()` hvis ruten
-  faktisk leser. Minst én 401-test for ny rute.
+- Test: Ktor `testApplication` med `MockDataSource` tåler ingen transaksjon – bruk `TestDataSource()` (og
+  `@Tag("db")` på testklassen) hvis ruten faktisk leser. Minst én 401-test for ny rute.

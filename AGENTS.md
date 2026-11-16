@@ -31,19 +31,29 @@ og `repository` (konvensjon fra oktober 2026, se `no.nav.aap.meldeplikt`).
 ## Kommandoer
 ```bash
 ./gradlew :behandlingsflyt:compileKotlin                       # rask kompilering av én modul
+./gradlew :behandlingsflyt:coreTest                            # testene i modulen som ikke trenger Docker
 ./gradlew :behandlingsflyt:test --tests "no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderAlderStegTest"
 ./gradlew :repository:test --tests "*SykdomRepositoryImplTest" # DB-test, krever Docker (Testcontainers)
 ./gradlew :behandlingsflyt:check                               # som CI gjør for modulen
 ./gradlew runTestApp                                           # app på :8080 med fakes; token: curl -s -XPOST http://localhost:8081/token
 ./gradlew detekt                                               # feiler aldri bygget; ikke rydd baseline-funn i urelaterte PR-er
 ```
-Tester som bruker `TestDataSource`, `DatabaseSnapshot`, `postgreSQLContainer()` eller Kafka, starter containere med
-Testcontainers og krever Docker. Tidsbruk (målt): inkrementell kompilering ~1 s, én DB-testklasse ~10 s (container +
-Flyway). Kjør én testklasse om gangen, eller noen få, med `--tests` (skillen `verifiser` velger dem). Ikke kjør hele
-`test` eller hele `:<modul>:test`: det tar minutter, kan time ut og feiler ofte i en sandkasse. Hele testsuiten kjører i
-CI. Ikke bruk `assemble`/`build` i arbeidsløkka (pakker fat-jar hver gang). Feiler Testcontainers med "Could not
-connect to Ryuk" eller "Connection to localhost:NNNN refused", er det Docker-miljøet, ikke koden: kjør på nytt
-(eventuelt med `TESTCONTAINERS_RYUK_DISABLED=true`).
+Tester som trenger Docker (Testcontainers) er tagget `@Tag("db")` eller `@Tag("kafka")`. Flyttester arver `db` og
+`flyt` fra `AbstraktFlytOrkestratorTest`. `coreTest` kjører resten uten Docker. Ny test som bruker `TestDataSource`,
+`DatabaseSnapshot`, `postgreSQLContainer()` eller Kafka, må ha tag, ellers feiler `coreTest` med beskjed om hvilken.
+Tidsbruk (målt): inkrementell kompilering ~1 s, `:behandlingsflyt:coreTest` ~10 s, én DB-testklasse ~10 s
+(container + Flyway).
+- **`coreTest` er den raske løkka.** Kjør `:<modul>:coreTest` for modulene du har endret, ofte: etter hver endring,
+  ikke bare til slutt. Den trenger ikke Docker og passer i en sandkasse. Hold den rask: en ny test uten tag skal ikke
+  vente, sove eller starte noe tungt.
+- **DB-, Kafka- og flyttester kjøres målrettet.** Kjør én testklasse om gangen med `--tests`, eller noen få (skillen
+  `verifiser` velger dem). Flyttestene er tyngst: kjør bare flyttesten for området, aldri mange samtidig. Ikke kjør
+  hele `test` eller hele `:<modul>:test`: det tar minutter, kan time ut og feiler ofte i en sandkasse. Hele
+  testsuiten kjører i CI.
+
+Ikke bruk `assemble`/`build` i arbeidsløkka (pakker fat-jar hver gang). Feiler Testcontainers med "Could not connect
+to Ryuk" eller "Connection to localhost:NNNN refused", er det Docker-miljøet, ikke koden: kjør på nytt (eventuelt med
+`TESTCONTAINERS_RYUK_DISABLED=true`).
 Kjør git uten pager og editor (`git --no-pager log`, `git --no-pager diff`, `git merge --no-edit`), så kommandoen
 ikke blir stående og vente i terminalen.
 
@@ -119,14 +129,15 @@ Oppskrifter for vanlige endringer finnes som skills i `.agents/skills/`: `nytt-s
 Til gjennomgang av en diff: skillen `flyt-review` (sjekkliste).
 
 ## Testing
-- Nivåer: ren enhetstest (vilkår, tidslinjer), domenetest med `InMemory*`-repos, DB-test mot Postgres
-  (`TestDataSource`), flyttest (`*FlytOrkestratorTest`, `KlageFlytTest` – asserterer stegsekvens), E2E i `app`
-  (`OpprettOgFullførBehandlingApiTest` med `@Fakes`).
-- Ny løser → `*LøserTest`. Nytt repository → `*RepositoryImplTest` mot Postgres **og** `InMemory*`-variant.
-  Nytt steg → `*StegTest` og oppdater flytsekvenstestene. Ny toggle → `FakeUnleash`; tester kjører med alle
-  toggles av, så ny oppførsel bak toggle er utestet til testen skrur den på.
+- Nivåer: ren enhetstest (vilkår, tidslinjer) og domenetest med `InMemory*`-repos kjører i `coreTest`. DB-test mot
+  Postgres (`TestDataSource`, `@Tag("db")`), flyttest (`*FlytOrkestratorTest`, `KlageFlytTest` – asserterer
+  stegsekvens) og E2E i `app` (`OpprettOgFullførBehandlingApiTest` med `@Fakes`) krever Docker.
+- Ny løser → `*LøserTest`. Nytt repository → `*RepositoryImplTest` mot Postgres (med `@Tag("db")`) **og**
+  `InMemory*`-variant. Nytt steg → `*StegTest` og oppdater flytsekvenstestene. Ny toggle → `FakeUnleash`; tester
+  kjører med alle toggles av, så ny oppførsel bak toggle er utestet til testen skrur den på.
 - Fakes framfor mocks. Ikke "fiks" en test ved å endre forventningen uten å forstå hvorfor den feilet.
-- Før du sier "ferdig": kjør testklassene for det du endret (skillen `verifiser` velger dem ut fra endringene).
+- Før du sier "ferdig": kjør `coreTest` for modulene du endret, og DB- og flyttestene for det du endret (skillen
+  `verifiser` velger dem ut fra endringene).
   Har du rørt `forretningsflyt/`, `flyt/` eller `avklaringsbehov/`, kjør også flyttesten for området (for eksempel
   `--tests "*StudentFlytTest"`) og sekvenstesten `EnklereFlytOrkestratorTest`, én klasse per kall. Det finnes over 30
   flyttestklasser, og alle samlet tar for lang tid.

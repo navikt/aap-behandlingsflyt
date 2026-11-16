@@ -19,5 +19,5 @@ eksempel: `f84ecaaa3` (sykepenger/ferie fra søknaden, 9 filer). Kopier mønster
 5. Registrer i `repository/.../PostgresRepositoryRegistry.kt`.
 6. `lib-test/.../inmemoryrepo/InMemoryXxxRepository.kt` med samme `aktiv`-semantikk; registrer i
    `InMemoryRepositoryRegistry.kt`.
-7. Tester: `XxxRepositoryImplTest` mot `TestDataSource()` (lagre/hent/deaktiver/kopier/slett).
+7. Tester: `XxxRepositoryImplTest` med `@Tag("db")` mot `TestDataSource()` (lagre/hent/deaktiver/kopier/slett).
 8. Skal dataene vises: `api/.../XxxGrunnlagApi.kt` + `App.kt`.
