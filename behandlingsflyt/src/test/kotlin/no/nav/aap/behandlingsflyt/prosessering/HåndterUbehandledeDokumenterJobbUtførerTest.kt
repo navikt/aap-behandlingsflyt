@@ -28,9 +28,11 @@ import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import java.time.LocalDateTime
 import kotlin.test.Test
 
+@Tag("db")
 class HåndterUbehandledeDokumenterJobbUtførerTest {
     init {
         JobbType.leggTil(HåndterUbehandletDokumentJobbUtfører)

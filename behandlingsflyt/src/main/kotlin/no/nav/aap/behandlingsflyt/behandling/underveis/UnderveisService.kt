@@ -72,7 +72,7 @@ class UnderveisService(
         vilkårsresultatRepository = repositoryProvider.provide(),
         meldekortRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
-        institusjonsoppholdUtlederService = InstitusjonsoppholdUtlederService(repositoryProvider,gatewayProvider),
+        institusjonsoppholdUtlederService = InstitusjonsoppholdUtlederService(repositoryProvider),
         arbeidsevneRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
         meldeperiodeRepository = repositoryProvider.provide(),

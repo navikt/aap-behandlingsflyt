@@ -3,8 +3,8 @@ package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.barnetillegg.BarnetilleggRepository
+import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
@@ -18,8 +18,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.flate.BehandlingRef
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.tilgang.kanSaksbehandle
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -56,10 +54,7 @@ fun NormalOpenAPIRoute.institusjonApi(
 
                     val utlederService =
                         InstitusjonsoppholdUtlederService(
-                            barnetilleggRepository, institusjonsoppholdRepository,
-                            sakRepository,
-                            behandlingRepository,
-                            gatewayProvider.provide()
+                            barnetilleggRepository, institusjonsoppholdRepository, sakRepository, behandlingRepository
                         )
                     val behov = utlederService.utled(behandling.id)
 
@@ -126,16 +121,12 @@ fun NormalOpenAPIRoute.institusjonApi(
                     val behandling = BehandlingReferanseService(behandlingRepository).behandling(req)
                     val institusjonsoppholdRepository = repositoryProvider.provide<InstitusjonsoppholdRepository>()
                     val barnetilleggRepository = repositoryProvider.provide<BarnetilleggRepository>()
-                    val unleashGateway = gatewayProvider.provide<UnleashGateway>()
-                    val enManedsregelEnabled =
-                        unleashGateway.isEnabled(BehandlingsflytFeature.Helseinstitusjon1Manedsregel)
 
                     val utlederService = InstitusjonsoppholdUtlederService(
                         barnetilleggRepository,
                         institusjonsoppholdRepository,
                         sakRepository,
                         behandlingRepository,
-                        gatewayProvider.provide()
                     )
                     val behov = utlederService.utled(behandling.id)
 
@@ -159,12 +150,7 @@ fun NormalOpenAPIRoute.institusjonApi(
                     val helseoppholdPerioder = behov.perioderTilVurdering.mapValue { it.helse }.komprimer()
 
                     val vedtatteVurderingerDto =
-                        mapVurderingerToDto(
-                            vedtatteVurderingerForOpphold,
-                            oppholdInfo,
-                            vurdertAvService,
-                            gatewayProvider.provide()
-                        )
+                        mapVurderingerToDto(vedtatteVurderingerForOpphold, oppholdInfo, vurdertAvService)
 
                     val vurderingerDto = if (nyeVurderingerForOpphold.isEmpty()) {
                         helseoppholdPerioder.segmenter()
@@ -201,18 +187,13 @@ fun NormalOpenAPIRoute.institusjonApi(
                                 }
                             }
 
-                        val vurderingerFraDatabase = mapVurderingerToDto(
-                            nyeVurderingerForOpphold,
-                            oppholdInfo,
-                            vurdertAvService,
-                            gatewayProvider.provide()
-                        )
+                        val vurderingerFraDatabase =
+                            mapVurderingerToDto(nyeVurderingerForOpphold, oppholdInfo, vurdertAvService)
 
                         // Dedupliser på oppholdId - foretrekk dto-er som faktisk har vurderinger
                         // (f.eks. historiske vurderinger uten reduksjonsberegning) fremfor den
                         // tomme UAVKLART-plassholderen som ellers legges til for samme opphold.
-                        if (enManedsregelEnabled) dedupliserPerOppholdId(vurderingerFraDatabase + uavklarteDto)
-                        else vurderingerFraDatabase + uavklarteDto
+                        dedupliserPerOppholdId(vurderingerFraDatabase + uavklarteDto)
                     }
 
                     val oppholdSegmenter = grunnlag?.oppholdene?.opphold
@@ -229,8 +210,7 @@ fun NormalOpenAPIRoute.institusjonApi(
                     }
                     val tidligsteReduksjonsdatoPerKjede = beregnTidligsteReduksjonsdatoPerKjede(
                         oppholdSegmenter,
-                        harInnvilgetReduksjon,
-                        enManedsregelEnabled
+                        harInnvilgetReduksjon
                     )
 
                     // Bygg opphold-liste med tidligsteReduksjonsdato
@@ -238,7 +218,6 @@ fun NormalOpenAPIRoute.institusjonApi(
                         oppholdInfo,
                         behov.perioderTilVurdering,
                         vedtatteVurderingerDto,
-                        gatewayProvider.provide()
                     ).map { dto ->
                         val matchendeKjede = kjeder.find { kjede ->
                             kjede.elementer.any { segment ->
@@ -267,48 +246,12 @@ fun mapVurderingerToDto(
     vurderingerPerOpphold: Map<Periode, List<HelseinstitusjonVurdering>>,
     oppholdInfo: Tidslinje<Institusjon>,
     vurdertAvService: VurdertAvService,
-    unleashGateway: UnleashGateway,
 ): List<HelseoppholdDto> {
-    if (unleashGateway.isDisabled(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)) {
-        return vurderingerPerOpphold.entries.flatMap { (vurderingPeriode, vurderingerForPeriode) ->
-            val oppholdSegment = oppholdInfo.filter { segment ->
-                segment.periode.fom <= vurderingPeriode.tom && segment.periode.tom >= vurderingPeriode.fom
-            }.segmenter().firstOrNull() ?: return@flatMap emptyList()
-
-            listOf(
-                HelseoppholdDto(
-                    periode = vurderingPeriode,
-                    oppholdId = lagOppholdId(oppholdSegment.verdi.navn, oppholdSegment.periode.fom),
-                    vurderinger = vurderingerForPeriode.map { vurdering ->
-                        HelseinstitusjonVurderingDto(
-                            oppholdId = lagOppholdId(oppholdSegment.verdi.navn, oppholdSegment.periode.fom),
-                            begrunnelse = vurdering.begrunnelse,
-                            faarFriKostOgLosji = vurdering.faarFriKostOgLosji,
-                            forsoergerEktefelle = vurdering.forsoergerEktefelle,
-                            harFasteUtgifter = vurdering.harFasteUtgifter,
-                            periode = vurdering.periode,
-                            vurderingerMeta = vurdertAvService.byggVurderingerMeta(
-                                definisjon = Definisjon.AVKLAR_HELSEINSTITUSJON,
-                                behandlingId = vurdering.vurdertIBehandling,
-                                vurdertAv = vurdertAvService.medNavnOgEnhet(
-                                    ident = vurdering.vurdertAv ?: Bruker("ukjent"),
-                                    dato = vurdering.vurdertTidspunkt?.toLocalDate() ?: LocalDate.now(),
-                                ),
-                            )
-                        )
-                    },
-                    status = OppholdVurderingDto.UAVKLART
-                )
-            )
-        }
-    }
-
     val alleKjeder = grupperSammenhengendeOppholdSegmenter(oppholdInfo.segmenter().toList())
-    val enManedsregelEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.Helseinstitusjon1Manedsregel)
 
     return vurderingerPerOpphold.entries.flatMap { (vurderingPeriode, vurderingerForPeriode) ->
         val kjede = alleKjeder.firstOrNull { it.periode.overlapper(vurderingPeriode) }
-            ?: (if (enManedsregelEnabled) finnNærmesteKjedeFør(alleKjeder, vurderingPeriode) else null)
+            ?: finnNærmesteKjedeFør(alleKjeder, vurderingPeriode)
             ?: return@flatMap emptyList()
         val først = kjede.elementer.first()
 
@@ -370,28 +313,7 @@ fun hentOppholdSomSkalVurderes(
     oppholdInfo: Tidslinje<Institusjon>,
     behovPerioder: Tidslinje<InstitusjonsoppholdVurdering>,
     vedtatteVurderingerDto: List<HelseoppholdDto>,
-    unleashGateway: UnleashGateway,
 ): List<InstitusjonsoppholdDto> {
-    if (unleashGateway.isDisabled(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)) {
-        val behovOpphold = oppholdInfo.segmenter().mapNotNull { segment ->
-            val dto = InstitusjonsoppholdDto.institusjonToDto(segment)
-            val harUavklartOpphold = behovPerioder.segmenter().any { periode ->
-                dto.oppholdFra <= periode.periode.tom && dto.avsluttetDato >= periode.periode.fom
-            }
-            if (harUavklartOpphold) dto else null
-        }
-        val vedtatteOpphold = vedtatteVurderingerDto
-            .mapNotNull { vurdering ->
-                vurdering.oppholdId?.let { oppholdId ->
-                    oppholdInfo.segmenter().mapNotNull { segment ->
-                        val dto = InstitusjonsoppholdDto.institusjonToDto(segment)
-                        if (dto.oppholdId == oppholdId) dto else null
-                    }
-                }
-            }.flatten()
-        return (behovOpphold + vedtatteOpphold).distinctBy { it.oppholdId }
-    }
-
     val alleKjeder = grupperSammenhengendeOppholdSegmenter(oppholdInfo.segmenter().toList())
 
     val behovOpphold = alleKjeder

@@ -182,6 +182,7 @@ class VurderBistandsbehovSteg(
         val vurdering = ArenaMigreringMapper.tilOppfyltBistandsvurdering(
             behandlingId = kontekst.behandlingId,
             fom = kontekst.rettighetsperiode.fom,
+            virkningstidspunkt = arenaMigreringService.hentVirkningstidspunkt(kontekst.behandlingId),
         )
 
         require(vurdering.erBehovForBistand()) {

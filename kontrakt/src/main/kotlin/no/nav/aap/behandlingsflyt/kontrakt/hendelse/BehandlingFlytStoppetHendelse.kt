@@ -40,6 +40,7 @@ public data class BehandlingFlytStoppetHendelse(
     val hendelsesTidspunkt: LocalDateTime,
     val versjon: String,
     val behandlingMetadata: BehandlingMetadata? = null,
+    val gjenståendeSykedager: GjenståendeSykedagerDto? = null,
 ) {
     public fun erFørstegangsbehandlingHosBeslutterEllerVedtatt(): Boolean {
         return behandlingType == TypeBehandling.Førstegangsbehandling && (aktivtSteg == StegType.FATTE_VEDTAK || status.erVedtatt())

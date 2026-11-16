@@ -24,11 +24,16 @@ enum class BehandlingsflytFeature(
     SynkroniserArenaMeldeperiodesyklus,
     HandtereMaksdatoForKantTilKant,
     DynamiskFrivilligSykestipend,
+    MaksdatoSykepenger,
 
     // --- Krav ---
+    BackfillKrav,
     KravSteg, // Visning
     KravManuellVurdering,
     NyttKravPeriodiserteAvklaringsbehov,
+
+    // --- Utbetaling ---
+    SimuleringStegForNyttUtbetalingsgrensesnitt,
 
     // --- Migrering ---
     MigererSykdomFraArenaAutomatisk,
@@ -39,21 +44,19 @@ enum class BehandlingsflytFeature(
     MigrererVedtakslengdeFraArenaAutomatisk,
     MigrererBeregningstidspunktFraArenaAutomatisk,
 
-    // --- Utbetaling ---
-    FjerneAvventUtbetalingForSamordningArbeidsgiver,
-
     // ------
     Avslag11_27,
     BosattStatsborgerskapGjennomslipp,
     KanVurdereRefusjonIRevurdering,
     KunEnAktivKlagebehandling,
     KlagePaaTilbakekreving,
-    SammenhengendeInstitusjonsopphold,
     DatadelingBehandlingVisning,
-    Helseinstitusjon1Manedsregel,
     OvergangUfoereBrevbygger,
     BackfillRedusertDagsats,
     VedtaksperiodeBeslutter,
+
+    // -- Lovvalg
+    HentInnLovvalgRegisterdataForNyesteAktuelleKrav,
     ;
 
     override fun key(): String = name

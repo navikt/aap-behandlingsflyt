@@ -47,7 +47,12 @@ class TestPerson(
     var uføreHistorikk: List<Uføre> = emptyList(),
     var uføreSøknad: UføreSøknad? = null,
     inntekter: List<InntektPerÅr> = defaultInntekt(),
-    aInntekter: List<InntektPerÅr>? = null,
+    /**
+     * A-inntekt per år (kun for test). Når satt, brukes denne i [no.nav.aap.behandlingsflyt.test.fakes.AinntektFake]
+     * i stedet for å avlede A-inntekt fra POPP-inntekten — slik at man kan simulere avvik mellom
+     * A-inntekt og POPP (f.eks. ved endring i uføregrad midt i året).
+     */
+    private val aInntekter: List<InntektPerÅr>? = null,
     val personStatus: List<PdlFolkeregisterPersonStatus> = listOf(
         PdlFolkeregisterPersonStatus(
             PersonStatus.bosatt,
@@ -83,13 +88,6 @@ class TestPerson(
 
 
     private val inntekter: MutableList<InntektPerÅr> = inntekter.toMutableList()
-
-    /**
-     * A-inntekt per år (kun for test). Når satt, brukes denne i [no.nav.aap.behandlingsflyt.test.fakes.AinntektFake]
-     * i stedet for å avlede A-inntekt fra POPP-inntekten — slik at man kan simulere avvik mellom
-     * A-inntekt og POPP (f.eks. ved endring i uføregrad midt i året).
-     */
-    private val aInntekter: List<InntektPerÅr>? = aInntekter
 
     var institusjonsopphold = institusjonsopphold
         private set

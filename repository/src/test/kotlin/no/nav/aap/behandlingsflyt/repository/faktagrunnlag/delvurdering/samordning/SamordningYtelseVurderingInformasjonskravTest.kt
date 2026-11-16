@@ -25,9 +25,11 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
+@Tag("db")
 class SamordningYtelseVurderingInformasjonskravTest {
 
     companion object {

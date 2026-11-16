@@ -248,6 +248,7 @@ class IverksettVedtakSteg internal constructor(
     private fun skalGenerereVilkårsvurderingOppsummering(kontekst: FlytKontekstMedPerioder): Boolean {
         return when (kontekst.vurderingType) {
             VurderingType.REVURDERING,
+            VurderingType.MIGERING_FRA_ARENA,
             VurderingType.UTVID_VEDTAKSLENGDE,
             VurderingType.OVERGANG_UFORE_STANS,
             VurderingType.FØRSTEGANGSBEHANDLING -> true

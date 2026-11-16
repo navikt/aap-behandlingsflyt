@@ -36,9 +36,9 @@ class BehandlingVisningDatadelingService(
     }
 
     fun hendelseAlderLovvalgMedlemskap(behandling: Behandling): BehandlingHendelse.AlderLovvalgMedlemskap {
-        val stegTyper = listOf(StegType.VURDER_LOVVALG, StegType.AVKLAR_STUDENT_V2, StegType.VURDER_ALDER)
+        val stegTyper = listOf(StegType.VURDER_LOVVALG, StegType.VURDER_ALDER)
         val stegHistorikk = behandlingRepository.hentStegHistorikk(behandling.id)
-            .filter { it.steg() == StegType.VURDER_LOVVALG || it.steg() == StegType.VURDER_ALDER || it.steg() == StegType.AVKLAR_STUDENT_V2 }
+            .filter { it.steg() == StegType.VURDER_LOVVALG || it.steg() == StegType.VURDER_ALDER }
         val sisteTilstandPerSteg = stegTyper.associateWith { stegType ->
             stegHistorikk.lastOrNull { it.steg() == stegType }
         }
