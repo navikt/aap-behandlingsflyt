@@ -143,14 +143,19 @@ class VurderLovvalgSteg private constructor(
     ) {
         val relevanteDatoer = utledRelevanteDatoer(kontekst).sorted()
         val nyesteDato = relevanteDatoer.last()
+        val forrigeBehandlingsVurderinger = kontekst.forrigeBehandlingId
+            ?.let { lovvalgDelvurderingRepository.hentAlle(it) }
+            .orEmpty()
+            .associateBy { it.relevantDato }
         val eksisterende = lovvalgDelvurderingRepository.hentAlle(kontekst.behandlingId)
             .associateBy { it.relevantDato }
 
         val delvurderinger = relevanteDatoer.map { dato ->
-            val eksisterendeForDato = eksisterende[dato]
-            if (eksisterendeForDato != null && dato != nyesteDato) {
-                return@map eksisterendeForDato
+            val fraForrigeBehandling = forrigeBehandlingsVurderinger[dato]
+            if (fraForrigeBehandling != null && dato != nyesteDato) {
+                return@map fraForrigeBehandling
             }
+            val eksisterendeForDato = eksisterende[dato]
 
             val vurdering = LovvalgMedlemskapVurderingService().vurderTilhørighet(
                 registerGrunnlag.value,

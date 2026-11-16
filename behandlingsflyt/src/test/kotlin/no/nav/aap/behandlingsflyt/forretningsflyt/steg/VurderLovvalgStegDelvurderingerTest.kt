@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingerGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
@@ -19,6 +20,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryLovvalgDelvurderingR
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryOppgittUtenlandsopplysningerRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryStønadsperiodeRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juni
@@ -126,6 +128,48 @@ class VurderLovvalgStegDelvurderingerTest {
         utfør(revurdering)
 
         assertThat(repository.hentAlle(revurdering.id)).isEqualTo(fraFørste)
+    }
+
+    @Test
+    fun `datoer som er nye i behandlingen beregnes på nytt ved ny kjøring når de ikke lenger er nyeste`() {
+        stønadsperioder(førsteBehandling, dato1 to RelevantKravType.NY_STØNADSPERIODE)
+        utfør(førsteBehandling)
+        val fraFørste = repository.hentAlle(førsteBehandling.id)
+        repository.kopier(førsteBehandling.id, revurdering.id)
+
+        stønadsperioder(revurdering, dato1 to RelevantKravType.NY_STØNADSPERIODE, dato2 to RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR)
+        utfør(revurdering)
+        val etterFørsteKjøring = repository.hentAlle(revurdering.id).associateBy { it.relevantDato }
+
+        oppgittOpphold(revurdering, 1 mai 2025, 1 juni 2025)
+        stønadsperioder(
+            revurdering,
+            dato1 to RelevantKravType.NY_STØNADSPERIODE,
+            dato2 to RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR,
+            dato3 to RelevantKravType.MIGRERT_STØNADSPERIODE,
+        )
+        utfør(revurdering)
+
+        val lagret = repository.hentAlle(revurdering.id).associateBy { it.relevantDato }
+        assertThat(lagret.getValue(dato1)).isEqualTo(fraFørste[0])
+        assertThat(lagret.getValue(dato2).vurdering()).isNotEqualTo(etterFørsteKjøring.getValue(dato2).vurdering())
+        assertThat(lagret.getValue(dato2).vurdertIBehandling).isEqualTo(revurdering.id)
+        assertThat(lagret.getValue(dato3).vurdertIBehandling).isEqualTo(revurdering.id)
+    }
+
+    @Test
+    fun `beregner alle datoer når forrige behandling ikke har delvurderinger`() {
+        // Steget har ikke kjørt i forrige behandling, men vilkåret må finnes for at revurderingen kan kjøre
+        val forrigeVilkår = InMemoryVilkårsresultatRepository.hent(førsteBehandling.id)
+        forrigeVilkår.leggTilHvisIkkeEksisterer(Vilkårtype.LOVVALG)
+        InMemoryVilkårsresultatRepository.lagre(førsteBehandling.id, forrigeVilkår)
+
+        stønadsperioder(revurdering, dato1 to RelevantKravType.NY_STØNADSPERIODE, dato2 to RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR)
+        utfør(revurdering)
+
+        val lagret = repository.hentAlle(revurdering.id)
+        assertThat(lagret.map { it.relevantDato }).containsExactly(dato1, dato2)
+        assertThat(lagret.map { it.vurdertIBehandling }).containsOnly(revurdering.id)
     }
 
     @Test
