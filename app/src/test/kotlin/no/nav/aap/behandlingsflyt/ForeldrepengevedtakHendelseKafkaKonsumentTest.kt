@@ -17,12 +17,14 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringSerializer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.*
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.milliseconds
 
+@Tag("kafka")
 class ForeldrepengevedtakHendelseKafkaKonsumentTest {
 
     companion object {

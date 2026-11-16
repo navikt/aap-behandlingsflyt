@@ -35,6 +35,20 @@ For macOS og Linux anbefaler vi Colima. Det kan være nødvendig med et par tilp
 - `export DOCKER_HOST=unix://$TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE`
 - `export TESTCONTAINERS_RYUK_DISABLED=true`
 
+### Tester
+
+Kjør de raske testene uten Docker:
+
+```bash
+./gradlew coreTest
+```
+
+Kjør alle tester, inkludert de tregere integrasjons- og flyttestene (krever Docker):
+
+```bash
+./gradlew test
+```
+
 ### Code quality
 
 Prosjektet bruker [detekt](https://detekt.dev/) for statisk kodeanalyse. Detekt er automatisk aktivert på alle moduler.

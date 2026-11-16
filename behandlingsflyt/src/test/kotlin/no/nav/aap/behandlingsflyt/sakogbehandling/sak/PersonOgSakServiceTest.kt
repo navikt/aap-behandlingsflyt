@@ -33,6 +33,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
@@ -40,6 +41,7 @@ import java.sql.SQLException
 import java.time.Instant
 import java.time.LocalDate
 
+@Tag("db")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PersonOgSakServiceTest {
     private val pdlGateway: IdentGateway = mockk()
