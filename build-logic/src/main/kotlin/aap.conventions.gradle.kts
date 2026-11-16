@@ -23,11 +23,6 @@ testing {
     suites {
         @Suppress("UnstableApiUsage")
         named<JvmTestSuite>("test") {
-            targets.all {
-                testTask {
-                    environment("TZ", "Europe/Oslo")
-                }
-            }
             useJUnitJupiter()
         }
     }
@@ -90,32 +85,27 @@ private fun bestemAntallTestTråder(): Int {
 
 val dockerTagger = arrayOf("db", "kafka", "flyt")
 
-// Bruk test-tasken som alias, slik at IntelliJ fortsatt bare har én task å velge for enkelttester.
-val kjørerCoreTest = gradle.startParameter.taskNames.any { it.substringAfterLast(':') == "coreTest" }
-if (kjørerCoreTest && gradle.startParameter.taskNames.any { it.substringAfterLast(':') in setOf("test", "check", "build") }) {
-    throw GradleException("coreTest gjør om test til bare kjernetester, og kan ikke kjøres sammen med test, check eller build")
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+    environment("TZ", "Europe/Oslo")
+    maxParallelForks = bestemAntallTestTråder()
+    systemProperty("junit.jupiter.execution.timeout.default", "3m")
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
 }
 
 tasks {
-    test {
-        useJUnitPlatform()
-        maxParallelForks = bestemAntallTestTråder()
-        systemProperty("junit.jupiter.execution.timeout.default", "3m")
-        testLogging {
-            events("passed", "skipped", "failed")
-        }
-        if (kjørerCoreTest) {
-            useJUnitPlatform {
-                excludeTags(*dockerTagger)
-            }
-            environment("TESTCONTAINERS_IMAGE_SUBSTITUTOR", "no.nav.aap.behandlingsflyt.test.DockerIkkeTillattIKjernetester")
-        }
-    }
-
-    register("coreTest") {
+    register<Test>("coreTest") {
         description = "Kjører testene som ikke trenger Docker (alt uten taggene ${dockerTagger.joinToString()})."
         group = LifecycleBasePlugin.VERIFICATION_GROUP
-        dependsOn(test)
+        val testSourceSet = sourceSets.named("test")
+        testClassesDirs = files(testSourceSet.map { it.output.classesDirs })
+        classpath = files(testSourceSet.map { it.runtimeClasspath })
+        useJUnitPlatform {
+            excludeTags(*dockerTagger)
+        }
+        environment("TESTCONTAINERS_IMAGE_SUBSTITUTOR", "no.nav.aap.behandlingsflyt.test.DockerIkkeTillattIKjernetester")
     }
 
     (findByName("jar") as? Jar)?.apply {
