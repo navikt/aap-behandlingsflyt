@@ -20,7 +20,6 @@ import java.time.LocalDate
 data class MedlemskapLovvalgRegisterGrunnlag(
     val medlemskapUnntakGrunnlag: MedlemskapUnntakGrunnlag?,
     val inntekterINorgeGrunnlag: InntekterINorgeRegisterGrunnlag?,
-    val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
     val personopplysning: Personopplysning?,
     val nyeSoknadGrunnlag: UtenlandsOppholdData?,
     val vurderBosattStatusOgNorskStatsborgerskap: Boolean = false,
@@ -34,7 +33,6 @@ data class MedlemskapLovvalgRegisterGrunnlag(
         ) = MedlemskapLovvalgRegisterGrunnlag(
             medlemskapUnntakGrunnlag = lovvalgMedlemskapGrunnlag?.registerGrunnlag?.medlemskapUnntakGrunnlag,
             inntekterINorgeGrunnlag = lovvalgMedlemskapGrunnlag?.registerGrunnlag?.inntekterINorgeGrunnlag,
-            arbeiderINorgeGrunnlag = lovvalgMedlemskapGrunnlag?.registerGrunnlag?.arbeiderINorgeGrunnlag.orEmpty(),
             personopplysning = personopplysning,
             nyeSoknadGrunnlag = nyeSoknadGrunnlag,
             vurderBosattStatusOgNorskStatsborgerskap = vurderBosattStatusOgNorskStatsborgerskap,
@@ -67,7 +65,6 @@ data class LovvalgMedlemskapGrunnlag(
 data class LovvalgMedlemskapRegisterGrunnlag(
     val medlemskapUnntakGrunnlag: MedlemskapUnntakGrunnlag?,
     val inntekterINorgeGrunnlag: InntekterINorgeRegisterGrunnlag?,
-    val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
 )
 
 data class InntekterINorgeRegisterGrunnlag(

@@ -121,47 +121,19 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
             deaktiverGrunnlag(behandlingId)
         }
 
-        val arbeiderId = lagreArbeidGrunnlag(registerGrunnlag.arbeiderINorgeGrunnlag)
         val inntekterINorgeId = lagreArbeidsInntektGrunnlag(registerGrunnlag.inntekterINorgeGrunnlag)
 
         val grunnlagQuery = """
-            INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, vurderinger_id) VALUES (?, ?, ?, ?, ?)
+            INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG (behandling_id, inntekter_i_norge_id, medlemskap_unntak_person_id, vurderinger_id) VALUES (?, ?, ?, ?)
         """.trimIndent()
         connection.execute(grunnlagQuery) {
             setParams {
                 setLong(1, behandlingId.toLong())
-                setLong(2, arbeiderId)
-                setLong(3, inntekterINorgeId)
-                setLong(4, medlId)
-                setLong(5, grunnlagOppslag?.vurderingerId)
+                setLong(2, inntekterINorgeId)
+                setLong(3, medlId)
+                setLong(4, grunnlagOppslag?.vurderingerId)
             }
         }
-    }
-
-    private fun lagreArbeidGrunnlag(arbeidGrunnlag: List<ArbeidINorgeGrunnlag>): Long? {
-        if (arbeidGrunnlag.isEmpty()) return null
-
-        val arbeiderQuery = """
-            INSERT INTO ARBEIDER DEFAULT VALUES
-        """.trimIndent()
-        val arbeiderId = connection.executeReturnKey(arbeiderQuery)
-
-        for (forhold in arbeidGrunnlag) {
-            val arbeidQuery = """
-                INSERT INTO ARBEID (identifikator, arbeidsforhold_kode, arbeider_id, startdato, sluttdato) VALUES (?, ?, ?, ?, ?)
-            """.trimIndent()
-
-            connection.execute(arbeidQuery) {
-                setParams {
-                    setString(1, forhold.identifikator)
-                    setString(2, forhold.arbeidsforholdKode.kode)
-                    setLong(3, arbeiderId)
-                    setLocalDate(4, forhold.startdato)
-                    setLocalDate(5, forhold.sluttdato)
-                }
-            }
-        }
-        return arbeiderId
     }
 
     private fun lagreArbeidsInntektGrunnlag(
@@ -494,7 +466,6 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
         return LovvalgMedlemskapGrunnlag(
             LovvalgMedlemskapRegisterGrunnlag(
                 medlemskapUnntakGrunnlag = hentMedlemskapGrunnlag(row.getLongOrNull("medlemskap_unntak_person_id")),
-                arbeiderINorgeGrunnlag = hentArbeiderINorgeGrunnlag(row.getLongOrNull("arbeider_id")),
                 inntekterINorgeGrunnlag = InntekterINorgeRegisterGrunnlag(inntekt.perKrav()),
             ),
             vurderinger = hentVurderinger(row.getLongOrNull("vurderinger_id")),
