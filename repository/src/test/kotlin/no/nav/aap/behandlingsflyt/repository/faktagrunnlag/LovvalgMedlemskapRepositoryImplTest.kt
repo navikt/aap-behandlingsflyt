@@ -402,15 +402,6 @@ internal class LovvalgMedlemskapRepositoryImplTest {
             vurdertIBehandling = vurdertIBehandling
         )
 
-    private fun arbeidGrunnlag(): List<ArbeidINorgeGrunnlag> = listOf(
-        ArbeidINorgeGrunnlag(
-            identifikator = "1234",
-            arbeidsforholdKode = Arbeidsforholdtype.ORDINAERT_ARBEIDSFORHOLD,
-            startdato = 1 mai 2020,
-            sluttdato = null
-        )
-    )
-
     private fun inntektGrunnlag(): List<ArbeidsInntektMåned> = listOf(
         ArbeidsInntektMåned(
             årMåned = YearMonth.now(),
