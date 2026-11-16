@@ -38,10 +38,12 @@ og `repository` (konvensjon fra oktober 2026, se `no.nav.aap.meldeplikt`).
 ./gradlew detekt                                               # feiler aldri bygget; ikke rydd baseline-funn i urelaterte PR-er
 ```
 Tester som bruker `TestDataSource`, `DatabaseSnapshot`, `postgreSQLContainer()` eller Kafka, starter containere med
-Testcontainers og krever Docker. Tidsbruk (målt): inkrementell kompilering ~1 s. Kjør testene for det du har rørt etter
-hver endring (skillen `verifiser` velger dem), og hele `test` før du leverer. Ikke bruk `assemble`/`build` i
-arbeidsløkka (pakker fat-jar hver gang). Feiler Testcontainers med "Could not connect to Ryuk" eller "Connection to
-localhost:NNNN refused", er det Docker-miljøet, ikke koden: kjør på nytt (eventuelt med `TESTCONTAINERS_RYUK_DISABLED=true`).
+Testcontainers og krever Docker. Tidsbruk (målt): inkrementell kompilering ~1 s, én DB-testklasse ~10 s (container +
+Flyway). Kjør én testklasse om gangen, eller noen få, med `--tests` (skillen `verifiser` velger dem). Ikke kjør hele
+`test` eller hele `:<modul>:test`: det tar minutter, kan time ut og feiler ofte i en sandkasse. Hele testsuiten kjører i
+CI. Ikke bruk `assemble`/`build` i arbeidsløkka (pakker fat-jar hver gang). Feiler Testcontainers med "Could not
+connect to Ryuk" eller "Connection to localhost:NNNN refused", er det Docker-miljøet, ikke koden: kjør på nytt
+(eventuelt med `TESTCONTAINERS_RYUK_DISABLED=true`).
 Kjør git uten pager og editor (`git --no-pager log`, `git --no-pager diff`, `git merge --no-edit`), så kommandoen
 ikke blir stående og vente i terminalen.
 
@@ -124,9 +126,10 @@ Til gjennomgang av en diff: skillen `flyt-review` (sjekkliste).
   Nytt steg → `*StegTest` og oppdater flytsekvenstestene. Ny toggle → `FakeUnleash`; tester kjører med alle
   toggles av, så ny oppførsel bak toggle er utestet til testen skrur den på.
 - Fakes framfor mocks. Ikke "fiks" en test ved å endre forventningen uten å forstå hvorfor den feilet.
-- Før du sier "ferdig": kjør testene i modulene du endret (skillen `verifiser` velger dem ut fra endringene).
-  Har du rørt `forretningsflyt/`, `flyt/` eller `avklaringsbehov/`, kjør også
-  `:behandlingsflyt:test --tests "*FlytOrkestratorTest" --tests "*FlytTest"`.
+- Før du sier "ferdig": kjør testklassene for det du endret (skillen `verifiser` velger dem ut fra endringene).
+  Har du rørt `forretningsflyt/`, `flyt/` eller `avklaringsbehov/`, kjør også flyttesten for området (for eksempel
+  `--tests "*StudentFlytTest"`) og sekvenstesten `EnklereFlytOrkestratorTest`, én klasse per kall. Det finnes over 30
+  flyttestklasser, og alle samlet tar for lang tid.
 
 ## Naborepoer
 Les kildekoden i naborepoet i stedet for å pakke ut jar-filer. Finnes ikke mappen, si fra i stedet for å lete i

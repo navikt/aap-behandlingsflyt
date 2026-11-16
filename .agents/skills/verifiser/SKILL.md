@@ -12,15 +12,17 @@ argument-hint: "[basis-ref, for eksempel origin/main]"
 2. Kompiler hver endret modul: `./gradlew :<modul>:compileKotlin :<modul>:compileTestKotlin`.
 3. Kjør testklassen til hver endret klasse (`XxxTest` i samme pakke under `src/test/`):
    `./gradlew :<modul>:test --tests "*XxxTest"`. Finnes ingen test for klassen, si det.
-4. Kjør DB- og flyttester for hver endret fil i listen fra steg 1, mest spesifikt først:
-   - Endret `XxxSteg.kt` → `./gradlew :behandlingsflyt:test --tests "*XxxStegTest"` og deretter
-     `--tests "*FlytOrkestratorTest" --tests "*FlytTest"` (flytsekvens og scenarier).
+4. Kjør DB- og flyttester for hver endret fil i listen fra steg 1, én testklasse per kall, mest spesifikt først.
+   Ikke kjør hele `:<modul>:test` eller `test`: det tar minutter, kan time ut og feiler ofte i en sandkasse. Det kjører CI.
+   - Endret `XxxSteg.kt` → `./gradlew :behandlingsflyt:test --tests "*XxxStegTest"`, deretter flyttesten for området
+     (for eksempel `--tests "*StudentFlytTest"`) og `--tests "*EnklereFlytOrkestratorTest"` (stegsekvensen).
    - Endret løser/løsning → `--tests "*XxxLøserTest" --tests "*AvklaringsbehovsLøserTest"`.
    - Endret informasjonskrav → `--tests "*XxxInformasjonskravTest" --tests "*InformasjonskravGrunnlagTest"`.
-   - Endret `*RepositoryImpl` eller migrasjon → `./gradlew :repository:test --tests "*XxxRepositoryImplTest"`,
-     deretter hele `:repository:test` (alle migrasjoner kjøres mot tom Postgres).
-   - Endret `kontrakt/` → `./gradlew :kontrakt:test` og si eksplisitt at kontrakten endres.
-   - Endret `api/` → `./gradlew :api:test --tests "*XxxApiTest"`; endret `App.kt` → `./gradlew :app:test`.
+   - Endret `*RepositoryImpl` eller migrasjon → `./gradlew :repository:test --tests "*XxxRepositoryImplTest"`.
+     Hver DB-testklasse kjører alle migrasjonene mot tom Postgres, så én klasse er nok til å sjekke en ny migrasjon.
+   - Endret `kontrakt/` → `./gradlew :kontrakt:test` (få tester, uten Docker) og si eksplisitt at kontrakten endres.
+   - Endret `api/` → `./gradlew :api:test --tests "*XxxApiTest"`; endret `App.kt` →
+     `./gradlew :app:test --tests "no.nav.aap.behandlingsflyt.ApiTest"`.
 5. Docker må kjøre for DB-, Kafka- og flyttester (Testcontainers). Hvis Testcontainers feiler med Ryuk/Docker, er det
    miljøet, ikke koden – si det, ikke "fiks" testen.
 6. Rapporter: hvilke kommandoer som kjørte, antall tester, hva som feilet med feilmelding. Ikke si "alle tester
