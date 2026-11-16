@@ -5,10 +5,14 @@ argument-hint: "[basis-ref, for eksempel origin/main]"
 ---
 # Verifiser endringene
 
-1. Finn endrede filer. Er arbeidskopien skitten (`git status --porcelain` gir noe), bruk
-   `git status --porcelain | awk '{print $2}'`. Er den ren, bruk `git diff --name-only <basis>...HEAD`, der basis
-   er ref-en brukeren oppga (for eksempel `origin/main`).
-   Finnes ingen basis, si det og stopp. Moduler er første stikomponent: `| cut -d/ -f1 | sort -u`.
+1. Finn endrede filer: både det som er committet på branchen og det som ikke er committet. Basis er ref-en brukeren
+   oppga, ellers `origin/main`:
+   `{ git -c core.quotePath=false diff --name-only <basis>...HEAD; git -c core.quotePath=false diff --name-only HEAD;
+   git -c core.quotePath=false ls-files --others --exclude-standard; } | sort -u`
+   Moduler er første stikomponent, men bare de som finnes i `settings.gradle.kts`: `app`, `api`, `behandlingsflyt`,
+   `repository`, `lib-test`, `kontrakt`. Endringer bare i `.md`-filer eller `.agents/` trenger ingen kjøring; si det
+   og stopp. Endringer i `build-logic/`, `gradle/` eller rot-`*.gradle.kts` påvirker alle moduler: kjør `coreTest`
+   for alle (`./gradlew coreTest`), men ikke hele `test`.
 2. Kompiler hver endret modul: `./gradlew :<modul>:compileKotlin :<modul>:compileTestKotlin`.
 3. Kjør testene uten Docker for hver endret modul: `./gradlew :<modul>:coreTest` (~10 s). De er raske, så kjør dem
    etter hver endring under arbeidet, ikke bare her. Feiler en test fordi den prøver å starte Docker

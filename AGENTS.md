@@ -32,7 +32,7 @@ og `repository` (konvensjon fra oktober 2026, se `no.nav.aap.meldeplikt`).
 ```bash
 ./gradlew :behandlingsflyt:compileKotlin                       # rask kompilering av én modul
 ./gradlew :behandlingsflyt:coreTest                            # testene i modulen som ikke trenger Docker
-./gradlew :behandlingsflyt:test --tests "no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderAlderStegTest"
+./gradlew :behandlingsflyt:test --tests "*AldersvilkåretTest"  # én testklasse
 ./gradlew :repository:test --tests "*SykdomRepositoryImplTest" # DB-test, krever Docker (Testcontainers)
 ./gradlew :behandlingsflyt:check                               # som CI gjør for modulen
 ./gradlew runTestApp                                           # app på :8080 med fakes; token: curl -s -XPOST http://localhost:8081/token

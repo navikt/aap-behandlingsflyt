@@ -24,7 +24,7 @@ skillene `nytt-avklaringsbehov` og `nytt-grunnlag`. Selve steget er `StegType`, 
 2. `behandlingsflyt/.../forretningsflyt/steg/XxxSteg.kt` (eller i feature-pakken `no.nav.aap.<feature>`):
    `class XxxSteg(avhengigheter) : BehandlingSteg` + `companion object : FlytSteg { konstruer(repositoryProvider,
    gatewayProvider); type() }`. Har steget et avklaringsbehov: kall `avklaringsbehovService.oppdaterAvklaringsbehov(
-   kontekst, definisjon, vedtakBehøverVurdering, erTilstrekkeligVurdert, tilbakestillGrunnlag)` og returner `Fullført`.
+   definisjon, vedtakBehøverVurdering, erTilstrekkeligVurdert, tilbakestillGrunnlag, kontekst)` og returner `Fullført`.
    `vedtakBehøverVurdering` har en uttømmende `when (kontekst.vurderingType)` uten `else`.
 3. Flytdefinisjon: `.medSteg(steg = XxxSteg, vurderingsbehovRelevanteForSteg = …, informasjonskrav = …)` på riktig
    plass i `Revurdering.kt` (og andre flyter hvis relevant).
