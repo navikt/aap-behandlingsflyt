@@ -31,20 +31,15 @@ og `repository` (konvensjon fra oktober 2026, se `no.nav.aap.meldeplikt`).
 ## Kommandoer
 ```bash
 ./gradlew :behandlingsflyt:compileKotlin                       # rask kompilering av én modul
-./gradlew :behandlingsflyt:coreTest                            # alle kjernetester i modulen, uten Docker (~15 s)
 ./gradlew :behandlingsflyt:test --tests "no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderAlderStegTest"
 ./gradlew :repository:test --tests "*SykdomRepositoryImplTest" # DB-test, krever Docker (Testcontainers)
 ./gradlew :behandlingsflyt:check                               # som CI gjør for modulen
-./gradlew :arkitektur:test                                     # strukturregler: registreringslister, lagdeling, aktiv-flagg (~10 s)
 ./gradlew runTestApp                                           # app på :8080 med fakes; token: curl -s -XPOST http://localhost:8081/token
 ./gradlew detekt                                               # feiler aldri bygget; ikke rydd baseline-funn i urelaterte PR-er
 ```
-Tester som trenger Docker er tagget `@Tag("db")`/`@Tag("kafka")` (flyttester arver `db`+`flyt` fra
-`AbstraktFlytOrkestratorTest`); `coreTest` kjører resten uten Docker. Ny test som bruker `TestDataSource`,
-`DatabaseSnapshot`, `postgreSQLContainer()` eller Kafka skal ha tag, ellers feiler `coreTest` med beskjed om det.
-Tidsbruk (målt): inkrementell kompilering ~1 s, endring + `:behandlingsflyt:coreTest` ~15 s, én DB-test ~10-15 s fast
-kostnad (container + Flyway), `:behandlingsflyt:test` ~4-5 min, `./gradlew test` ~5 min. Kjør `coreTest` etter hver
-endring, målrettede DB-/flyttester for det du har rørt, og hele `test` før du leverer. Ikke bruk `assemble`/`build` i
+Tester som bruker `TestDataSource`, `DatabaseSnapshot`, `postgreSQLContainer()` eller Kafka, starter containere med
+Testcontainers og krever Docker. Tidsbruk (målt): inkrementell kompilering ~1 s. Kjør testene for det du har rørt etter
+hver endring (skillen `verifiser` velger dem), og hele `test` før du leverer. Ikke bruk `assemble`/`build` i
 arbeidsløkka (pakker fat-jar hver gang). Feiler Testcontainers med "Could not connect to Ryuk" eller "Connection to
 localhost:NNNN refused", er det Docker-miljøet, ikke koden: kjør på nytt (eventuelt med `TESTCONTAINERS_RYUK_DISABLED=true`).
 Kjør git uten pager og editor (`git --no-pager log`, `git --no-pager diff`, `git merge --no-edit`), så kommandoen
@@ -99,8 +94,6 @@ Disse kompilerer uten endring og feiler først i runtime (`"Repository av typen 
 `repository/.../PostgresRepositoryRegistry.kt`, `repository/.../integrasjon/DefaultGatewayProvider.kt`,
 `lib-test/.../TestGatewayProvider.kt`, `lib-test/.../inmemoryrepo/InMemoryRepositoryRegistry.kt`,
 `prosessering/ProsesseringsJobber.kt`, `app/.../App.kt` (ruter), `lib-test/.../FakeUnleash.kt` (nye toggles).
-`./gradlew :arkitektur:test` sjekker alle listene unntatt ruter, og sier hvilken fil som mangler hva. Kjente brudd
-står i `kjenteBrudd` i testene; listene skal bare krympe, så ikke legg til nye der for å få testen grønn.
 Alle injiserbare klasser følger samme idiom: `private constructor(avhengigheter)` +
 `constructor(repositoryProvider, gatewayProvider)` + `companion object : FlytSteg | Factory | Informasjonskravkonstruktør | ProvidersJobbSpesifikasjon`.
 Parametertyper må være marker-grensesnittet, aldri `*Impl`. Nytt repository må implementere `kopier` og `slett`.
