@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.støna
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.KantIKantMedArena
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
@@ -77,8 +78,13 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
                 v.vurdert_tidspunkt                 AS v_vurdert_tidspunkt,
                 v.vurdert_av                        AS v_vurdert_av,
                 v.startdato                         AS v_startdato,
-                v.kant_i_kant_med_arena             AS v_kant_i_kant_med_arena
+                k.arena_saksnummer                  AS k_arena_saksnummer,
+                k.status                            AS k_status,
+                k.maksdato                          AS k_maksdato,
+                k.vedtak_til                        AS k_vedtak_til,
+                k.vedtak_id                         AS k_vedtak_id
             FROM stonadsperiode_vurdering v 
+            LEFT JOIN stonadsperiode_kant_i_kant_med_arena k ON k.id = v.kant_i_kant_med_arena_id
             WHERE v.stonadsperiode_vurderinger_id = ?
         """.trimIndent()
             ) {
@@ -106,10 +112,21 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
                         opprettet = it.getInstant("v_vurdert_tidspunkt"),
                         vurdertAv = it.getBruker("v_vurdert_av"),
                         startDato = it.getLocalDate("v_startdato"),
-                        erKantIKantMedArena = it.getBoolean("v_kant_i_kant_med_arena"),
+                        kantIKantMedArena = mapKantIKantMedArena(it),
                     )
                 }
             }
+        )
+    }
+
+    private fun mapKantIKantMedArena(row: Row): KantIKantMedArena? {
+        val arenaSaksnummer = row.getStringOrNull("k_arena_saksnummer") ?: return null
+        return KantIKantMedArena(
+            arenaSaksnummer = arenaSaksnummer,
+            status = row.getString("k_status"),
+            maksdato = row.getLocalDate("k_maksdato"),
+            vedtakTil = row.getLocalDateOrNull("k_vedtak_til"),
+            vedtakId = row.getInt("k_vedtak_id"),
         )
     }
 
@@ -147,7 +164,11 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
         val deletedRows = connection.executeReturnUpdated(
             """
             DELETE FROM stonadsperiode_grunnlag WHERE behandling_id = ?;
-            DELETE FROM stonadsperiode_vurdering WHERE stonadsperiode_vurderinger_id = ANY(?::bigint[]);
+            WITH slettet AS (
+                DELETE FROM stonadsperiode_vurdering WHERE stonadsperiode_vurderinger_id = ANY(?::bigint[])
+                RETURNING kant_i_kant_med_arena_id
+            )
+            DELETE FROM stonadsperiode_kant_i_kant_med_arena WHERE id IN (SELECT kant_i_kant_med_arena_id FROM slettet);
             DELETE FROM stonadsperiode_vurderinger WHERE id = ANY(?::bigint[]);
         """.trimIndent()
         ) {
@@ -193,14 +214,18 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
             }
         }
 
+        val vurderingerMedKantIKantId = vurderinger.map { vurdering ->
+            vurdering to vurdering.kantIKantMedArena?.let(::lagreKantIKantMedArena)
+        }
+
         val query = """
                 INSERT INTO stonadsperiode_vurdering 
-                (referanse, begrunnelse, har_hatt_ordinar_siste_52_uker, har_gjenvaerende_kvote, relevant_krav_type, avslagsaarsaker, vurdert_i_behandling, vurdert_tidspunkt, stonadsperiode_vurderinger_id, vurdert_av, startdato, kant_i_kant_med_arena) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (referanse, begrunnelse, har_hatt_ordinar_siste_52_uker, har_gjenvaerende_kvote, relevant_krav_type, avslagsaarsaker, vurdert_i_behandling, vurdert_tidspunkt, stonadsperiode_vurderinger_id, vurdert_av, startdato, kant_i_kant_med_arena, kant_i_kant_med_arena_id) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
-        connection.executeBatch(query, vurderinger) {
-            setParams { vurdering ->
+        connection.executeBatch(query, vurderingerMedKantIKantId) {
+            setParams { (vurdering, kantIKantMedArenaId) ->
                 setUUID(1, vurdering.referanse.verdi)
                 setString(2, vurdering.begrunnelse)
                 setBoolean(3, vurdering.harHattOrdinærSiste52Uker)
@@ -234,9 +259,28 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
                 setBruker(10, vurdering.vurdertAv)
                 setLocalDate(11, vurdering.startDato)
                 setBoolean(12, vurdering.erKantIKantMedArena)
+                setLong(13, kantIKantMedArenaId)
             }
         }
 
         return vurderingerId
     }
+
+    private fun lagreKantIKantMedArena(kantIKantMedArena: KantIKantMedArena): Long =
+        connection.executeReturnKey(
+            """
+                INSERT INTO stonadsperiode_kant_i_kant_med_arena
+                    (arena_saksnummer, status, maksdato, vedtak_til, vedtak_id, opprettet_tid)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """.trimIndent()
+        ) {
+            setParams {
+                setString(1, kantIKantMedArena.arenaSaksnummer)
+                setString(2, kantIKantMedArena.status)
+                setLocalDate(3, kantIKantMedArena.maksdato)
+                setLocalDate(4, kantIKantMedArena.vedtakTil)
+                setLong(5, kantIKantMedArena.vedtakId.toLong())
+                setInstant(6, Instant.now())
+            }
+        }
 }

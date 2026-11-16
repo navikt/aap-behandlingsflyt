@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdatoRepo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.kravtidslinje
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.KantIKantMedArena
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
@@ -105,7 +106,13 @@ class AvklarStønadsperiodeSteg(
                 harGjenværendeKvote = false,
                 relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
                 startDato = arenaMaksdato.maksdato.plusDays(1),
-                erKantIKantMedArena = true,
+                kantIKantMedArena = KantIKantMedArena(
+                    arenaSaksnummer = arenaMaksdato.arenaSaksnummer,
+                    status = arenaMaksdato.status,
+                    maksdato = arenaMaksdato.maksdato,
+                    vedtakTil = arenaMaksdato.vedtakTil,
+                    vedtakId = arenaMaksdato.vedtakId,
+                ),
             )
         }
 

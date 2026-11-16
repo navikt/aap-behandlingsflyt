@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettig
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.KantIKantMedArena
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
@@ -69,7 +70,7 @@ class BehandlingEgenskaperServiceTest {
         val (_, behandling) = opprettInMemorySakOgBehandling()
         InMemoryKravRepository.lagre(behandling.id, setOf(lagRelevantKrav(behandling.id, Kravreferanse.ny())))
 
-        assertThat(hentEgenskaper(behandling).erKantIKantMedArena).isFalse()
+        assertThat(hentEgenskaper(behandling).kantIKantMedArena).isNull()
     }
 
     @Test
@@ -79,10 +80,10 @@ class BehandlingEgenskaperServiceTest {
         InMemoryKravRepository.lagre(behandling.id, setOf(krav))
         InMemoryStønadsperiodeRepository.lagre(
             behandling.id,
-            setOf(lagStønadsperiodeVurdering(behandling.id, krav.referanse, erKantIKantMedArena = false)),
+            setOf(lagStønadsperiodeVurdering(behandling.id, krav.referanse, kantIKantMedArena = null)),
         )
 
-        assertThat(hentEgenskaper(behandling).erKantIKantMedArena).isFalse()
+        assertThat(hentEgenskaper(behandling).kantIKantMedArena).isNull()
     }
 
     @Test
@@ -92,10 +93,10 @@ class BehandlingEgenskaperServiceTest {
         InMemoryKravRepository.lagre(behandling.id, setOf(krav))
         InMemoryStønadsperiodeRepository.lagre(
             behandling.id,
-            setOf(lagStønadsperiodeVurdering(behandling.id, krav.referanse, erKantIKantMedArena = true)),
+            setOf(lagStønadsperiodeVurdering(behandling.id, krav.referanse, kantIKantMedArena = KANT_I_KANT)),
         )
 
-        assertThat(hentEgenskaper(behandling).erKantIKantMedArena).isTrue()
+        assertThat(hentEgenskaper(behandling).kantIKantMedArena).isEqualTo(KANT_I_KANT)
     }
 
     @Test
@@ -105,10 +106,10 @@ class BehandlingEgenskaperServiceTest {
         InMemoryKravRepository.lagre(behandling.id, setOf(krav))
         InMemoryStønadsperiodeRepository.lagre(
             behandling.id,
-            setOf(lagStønadsperiodeVurdering(behandling.id, Kravreferanse.ny(), erKantIKantMedArena = true)),
+            setOf(lagStønadsperiodeVurdering(behandling.id, Kravreferanse.ny(), kantIKantMedArena = KANT_I_KANT)),
         )
 
-        assertThat(hentEgenskaper(behandling).erKantIKantMedArena).isFalse()
+        assertThat(hentEgenskaper(behandling).kantIKantMedArena).isNull()
     }
 
     private fun hentEgenskaper(behandling: Behandling, service: BehandlingEgenskaperService = this.service) =
@@ -156,21 +157,28 @@ class BehandlingEgenskaperServiceTest {
     private fun lagStønadsperiodeVurdering(
         behandlingId: BehandlingId,
         referanse: Kravreferanse,
-        erKantIKantMedArena: Boolean,
+        kantIKantMedArena: KantIKantMedArena?,
     ) = StønadsperiodeVurdering(
         referanse = referanse,
         opprettet = Instant.now(),
         vurdertIBehandling = behandlingId,
         vurdertAv = SYSTEMBRUKER,
         begrunnelse = "Test",
-        harHattOrdinærSiste52Uker = erKantIKantMedArena,
+        harHattOrdinærSiste52Uker = kantIKantMedArena != null,
         harGjenværendeKvote = false,
         relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
         startDato = MULIG_RETT_FRA,
-        erKantIKantMedArena = erKantIKantMedArena,
+        kantIKantMedArena = kantIKantMedArena,
     )
 
     private companion object {
         val MULIG_RETT_FRA: LocalDate = LocalDate.of(2024, 1, 1)
+        val KANT_I_KANT = KantIKantMedArena(
+            arenaSaksnummer = "2023-5",
+            status = "AVSLU",
+            maksdato = MULIG_RETT_FRA.minusDays(1),
+            vedtakTil = MULIG_RETT_FRA.minusDays(1),
+            vedtakId = 1,
+        )
     }
 }

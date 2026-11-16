@@ -45,10 +45,13 @@ data class StønadsperiodeVurdering(
     val relevantKravType: RelevantKravType,
     val startDato: LocalDate,
     /**
-     * Startdatoen er satt til dagen etter maksdato i tilstøtende Arena-sak.
+     * Satt når startdatoen er dagen etter maksdato i tilstøtende Arena-sak.
      */
-    val erKantIKantMedArena: Boolean = false,
+    val kantIKantMedArena: KantIKantMedArena? = null,
 ) : VurderingForKrav {
+    val erKantIKantMedArena: Boolean
+        get() = kantIKantMedArena != null
+
     init {
 
         /// harGjenværendeKvote | harHattOrdinærSiste52Uker
