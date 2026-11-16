@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
@@ -55,13 +57,30 @@ class AvklarStønadsperiodeStegTest {
         steg = lagSteg(KantIKantPåskruddUnleash)
     }
 
-    private fun lagSteg(unleash: UnleashGateway) = AvklarStønadsperiodeSteg(
+    private fun lagSteg(
+        unleash: UnleashGateway,
+        tidligereVurderinger: TidligereVurderinger = FakeTidligereVurderinger(),
+    ) = AvklarStønadsperiodeSteg(
         unleashGateway = unleash,
         kravRepository = InMemoryKravRepository,
         stønadsperiodeRepository = InMemoryStønadsperiodeRepository,
         arenaMaksdatoRepository = InMemoryArenaMaksdatoRepository,
         sakService = sakService,
+        tidligereVurderinger = tidligereVurderinger,
     )
+
+    @Test
+    fun `ingen behandlingsgrunnlag - lagrer ikke stønadsperiode`() {
+        val tidligereVurderinger = FakeTidligereVurderinger().apply { ingenBehandlingsgrunnlag = true }
+        val sak = opprettInMemorySak(søknadsdato = 1 juni 2024)
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        InMemoryKravRepository.lagre(behandling.id, setOf(lagRelevantKrav(behandling.id, 1 juni 2024)))
+
+        lagSteg(KantIKantPåskruddUnleash, tidligereVurderinger)
+            .utfør(flytKontekstMedPerioder { this.behandling = behandling })
+
+        assertThat(InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandling.id)).isNull()
+    }
 
     @Test
     fun `ingen relevante krav - lagrer tomt grunnlag`() {

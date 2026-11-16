@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.erSystembruker
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdatoRepository
@@ -33,10 +35,15 @@ class AvklarStønadsperiodeSteg(
     private val stønadsperiodeRepository: StønadsperiodeRepository,
     private val arenaMaksdatoRepository: ArenaMaksdatoRepository,
     private val sakService: SakService,
+    private val tidligereVurderinger: TidligereVurderinger,
 ) : BehandlingSteg {
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
+        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
+            return Fullført
+        }
+
         when (kontekst.behandlingType) {
             TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
                 if(kontekst.erMigreringFraArena()) {
@@ -218,6 +225,7 @@ class AvklarStønadsperiodeSteg(
                 stønadsperiodeRepository = repositoryProvider.provide(),
                 arenaMaksdatoRepository = repositoryProvider.provide(),
                 sakService = SakService(repositoryProvider, gatewayProvider),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
             )
         }
 
