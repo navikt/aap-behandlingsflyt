@@ -366,6 +366,50 @@ class TidligereVurderingerImplTest {
         assertThat(resultat.segmenter()).noneMatch { it.verdi is TidligereVurderinger.UunngåeligAvslag }
     }
 
+    @ParameterizedTest
+    @MethodSource("kvoteBruktOpp")
+    fun `gir UunngåeligAvslag når én kvote er brukt opp og den andre er IKKE_RELEVANT`(
+        kvoteBruktOpp: Vilkårtype,
+        annenKvote: Vilkårtype,
+        avslagsårsak: Avslagsårsak,
+    ) {
+        val kvoteVilkår = listOf(
+            Vilkår(
+                kvoteBruktOpp,
+                setOf(
+                    Vilkårsperiode(
+                        periode = rettighetsperiode,
+                        utfall = Utfall.IKKE_OPPFYLT,
+                        manuellVurdering = false,
+                        begrunnelse = null,
+                        avslagsårsak = avslagsårsak,
+                    )
+                )
+            ),
+            Vilkår(
+                annenKvote,
+                setOf(
+                    Vilkårsperiode(
+                        periode = rettighetsperiode,
+                        utfall = Utfall.IKKE_RELEVANT,
+                        manuellVurdering = false,
+                        begrunnelse = null,
+                    )
+                )
+            ),
+        )
+        val grunnlag = vilkårsresultatMedMuligRettighet(kvoteBruktOpp, rettighetsperiode, Utfall.IKKE_OPPFYLT, avslagsårsak)
+        every { vilkårsresultatRepository.hent(behandlingId) } returns
+                Vilkårsresultat(vilkår = grunnlag.alle().filter { it.type != kvoteBruktOpp } + kvoteVilkår)
+
+        val resultat = opprettTidligereVurderinger().behandlingsutfall(kontekst(), StegType.FORESLÅ_VEDTAK)
+
+        assertThat(resultat.segmenter()).isNotEmpty.allSatisfy {
+            assertThat(it.verdi).isInstanceOf(TidligereVurderinger.UunngåeligAvslag::class.java)
+            assertThat((it.verdi as TidligereVurderinger.UunngåeligAvslag).vilkårtype).isEqualTo(kvoteBruktOpp)
+        }
+    }
+
     @Test
     fun `girAvslag er false når soning bare gjelder deler av perioden`() {
         every { vilkårsresultatRepository.hent(behandlingId) } returns
@@ -380,6 +424,20 @@ class TidligereVurderingerImplTest {
     }
 
     companion object {
+        @JvmStatic
+        fun kvoteBruktOpp() = listOf(
+            Arguments.of(
+                Vilkårtype.ORDINÆR_KVOTE,
+                Vilkårtype.SYKEPENGEERSTATNING_KVOTE,
+                Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP
+            ),
+            Arguments.of(
+                Vilkårtype.SYKEPENGEERSTATNING_KVOTE,
+                Vilkårtype.ORDINÆR_KVOTE,
+                Avslagsårsak.SYKEPENGEERSTATNINGKVOTE_BRUKT_OPP
+            ),
+        )
+
         @JvmStatic
         fun nyeAvslagsvilkår() = listOf(
             Arguments.of(

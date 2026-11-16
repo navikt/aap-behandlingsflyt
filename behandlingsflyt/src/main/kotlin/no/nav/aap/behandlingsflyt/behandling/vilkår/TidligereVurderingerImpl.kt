@@ -305,8 +305,12 @@ class TidligereVurderingerImpl(
                 ikkeOppfyltFørerTilAvslag(Vilkårtype.ORDINÆR_KVOTE, vilkårsresultat)
                     .outerJoin(
                         ikkeOppfyltFørerTilAvslag(Vilkårtype.SYKEPENGEERSTATNING_KVOTE, vilkårsresultat)
-                    ) { a, b ->
-                        a ?: b ?: TidligereVurderinger.PotensieltOppfylt(null)
+                    ) { ordinær, sykepengeerstatning ->
+                        // Bare én kvote gjelder per periode. Den andre er IKKE_RELEVANT, som tolkes som
+                        // PotensieltOppfylt. Et avslag fra en av dem skal derfor vinne over den andres PotensieltOppfylt.
+                        ordinær as? TidligereVurderinger.UunngåeligAvslag
+                            ?: sykepengeerstatning as? TidligereVurderinger.UunngåeligAvslag
+                            ?: TidligereVurderinger.PotensieltOppfylt(null)
                     }
             },
         )

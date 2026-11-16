@@ -119,15 +119,11 @@ fun NormalOpenAPIRoute.foreslaaVedtakApi(
                                         ?: Tidslinje()
                                 }
 
-                        val forrigeHelePeriode = forrigeTidslinje?.helePeriodenOrNull()
-                        val gjeldendeHelePeriode = foreslåVedtakData.helePeriodenOrNull()
-
-                        val endretRettighetsperiode =
-                            if (visPeriodeEndringer && forrigeHelePeriode != null && gjeldendeHelePeriode != null && forrigeHelePeriode != gjeldendeHelePeriode) {
-                                EndretRettighetsperiodeDto(fra = forrigeHelePeriode, til = gjeldendeHelePeriode)
-                            } else {
-                                null
-                            }
+                        val endretRettighetsperiode = utledEndretRettighetsperiode(
+                            visPeriodeEndringer = visPeriodeEndringer,
+                            forrigeHelePeriode = forrigeTidslinje?.helePeriodenOrNull(),
+                            gjeldendeHelePeriode = foreslåVedtakData.helePeriodenOrNull(),
+                        )
 
                         val forrigeSegmenter: List<Segment<ForeslåVedtakData>>? =
                             forrigeTidslinje?.segmenter()?.toList()
@@ -175,6 +171,16 @@ internal data class EndringFraForrige(
     val tidligerePerioder: List<Periode>,
     val tidligereVarÅpen: Boolean,
 )
+
+internal fun utledEndretRettighetsperiode(
+    visPeriodeEndringer: Boolean,
+    forrigeHelePeriode: Periode?,
+    gjeldendeHelePeriode: Periode?,
+): EndretRettighetsperiodeDto? {
+    if (!visPeriodeEndringer || forrigeHelePeriode == null || gjeldendeHelePeriode == null) return null
+    if (forrigeHelePeriode == gjeldendeHelePeriode) return null
+    return EndretRettighetsperiodeDto(fra = forrigeHelePeriode, til = gjeldendeHelePeriode)
+}
 
 internal fun utledEndringFraForrige(
     segment: Periode,

@@ -305,4 +305,25 @@ class ForeslåVedtakEndringTest {
         assertThat(resultat.erNy).isTrue()
         assertThat(resultat.tidligerePerioder).isEmpty()
     }
+
+    @Test
+    fun `endret rettighetsperiode gir fra og til når periodene er ulike`() {
+        val forrige = Periode(start, dato(12, 31))
+        val gjeldende = Periode(start, dato(6, 30))
+
+        val resultat = utledEndretRettighetsperiode(true, forrige, gjeldende)
+
+        assertThat(resultat).isEqualTo(EndretRettighetsperiodeDto(fra = forrige, til = gjeldende))
+    }
+
+    @Test
+    fun `endret rettighetsperiode er null for lik periode, manglende periode eller avslått toggle`() {
+        val periode = Periode(start, dato(12, 31))
+        val annen = Periode(start, dato(6, 30))
+
+        assertThat(utledEndretRettighetsperiode(true, periode, periode)).isNull()
+        assertThat(utledEndretRettighetsperiode(true, null, periode)).isNull()
+        assertThat(utledEndretRettighetsperiode(true, periode, null)).isNull()
+        assertThat(utledEndretRettighetsperiode(false, periode, annen)).isNull()
+    }
 }
