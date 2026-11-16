@@ -68,6 +68,7 @@ fun opprettInMemorySakOgBehandling(
     vurderingsbehov: List<Vurderingsbehov> = listOf(Vurderingsbehov.MOTTATT_SØKNAD),
     årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
     ident: Ident = ident(),
+    medKrav: Boolean = true,
 ): Pair<Sak, Behandling> {
     val vurderingsbehovMedPeriode = vurderingsbehov.map { VurderingsbehovMedPeriode(it) }
     val sak = opprettInMemorySak(søknadsdato, ident)
@@ -75,7 +76,9 @@ fun opprettInMemorySakOgBehandling(
         sak.id,
         VurderingsbehovOgÅrsak(vurderingsbehovMedPeriode, årsakTilOpprettelse)
     )
-    opprettKravOgStønadsperiode(behandling, søknadsdato)
+    if (medKrav) {
+        opprettKravOgStønadsperiode(behandling, søknadsdato)
+    }
     return sak to behandling
 }
 
@@ -84,10 +87,12 @@ fun opprettInMemorySakOgRevurdering(
     vurderingsbehov: List<Vurderingsbehov> = listOf(Vurderingsbehov.MOTTATT_SØKNAD),
     årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
     ident: Ident = ident(),
+    medKrav: Boolean = true,
 ): Triple<Sak, Behandling, Behandling> {
     val (sak, førstegangsbehandling) = opprettInMemorySakOgBehandling(
         søknadsdato = søknadsdato,
         ident = ident,
+        medKrav = medKrav,
     )
 
     InMemoryBehandlingRepository.leggTilNyttAktivtSteg(
@@ -121,9 +126,12 @@ fun opprettInMemorySakOgRevurdering(
         sak.id,
         VurderingsbehovOgÅrsak(vurderingsbehovMedPeriode, årsakTilOpprettelse)
     )
-    InMemoryKravRepository.kopier(førstegangsbehandling.id, revurdering.id)
-    InMemoryStønadsperiodeRepository.kopier(førstegangsbehandling.id, revurdering.id)
 
+    if (medKrav) {
+        InMemoryKravRepository.kopier(førstegangsbehandling.id, revurdering.id)
+        InMemoryStønadsperiodeRepository.kopier(førstegangsbehandling.id, revurdering.id)
+    }
+    
     check(førstegangsbehandling.id != revurdering.id)
     return Triple(sak, InMemoryBehandlingRepository.hent(førstegangsbehandling.id), revurdering)
 }
