@@ -50,6 +50,7 @@ spec:
   terminationGracePeriodSeconds: 30
   startup:
     path: /actuator/live
+    # Trenger 25 + 5x8 = 65 sek
     initialDelay: 25
     periodSeconds: 5
     failureThreshold: 8

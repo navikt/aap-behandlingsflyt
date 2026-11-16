@@ -36,11 +36,13 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.io.InputStream
 import java.net.URI
 import java.time.LocalDate
 
+@Tag("db")
 @Fakes
 class PipTest {
     companion object {

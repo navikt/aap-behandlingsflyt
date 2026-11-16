@@ -23,11 +23,6 @@ testing {
     suites {
         @Suppress("UnstableApiUsage")
         named<JvmTestSuite>("test") {
-            targets.all {
-                testTask {
-                    environment("TZ", "Europe/Oslo")
-                }
-            }
             useJUnitJupiter()
         }
     }
@@ -88,14 +83,29 @@ private fun bestemAntallTestTråder(): Int {
     return antallTråder
 }
 
+val dockerTagger = arrayOf("db", "kafka", "flyt")
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+    environment("TZ", "Europe/Oslo")
+    maxParallelForks = bestemAntallTestTråder()
+    systemProperty("junit.jupiter.execution.timeout.default", "3m")
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+}
+
 tasks {
-    test {
-        useJUnitPlatform()
-        maxParallelForks = bestemAntallTestTråder()
-        systemProperty("junit.jupiter.execution.timeout.default", "3m")
-        testLogging {
-            events("passed", "skipped", "failed")
+    register<Test>("coreTest") {
+        description = "Kjører testene som ikke trenger Docker (alt uten taggene ${dockerTagger.joinToString()})."
+        group = LifecycleBasePlugin.VERIFICATION_GROUP
+        val testSourceSet = sourceSets.named("test")
+        testClassesDirs = files(testSourceSet.map { it.output.classesDirs })
+        classpath = files(testSourceSet.map { it.runtimeClasspath })
+        useJUnitPlatform {
+            excludeTags(*dockerTagger)
         }
+        environment("TESTCONTAINERS_IMAGE_SUBSTITUTOR", "no.nav.aap.behandlingsflyt.test.DockerIkkeTillattIKjernetester")
     }
 
     (findByName("jar") as? Jar)?.apply {
