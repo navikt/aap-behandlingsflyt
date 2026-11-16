@@ -7,12 +7,10 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.miljo.Miljø
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import javax.sql.DataSource
@@ -33,15 +31,15 @@ class BackfillKrav(
                 var forrigeFraTil: List<Long>? = null
                 while (true) {
                     if (isLeader(log) && unleashGateway.isEnabled(BehandlingsflytFeature.BackfillKrav)) {
-                        val sakIder = unleashGateway.getVariantValue(
+                        val fraTil = unleashGateway.getVariantValue(
                             BehandlingsflytFeature.BackfillKrav,
                             "backfill-saker-ider"
                         ).split(",").map(String::toLong)
 
-                        if (forrigeFraTil != sakIder) {
+                        if (forrigeFraTil != fraTil) {
                             try {
-                                backfillKravLoop(sakIder)
-                                forrigeFraTil = sakIder
+                                backfillKravLoop(fraTil[0], fraTil[1])
+                                forrigeFraTil = fraTil
                             } catch (e: Exception) {
                                 log.warn("BackfillKrav: uncaughtException {}, se secure / team log", e.javaClass.name)
                                 teamLogs.warn(
@@ -60,11 +58,11 @@ class BackfillKrav(
 
     private var antallBackfillUtført = 0
 
-    private fun backfillKravLoop(sakIder: List<Long>) {
-        log.info("Begynner backfill krav for sak-ider $sakIder")
+    private fun backfillKravLoop(fra: Long, til: Long) {
+        log.info("Begynner backfill krav for sak-ider $fra - til")
         antallBackfillUtført = 0
 
-        for (sakId in sakIder) {
+        for (sakId in fra..til) {
             dataSource.transaction { connection ->
                 val sakRepository = SakRepositoryImpl(connection)
                 val sak = sakRepository.hentSakHvisEksisterer(sakId) ?: return@transaction
@@ -126,7 +124,7 @@ class BackfillKrav(
         }
 
         log.info(
-            "Backfill krav ferdig: {} behandlinger for sak-ider $sakIder",
+            "Backfill krav ferdig: {} behandlinger for sak-ider $fra - $til",
             antallBackfillUtført
         )
         Thread.sleep(Duration.ofMinutes(5))
