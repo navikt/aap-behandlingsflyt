@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterForKrav
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterINorgeRegisterGrunnlag
@@ -227,27 +225,6 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
         } else null
     }
 
-    private fun hentArbeiderINorgeGrunnlag(arbeiderINorgeId: Long?): List<ArbeidINorgeGrunnlag> {
-        if (arbeiderINorgeId == null) return emptyList()
-
-        val query = """
-            SELECT * FROM ARBEID WHERE arbeider_id = ? AND arbeidsforhold_kode != 'maritimtArbeidsforhold'
-        """.trimIndent()
-        return connection.queryList(query) {
-            setParams {
-                setLong(1, arbeiderINorgeId)
-            }
-            setRowMapper {
-                ArbeidINorgeGrunnlag(
-                    identifikator = it.getString("identifikator"),
-                    arbeidsforholdKode = Arbeidsforholdtype.fraKode(it.getString("arbeidsforhold_kode")),
-                    startdato = it.getLocalDate("startdato"),
-                    sluttdato = it.getLocalDateOrNull("sluttdato"),
-                )
-            }
-        }
-    }
-
     private fun hentInntekterINorgeGrunnlag(inntekterINorgeId: Long?): List<InntektINorgeInternal> {
         if (inntekterINorgeId == null) return emptyList()
 
@@ -342,8 +319,8 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
 
         val query = """
             INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
-                (behandling_id, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id, vurderinger_id) 
-            SELECT ?, medlemskap_unntak_person_id, inntekter_i_norge_id, arbeider_id, vurderinger_id
+                (behandling_id, medlemskap_unntak_person_id, inntekter_i_norge_id, vurderinger_id) 
+            SELECT ?, medlemskap_unntak_person_id, inntekter_i_norge_id, vurderinger_id
                 from MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
                 where behandling_id = ? and aktiv
         """.trimIndent()
@@ -359,8 +336,6 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
     override fun slett(behandlingId: BehandlingId) {
         val inntekterINorgeIds = getInntekterINorgeIds(behandlingId)
         val lovvalgMedlemsskapManuellVurderingIds = getLovvalgMedlemsskapManuellVurderingIds(behandlingId)
-        val arbeiderIds = getArbeiderIds(behandlingId)
-        val arbeidIds = getArbeidIds(arbeiderIds)
         val inntektINorgeIds = getInntektINorgeIds(inntekterINorgeIds)
 
 
@@ -368,8 +343,6 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
             """
             delete from MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG where behandling_id = ?; 
             delete from INNTEKT_I_NORGE where inntekter_i_norge_id = ANY(?::bigint[]);     
-            delete from ARBEID where arbeider_id = ANY(?::bigint[]);
-            delete from ARBEIDER where id = ANY(?::bigint[]);    
             delete from LOVVALG_MEDLEMSKAP_MANUELL_VURDERING where vurderinger_id = ANY(?::bigint[]);
             delete from LOVVALG_MEDLEMSKAP_MANUELL_VURDERINGER where id = ANY(?::bigint[]);
             delete from INNTEKTER_I_NORGE where id = ANY(?::bigint[]);
@@ -378,11 +351,9 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
             setParams {
                 setLong(1, behandlingId.id)
                 setLongArray(2, inntektINorgeIds)
-                setLongArray(3, arbeidIds)
-                setLongArray(4, arbeiderIds)
-                setLongArray(5, lovvalgMedlemsskapManuellVurderingIds)
-                setLongArray(6, lovvalgMedlemsskapManuellVurderingIds)
-                setLongArray(7, inntektINorgeIds)
+                setLongArray(3, lovvalgMedlemsskapManuellVurderingIds)
+                setLongArray(4, lovvalgMedlemsskapManuellVurderingIds)
+                setLongArray(5, inntektINorgeIds)
             }
         }
         log.info("Slettet $deletedRows rader fra MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG")
@@ -416,20 +387,6 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
         }
     }
 
-    private fun getArbeiderIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
-        """
-                    SELECT arbeider_id
-                    FROM MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG
-                    WHERE behandling_id = ? AND arbeider_id is not null
-                 
-                """.trimIndent()
-    ) {
-        setParams { setLong(1, behandlingId.id) }
-        setRowMapper { row ->
-            row.getLong("arbeider_id")
-        }
-    }
-
     private fun getInntektINorgeIds(inntekterId: List<Long>): List<Long> = connection.queryList(
         """
                     SELECT id
@@ -439,20 +396,6 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
                 """.trimIndent()
     ) {
         setParams { setLongArray(1, inntekterId) }
-        setRowMapper { row ->
-            row.getLong("id")
-        }
-    }
-
-    private fun getArbeidIds(arbeiderIds: List<Long>): List<Long> = connection.queryList(
-        """
-                    SELECT id
-                    FROM ARBEIDER
-                    WHERE id = ANY(?::bigint[]);
-                 
-                """.trimIndent()
-    ) {
-        setParams { setLongArray(1, arbeiderIds) }
         setRowMapper { row ->
             row.getLong("id")
         }
