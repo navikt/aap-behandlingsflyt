@@ -17,8 +17,10 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import org.junit.jupiter.api.Tag
 import java.time.LocalDate
 
+@Tag("db")
 class PersonopplysningForutgåendeRepositoryImplTest {
     companion object {
         private lateinit var dataSource: TestDataSource

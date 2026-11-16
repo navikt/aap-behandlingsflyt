@@ -43,12 +43,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 
+@Tag("db")
 internal class LovvalgMedlemskapRepositoryImplTest {
     companion object {
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))

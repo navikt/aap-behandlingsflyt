@@ -38,9 +38,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Tag
 import java.time.Instant
 import java.time.LocalDate
 
+@Tag("db")
 class BistandsvilkåretTest {
     companion object {
         private val søknadsdato = LocalDate.now()

@@ -88,6 +88,14 @@ private fun bestemAntallTestTråder(): Int {
     return antallTråder
 }
 
+val dockerTagger = arrayOf("db", "kafka", "flyt")
+
+// Bruk test-tasken som alias, slik at IntelliJ fortsatt bare har én task å velge for enkelttester.
+val kjørerCoreTest = gradle.startParameter.taskNames.any { it.substringAfterLast(':') == "coreTest" }
+if (kjørerCoreTest && gradle.startParameter.taskNames.any { it.substringAfterLast(':') in setOf("test", "check", "build") }) {
+    throw GradleException("coreTest gjør om test til bare kjernetester, og kan ikke kjøres sammen med test, check eller build")
+}
+
 tasks {
     test {
         useJUnitPlatform()
@@ -96,6 +104,18 @@ tasks {
         testLogging {
             events("passed", "skipped", "failed")
         }
+        if (kjørerCoreTest) {
+            useJUnitPlatform {
+                excludeTags(*dockerTagger)
+            }
+            environment("TESTCONTAINERS_IMAGE_SUBSTITUTOR", "no.nav.aap.behandlingsflyt.test.DockerIkkeTillattIKjernetester")
+        }
+    }
+
+    register("coreTest") {
+        description = "Kjører testene som ikke trenger Docker (alt uten taggene ${dockerTagger.joinToString()})."
+        group = LifecycleBasePlugin.VERIFICATION_GROUP
+        dependsOn(test)
     }
 
     (findByName("jar") as? Jar)?.apply {
