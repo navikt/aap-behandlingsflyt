@@ -60,17 +60,16 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
 
         val grunnlagQuery = """
             INSERT INTO MEDLEMSKAP_ARBEID_OG_INNTEKT_I_NORGE_GRUNNLAG 
-            (behandling_id, arbeider_id, inntekter_i_norge_id, medlemskap_unntak_person_id, vurderinger_id) 
-            VALUES (?, ?, ?, ?, ?)
+            (behandling_id, inntekter_i_norge_id, medlemskap_unntak_person_id, vurderinger_id) 
+            VALUES (?, ?, ?, ?)
         """.trimIndent()
 
         connection.execute(grunnlagQuery) {
             setParams {
                 setLong(1, behandlingId.toLong())
-                setLong(2, grunnlagOppslag?.arbeiderId)
-                setLong(3, grunnlagOppslag?.inntektINorgeId)
-                setLong(4, grunnlagOppslag?.medlId)
-                setLong(5, vurderingerId)
+                setLong(2, grunnlagOppslag?.inntektINorgeId)
+                setLong(3, grunnlagOppslag?.medlId)
+                setLong(4, vurderingerId)
             }
             setResultValidator { require(it == 1) }
         }
@@ -323,7 +322,6 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
                 GrunnlagOppslag(
                     it.getLongOrNull("medlemskap_unntak_person_id"),
                     it.getLongOrNull("inntekter_i_norge_id"),
-                    it.getLongOrNull("arbeider_id"),
                     it.getLongOrNull("vurderinger_id")
                 )
             }
@@ -495,7 +493,6 @@ class LovvalgMedlemskapRepositoryImpl(private val connection: DBConnection) : Lo
     internal data class GrunnlagOppslag(
         val medlId: Long?,
         val inntektINorgeId: Long?,
-        val arbeiderId: Long?,
         val vurderingerId: Long?
     )
 }
