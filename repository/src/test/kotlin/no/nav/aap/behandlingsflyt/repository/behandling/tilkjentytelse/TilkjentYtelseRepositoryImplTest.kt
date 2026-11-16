@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
-import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
@@ -95,7 +94,7 @@ class TilkjentYtelseRepositoryImplTest {
                     )
                 )
 
-            tilkjentYtelseRepository.lagre(behandling.id, tilkjentYtelse, tomtTilkjentYtelseGrunnlag, "")
+            tilkjentYtelseRepository.lagre(behandling.id, tilkjentYtelse)
             val tilkjentYtelseHentet = tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)
             assertNotNull(tilkjentYtelseHentet)
             assertThat(tilkjentYtelseHentet)
@@ -178,8 +177,6 @@ class TilkjentYtelseRepositoryImplTest {
                         redusertDagsats = null
                     )
                 ),
-                tomtTilkjentYtelseGrunnlag,
-                ""
             )
             tilkjentYtelseRepository.lagre(
                 behandling.id,
@@ -233,8 +230,6 @@ class TilkjentYtelseRepositoryImplTest {
                         redusertDagsats = Beløp(65432)
                     )
                 ),
-                tomtTilkjentYtelseGrunnlag,
-                ""
             )
             assertDoesNotThrow { tilkjentYtelseRepository.slett(behandling.id) }
             assertThat(tilkjentYtelseRepository.hentHvisEksisterer(behandling.id)).isNull()

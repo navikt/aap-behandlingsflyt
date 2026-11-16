@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -302,7 +301,6 @@ class KvalitetssikringFlytTest : AbstraktFlytOrkestratorSnapshotTest(UnleashMedK
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
-            .fattVedtak()
 
         assertThat(hentAvklaringsbehovSomMåLøses(behandlingMedAvslag)).isEmpty()
 

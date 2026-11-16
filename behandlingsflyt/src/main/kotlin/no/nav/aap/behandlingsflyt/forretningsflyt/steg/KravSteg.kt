@@ -206,7 +206,7 @@ class KravSteg(
 
         val gjeldendeOverstyring = overstyringFraDenneBehandlingen ?: overstyringFraVedtattKrav
 
-        val vurderinger = alleDokumenter.mapIndexedNotNull { index, dokument ->
+        val vurderinger = alleDokumenter.mapIndexed { index, dokument ->
             val erNyttKrav = dokumentSomOvertarSomKrav?.referanse == dokument.referanse
                     || (gjeldendeKravFraForrige == null && index == 0)
             when {

@@ -19,7 +19,7 @@ import java.time.LocalDate
  */
 data class MedlemskapLovvalgRegisterGrunnlag(
     val medlemskapUnntakGrunnlag: MedlemskapUnntakGrunnlag?,
-    val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
+    val inntekterINorgeGrunnlag: InntekterINorgeRegisterGrunnlag?,
     val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
     val personopplysning: Personopplysning?,
     val nyeSoknadGrunnlag: UtenlandsOppholdData?,
@@ -33,7 +33,7 @@ data class MedlemskapLovvalgRegisterGrunnlag(
             vurderBosattStatusOgNorskStatsborgerskap: Boolean = false,
         ) = MedlemskapLovvalgRegisterGrunnlag(
             medlemskapUnntakGrunnlag = lovvalgMedlemskapGrunnlag?.registerGrunnlag?.medlemskapUnntakGrunnlag,
-            inntekterINorgeGrunnlag = lovvalgMedlemskapGrunnlag?.registerGrunnlag?.inntekterINorgeGrunnlag.orEmpty(),
+            inntekterINorgeGrunnlag = lovvalgMedlemskapGrunnlag?.registerGrunnlag?.inntekterINorgeGrunnlag,
             arbeiderINorgeGrunnlag = lovvalgMedlemskapGrunnlag?.registerGrunnlag?.arbeiderINorgeGrunnlag.orEmpty(),
             personopplysning = personopplysning,
             nyeSoknadGrunnlag = nyeSoknadGrunnlag,
@@ -57,7 +57,6 @@ data class MedlemskapLovvalgFaktagrunnlag(
 
 data class LovvalgMedlemskapGrunnlag(
     val registerGrunnlag: LovvalgMedlemskapRegisterGrunnlag,
-    val inntekterINorgeRegisterGrunnlag: InntekterINorgeRegisterGrunnlag,
     val vurderinger: List<ManuellVurderingForLovvalgMedlemskap> = emptyList()
 ) {
     fun gjeldendeVurderinger(): Tidslinje<ManuellVurderingForLovvalgMedlemskap> {
@@ -67,7 +66,7 @@ data class LovvalgMedlemskapGrunnlag(
 
 data class LovvalgMedlemskapRegisterGrunnlag(
     val medlemskapUnntakGrunnlag: MedlemskapUnntakGrunnlag?,
-    val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
+    val inntekterINorgeGrunnlag: InntekterINorgeRegisterGrunnlag?,
     val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
 )
 

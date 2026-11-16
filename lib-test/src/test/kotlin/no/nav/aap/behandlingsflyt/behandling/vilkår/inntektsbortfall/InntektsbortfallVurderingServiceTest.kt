@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.behandling.`vilkår`.inntektsbortfall
+package no.nav.aap.behandlingsflyt.behandling.vilkår.inntektsbortfall
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr

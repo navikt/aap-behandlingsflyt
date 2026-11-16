@@ -13,6 +13,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 class MigrerKravService(
@@ -78,7 +80,8 @@ class MigrerKravService(
 
     fun reverserKravForOverstyrtMuligRett(
         behandlingId: BehandlingId,
-        rettighetsperiodeVurdering: RettighetsperiodeVurdering
+        rettighetsperiodeVurdering: RettighetsperiodeVurdering,
+        søknadsdato: LocalDate,
     ) {
         if (rettighetsperiodeVurdering.harRettUtoverSøknadsdato != RettighetsperiodeHarRett.Nei) {
             throw IllegalStateException("Forventer at vurdering som skal reverseres har RettighetsperiodeHarRett.Nei")
@@ -96,6 +99,10 @@ class MigrerKravService(
             return
         }
 
+        require(kravSomSkalTilbakestilles.søknadsdato.dato == søknadsdato) {
+            "Ved reversering av krav er søknadsdato utledet i vurderRettighetsperiodeLøser ulik søknadsdato for kravet som skal tilbakestilles. Søknadsdato fra eldste mottatte dokument: ${søknadsdato}, søknadsdato for krav: ${kravSomSkalTilbakestilles.søknadsdato.dato}"
+        }
+
         val relevantKrav = RelevantKrav(
             referanse = kravSomSkalTilbakestilles.referanse,
             journalpostId = kravSomSkalTilbakestilles.journalpostId,
@@ -105,7 +112,7 @@ class MigrerKravService(
             opprettet = rettighetsperiodeVurdering.vurdertDato.toInstant(ZoneOffset.UTC),
             søknadsdato = kravSomSkalTilbakestilles.søknadsdato,
             overstyrMuligRettFra = null,
-            muligRettFra = kravSomSkalTilbakestilles.muligRettFra,
+            muligRettFra = kravSomSkalTilbakestilles.søknadsdato.dato,
         )
         val nyeVurderinger = eksisterendeKravGrunnlag.vurderinger
             .filterNot { it.vurdertIBehandling == behandlingId && it.referanse == kravSomSkalTilbakestilles.referanse } + relevantKrav

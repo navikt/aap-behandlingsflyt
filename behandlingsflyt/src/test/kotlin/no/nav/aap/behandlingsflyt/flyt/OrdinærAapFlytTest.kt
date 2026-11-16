@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.hendelse.mottak.BehandlingSattPåVent
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
@@ -102,22 +101,12 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
             .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
-                if (toggleForHoppOverBeslutter()) {
-                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
-                    assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
-                } else {
-                    assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
-                    assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-                }
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+
             }
 
-        val behandlingMedFattetVedtak =
-            if (toggleForHoppOverBeslutter()) {
-                behandling
-            } else {
-                behandling.fattVedtak()
-            }
-        behandlingMedFattetVedtak
+        behandling
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
 
@@ -145,11 +134,6 @@ class OrdinærAapFlytTest(val unleashGateway: KClass<UnleashGateway>) : Abstrakt
                 // Saken er avsluttet, så det skal ikke være flere åpne avklaringsbehov
                 assertThat(avklaringsbehovSomMåLøses).isEmpty()
             }
-    }
-
-    private fun toggleForHoppOverBeslutter(): Boolean {
-        return gatewayProvider.provide<UnleashGateway>()
-            .isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)
     }
 
     @Test

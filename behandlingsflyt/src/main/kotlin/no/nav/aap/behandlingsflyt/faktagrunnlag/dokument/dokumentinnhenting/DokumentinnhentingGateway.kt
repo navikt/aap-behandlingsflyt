@@ -8,22 +8,21 @@ import no.nav.aap.dokumentinnhenting.kontrakt.FellesDialogmeldingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDialogmeldingerForSakParams
 import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostListeResponse
-import no.nav.aap.dokumentinnhenting.kontrakt.HentDokumentoversiktJournalpostResponse
 import no.nav.aap.dokumentinnhenting.kontrakt.HentFastlegeDto
 import no.nav.aap.dokumentinnhenting.kontrakt.HentLegeerklæringForespørslerForSakParams
-import no.nav.aap.dokumentinnhenting.kontrakt.PåminnelseDto
 import no.nav.aap.komponenter.gateway.Gateway
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 
 interface DokumentinnhentingGateway : Gateway {
     fun bestillLegeerklæring(request: BehandlingsflytToDokumentInnhentingBestillingDto): String
-    fun sendPåminnelseForBestilling(påminnelseRequest: PåminnelseDto): String
-    fun avbrytAutomatiskPåminnelseForBestilling(påminnelseRequest: PåminnelseDto)
-    fun gjenopptaAutomatiskPåminnelseForBestilling(påminnelseRequest: PåminnelseDto)
     fun legeerklæringStatus(saksnummer: String): List<DialogmeldingStatusTilBehandslingsflytDto>
     fun forhåndsvisDialogmelding(request: ForhåndsvisDialogmeldingDto): DialogmeldingForhåndsvisningDto
     fun hentDialogmeldingerForSak(request: HentDialogmeldingerForSakParams): List<FellesDialogmeldingDto>
-    fun hentDokumentoversiktForJournalpostListe(journalpostIDer: List<String>, currentToken: OidcToken): HentDokumentoversiktJournalpostListeResponse
+    fun hentDokumentoversiktForJournalpostListe(
+        journalpostIDer: List<String>,
+        currentToken: OidcToken
+    ): HentDokumentoversiktJournalpostListeResponse
+
     fun hentLegeerklæringForespørslerForSak(requestParams: HentLegeerklæringForespørslerForSakParams): List<FellesDialogmeldingDto>
     fun hentFastlege(request: HentFastlegeDto, currentToken: OidcToken): FastlegeDto
 }

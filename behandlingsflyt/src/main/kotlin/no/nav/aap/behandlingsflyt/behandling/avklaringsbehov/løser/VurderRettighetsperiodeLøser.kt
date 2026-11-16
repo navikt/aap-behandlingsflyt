@@ -89,7 +89,7 @@ class VurderRettighetsperiodeLøser(
                     startDato = søknadsdato,
                     sluttDato = Tid.MAKS
                 )
-                migrerKravService.reverserKravForOverstyrtMuligRett(kontekst.behandlingId(), vurdering)
+                migrerKravService.reverserKravForOverstyrtMuligRett(kontekst.behandlingId(), vurdering, søknadsdato)
             }
         }
 

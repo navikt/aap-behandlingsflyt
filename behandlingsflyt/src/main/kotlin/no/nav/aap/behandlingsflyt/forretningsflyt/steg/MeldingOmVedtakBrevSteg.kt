@@ -180,6 +180,7 @@ class MeldingOmVedtakBrevSteg(
     private fun brukApiV3(behandlingId: BehandlingId, typeBrev: TypeBrev): Boolean {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
         if (typeBrev != TypeBrev.VEDTAK_AVSLAG_11_5 &&
+            typeBrev != TypeBrev.KLAGE_OPPRETTHOLDELSE &&
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK) == null
         ) {
             return false
@@ -210,7 +211,7 @@ class MeldingOmVedtakBrevSteg(
             "Z990265"
         )
         val brevtyperSomSkalBrukeBrevbygger = listOf(TypeBrev.VEDTAK_INNVILGELSE)
-        return typeBrev in brevtyperSomSkalBrukeBrevbygger && bruker.ident in brukereSomSkalBrukeBrevbygger
+        return typeBrev in brevtyperSomSkalBrukeBrevbygger && (bruker.ident in brukereSomSkalBrukeBrevbygger || Miljø.erDev())
     }
 
     companion object : FlytSteg {

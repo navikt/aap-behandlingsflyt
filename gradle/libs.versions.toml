@@ -1,12 +1,12 @@
 [versions]
-komponenter = "2.0.198"
+komponenter = "3.0.3"
 tilgang = "1.0.244"
-utbetaling = "0.0.140"
+utbetaling = "0.0.142"
 brev = "0.0.293"
 meldekort = "0.0.238"
-apiIntern = "0.0.114"
-dokumentinnhenting = "0.0.8"
-arenaoppslag = "0.7.30"
+apiIntern = "0.0.115"
+dokumentinnhenting = "0.0.11"
+arenaoppslag = "0.7.36"
 
 [libraries]
 json = { module = "no.nav.aap.kelvin:json", version.ref = "komponenter" }

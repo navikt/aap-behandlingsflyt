@@ -13,7 +13,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagY
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Innvilgelsesårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
@@ -22,7 +24,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Arbeidsevne
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -81,9 +82,62 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
-            .fattVedtak()
 
         assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
+    }
+
+    @Test
+    fun `skal gi generelt avslagsbrev når yrkesskade er vurdert uten årsakssammenheng`() {
+        val søknadsdato = LocalDate.now()
+        val person = TestPersoner.PERSON_MED_YRKESSKADE()
+        val (_, behandling) = sendInnFørsteSøknad(
+            person = person,
+            mottattTidspunkt = søknadsdato.atStartOfDay(),
+        )
+
+        behandling
+            .løsSykdom(
+                vurderingGjelderFra = søknadsdato,
+                erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = true,
+            )
+            .løsBistand(søknadsdato)
+            .løsRefusjonskrav()
+            .løsSykdomsvurderingBrev()
+            .bekreftVurderinger()
+            .kvalitetssikre()
+            .løsAvklaringsBehov(
+                AvklarYrkesskadeLøsning(
+                    yrkesskadesvurdering = YrkesskadevurderingDto(
+                        begrunnelse = "Nedsettelsen skyldes ikke yrkesskaden",
+                        relevanteYrkesskadeSaker = person.yrkesskade.map {
+                            YrkesskadeSakDto(it.saksreferanse, null)
+                        },
+                        andelAvNedsettelsen = 0,
+                        erÅrsakssammenheng = false,
+                    ),
+                ),
+            )
+            .løsAvklaringsBehov(ForeslåVedtakLøsning())
+            .fattVedtak()
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.IVERKSETTES)
+                assertThat(hentBrevAvType(this.behandling, TypeBrev.VEDTAK_AVSLAG).status)
+                    .isEqualTo(no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status.FORHÅNDSVISNING_KLAR)
+
+                val sykdomsvilkåret = hentVilkårsresultat()
+                    .finnVilkår(Vilkårtype.SYKDOMSVILKÅRET)
+
+                assertThat(sykdomsvilkåret.vilkårsperioder()).hasSize(1).allSatisfy {
+                    assertThat(it.utfall).isEqualTo(Utfall.IKKE_OPPFYLT)
+                    assertThat(it.avslagsårsak).isEqualTo(Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE)
+                    assertThat(it.innvilgelsesårsak).isNull()
+                }
+            }
+            .løsVedtaksbrev(typeBrev = TypeBrev.VEDTAK_AVSLAG)
+            .medKontekst {
+                assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
+                assertThat(avklaringsbehovSomMåLøses).isEmpty()
+            }
     }
 
     @Test
@@ -699,14 +753,7 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
             .bekreftVurderinger()
             .kvalitetssikre()
             .medKontekst {
-                // Saken står til To-trinnskontroll hos beslutter
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .fattVedtak()
-            .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
-
                 val vedtak = hentVedtak()
                 assertThat(vedtak.vedtakstidspunkt.toLocalDate()).isToday
             }
@@ -754,12 +801,6 @@ class YrkesskadeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                     )
             }
             .kvalitetssikre()
-            .medKontekst {
-                // Saken står til To-trinnskontroll hos beslutter
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).containsOnly(Definisjon.FATTE_VEDTAK)
-                assertThat(this.behandling.status()).isEqualTo(Status.UTREDES)
-            }
-            .fattVedtak()
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
             }

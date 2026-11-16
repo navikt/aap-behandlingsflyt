@@ -27,6 +27,7 @@ data class SamordningYtelseVurderingGrunnlagDTO(
     val mottarSykepenger: Boolean? = null,
     val feriePerioder: List<Periode> = emptyList(),
     val ferieDager: Int? = null,
+    val vedtattePerioder: List<SamordningVurderingDTO> = emptyList(),
 )
 
 data class SamordningYtelseVurderingDTO(
@@ -54,7 +55,8 @@ data class SamordningVurderingDTO(
 data class SamordningUføreVurderingGrunnlagDTO(
     val harTilgangTilÅSaksbehandle: Boolean,
     val vurdering: SamordningUføreVurderingDTO?,
-    val grunnlag: List<SamordningUføreGrunnlagDTO>
+    val grunnlag: List<SamordningUføreGrunnlagDTO>,
+    val vedtattePerioder: List<SamordningUføreVurderingPeriodeDTO> = emptyList(),
 )
 
 /**

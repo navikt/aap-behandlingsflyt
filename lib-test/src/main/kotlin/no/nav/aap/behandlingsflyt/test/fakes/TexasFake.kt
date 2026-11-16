@@ -31,8 +31,9 @@ class TexasFake : FakeServer() {
         installerStatusPages("TEXAS")
         routing {
             post("/token") {
+                val azp = System.getenv("BEHANDLINGSFLYT_AZP") ?: "behandlingsflyt"
                 val token = AzureTokenGen("behandlingsflyt")
-                    .generate(isApp = true, azp = "behandlingsflyt")
+                    .generate(isApp = true, azp = azp)
                 call.respond(TestToken(access_token = token))
             }
 

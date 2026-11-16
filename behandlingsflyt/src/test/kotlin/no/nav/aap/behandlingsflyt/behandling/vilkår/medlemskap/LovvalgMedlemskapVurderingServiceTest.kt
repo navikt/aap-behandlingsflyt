@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterINorgeRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgRegisterGrunnlag
@@ -18,7 +17,6 @@ import no.nav.aap.komponenter.type.Periode
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import kotlin.collections.emptySet
 
 class LovvalgMedlemskapVurderingServiceTest {
     private val service = LovvalgMedlemskapVurderingService()
@@ -45,10 +43,9 @@ class LovvalgMedlemskapVurderingServiceTest {
                             )
                         )
                     ),
-                    inntekterINorgeGrunnlag = emptyList(),
+                    inntekterINorgeGrunnlag = null,
                     arbeiderINorgeGrunnlag = emptyList(),
-                ),
-                inntekterINorgeRegisterGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet())
+                ) 
             ),
             personopplysning = Personopplysning(
                 Fødselsdato(LocalDate.now().minusYears(18)),
@@ -94,10 +91,9 @@ class LovvalgMedlemskapVurderingServiceTest {
                             )
                         )
                     ),
-                    inntekterINorgeGrunnlag = emptyList(),
+                    inntekterINorgeGrunnlag = null,
                     arbeiderINorgeGrunnlag = emptyList(),
                 ),
-                inntekterINorgeRegisterGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet())
             ),
             personopplysning = Personopplysning(
                 Fødselsdato(LocalDate.now().minusYears(18)), null, PersonStatus.bosatt,
@@ -144,10 +140,9 @@ class LovvalgMedlemskapVurderingServiceTest {
                             )
                         )
                     ),
-                    inntekterINorgeGrunnlag = emptyList(),
+                    inntekterINorgeGrunnlag = null,
                     arbeiderINorgeGrunnlag = emptyList(),
                 ),
-                inntekterINorgeRegisterGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet())
             ),
             personopplysning = Personopplysning(
                 Fødselsdato(LocalDate.now().minusYears(18)), null, PersonStatus.bosatt, listOf(
@@ -270,10 +265,9 @@ class LovvalgMedlemskapVurderingServiceTest {
         lovvalgMedlemskapGrunnlag = LovvalgMedlemskapGrunnlag(
             registerGrunnlag = LovvalgMedlemskapRegisterGrunnlag(
                 medlemskapUnntakGrunnlag = MedlemskapUnntakGrunnlag(emptyList()),
-                inntekterINorgeGrunnlag = emptyList(),
+                inntekterINorgeGrunnlag = null,
                 arbeiderINorgeGrunnlag = emptyList(),
             ),
-            inntekterINorgeRegisterGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet())
         ),
         personopplysning = Personopplysning(
             fødselsdato = Fødselsdato(LocalDate.of(1990, 1, 1)),

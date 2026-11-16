@@ -210,7 +210,9 @@ object FakeServers : AutoCloseable {
         System.setProperty("INTEGRASJON_UTBETAL_SCOPE", "utbetal")
 
         // Meldekort
-        System.setProperty("INTEGRASJON_MELDEKORT_URL", "http://localhost:${meldekort.port()}")
+        if (System.getenv("INTEGRASJON_MELDEKORT_URL").isNullOrEmpty()) {
+            System.setProperty("INTEGRASJON_MELDEKORT_URL", "http://localhost:${meldekort.port()}")
+        }
         System.setProperty("INTEGRASJON_MELDEKORT_SCOPE", "meldekort")
 
         //tjenestepensjon

@@ -18,7 +18,7 @@ import java.time.Instant
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
 
-class KlagevurderingKontorRepositoryImplTest {
+class KlagebehandlingKontorRepositoryImplTest {
     companion object {
 
         private lateinit var dataSource: TestDataSource

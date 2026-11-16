@@ -51,7 +51,7 @@ class RefusjonkravSteg(
             }
         }
 
-        val grunnlag = lazy { refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId) }
+        val grunnlag by lazy { refusjonkravRepository.hentHvisEksisterer(kontekst.behandlingId) }
         val behandling = behandlingRepository.hent(kontekst.behandlingId)
         val behandlingstype = behandlingService.utledFaktiskBehandlingstype(behandling)
 
@@ -62,7 +62,7 @@ class RefusjonkravSteg(
                     TypeBehandling.Førstegangsbehandling -> {
                         when {
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
-                            erVurdertAutomatisk(grunnlag.value) -> false
+                            erVurdertAutomatisk(grunnlag) -> false
                             kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
                             else -> {
                                 kontekst.forrigeBehandlingId?.let {
@@ -77,7 +77,7 @@ class RefusjonkravSteg(
                             !unleashGateway.isEnabled(BehandlingsflytFeature.KanVurdereRefusjonIRevurdering) -> false
                             tidligereVurderinger.girAvslagEllerIngenBehandlingsgrunnlag(kontekst, type()) -> false
                             kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty() -> true
-                            erVurdertAutomatisk(grunnlag.value) -> false
+                            erVurdertAutomatisk(grunnlag) -> false
                             else -> false
                         }
                     }
@@ -86,11 +86,11 @@ class RefusjonkravSteg(
                 }
             },
             erTilstrekkeligVurdert = {
-                grunnlag.value != null
+                grunnlag != null
             },
             tilbakestillGrunnlag = {
                 kontekst.forrigeBehandlingId
-                    ?.let { grunnlag.value }
+                    ?.let { grunnlag }
                     ?.let {
                         refusjonkravRepository.lagre(kontekst.sakId, kontekst.behandlingId, it)
                     }

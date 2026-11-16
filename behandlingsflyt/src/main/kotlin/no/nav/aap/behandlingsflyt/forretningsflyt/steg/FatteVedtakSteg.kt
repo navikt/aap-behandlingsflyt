@@ -24,8 +24,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDateTime
@@ -44,13 +42,11 @@ class FatteVedtakSteg(
     private val virkningstidspunktService: VirkningstidspunktService,
     private val sykdomRepository: SykdomRepository,
     private val behandlingService: BehandlingService,
-    private val unleashGateway: UnleashGateway
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val skalHoppeOverBeslutter =
-            unleashGateway.isEnabled(BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom)
-                    && behandlingService.utledFaktiskBehandlingstype(kontekst.behandlingId) == TypeBehandling.Førstegangsbehandling
+            behandlingService.utledFaktiskBehandlingstype(kontekst.behandlingId) == TypeBehandling.Førstegangsbehandling
                     && (skalHoppeOverBeslutterPåGrunnAvAvslagSykdom(kontekst) && (avklaringsbehovene.hentBehovForDefinisjon(
                 Definisjon.FATTE_VEDTAK
             )) == null)
@@ -172,7 +168,6 @@ class FatteVedtakSteg(
                 virkningstidspunktService = VirkningstidspunktService(repositoryProvider, gatewayProvider),
                 sykdomRepository = repositoryProvider.provide(),
                 behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
-                unleashGateway = gatewayProvider.provide()
             )
         }
 

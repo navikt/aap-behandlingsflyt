@@ -110,7 +110,6 @@ class BehandlingVisningDatadelingServiceTest {
             behandling,
             StegType.VURDER_LOVVALG to StegStatus.AVSLUTTER,
             StegType.VURDER_ALDER to StegStatus.AVSLUTTER,
-            StegType.AVKLAR_STUDENT_V2 to StegStatus.AVSLUTTER,
             starttidspunkt = LocalDateTime.of(3000, 1, 1, 0, 0),
         )
 
@@ -125,12 +124,11 @@ class BehandlingVisningDatadelingServiceTest {
             behandling,
             StegType.VURDER_LOVVALG to StegStatus.AVSLUTTER,
             StegType.VURDER_ALDER to StegStatus.AVSLUTTER,
-            StegType.AVKLAR_STUDENT_V2 to StegStatus.AVSLUTTER,
             StegType.VURDER_LOVVALG to StegStatus.AVSLUTTER,
         )
 
         assertThat(hendelse<BehandlingHendelse.AlderLovvalgMedlemskap>(behandling).sistEndret)
-            .isEqualTo(LocalDateTime.of(2026, 1, 1, 0, 0).plusSeconds(3))
+            .isEqualTo(LocalDateTime.of(2026, 1, 1, 0, 0).plusSeconds(2))
     }
 
     @Test
@@ -211,7 +209,6 @@ class BehandlingVisningDatadelingServiceTest {
             behandling,
             StegType.VURDER_LOVVALG to StegStatus.AVSLUTTER,
             StegType.VURDER_ALDER to StegStatus.AVSLUTTER,
-            StegType.AVKLAR_STUDENT_V2 to StegStatus.AVSLUTTER,
         )
 
         assertThat(progresjon<BehandlingHendelse.AlderLovvalgMedlemskap>(behandling))
@@ -225,8 +222,7 @@ class BehandlingVisningDatadelingServiceTest {
             behandling,
             StegType.VURDER_LOVVALG to StegStatus.AVSLUTTER,
             StegType.VURDER_ALDER to StegStatus.AVSLUTTER,
-            StegType.AVKLAR_STUDENT_V2 to StegStatus.AVSLUTTER,
-            StegType.AVKLAR_STUDENT_V2 to StegStatus.TILBAKEFØRT,
+            StegType.VURDER_ALDER to StegStatus.TILBAKEFØRT,
         )
 
         assertThat(progresjon<BehandlingHendelse.AlderLovvalgMedlemskap>(behandling))

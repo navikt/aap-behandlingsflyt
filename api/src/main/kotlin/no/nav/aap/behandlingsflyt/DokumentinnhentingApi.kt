@@ -2,19 +2,17 @@ package no.nav.aap.behandlingsflyt
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
-import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.http.HttpStatusCode
+import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.BestillLegeerklæringDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeResponse
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.FastlegeService
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.ForhåndsvisBrevRequest
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentBehandlerDialogService
-import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentUbesvarteForespørslerLegeerklæringDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentStatusLegeerklæring
+import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.HentUbesvarteForespørslerLegeerklæringDto
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.MeldingerResponse
-import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.PurringLegeerklæringRequest
 import no.nav.aap.behandlingsflyt.behandling.behandlerdialog.UbesvarteForespørslerLegeerklæringResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.DokumentinnhentingGateway
@@ -34,12 +32,12 @@ import no.nav.aap.dokumentinnhenting.kontrakt.BehandlingsflytToDokumentInnhentin
 import no.nav.aap.dokumentinnhenting.kontrakt.DialogmeldingForhåndsvisningDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DokumentasjonType
 import no.nav.aap.dokumentinnhenting.kontrakt.ForhåndsvisDialogmeldingDto
-import no.nav.aap.dokumentinnhenting.kontrakt.PåminnelseDto
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.server.auth.token
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingPathParam
@@ -183,25 +181,42 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                             mottattDokumentRepository,
                             behandlingRepository
                         )
-
                         service.hentDialogForSak(params.saksnummer, token())
                     }
-                    respond(meldinger)
+
+                    val bestillerIdenter = meldinger.meldinger
+                        .mapNotNull { it.melding.bestillerNavIdent }
+                        .distinct()
+                        .map(::Bruker)
+                    val navnPerIdent = if (bestillerIdenter.isEmpty()) {
+                        emptyMap()
+                    } else {
+                        AnsattInfoService(gatewayProvider)
+                            .hentAnsatteVisningsnavn(bestillerIdenter)
+                            .filterNotNull()
+                            .associate { it.navident.ident to it.visningsnavn }
+                    }
+                    respond(meldinger.medBestillerNavn(navnPerIdent))
                 }
             }
 
             route("/dialogmeldinger/legeerklaering/{behandlingsReferanse}/ubesvarte-foresporsler") {
                 authorizedGet<HentUbesvarteForespørslerLegeerklæringDto, UbesvarteForespørslerLegeerklæringResponse>(
                     AuthorizationParamPathConfig(
-                        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(
+                            repositoryRegistry,
+                            dataSource
+                        ),
                         behandlingPathParam = BehandlingPathParam("behandlingsReferanse"),
                         applicationsOnly = false,
                     )
                 ) { params ->
                     val meldinger = dataSource.transaction(readOnly = true) { connection ->
                         val sakRepository = repositoryRegistry.provider(connection).provide<SakRepository>()
-                        val mottattDokumentRepository = repositoryRegistry.provider(connection).provide<MottattDokumentRepository>()
-                        val behandlingRepository = repositoryRegistry.provider(connection).provide<BehandlingRepository>()
+                        val mottattDokumentRepository =
+                            repositoryRegistry.provider(connection).provide<MottattDokumentRepository>()
+                        val behandlingRepository =
+                            repositoryRegistry.provider(connection).provide<BehandlingRepository>()
 
                         val service = HentBehandlerDialogService(
                             dokumentinnhentingGateway,
@@ -216,57 +231,20 @@ fun NormalOpenAPIRoute.dokumentinnhentingApi(
                 }
             }
         }
-
-        route("/paaminnelse") {
-            route("/send") {
-                authorizedPost<Unit, String, PurringLegeerklæringRequest>(
-                    AuthorizationBodyPathConfig(
-                        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(
-                            repositoryRegistry,
-                            dataSource
-                        ),
-                        operasjon = Operasjon.SAKSBEHANDLE,
-                    )
-                ) { _, req ->
-                    val request = PåminnelseDto(req.dialogmeldingPurringUUID)
-                    val bestillingUUID = dokumentinnhentingGateway.sendPåminnelseForBestilling(request)
-                    respond(bestillingUUID)
-                }
-            }
-
-            route("/avbryt-automatisk-paaminnelse") {
-                authorizedPost<Unit, Unit, PurringLegeerklæringRequest>(
-                    AuthorizationBodyPathConfig(
-                        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(
-                            repositoryRegistry,
-                            dataSource
-                        ),
-                        operasjon = Operasjon.SAKSBEHANDLE
-                    )
-                ) { _, req ->
-                    val request = PåminnelseDto(req.dialogmeldingPurringUUID)
-                    dokumentinnhentingGateway.avbrytAutomatiskPåminnelseForBestilling(request)
-                    respondWithStatus(HttpStatusCode.OK)
-                }
-            }
-
-            route("/gjenoppta-automatisk-paaminnelse") {
-                authorizedPost<Unit, Unit, PurringLegeerklæringRequest>(
-                    AuthorizationBodyPathConfig(
-                        relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(
-                            repositoryRegistry,
-                            dataSource
-                        ),
-                        operasjon = Operasjon.SAKSBEHANDLE,
-                    )
-                ) { _, req ->
-                    val request = PåminnelseDto(req.dialogmeldingPurringUUID)
-                    dokumentinnhentingGateway.gjenopptaAutomatiskPåminnelseForBestilling(request)
-                    respondWithStatus(HttpStatusCode.OK)
-                }
-            }
-
-        }
-
     }
+}
+
+private fun MeldingerResponse.medBestillerNavn(navnPerIdent: Map<String, String>): MeldingerResponse {
+    // legger på bestillers navn hvis vi har det, ellers null.
+    val meldingerMedNavn = meldinger.map { meldingMedDokumenter ->
+        val melding = meldingMedDokumenter.melding
+        val bestillerNavn = navnPerIdent[melding.bestillerNavIdent]
+
+        val meldingMedNavn = melding.copy(bestillerNavn = bestillerNavn)
+        meldingMedDokumenter.copy(melding = meldingMedNavn)
+    }
+
+    return copy(
+        meldinger = meldingerMedNavn
+    )
 }

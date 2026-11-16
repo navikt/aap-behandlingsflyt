@@ -515,7 +515,7 @@ class TilkjentYtelseGrunnlagTest {
             )
         )
 
-        return BeregnTilkjentYtelseService(
+        return BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 minsteÅrligeYtelse = minsteÅrligeYtelse,
                 fødselsdato = fødselsdato,
@@ -539,6 +539,6 @@ class TilkjentYtelseGrunnlagTest {
                     )
                 ),
             ),
-        ).beregnTilkjentYtelse()
+        )
     }
 }

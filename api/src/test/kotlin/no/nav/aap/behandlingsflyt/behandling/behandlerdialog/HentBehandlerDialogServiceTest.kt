@@ -15,10 +15,12 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅ
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.Fakes
+import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository.opprettBehandling
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.dokumentinnhenting.kontrakt.AvsenderMottakerDto
 import no.nav.aap.dokumentinnhenting.kontrakt.BegrensetDokumentInfoDto
 import no.nav.aap.dokumentinnhenting.kontrakt.BegrensetJournalpostDto
@@ -31,18 +33,23 @@ import no.nav.aap.dokumentinnhenting.kontrakt.MeldingStatusDto
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
 @Fakes
 class HentBehandlerDialogServiceTest : BaseApiTest() {
 
+    private val dagensDato = 1 juni 2026
+    private val clock = fixedClock(dagensDato)
+
     private val dokumentinnhentingGateway = mockk<DokumentinnhentingGateway>()
     private val service = HentBehandlerDialogService(
         dokumentinnhentingGateway,
         InMemorySakRepository,
         InMemoryMottattDokumentRepository,
-        InMemoryBehandlingRepository
+        InMemoryBehandlingRepository,
+        clock
     )
 
     @Test
@@ -73,21 +80,26 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
                 dialogmeldingReferanse = null,
                 innkommendeUtgående = InnkommendeUtgående.UTGÅENDE,
                 meldingFraNavn = navnSaksbehandler,
-                opprettetTidspunkt = LocalDateTime.now().minusDays(31),
+                opprettetTidspunkt = LocalDateTime.now(clock).minusDays(31),
                 dokumentasjonsType = DokumentasjonType.MELDING_FRA_NAV,
                 tekst = tekstFørsteMelding,
                 meldingStatus = MeldingStatusDto.LEVERT,
-                journalpostId = journalpostIdSendtMelding1
+                journalpostId = journalpostIdSendtMelding1,
+                bestillerNavIdent = "Z123456",
+                kanSendeManuellPåminnelse = false,
+                sisteForespørselSendt = null,
             ),
             FellesDialogmeldingDto(
                 dialogmeldingReferanse = null,
                 innkommendeUtgående = InnkommendeUtgående.UTGÅENDE,
                 meldingFraNavn = navnSaksbehandler,
-                opprettetTidspunkt = LocalDateTime.now().minusDays(10),
+                opprettetTidspunkt = LocalDateTime.now(clock).minusDays(10),
                 dokumentasjonsType = DokumentasjonType.PURRING,
                 tekst = null,
                 meldingStatus = MeldingStatusDto.LEVERT,
-                journalpostId = journalpostIdSendtMelding2
+                journalpostId = journalpostIdSendtMelding2,
+                kanSendeManuellPåminnelse = false,
+                sisteForespørselSendt = null,
             )
         )
         val hentDokumentlisteResponse = HentDokumentoversiktJournalpostListeResponse(
@@ -120,6 +132,10 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
         assertThat(result.meldinger[1].melding.journalpostId).isEqualTo(journalpostIdSendtMelding2)
         assertThat(result.meldinger[2].melding.journalpostId).isEqualTo(journalpostIdMottattMelding)
         assertThat(result.meldinger[0].melding.tekst).isEqualTo(tekstFørsteMelding)
+        assertThat(result.meldinger[0].melding.bestillerNavIdent).isEqualTo("Z123456")
+        assertThat(result.meldinger[0].melding.bestillerNavn).isNull()
+        assertThat(result.meldinger[1].melding.bestillerNavIdent).isNull()
+        assertThat(result.meldinger[2].melding.bestillerNavIdent).isNull()
         assertThat(result.meldinger[2].dokumentIdListe.size).isEqualTo(1)
         assertThat(result.meldinger[2].dokumentIdListe[0].tittel).isEqualTo("Legeerklæring")
     }
@@ -135,21 +151,25 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
                 dialogmeldingReferanse = bestillingId1,
                 innkommendeUtgående = InnkommendeUtgående.UTGÅENDE,
                 meldingFraNavn = "Saksbehandler hos NAV",
-                opprettetTidspunkt = LocalDateTime.now(),
+                opprettetTidspunkt = LocalDateTime.now(clock),
                 dokumentasjonsType = DokumentasjonType.L40,
                 tekst = "Hei, kan dere sende over legeerklæring for bruker?",
                 meldingStatus = MeldingStatusDto.LEVERT,
-                journalpostId = "123"
+                journalpostId = "123",
+                kanSendeManuellPåminnelse = false,
+                sisteForespørselSendt = null,
             ),
             FellesDialogmeldingDto(
                 dialogmeldingReferanse = bestillingId2,
                 innkommendeUtgående = InnkommendeUtgående.UTGÅENDE,
                 meldingFraNavn = "Saksbehandler hos NAV",
-                opprettetTidspunkt = LocalDateTime.now().minusDays(23),
+                opprettetTidspunkt = LocalDateTime.now(clock).minusDays(23),
                 dokumentasjonsType = DokumentasjonType.L40,
                 tekst = "Hei, kan dere sende over legeerklæring for bruker igjen?",
                 meldingStatus = MeldingStatusDto.LEVERT,
-                journalpostId = "123"
+                journalpostId = "123",
+                kanSendeManuellPåminnelse = false,
+                sisteForespørselSendt = null,
             )
         )
         val token = getToken()
@@ -187,21 +207,25 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
                 dialogmeldingReferanse = riktigBestillingId,
                 innkommendeUtgående = InnkommendeUtgående.UTGÅENDE,
                 meldingFraNavn = "Saksbehandler hos NAV",
-                opprettetTidspunkt = LocalDateTime.now().minusDays(21),
+                opprettetTidspunkt = LocalDateTime.now(clock).minusDays(21),
                 dokumentasjonsType = DokumentasjonType.L40,
                 tekst = "Hei, kan dere sende over legeerklæring for bruker?",
                 meldingStatus = MeldingStatusDto.LEVERT,
-                journalpostId = journalpostIdFørSisteLegeerklæring
+                journalpostId = journalpostIdFørSisteLegeerklæring,
+                kanSendeManuellPåminnelse = false,
+                sisteForespørselSendt = null,
             ),
             FellesDialogmeldingDto(
                 dialogmeldingReferanse = riktigBestillingId,
                 innkommendeUtgående = InnkommendeUtgående.UTGÅENDE,
                 meldingFraNavn = "Saksbehandler hos NAV",
-                opprettetTidspunkt = LocalDateTime.now().minusDays(1),
+                opprettetTidspunkt = LocalDateTime.now(clock).minusDays(1),
                 dokumentasjonsType = DokumentasjonType.L40,
                 tekst = "Hei, kan du som vikarlege sende på legeerklæring for bruker?",
                 meldingStatus = MeldingStatusDto.LEVERT,
-                journalpostId = journalpostIdEtterSisteLegeerklæring
+                journalpostId = journalpostIdEtterSisteLegeerklæring,
+                kanSendeManuellPåminnelse = false,
+                sisteForespørselSendt = null,
             )
         )
 
@@ -229,8 +253,8 @@ class HentBehandlerDialogServiceTest : BaseApiTest() {
             ),
             sak.id,
             behandling.id,
-            mottattTidspunkt = LocalDateTime.now().minusDays(3),
-            opprettetTid = LocalDateTime.now().minusDays(4),
+            mottattTidspunkt = LocalDateTime.now(clock).minusDays(3),
+            opprettetTid = LocalDateTime.now(clock).minusDays(4),
             type = InnsendingType.LEGEERKLÆRING,
             kanal = Kanal.DIGITAL,
             status = Status.MOTTATT,

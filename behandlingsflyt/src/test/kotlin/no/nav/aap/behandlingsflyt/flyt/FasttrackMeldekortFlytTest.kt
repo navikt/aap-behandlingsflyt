@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarVedtakslengdeLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortGrunnlag
@@ -84,7 +85,7 @@ class FasttrackMeldekortFlytTest :
     }
 
     @Test
-    fun `Åpen behandling skal tilbakeføres til UnderveisSteg etter fullført meldekortbehandling`() {
+    fun `Åpen behandling til beslutter skal tilbakeføres til UnderveisSteg etter fullført meldekortbehandling`() {
         val revurderingGjelderFra = sak.rettighetsperiode.fom.plusWeeks(2)
         var åpenBehandling = revurdereFramTilOgMedSykdom(sak, revurderingGjelderFra)
 
@@ -94,6 +95,8 @@ class FasttrackMeldekortFlytTest :
                     .containsExactlyInAnyOrder(Definisjon.SKRIV_SYKDOMSVURDERING_BREV)
             }
             .løsSykdomsvurderingBrev().bekreftVurderinger()
+            .løsAvklaringsBehov(AvklarVedtakslengdeLøsning(løsningerForPerioder = emptyList()))
+            .foreslåVedtak()
             .medKontekst {
                 assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
                     .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
@@ -180,6 +183,8 @@ class FasttrackMeldekortFlytTest :
             .løsBistand(fom)
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
+            .løsAvklaringsBehov(AvklarVedtakslengdeLøsning(løsningerForPerioder = emptyList()))
+            .foreslåVedtak()
 
         val (førsteMeldeperiode, andreMeldeperiode) = dataSource.transaction { connection ->
             MeldeperiodeRepositoryImpl(connection).hentMeldeperioder(

@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
-import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
@@ -47,7 +46,7 @@ class InMemoryTilkjentYtelseRepositoryTest {
             Periode(dato.plusDays(2), dato.plusDays(3)) to tilkjent,
             Periode(dato.plusDays(4), dato.plusDays(5)) to tilkjent.copy(redusertDagsats = Beløp(419))
         )
-        repository.lagre(behandling.id, perioder, tomtTilkjentYtelseGrunnlag, "")
+        repository.lagre(behandling.id, perioder)
 
         val kandidater = repository.hentTilkjentUtenRedusertDagsats(behandling.id)
         assertThat(kandidater).hasSize(2)

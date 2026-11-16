@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.dokumentinnhenting.kontrakt.BegrensetDokumentInfoDto
 import no.nav.aap.dokumentinnhenting.kontrakt.BegrensetJournalpostDto
 import no.nav.aap.dokumentinnhenting.kontrakt.DokumentasjonType
 import no.nav.aap.dokumentinnhenting.kontrakt.FellesDialogmeldingDto
@@ -16,6 +17,8 @@ import no.nav.aap.dokumentinnhenting.kontrakt.HentLegeerklæringForespørslerFor
 import no.nav.aap.dokumentinnhenting.kontrakt.MeldingStatusDto
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.miljo.Miljø
+import java.time.Clock
+import java.time.LocalDate
 import java.util.*
 
 
@@ -26,6 +29,7 @@ class HentBehandlerDialogService(
     private val sakRepository: SakRepository,
     private val mottattDokumentRepository: MottattDokumentRepository,
     private val behandlingRepository: BehandlingRepository,
+    private val clock: Clock = Clock.systemDefaultZone()
 ) {
     fun hentDialogForSak(saksnummer: String, token: OidcToken): MeldingerResponse {
         val dialogmeldinger = hentDialogmeldingerFraDokumentinnhenting(saksnummer)
@@ -88,7 +92,7 @@ class HentBehandlerDialogService(
                         && it.innkommendeUtgående == InnkommendeUtgående.UTGÅENDE
                         && it.dialogmeldingId != null
                         && it.opprettetTidspunkt.toLocalDate()
-                    .plusDays(DAGER_TIL_PÅMINNELSE) > java.time.LocalDate.now()
+                    .plusDays(DAGER_TIL_PÅMINNELSE) > LocalDate.now(clock)
             }
 
         return kandidaterForPåminnelse.filter { melding ->
@@ -206,7 +210,9 @@ class HentBehandlerDialogService(
                     dokumentasjonsType = no.nav.aap.behandlingsflyt.behandling.behandlerdialog.DokumentasjonType.L40,
                     tekst = null,
                     meldingStatus = null,
-                    journalpostId = journalpostId
+                    journalpostId = journalpostId,
+                    kanSendeManuellPåminnelse = false,
+                    sisteForespørselSendt = null,
                 ),
                 dokumentIdListe = journalpost?.dokumenter?.map { it.tilResponseDto() }.orEmpty()
             )
@@ -245,7 +251,7 @@ class HentBehandlerDialogService(
         }
     }
 
-    private fun no.nav.aap.dokumentinnhenting.kontrakt.BegrensetDokumentInfoDto.tilResponseDto(): DokumentInfoDto {
+    private fun BegrensetDokumentInfoDto.tilResponseDto(): DokumentInfoDto {
         return DokumentInfoDto(
             dokumentInfoId = dokumentInfoId,
             tittel = this.tittel,
@@ -262,7 +268,10 @@ class HentBehandlerDialogService(
             tekst = this.tekst,
             meldingStatus = this.meldingStatus?.tilResponseDto(),
             journalpostId = this.journalpostId,
-            påminnelseAvbrutt = this.automatiskPåminnelse?.let { !it }
+            påminnelseAvbrutt = this.automatiskPåminnelse?.let { !it },
+            bestillerNavIdent = this.bestillerNavIdent,
+            kanSendeManuellPåminnelse = this.kanSendeManuellPåminnelse,
+            sisteForespørselSendt = this.sisteForespørselSendt,
         )
     }
 }

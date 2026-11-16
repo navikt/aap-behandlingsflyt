@@ -59,7 +59,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
 
-class BeregnTilkjentYtelseServiceTest {
+class BeregnTilkjentYtelseTest {
 
     @Test
     fun `årlig ytelse beregnes til 66 prosent av grunnlaget og dagsatsen er lik årlig ytelse delt på 260, og sjekker split av periode ved endring i Grunnbeløp`() {
@@ -84,7 +84,7 @@ class BeregnTilkjentYtelseServiceTest {
 
 
 
-        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -95,9 +95,9 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningArbeidsgiver,
                 utenBarnepensjon(),
             )
-        ).beregnTilkjentYtelse()
+        )
 
-        assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
             Segment(
                 periode = Periode(LocalDate.of(2023, 4, 30), LocalDate.of(2023, 4, 30)), verdi = Tilkjent(
                     dagsats = Beløp("1131.92"), //4*0.66*111477/260
@@ -162,7 +162,7 @@ class BeregnTilkjentYtelseServiceTest {
 
 
 
-        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -173,9 +173,9 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningArbeidsgiver,
                 utenBarnepensjon(),
             )
-        ).beregnTilkjentYtelse()
+        )
 
-        assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
             Segment(
                 periode = periode, verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*118620/260+36
@@ -221,7 +221,7 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
 
-        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -232,14 +232,14 @@ class BeregnTilkjentYtelseServiceTest {
                 utenSamordningArbeidsgiver(),
                 utenBarnepensjon(),
             )
-        ).beregnTilkjentYtelse()
+        )
 
-        assertTidslinje(beregnTilkjentYtelseService, Periode(8 desember 2025, 21 desember 2025) to {
+        assertTidslinje(beregnTilkjentYtelse, Periode(8 desember 2025, 21 desember 2025) to {
             assertThat(it.utbetalingsdato).isEqualTo(LocalDate.of(2025, 12, levererMeldekortPåDato))
         })
 
-        assertThat(beregnTilkjentYtelseService.segmenter()).hasSize(1)
-        assertThat(beregnTilkjentYtelseService.segmenter().first().verdi.utbetalingsdato)
+        assertThat(beregnTilkjentYtelse.segmenter()).hasSize(1)
+        assertThat(beregnTilkjentYtelse.segmenter().first().verdi.utbetalingsdato)
             .isEqualTo(LocalDate.of(2025, 12, levererMeldekortPåDato))
     }
 
@@ -269,7 +269,7 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
 
-        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -280,10 +280,10 @@ class BeregnTilkjentYtelseServiceTest {
                 utenSamordningArbeidsgiver(),
                 utenBarnepensjon(),
             )
-        ).beregnTilkjentYtelse()
+        )
 
-        assertThat(beregnTilkjentYtelseService.segmenter()).hasSize(1)
-        assertThat(beregnTilkjentYtelseService.segmenter().first().verdi.utbetalingsdato)
+        assertThat(beregnTilkjentYtelse.segmenter()).hasSize(1)
+        assertThat(beregnTilkjentYtelse.segmenter().first().verdi.utbetalingsdato)
             .isEqualTo(LocalDate.of(2025, 12, 22))
     }
 
@@ -327,7 +327,7 @@ class BeregnTilkjentYtelseServiceTest {
 
 
 
-        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -338,11 +338,11 @@ class BeregnTilkjentYtelseServiceTest {
                 utenSamordningArbeidsgiver(),
                 utenBarnepensjon(),
             )
-        ).beregnTilkjentYtelse()
+        )
 
-        assertThat(beregnTilkjentYtelseService.segmenter()).hasSize(2)
-        assertThat(beregnTilkjentYtelseService.segmenter().first().verdi.utbetalingsdato).isEqualTo(meldeDato)
-        assertThat(beregnTilkjentYtelseService.segmenter().last().verdi.utbetalingsdato).isEqualTo(sisteMuligeMeldedato)
+        assertThat(beregnTilkjentYtelse.segmenter()).hasSize(2)
+        assertThat(beregnTilkjentYtelse.segmenter().first().verdi.utbetalingsdato).isEqualTo(meldeDato)
+        assertThat(beregnTilkjentYtelse.segmenter().last().verdi.utbetalingsdato).isEqualTo(sisteMuligeMeldedato)
     }
 
     @Test
@@ -372,7 +372,7 @@ class BeregnTilkjentYtelseServiceTest {
 
 
 
-        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -383,10 +383,10 @@ class BeregnTilkjentYtelseServiceTest {
                 utenSamordningArbeidsgiver(),
                 utenBarnepensjon(),
             )
-        ).beregnTilkjentYtelse()
+        )
 
-        assertThat(beregnTilkjentYtelseService.segmenter()).hasSize(1)
-        assertThat(beregnTilkjentYtelseService.segmenter().first().verdi.utbetalingsdato)
+        assertThat(beregnTilkjentYtelse.segmenter()).hasSize(1)
+        assertThat(beregnTilkjentYtelse.segmenter().first().verdi.utbetalingsdato)
             .isEqualTo(LocalDate.of(2026, 3, 30))
     }
 
@@ -423,7 +423,7 @@ class BeregnTilkjentYtelseServiceTest {
 
 
 
-        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -434,9 +434,9 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningArbeidsgiver,
                 utenBarnepensjon()
             )
-        ).beregnTilkjentYtelse()
+        )
 
-        assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
             Segment(
                 periode = Periode(LocalDate.of(2023, 12, 30), LocalDate.of(2023, 12, 31)), verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*118620/260+36
@@ -491,7 +491,7 @@ class BeregnTilkjentYtelseServiceTest {
 
 
 
-        val beregnetTilkjentYtelse = BeregnTilkjentYtelseService(
+        val beregnetTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødeselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -502,7 +502,7 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningArbeidsgiver,
                 utenBarnepensjon()
             )
-        ).beregnTilkjentYtelse()
+        )
 
         assertThat(beregnetTilkjentYtelse.segmenter()).containsExactly(
             Segment(
@@ -558,7 +558,7 @@ class BeregnTilkjentYtelseServiceTest {
 
 
 
-        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -569,9 +569,9 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningArbeidsgiver,
                 utenBarnepensjon()
             )
-        ).beregnTilkjentYtelse()
+        )
 
-        assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
             Segment(
                 periode = Periode(LocalDate.of(2020, 3, 31), LocalDate.of(2020, 3, 31)), verdi = Tilkjent(
                     dagsats = Beløp("512.09"), //2*2/3*99858/260
@@ -625,7 +625,7 @@ class BeregnTilkjentYtelseServiceTest {
 
 
 
-        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -636,9 +636,9 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningArbeidsgiver,
                 utenBarnepensjon(),
             )
-        ).beregnTilkjentYtelse()
+        )
 
-        assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
             Segment(
                 periode = Periode(1 juni 2023, 1 august 2023), verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*111477/260
@@ -706,7 +706,7 @@ class BeregnTilkjentYtelseServiceTest {
 
 
         
-        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -717,16 +717,16 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningArbeidsgiver,
                 utenBarnepensjon()
             )
-        ).beregnTilkjentYtelse()
+        )
 
         // Forventer 30 prosent grunnlag først, deretter 100 prosent
         assertThat(
-            beregnTilkjentYtelseService.segmenter().map { it.verdi.gradering }).containsExactly(
+            beregnTilkjentYtelse.segmenter().map { it.verdi.gradering }).containsExactly(
             Prosent.`30_PROSENT`, Prosent.`0_PROSENT`, Prosent.`100_PROSENT`
         )
 
-        assertThat(beregnTilkjentYtelseService.segmenter()).hasSize(3)
-        assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
+        assertThat(beregnTilkjentYtelse.segmenter()).hasSize(3)
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
             Segment(
                 periode = Periode(1 juni 2023, 30 juni 2023), verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*111477/260
@@ -822,7 +822,7 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
-        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -833,16 +833,16 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningArbeidsgiver,
                 utenBarnepensjon()
             )
-        ).beregnTilkjentYtelse()
+        )
 
         // Forventer 30 prosent grunnlag først, deretter 100 prosent
         assertThat(
-            beregnTilkjentYtelseService.segmenter().map { it.verdi.gradering }).containsExactly(
+            beregnTilkjentYtelse.segmenter().map { it.verdi.gradering }).containsExactly(
             Prosent.`50_PROSENT`, Prosent.`30_PROSENT`
         )
 
-        assertThat(beregnTilkjentYtelseService.segmenter()).hasSize(2)
-        assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
+        assertThat(beregnTilkjentYtelse.segmenter()).hasSize(2)
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
             Segment(
                 periode = Periode(1 juni 2023, 30 juni 2023), verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*111477/260
@@ -909,7 +909,7 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
-        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -920,9 +920,9 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningArbeidsgiver,
                 utenBarnepensjon()
             ),
-        ).beregnTilkjentYtelse()
+        )
 
-        assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
             Segment(
                 periode = Periode(1 juni 2023, 1 august 2023),
                 verdi = Tilkjent(
@@ -986,7 +986,7 @@ class BeregnTilkjentYtelseServiceTest {
         assertThat(underveisperioder.first { it.periode == Periode(3 februar 2020, 10 februar 2020) }.meldepliktStatus)
             .isEqualTo(MeldepliktStatus.IKKE_MELDT_SEG)
 
-        val tilkjentYtelse = BeregnTilkjentYtelseService(
+        val tilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2)),
                 beregningsgrunnlag = GUnit(BigDecimal(4)),
@@ -997,7 +997,7 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningArbeidsgiver = utenSamordningArbeidsgiver(),
                 barnepensjonGrunnlag = utenBarnepensjon(),
             )
-        ).beregnTilkjentYtelse()
+        )
 
         assertThat(tilkjentYtelse.segmenter()).satisfiesExactly(
             {
@@ -1063,7 +1063,7 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
-        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -1074,9 +1074,9 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningArbeidsgiver,
                 utenBarnepensjon()
             )
-        ).beregnTilkjentYtelse()
+        )
 
-        assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
             Segment(
                 periode = Periode(1 juni 2023, 1 august 2023),
                 verdi = Tilkjent(
@@ -1178,7 +1178,7 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
-        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -1189,9 +1189,9 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningArbeidsgiver,
                 utenBarnepensjon()
             )
-        ).beregnTilkjentYtelse()
+        )
 
-        assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
             Segment(
                 periode = Periode(1 juni 2023, 1 august 2023),
                 verdi = Tilkjent(
@@ -1254,7 +1254,7 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
-        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -1265,9 +1265,9 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningArbeidsgiver,
                 utenBarnepensjon()
             )
-        ).beregnTilkjentYtelse()
+        )
 
-        assertThat(beregnTilkjentYtelseService.segmenter()).containsExactly(
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
             Segment(
                 periode = Periode(1 juni 2023, 1 august 2023), verdi = Tilkjent(
                     dagsats = Beløp("1204.45"), //4*0.66*111477/260
@@ -1349,7 +1349,7 @@ class BeregnTilkjentYtelseServiceTest {
         )
 
 
-        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -1360,9 +1360,9 @@ class BeregnTilkjentYtelseServiceTest {
                 utenSamordningArbeidsgiver(),
                 utenBarnepensjon()
             )
-        ).beregnTilkjentYtelse()
+        )
 
-        assertThat(beregnTilkjentYtelseService.segmenter())
+        assertThat(beregnTilkjentYtelse.segmenter())
             .usingRecursiveComparison()
             .ignoringFields("verdi.redusertDagsats")
             .isEqualTo(
@@ -1430,7 +1430,7 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
-        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -1441,7 +1441,7 @@ class BeregnTilkjentYtelseServiceTest {
                 samordningArbeidsgiver,
                 utenBarnepensjon()
             )
-        ).beregnTilkjentYtelse()
+        )
 
         val tilkjent = Tilkjent(
             dagsats = Beløp("1131.92"), //4*0.66*118620/260
@@ -1457,7 +1457,7 @@ class BeregnTilkjentYtelseServiceTest {
             redusertDagsats = Beløp(1132),
             barnepensjonDagsats = Beløp(0)
         )
-        assertThat(beregnTilkjentYtelseService.segmenter()).usingRecursiveComparison().isEqualTo(
+        assertThat(beregnTilkjentYtelse.segmenter()).usingRecursiveComparison().isEqualTo(
             listOf(
                 Segment(periode = periode1, verdi = tilkjent.copy(utbetalingsdato = periode1.tom.plusDays(9))),
                 Segment(periode = periode2, verdi = tilkjent.copy(utbetalingsdato = periode2.tom.plusDays(1))),
@@ -1505,7 +1505,7 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
-        val beregnTilkjentYtelseService = BeregnTilkjentYtelseService(
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -1516,10 +1516,10 @@ class BeregnTilkjentYtelseServiceTest {
                 utenSamordningArbeidsgiver(),
                 barnepensjonGrunnlag,
             )
-        ).beregnTilkjentYtelse()
+        )
 
-        assertThat(beregnTilkjentYtelseService.segmenter()).hasSize(1)
-        val tilkjent = beregnTilkjentYtelseService.segmenter().first().verdi
+        assertThat(beregnTilkjentYtelse.segmenter()).hasSize(1)
+        val tilkjent = beregnTilkjentYtelse.segmenter().first().verdi
 
         // Dagsats = 4 * 0.66 / 260 * 118 620 = 1204.45
         assertThat(tilkjent.dagsats).isEqualTo(Beløp("1204.45"))
@@ -1563,7 +1563,7 @@ class BeregnTilkjentYtelseServiceTest {
             )
         )
 
-        val beregnet = BeregnTilkjentYtelseService(
+        val beregnet = BeregnTilkjentYtelse.beregnTilkjentYtelse(
             TilkjentYtelseGrunnlag(
                 fødselsdato,
                 beregningsgrunnlag.grunnlaget(),
@@ -1574,7 +1574,7 @@ class BeregnTilkjentYtelseServiceTest {
                 utenSamordningArbeidsgiver(),
                 barnepensjonGrunnlag,
             )
-        ).beregnTilkjentYtelse()
+        )
 
         assertThat(beregnet.segmenter()).hasSize(1)
         val tilkjent = beregnet.segmenter().first().verdi

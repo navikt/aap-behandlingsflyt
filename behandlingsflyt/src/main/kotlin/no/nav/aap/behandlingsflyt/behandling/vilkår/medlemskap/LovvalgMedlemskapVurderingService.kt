@@ -87,8 +87,13 @@ class LovvalgMedlemskapVurderingService {
         grunnlag: MedlemskapLovvalgRegisterGrunnlag,
         rettighetsPeriode: Periode,
     ): List<TilhørighetVurdering> {
-        val mottarSykepengerVurdering = mottarSykepenger(grunnlag.inntekterINorgeGrunnlag)
-        val arbeidInntektINorgeVurdering = harArbeidInntektINorge(grunnlag.inntekterINorgeGrunnlag)
+        // TODO: Denne må gjøres per krav
+        val inntekter = grunnlag.inntekterINorgeGrunnlag?.inntekterForKrav
+                ?.firstOrNull { it.relevantDato == rettighetsPeriode.fom }
+                ?.inntekter.orEmpty().toList()
+        val mottarSykepengerVurdering =
+            mottarSykepenger(inntekter)
+        val arbeidInntektINorgeVurdering = harArbeidInntektINorge(inntekter)
         val vedtakIMedl = harVedtakIMEDL(grunnlag.medlemskapUnntakGrunnlag)
 
         return if (grunnlag.vurderBosattStatusOgNorskStatsborgerskap) {

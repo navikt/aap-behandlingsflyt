@@ -60,7 +60,7 @@ class BekreftVurderingerOppfølgingSteg(
                 }
 
                 val sykdomsbehovLøstAvKontor = sykdomsbehovLøstAvKontorIDenneBehandlingen(avklaringsbehovene)
-                return sykdomsbehovLøstAvKontor.isNotEmpty()
+                sykdomsbehovLøstAvKontor.isNotEmpty()
             }
 
             VurderingType.UTVID_VEDTAKSLENGDE,

@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
@@ -86,6 +85,7 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
     private fun hentInstitusjonsopphold(sak: Sak): List<Institusjonsopphold> {
         val gyldigeOpphold = institusjonsoppholdRegisterGateway
             .innhent(sak.person)
+            .filter { it.institusjonstype == Institusjonstype.HS || it.institusjonstype == Institusjonstype.FO }
             .filter {
                 try {
                     it.periode()
@@ -99,11 +99,7 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
                 }
             }
 
-        return if (unleashGateway.isEnabled(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)) {
-            finnRelevanteOpphold(gyldigeOpphold, sak.rettighetsperiode)
-        } else {
-            gyldigeOpphold.filter { it.periode().overlapper(sak.rettighetsperiode) }
-        }
+        return finnRelevanteOpphold(gyldigeOpphold, sak.rettighetsperiode)
     }
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag? {
@@ -114,8 +110,14 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
         val eksisterendeGrunnlag = hentHvisEksisterer(behandlingId)
         val sak = sakService.hentSakFor(behandlingId)
         val institusjonsopphold = hentInstitusjonsopphold(sak)
+        val eksisterendeRelevantGrunnlag = InstitusjonsoppholdGrunnlag(
+            oppholdene = Oppholdene(
+                eksisterendeGrunnlag?.oppholdene?.opphold.orEmpty()
+                    .filter { it.verdi.type == Institusjonstype.HS || it.verdi.type == Institusjonstype.FO }
+            )
+        )
 
-        return if (erEndret(eksisterendeGrunnlag, institusjonsopphold))
+        return if (erEndret(eksisterendeRelevantGrunnlag, institusjonsopphold))
             listOf(VurderingsbehovMedPeriode(Vurderingsbehov.INSTITUSJONSOPPHOLD))
         else
             emptyList()

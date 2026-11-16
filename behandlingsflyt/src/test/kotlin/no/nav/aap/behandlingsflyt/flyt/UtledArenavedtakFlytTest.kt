@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
-import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.help.assertTidslinjeEquals
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.UtledArenaVedtakstype
 import no.nav.aap.behandlingsflyt.repository.behandling.vedtak.VedtakRepositoryImpl
@@ -28,7 +27,7 @@ class UtledArenavedtakFlytTest: AbstraktFlytOrkestratorTest(AlleAvskruddUnleash:
                 .utledVedtak(sak)
         }
         val vedtakId = dataSource.transaction {
-            VedtakId(VedtakRepositoryImpl(it).hentId(behandling.id))
+            VedtakRepositoryImpl(it).hent(behandling.id)?.id!!
         }
 
         assertTidslinjeEquals(arenavedtak,

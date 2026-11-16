@@ -20,7 +20,7 @@ data class TilkjentForRedusertDagsatsBackfill(
          * ned. Regner derfor ut her. Burde vurdere å backfille, slik at
          * vi ikke trenger denne kodesnutten.
          */
-        return BeregnTilkjentYtelseService.redusertDagsats(
+        return BeregnTilkjentYtelse.redusertDagsats(
             dagsats = dagsats,
             barnetillegg = barnetillegg,
             barnepensjonDagsats = barnepensjonDagsats,

@@ -38,6 +38,7 @@ import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.behandlingsflyt.utils.tilNorskFormat
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -450,7 +451,10 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
                 assertThat(vurdering.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
                 assertThat(vurdering.nedsattArbeidsevneEllerStudieevneDato).isEqualTo(beregningstidspunktFraArena)
                 assertThat(vurdering.årsak).isEqualTo(ÅrsakBeregningstidspunkt.ANNET)
-                assertThat(vurdering.begrunnelse).isEqualTo("Migrert fra Arena")
+                assertThat(vurdering.begrunnelse).isEqualTo(
+                    "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet " +
+                            "${startDato.minusMonths(5).tilNorskFormat()} i Arena. Forvaltningsnotat finnes i Gosys."
+                )
                 assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
                     .doesNotContain(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
 
