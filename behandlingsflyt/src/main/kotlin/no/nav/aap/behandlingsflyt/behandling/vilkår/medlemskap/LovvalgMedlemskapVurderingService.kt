@@ -8,78 +8,25 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Personopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.erGyldigIPeriode
-import no.nav.aap.behandlingsflyt.lovvalgAutomatiskGjennomslipp
-import no.nav.aap.behandlingsflyt.lovvalgBosattOgIngenAndreDel1
-import no.nav.aap.behandlingsflyt.lovvalgBosattOgIngenAndreDel1IngenDel2
-import no.nav.aap.behandlingsflyt.lovvalgBosattOgPotensielleAndreDel1
-import no.nav.aap.behandlingsflyt.lovvalgBosattOgPotensielleAndreDel1IngenDel2
-import no.nav.aap.behandlingsflyt.lovvalgÅrsakTilManuellVurderingIkkeOppfyltDel1
-import no.nav.aap.behandlingsflyt.lovvalgÅrsakTilManuellVurderingOppfyltDel1
-import no.nav.aap.behandlingsflyt.prometheus
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.komponenter.type.Periode
 import kotlin.enums.enumEntries
 
 class LovvalgMedlemskapVurderingService {
+    /** Uten sideeffekter, slik at den kan kjøres under sporing. */
     fun vurderTilhørighet(
         grunnlag: MedlemskapLovvalgRegisterGrunnlag,
         rettighetsPeriode: Periode,
-        type: VurderingType? = null
     ): KanBehandlesAutomatiskVurdering {
         val førsteDelVurderinger = vurderFørsteDelKriterier(grunnlag, rettighetsPeriode)
         val andreDelVurdering = vurderAndreDelKriterier(grunnlag, rettighetsPeriode)
 
         val oppfyltMinstEttKrav = førsteDelVurderinger.any { it.resultat }
         val ingenInntruffet = andreDelVurdering.all { !it.resultat }
-        val kanBehandlesAutomatisk = oppfyltMinstEttKrav && ingenInntruffet
-
-        // No-op: Metrikker for videre utviklingsplan
-        if (type == VurderingType.FØRSTEGANGSBEHANDLING) {
-            // Målinger fra 12.08.26
-            val bosatt = grunnlag.personopplysning?.status == PersonStatus.bosatt
-
-            // Har bosatt-status
-            prometheus.lovvalgBosattOgPotensielleAndreDel1(bosatt).increment()
-
-            // Har bosatt-status og ingen oppfyllende del 1 kriterier
-            prometheus.lovvalgBosattOgIngenAndreDel1(bosatt && !oppfyltMinstEttKrav).increment()
-
-            // Har bosatt-status + potensielle andre del 1 + ingenInntruffet del 2 -> kanBehandlesAutomatisk
-            prometheus.lovvalgBosattOgPotensielleAndreDel1IngenDel2(bosatt && ingenInntruffet).increment()
-
-            // Har bosatt-status og ingen oppfyllende del 1 kriterier + ingenInntruffet del 2 -> kanBehandlesAutomatisk
-            prometheus.lovvalgBosattOgIngenAndreDel1IngenDel2(bosatt && !oppfyltMinstEttKrav && ingenInntruffet)
-                .increment()
-
-            prometheus.lovvalgAutomatiskGjennomslipp(kanBehandlesAutomatisk).increment()
-
-            if (!oppfyltMinstEttKrav) {
-                prometheus.lovvalgÅrsakTilManuellVurderingIkkeOppfyltDel1("del1_ikke_oppfylt").increment()
-                andreDelVurdering.filter { it.resultat }.forEach { vurdering ->
-                    prometheus.lovvalgÅrsakTilManuellVurderingIkkeOppfyltDel1(lovvalgÅrsakNavn(vurdering.opplysning))
-                        .increment()
-                }
-            } else {
-                andreDelVurdering.filter { it.resultat }.forEach { vurdering ->
-                    prometheus.lovvalgÅrsakTilManuellVurderingOppfyltDel1(lovvalgÅrsakNavn(vurdering.opplysning))
-                        .increment()
-                }
-            }
-        }
 
         return KanBehandlesAutomatiskVurdering(
-            kanBehandlesAutomatisk,
+            oppfyltMinstEttKrav && ingenInntruffet,
             førsteDelVurderinger + andreDelVurdering,
         )
-    }
-
-    private fun lovvalgÅrsakNavn(opplysning: String): String = when (opplysning) {
-        "Arbeid i utland" -> "arbeid_i_utland"
-        "Opphold i utland" -> "opphold_i_utland"
-        "Utenlandsk adresse" -> "utenlandsk_adresse"
-        "Vedtak om annet lovvalgsland finnes" -> "annet_lovvalgsland"
-        "Mangler statsborgerskap i EØS" -> "mangler_statsborgerskap_eos"
-        else -> opplysning.replace(" ", "_").lowercase()
     }
 
     // Minst én må oppfylles
