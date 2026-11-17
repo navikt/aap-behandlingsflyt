@@ -12,8 +12,10 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.utbetal.simulering.SimuleringDto
+import no.nav.aap.utbetal.migrering.ErMigrertRequestDto
+import no.nav.aap.utbetal.migrering.ErMigrertResponseDto
 import no.nav.aap.utbetal.simulering.UtbetalingOgSimuleringDto
+import no.nav.aap.utbetal.simuleringv2.SimuleringsresponseDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
 import no.nav.aap.utbetal.trekk.TrekkResponsDto
 import java.net.URI
@@ -46,7 +48,7 @@ object UtbetalingGatewayImpl : UtbetalingGateway {
         )!!
     }
 
-    override fun simuleringV2(tilkjentYtelseDto: TilkjentYtelseDto): SimuleringDto {
+    override fun simuleringV2(tilkjentYtelseDto: TilkjentYtelseDto): SimuleringsresponseDto {
         return client.post(
             uri = baseUri.resolve("/simulering/v2"),
             request = PostRequest(body = tilkjentYtelseDto)
@@ -69,4 +71,16 @@ object UtbetalingGatewayImpl : UtbetalingGateway {
 
         return response
     }
+
+    override fun erMigrert(personIdent: String, saksnummer: String): Boolean {
+        val respons: ErMigrertResponseDto? = client.post<ErMigrertRequestDto, ErMigrertResponseDto>(
+            uri = baseUri.resolve("/migrert/sak"),
+            request = PostRequest(body = ErMigrertRequestDto(
+                personIdent = personIdent,
+                saksnummer = saksnummer
+            ))
+        )
+        return respons!!.migrert
+    }
+
 }

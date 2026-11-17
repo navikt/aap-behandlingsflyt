@@ -18,6 +18,7 @@ import no.nav.aap.barnetillegg.BarnGateway
 import no.nav.aap.barnetillegg.BarnInformasjonskrav
 import no.nav.aap.barnetillegg.BarnInnhentingRespons
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedagerGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdInformasjonskrav
@@ -64,9 +65,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Tag
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+@Tag("db")
 class OppdagEndretInformasjonskravJobbUtførerTest {
     init {
         JobbType.leggTil(ProsesserBehandlingJobbUtfører)
@@ -95,9 +98,9 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
 
     object FakeSykepengerGateway : SykepengerGateway {
         var sykepengerRespons = SykepengerResponse(emptyList())
-        override fun hentGjenståendeSykedager(fødselsnummer: String): GjenståendeSykedager {
-            TODO("Not yet implemented")
-        }
+        override fun hentGjenståendeSykedager(fødselsnummer: String): GjenståendeSykedager =
+            GjenståendeSykedager(GjenståendeSykedagerGrunnlag.INGEN_SYKEPENGER_SISTE_26_UKER)
+
 
         override fun hentYtelseSykepenger(
             personidentifikatorer: Set<String>,

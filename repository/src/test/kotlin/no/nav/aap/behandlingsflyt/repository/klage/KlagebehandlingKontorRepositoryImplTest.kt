@@ -13,11 +13,13 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertNull
 
+@Tag("db")
 class KlagebehandlingKontorRepositoryImplTest {
     companion object {
 

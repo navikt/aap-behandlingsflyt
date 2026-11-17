@@ -2,16 +2,24 @@ package no.nav.aap.behandlingsflyt.arena
 
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.ArenaMigrering
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.FakeArenaOppslagGateway
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryArenaMigreringsdataRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class ArenaMigreringServiceTest {
@@ -30,10 +38,14 @@ class ArenaMigreringServiceTest {
         },
         arenaMigreringsdataRepository = InMemoryArenaMigreringsdataRepository,
         arenaOppslagGateway = FakeArenaOppslagGateway(),
+        kravRepository = InMemoryKravRepository,
     )
 
     @AfterEach
-    fun reset() = InMemoryArenaMigreringsdataRepository.reset()
+    fun reset() {
+        InMemoryArenaMigreringsdataRepository.reset()
+        InMemoryKravRepository.slett(behandlingId)
+    }
 
     @Test
     fun `hentSykdomsvurdering returnerer svaret fra Arena`() {
@@ -84,6 +96,36 @@ class ArenaMigreringServiceTest {
         assertThat(respons).isEqualTo(FakeArenaOppslagGateway().hentKravDataForSak("2018-123456").tilDomene())
     }
 
+    @Test
+    fun `hentVirkningstidspunkt returnerer virkningstidspunkt fra migrert krav`() {
+        val virkningstidspunkt = LocalDate.of(2025, 1, 15)
+        InMemoryKravRepository.lagre(
+            behandlingId,
+            setOf(
+                MigrertKrav(
+                    referanse = Kravreferanse.ny(),
+                    vurdertAv = ARENA_MIGRERING_BRUKER,
+                    begrunnelse = "Migrert fra Arena",
+                    vurdertIBehandling = behandlingId,
+                    opprettet = Instant.now(),
+                    virkningstidspunktArena = virkningstidspunkt,
+                    muligRettFra = LocalDate.of(2025, 6, 1),
+                    arenaSaksnummer = "2018-123456",
+                    rettighetstype = MigrertRettighetstype.ORDINÆR,
+                    resterendeKvoteOrdinær = 100,
+                )
+            )
+        )
+
+        assertThat(service.hentVirkningstidspunkt(behandlingId)).isEqualTo(virkningstidspunkt)
+    }
+
+    @Test
+    fun `hentVirkningstidspunkt feiler når behandlingen mangler migrert krav`() {
+        assertThatThrownBy { service.hentVirkningstidspunkt(behandlingId) }
+            .isInstanceOf(IllegalArgumentException::class.java)
+            .hasMessageContaining("Fant ikke migrert krav")
+    }
 
     @Test
     fun `lagreMigreringsdataForSporing lagrer data for behandling og steg`() {

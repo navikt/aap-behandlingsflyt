@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.KanBehandlesAutomatiskVurdering
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingerGrunnlag
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
@@ -16,9 +18,9 @@ class InMemoryLovvalgDelvurderingRepositoryTest {
     @Test
     fun `kan hente aktiv og historisk vurdering etter id`() {
         val (_, behandling) = opprettInMemorySakOgBehandling()
-        repository.lagre(behandling.id, vurdering, relevantDato)
+        repository.lagre(behandling.id, listOf(delvurdering(behandling.id, vurdering, relevantDato)))
         val opprinnelig = requireNotNull(repository.hentHvisEksisterer(behandling.id))
-        repository.lagre(behandling.id, vurdering.copy(kanBehandlesAutomatisk = false), relevantDato)
+        repository.lagre(behandling.id, listOf(delvurdering(behandling.id, vurdering.copy(kanBehandlesAutomatisk = false), relevantDato)))
         val ny = requireNotNull(repository.hentHvisEksisterer(behandling.id))
 
         assertThat(ny).isNotEqualTo(opprinnelig)
@@ -31,13 +33,21 @@ class InMemoryLovvalgDelvurderingRepositoryTest {
     fun `kopiering og uendret lagring beholder samme id`() {
         val (_, fra) = opprettInMemorySakOgBehandling()
         val (_, til) = opprettInMemorySakOgBehandling()
-        repository.lagre(fra.id, vurdering, relevantDato)
+        repository.lagre(fra.id, listOf(delvurdering(fra.id, vurdering, relevantDato)))
         val opprinnelig = requireNotNull(repository.hentHvisEksisterer(fra.id))
         repository.kopier(fra.id, til.id)
-        repository.lagre(til.id, vurdering, relevantDato)
+        repository.lagre(til.id, listOf(delvurdering(fra.id, vurdering, relevantDato)))
         assertThat(repository.hentHvisEksisterer(til.id)).isEqualTo(opprinnelig)
 
-        repository.lagre(til.id, vurdering.copy(kanBehandlesAutomatisk = false), relevantDato)
+        repository.lagre(til.id, listOf(delvurdering(til.id, vurdering.copy(kanBehandlesAutomatisk = false), relevantDato)))
         assertThat(repository.hentHvisEksisterer(fra.id)).isEqualTo(opprinnelig)
     }
+
+    private fun delvurdering(behandlingId: BehandlingId, vurdering: KanBehandlesAutomatiskVurdering, relevantDato: LocalDate) =
+        LovvalgDelvurderingerGrunnlag(
+            kanBehandlesAutomatisk = vurdering.kanBehandlesAutomatisk,
+            tilhørighetVurdering = vurdering.tilhørighetVurdering,
+            relevantDato = relevantDato,
+            vurdertIBehandling = behandlingId,
+        )
 }

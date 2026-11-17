@@ -11,9 +11,12 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedagerGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.SykepengerResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.UtbetaltePerioder
 import no.nav.aap.behandlingsflyt.test.TestPersonService
+import java.time.LocalDate
 
 data class SykepengerRequest(val personidentifikatorer: Set<String>)
 
@@ -33,6 +36,10 @@ class SykepengerFake(private val fakePersoner: () -> TestPersonService) : FakeSe
         }
         installerStatusPages("SYKEPENGER")
         routing {
+            post("/gjenstaende-sykedager") {
+                call.respond(GjenståendeSykedager(grunnlag = GjenståendeSykedagerGrunnlag.VEDTAK_I_NY_LØSNING, 21,
+                    LocalDate.now()))
+            }
             post("/utbetalte-perioder-aap") {
                 val request = call.receive<SykepengerRequest>()
                 val fakePerson = fakePersoner().hentPerson(request.personidentifikatorer.first())

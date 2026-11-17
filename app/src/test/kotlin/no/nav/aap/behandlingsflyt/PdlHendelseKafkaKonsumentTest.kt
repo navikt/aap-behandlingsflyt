@@ -21,11 +21,13 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import java.time.Instant
 import java.util.*
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.milliseconds
 
+@Tag("kafka")
 class PdlHendelseKafkaKonsumentTest {
 
     companion object {

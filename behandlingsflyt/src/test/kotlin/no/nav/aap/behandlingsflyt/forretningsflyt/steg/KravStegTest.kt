@@ -84,6 +84,7 @@ class KravStegTest {
             },
             arenaMigreringsdataRepository = InMemoryArenaMigreringsdataRepository,
             arenaOppslagGateway = FakeArenaOppslagGateway(),
+            kravRepository = InMemoryKravRepository,
         )
         steg = KravSteg(
             unleashGateway = AlleAvskruddUnleash,
@@ -403,6 +404,7 @@ class KravStegTest {
                 },
                 arenaMigreringsdataRepository = InMemoryArenaMigreringsdataRepository,
                 arenaOppslagGateway = it,
+                kravRepository = kravRepository,
             )
         } ?: arenaMigreringService,
     )
@@ -592,7 +594,7 @@ class KravStegTest {
         assertThat(vurderinger).hasSize(1)
         assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(1)
     }
-    
+
     @Test
     fun `søknad før legeerklæring – søknad er krav, legeerklæring ignoreres`() {
         val sak = opprettInMemorySak()
