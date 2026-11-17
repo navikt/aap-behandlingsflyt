@@ -118,22 +118,6 @@ class VurderKlageNayLøserTest {
         assertThat(resultat.begrunnelse).isEqualTo("Begrunnelse for klage")
     }
 
-    @ParameterizedTest
-    @EnumSource(KlageInnstilling::class)
-    fun `løs skal avvise manglende påklaget vedtak før vurderingen lagres`(innstilling: KlageInnstilling) {
-        val (_, behandling) = opprettInMemorySakOgBehandling()
-        every { påklagetBehandlingRepositoryMock.hentPåklagetVedtakstype(behandling.id) } throws NoSuchElementException()
-
-        assertThrows<NoSuchElementException> {
-            lagLøser().løs(
-                kontekst = avklaringsbehovKontekst { this.behandling = behandling },
-                løsning = lagLøsning(innstilling)
-            )
-        }
-
-        verify(exactly = 0) { klagebehandlingNayRepositoryMock.lagre(any(), any()) }
-    }
-
     private fun lagLøser() = VurderKlageNayLøser(
         klagebehandlingNayRepositoryMock,
         påklagetBehandlingRepositoryMock

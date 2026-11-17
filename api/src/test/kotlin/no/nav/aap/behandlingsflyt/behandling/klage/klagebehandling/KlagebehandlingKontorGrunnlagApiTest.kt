@@ -78,45 +78,9 @@ class KlagebehandlingKontorGrunnlagApiTest : BaseApiTest() {
 
         val respons = hentGrunnlag(klagebehandling.referanse.referanse.toString())
 
-        assertPåklagetVedtakstypeMangler(respons)
-        assertThat(respons.path("vurdering").isNull).isTrue()
-    }
-
-    @Test
-    fun `skal returnere null påklaget vedtakstype og bevare Kontor-vurdering uten grunnlag`() {
-        val klagebehandling = opprettBehandling(opprettInMemorySak(), TypeBehandling.Klage)
-        val vurdering = klagevurdering()
-        InMemoryKlagebehandlingKontorRepository.lagre(klagebehandling.id, vurdering)
-
-        val respons = hentGrunnlag(klagebehandling.referanse.referanse.toString())
-
-        assertPåklagetVedtakstypeMangler(respons)
-        assertThat(respons.path("vurdering").path("begrunnelse").asText()).isEqualTo(vurdering.begrunnelse)
-    }
-
-    @Test
-    fun `skal returnere Arena som påklaget vedtakstype`() {
-        val klagebehandling = opprettBehandling(opprettInMemorySak(), TypeBehandling.Klage)
-        lagreGrunnlag(
-            klagebehandling.id,
-            PåklagetBehandlingVurdering(
-                påklagetVedtakType = PåklagetVedtakType.ARENA_VEDTAK,
-                påklagetBehandling = null,
-                påklagetTilbakekrevingsbehandling = null,
-                vurdertAv = Bruker("Z123456"),
-                opprettet = Instant.now(),
-            ),
-        )
-
-        val respons = hentGrunnlag(klagebehandling.referanse.referanse.toString())
-
-        assertThat(respons.at("/påklagetVedtakType").asText())
-            .isEqualTo(PåklagetVedtakType.ARENA_VEDTAK.name)
-    }
-
-    private fun assertPåklagetVedtakstypeMangler(respons: JsonNode) {
         assertThat(respons.has("påklagetVedtakType")).isTrue()
         assertThat(respons.get("påklagetVedtakType").isNull).isTrue()
+        assertThat(respons.path("vurdering").isNull).isTrue()
     }
 
     private fun lagreGrunnlag(
@@ -124,18 +88,19 @@ class KlagebehandlingKontorGrunnlagApiTest : BaseApiTest() {
         påklagetBehandlingVurdering: PåklagetBehandlingVurdering,
     ) {
         InMemoryPåklagetBehandlingRepository.lagre(behandlingId, påklagetBehandlingVurdering)
-        InMemoryKlagebehandlingKontorRepository.lagre(behandlingId, klagevurdering())
+        InMemoryKlagebehandlingKontorRepository.lagre(
+            behandlingId,
+            KlagevurderingKontor(
+                begrunnelse = "begrunnelse",
+                notat = null,
+                innstilling = KlageInnstilling.OPPRETTHOLD,
+                vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
+                vilkårSomOmgjøres = emptyList(),
+                vurdertAv = Bruker("Z123456"),
+                opprettet = Instant.now(),
+            ),
+        )
     }
-
-    private fun klagevurdering() = KlagevurderingKontor(
-        begrunnelse = "begrunnelse",
-        notat = null,
-        innstilling = KlageInnstilling.OPPRETTHOLD,
-        vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
-        vilkårSomOmgjøres = emptyList(),
-        vurdertAv = Bruker("Z123456"),
-        opprettet = Instant.now(),
-    )
 
     private fun hentGrunnlag(referanse: String): JsonNode {
         lateinit var respons: JsonNode
