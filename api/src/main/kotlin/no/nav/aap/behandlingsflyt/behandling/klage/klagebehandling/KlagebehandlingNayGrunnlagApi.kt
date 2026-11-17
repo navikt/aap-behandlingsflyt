@@ -40,7 +40,7 @@ fun NormalOpenAPIRoute.klagebehandlingNayGrunnlagApi(
 
                 val behandling: Behandling =
                     BehandlingReferanseService(behandlingRepository).behandling(req)
-                val påklagetVedtakType = påklagetBehandlingRepository.hentHvisEksisterer(behandling.id)?.vurdering?.påklagetVedtakType
+                val påklagetVedtakType = påklagetBehandlingRepository.hentPåklagetVedtakstype(behandling.id)
 
                 klagebehandlingNayRepository.hentHvisEksisterer(behandling.id)
                     ?.tilDto(kanSaksbehandle(), ansattInfoService, påklagetVedtakType)
