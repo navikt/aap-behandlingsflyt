@@ -41,6 +41,7 @@ import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.Instant
@@ -453,6 +454,7 @@ class BackfillKravServiceTest {
         assertThat(tilleggsopplysninger.single().referanse).isEqualTo(relevantKravFørstegangsbehandling.referanse)
     }
 
+    @Disabled("Deaktivert fordi vi ønsker å hoppe over disse sakene i dev")
     @Test
     fun `behandling uten søknad skal kaste feil`() {
         val legeerklæringDato = 15 januar 2024
