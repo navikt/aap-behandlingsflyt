@@ -280,7 +280,6 @@ internal fun Application.server(
             install(NavIdentInterceptor)
 
             apiRouting {
-                personApi(fellesDataSource, repositoryRegistry, gatewayProvider)
                 sykepengeperioderApi(gatewayProvider)
                 foreldrepengeperioderApi(gatewayProvider)
                 saksApi(fellesDataSource, repositoryRegistry, gatewayProvider)

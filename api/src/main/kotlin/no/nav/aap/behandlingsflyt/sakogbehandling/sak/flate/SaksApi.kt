@@ -65,7 +65,6 @@ fun NormalOpenAPIRoute.saksApi(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
     val personinfoGateway = gatewayProvider.provide(PersoninfoGateway::class)
     val ansattInfoService = AnsattInfoService(gatewayProvider)
 
@@ -113,34 +112,6 @@ fun NormalOpenAPIRoute.saksApi(
                 respond(dto)
             }
 
-
-        @Suppress("UnauthorizedPost") route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
-            val saker = dataSource.transaction(readOnly = true) { connection ->
-                SakOgBehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
-                    .finnSaksinfo(Ident(dto.ident))
-            }
-
-            // Midlertidig fiks for ikke å brekke postmottak
-            val token = token()
-            if (token.isClientCredentials()) {
-                respond(saker)
-            } else {
-                val sakerMedTilgang = saker.filter { sak ->
-                    tilgangGateway.sjekkTilgangTilSak(
-                        Saksnummer(sak.saksnummer), token, Operasjon.SE,
-                        relevanteIdenterForSakResolver(repositoryRegistry, dataSource).resolve(sak.saksnummer)
-                    )
-                }
-
-                if (sakerMedTilgang.isNotEmpty()) {
-                    respond(sakerMedTilgang)
-                } else {
-                    // TODO:
-                    //  Bedre skille på om sak faktisk ikke finnes eller om sb mangler tilgang (unntak på gradering)
-                    throw VerdiIkkeFunnetException("Fant ikke sak for ident")
-                }
-            }
-        }
 
         route("/finnSisteBehandlinger") {
             authorizedPost<Unit, NullableSakOgBehandlingDTO, FinnBehandlingForIdentDTO>(
