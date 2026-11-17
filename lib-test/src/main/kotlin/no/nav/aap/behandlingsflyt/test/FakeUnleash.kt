@@ -114,6 +114,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.DatadelingBehandlingVisning to true,
         BehandlingsflytFeature.HentInnLovvalgRegisterdataForNyesteAktuelleKrav to true,
         BehandlingsflytFeature.OvergangUfoereBrevbygger to true,
+        BehandlingsflytFeature.VedtaksperiodeBeslutter to true,
     )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
