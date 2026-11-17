@@ -26,7 +26,7 @@ class TrukketSøknadGrunnlagDto(
 )
 
 class TrukketSøknadVurderingDto(
-    val journalpostId: String,
+    val journalpostId: String?,
     val begrunnelse: String,
     val skalTrekkes: Boolean,
     val vurderingerMeta: VurderingerMetaResponse,
@@ -56,7 +56,7 @@ fun NormalOpenAPIRoute.trukketSøknadGrunnlagApi(
                 vurderinger = trukketSøknadRepository.hentTrukketSøknadVurderinger(behandlingId)
                     .map {
                         TrukketSøknadVurderingDto(
-                            journalpostId = it.journalpostId.identifikator,
+                            journalpostId = it.journalpostId?.identifikator,
                             begrunnelse = it.begrunnelse,
                             skalTrekkes = it.skalTrekkes,
                             vurderingerMeta = vurdertAvService.byggVurderingerMeta(
