@@ -147,7 +147,7 @@ class BackfillKravServiceTest {
     @Test
     fun `trukket-søknad-sak hoppes over`() {
         val søknadsdato = 10 januar 2024
-        val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato)
+        val (_, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato)
 
         InMemoryTrukketSøknadRepository.lagreTrukketSøknadVurdering(
             behandling.id,

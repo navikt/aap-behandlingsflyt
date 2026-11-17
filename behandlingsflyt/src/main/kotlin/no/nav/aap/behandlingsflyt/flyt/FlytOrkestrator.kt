@@ -24,7 +24,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -49,7 +48,6 @@ class FlytOrkestrator(
     private val flytKontekstMedPeriodeService: FlytKontekstMedPeriodeService,
     private val behandlingService: BehandlingService,
     private val informasjonskravGrunnlag: InformasjonskravGrunnlag,
-    private val sakRepository: SakRepository,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val behandlingRepository: BehandlingRepository,
     private val behandlingHendelseService: BehandlingHendelseService,
@@ -70,7 +68,6 @@ class FlytOrkestrator(
         behandlingRepository = repositoryProvider.provide(),
         avklaringsbehovRepository = repositoryProvider.provide(),
         informasjonskravGrunnlag = InformasjonskravGrunnlagImpl(repositoryProvider, gatewayProvider),
-        sakRepository = repositoryProvider.provide(),
         flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(repositoryProvider, gatewayProvider),
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
         behandlingHendelseService = behandlingHendelseService,

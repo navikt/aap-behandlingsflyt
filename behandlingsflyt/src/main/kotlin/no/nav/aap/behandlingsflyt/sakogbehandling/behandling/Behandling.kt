@@ -44,10 +44,6 @@ class Behandling(
         )
     }
 
-    fun harBehandlingenStartet(): Boolean {
-        return stegTilstand != null
-    }
-
     fun oppdaterSteg(nyStegTilstand: StegTilstand) {
         stegTilstand = nyStegTilstand
         status = nyStegTilstand.steg().status

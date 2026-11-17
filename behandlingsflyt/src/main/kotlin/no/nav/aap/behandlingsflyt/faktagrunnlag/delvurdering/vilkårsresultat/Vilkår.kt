@@ -134,7 +134,4 @@ class Vilkår(
         return "Vilkår(type=$type, vilkårTidslinje=$vilkårTidslinje)"
     }
 
-    fun harPerioderSomIkkeErOppfylt(): Boolean {
-        return vilkårsperioder().any { ! it.erOppfylt() }
-    }
 }

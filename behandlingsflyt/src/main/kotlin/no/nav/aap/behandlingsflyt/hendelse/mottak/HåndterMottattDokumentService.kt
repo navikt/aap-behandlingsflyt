@@ -21,7 +21,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.tilVurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
@@ -36,7 +35,6 @@ class HåndterMottattDokumentService(
     private val mottaDokumentService: MottaDokumentService,
     private val behandlingRepository: BehandlingRepository,
     private val flytJobbRepository: FlytJobbRepository,
-    private val unleashGateway: UnleashGateway
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -49,7 +47,6 @@ class HåndterMottattDokumentService(
         mottaDokumentService = MottaDokumentService(repositoryProvider),
         behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
         flytJobbRepository = repositoryProvider.provide<FlytJobbRepository>(),
-        unleashGateway = gatewayProvider.provide<UnleashGateway>()
     )
 
     fun håndterMottatteDokumenter(

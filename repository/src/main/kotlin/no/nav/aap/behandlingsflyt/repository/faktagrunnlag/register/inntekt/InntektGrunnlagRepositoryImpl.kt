@@ -100,8 +100,6 @@ class InntektGrunnlagRepositoryImpl(private val connection: DBConnection) :
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        val eksisterendeGrunnlag = hentHvisEksisterer(fraBehandling) ?: return
-
         val query = """
             INSERT INTO INNTEKT_GRUNNLAG (behandling_id, inntekt_id) SELECT ?, inntekt_id from INNTEKT_GRUNNLAG where behandling_id = ? and aktiv
         """.trimIndent()

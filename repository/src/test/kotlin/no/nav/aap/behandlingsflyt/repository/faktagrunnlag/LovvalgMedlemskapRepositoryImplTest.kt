@@ -1,7 +1,5 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.Arbeidsforholdtype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterINorgeRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapRegisterGrunnlag
@@ -18,7 +16,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemK
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.tilDomene as tilMedlemskapDomene
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -49,6 +46,7 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.tilDomene as tilMedlemskapDomene
 
 @Tag("db")
 internal class LovvalgMedlemskapRepositoryImplTest {

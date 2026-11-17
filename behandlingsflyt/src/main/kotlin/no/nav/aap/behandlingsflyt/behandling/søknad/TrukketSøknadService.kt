@@ -11,7 +11,4 @@ class TrukketSøknadService(
     fun søknadErTrukket(behandlingId: BehandlingId): Boolean {
         return trukketSøknadRepository.hentTrukketSøknadVurderinger(behandlingId).any { it.skalTrekkes }
     }
-    fun søknadErTrukketVurdering(behandlingId: BehandlingId): TrukketSøknadVurdering? {
-        return trukketSøknadRepository.hentTrukketSøknadVurderinger(behandlingId).find { it.skalTrekkes }
-    }
 }

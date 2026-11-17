@@ -19,12 +19,9 @@ import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.Factory
 import no.nav.aap.verdityper.dokument.JournalpostId
-import org.slf4j.LoggerFactory
 import java.time.Instant
 
 class KravRepositoryImpl(private val connection: DBConnection) : KravRepository {
-    private val log = LoggerFactory.getLogger(javaClass)
-
     companion object : Factory<KravRepositoryImpl> {
         override fun konstruer(connection: DBConnection): KravRepositoryImpl {
             return KravRepositoryImpl(connection)
@@ -278,19 +275,6 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
 
     override fun slett(behandlingId: BehandlingId) {
         // Skal ikke slette krav selv om søknad trekkes
-    }
-
-    private fun hentVurderingerIder(behandlingId: BehandlingId): List<Long> {
-        return connection.queryList(
-            """
-            SELECT krav_vurderinger_id
-            FROM krav_grunnlag
-            WHERE behandling_id = ? AND krav_vurderinger_id IS NOT NULL
-            """.trimIndent()
-        ) {
-            setParams { setLong(1, behandlingId.id) }
-            setRowMapper { row -> row.getLong("krav_vurderinger_id") }
-        }
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {

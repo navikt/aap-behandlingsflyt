@@ -1,9 +1,9 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
+import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.Runs
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
@@ -42,10 +42,6 @@ class OpprettJobbForGReguleringJobbUtførerTest {
             clock = clock,
             unleashGateway = unleashGateway,
         )
-
-    private fun enableToggle() {
-        every { unleashGateway.isDisabled(BehandlingsflytFeature.GReguleringUtplukkJobb) } returns false
-    }
 
     private fun enableToggleWithSakIdFilter(vararg sakIds: Long) =
         enableToggleWithSakIdFilter(sakIds.joinToString(","))

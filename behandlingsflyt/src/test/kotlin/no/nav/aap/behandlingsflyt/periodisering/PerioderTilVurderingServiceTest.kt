@@ -19,7 +19,7 @@ class PerioderTilVurderingServiceTest {
             LocalDate.now(),
             Tid.MAKS
         )
-        val (sak, behandling) = opprettInMemorySakOgBehandling()
+        val (_, behandling) = opprettInMemorySakOgBehandling()
 
         val flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(
             inMemoryRepositoryProvider,

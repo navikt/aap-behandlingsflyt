@@ -12,9 +12,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.informasjonskravExecutor
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ARBEIDSFORHOLDSTATUSER
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.tilDomene
@@ -43,7 +40,6 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.concurrent.*
@@ -54,15 +50,12 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
     private val medlemskapUnntakRepository: MedlemskapUnntakRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val medlemskapGateway: MedlemskapGateway,
-    private val arbeidsForholdGateway: ArbeidsforholdGateway,
     private val enhetsregisteretGateway: EnhetsregisteretGateway,
     private val inntektskomponentenGateway: InntektkomponentenGateway,
     private val stønadsperiodeRepository: StønadsperiodeRepository,
     private val kravRepository: KravRepository,
     private val unleashGateway: UnleashGateway,
 ) : Informasjonskrav<LovvalgMedlemskapInformasjonskrav.LovvalgInput, LovvalgMedlemskapInformasjonskrav.LovvalgRegisterData> {
-    private val log = LoggerFactory.getLogger(javaClass)
-
     data class LovvalgInput(
         val sak: Sak,
         val datoerSomInntektSkalHentesIForholdTil: Set<LocalDate>,
@@ -300,7 +293,6 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
                 medlemskapUnntakRepository = repositoryProvider.provide<MedlemskapUnntakRepository>(),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 medlemskapGateway = gatewayProvider.provide(),
-                arbeidsForholdGateway = gatewayProvider.provide(),
                 enhetsregisteretGateway = gatewayProvider.provide(),
                 inntektskomponentenGateway = gatewayProvider.provide(),
                 unleashGateway = gatewayProvider.provide(),

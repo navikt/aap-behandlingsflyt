@@ -6,7 +6,7 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
 import java.time.LocalDate
-import java.util.UUID
+import java.util.*
 
 @JvmInline
 value class Kravreferanse(val verdi: UUID) {
@@ -29,10 +29,6 @@ sealed interface KravVurdering {
 
     fun forJournalpostId(journalpostId: JournalpostId): Boolean {
         return this.journalpostId == journalpostId
-    }
-
-    fun forJournalpostId(journalpostId: String): Boolean {
-        return this.journalpostId?.identifikator == journalpostId
     }
 }
 

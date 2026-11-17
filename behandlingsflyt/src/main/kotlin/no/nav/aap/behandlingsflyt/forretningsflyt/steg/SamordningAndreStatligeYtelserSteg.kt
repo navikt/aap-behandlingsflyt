@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -17,7 +16,6 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class SamordningAndreStatligeYtelserSteg(
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val tidligereVurderinger: TidligereVurderinger,
     private val andreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
@@ -64,7 +62,6 @@ class SamordningAndreStatligeYtelserSteg(
             gatewayProvider: GatewayProvider
         ): BehandlingSteg {
             return SamordningAndreStatligeYtelserSteg(
-                avklaringsbehovRepository = repositoryProvider.provide(),
                 avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 andreStatligeYtelserRepository = repositoryProvider.provide(),

@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
@@ -12,7 +11,7 @@ import no.nav.aap.behandlingsflyt.utils.FarligMutering
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
-import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.*
 
 object InMemorySakRepository : SakRepository {
 

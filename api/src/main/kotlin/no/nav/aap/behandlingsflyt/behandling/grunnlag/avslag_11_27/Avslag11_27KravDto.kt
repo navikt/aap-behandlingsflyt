@@ -4,8 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
-import no.nav.aap.komponenter.verdityper.Beløp
-import java.math.BigDecimal
 import java.time.LocalDate
 
 data class Avslag11_27KravDto(
