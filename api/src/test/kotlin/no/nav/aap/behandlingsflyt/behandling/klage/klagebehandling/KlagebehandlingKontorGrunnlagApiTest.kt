@@ -73,7 +73,7 @@ class KlagebehandlingKontorGrunnlagApiTest : BaseApiTest() {
     }
 
     @Test
-    fun `skal returnere null påklaget vedtakstype uten grunnlag eller vurdering`() {
+    fun `skal returnere null for påklaget vedtakstype og vurdering ved manglende grunnlag`() {
         val klagebehandling = opprettBehandling(opprettInMemorySak(), TypeBehandling.Klage)
 
         val respons = hentGrunnlag(klagebehandling.referanse.referanse.toString())

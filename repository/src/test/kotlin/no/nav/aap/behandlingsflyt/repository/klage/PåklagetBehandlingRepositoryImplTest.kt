@@ -146,7 +146,7 @@ internal class PåklagetBehandlingRepositoryImplTest {
     }
 
     @Test
-    fun `henter null hvis det ikke finnes grunnlag`() {
+    fun `Returnerer null hvis det ikke finnes grunnlag`() {
         dataSource.transaction { connection ->
             val sak = sak(connection, søknadsdato)
             finnEllerOpprettBehandling(connection, sak)
