@@ -76,10 +76,10 @@ class HelligdagsunntakMeldekortTest {
             LocalDate.of(2026, 5, 13) to LocalDate.of(2026, 5, 12),
 
             LocalDate.of(2026, 12, 16) to LocalDate.of(2026, 12, 14),
-            LocalDate.of(2026, 12, 23) to LocalDate.of(2026, 12, 21),
+            LocalDate.of(2026, 12, 23) to LocalDate.of(2026, 12, 16),
             LocalDate.of(2026, 12, 30) to LocalDate.of(2026, 12, 28),
             LocalDate.of(2026, 11, 25) to LocalDate.of(2026, 11, 23),
-            LocalDate.of(2026, 12, 2) to LocalDate.of(2026, 11, 30),
+            LocalDate.of(2026, 12, 2) to LocalDate.of(2026, 11, 25),
             LocalDate.of(2026, 12, 9) to LocalDate.of(2026, 12, 7),
         )
 
