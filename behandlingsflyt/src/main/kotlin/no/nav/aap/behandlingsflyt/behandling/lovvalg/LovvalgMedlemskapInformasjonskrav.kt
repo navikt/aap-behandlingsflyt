@@ -10,11 +10,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdagForBehandling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.informasjonskravExecutor
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ARBEIDSFORHOLDSTATUSER
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.tilDomene
@@ -54,7 +51,6 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
     private val medlemskapUnntakRepository: MedlemskapUnntakRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val medlemskapGateway: MedlemskapGateway,
-    private val arbeidsForholdGateway: ArbeidsforholdGateway,
     private val enhetsregisteretGateway: EnhetsregisteretGateway,
     private val inntektskomponentenGateway: InntektkomponentenGateway,
     private val stønadsperiodeRepository: StønadsperiodeRepository,
@@ -92,7 +88,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         }
 
         return fellesRegler
-                && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
+                && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): LovvalgInput {
@@ -157,7 +153,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         val executor = informasjonskravExecutor
         val medlemskapPerioderFuture = CompletableFuture
             .supplyAsync(withMdc { medlemskapGateway.innhent(sak.person, sak.rettighetsperiode) }, executor)
-  
+
         val inntektGrunnlagFutures = if (input.skalHentePerKrav) {
             datoerSomInntektSkalHentesIForholdTil.map { dato ->
                 Pair(dato, CompletableFuture.supplyAsync(withMdc {
@@ -227,7 +223,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
 
         return IKKE_ENDRET
     }
-    
+
     private fun innhentEREGGrunnlag(inntektGrunnlag: List<ArbeidsInntektMåned>): List<EnhetGrunnlag> {
         if (inntektGrunnlag.isEmpty()) return emptyList()
 
@@ -300,7 +296,6 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
                 medlemskapUnntakRepository = repositoryProvider.provide<MedlemskapUnntakRepository>(),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 medlemskapGateway = gatewayProvider.provide(),
-                arbeidsForholdGateway = gatewayProvider.provide(),
                 enhetsregisteretGateway = gatewayProvider.provide(),
                 inntektskomponentenGateway = gatewayProvider.provide(),
                 unleashGateway = gatewayProvider.provide(),
