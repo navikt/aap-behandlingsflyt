@@ -53,7 +53,8 @@ enum class BehandlingsflytFeature(
     DatadelingBehandlingVisning,
     OvergangUfoereBrevbygger,
     BackfillRedusertDagsats,
-    
+    VedtaksperiodeBeslutter,
+
     // -- Lovvalg
     HentInnLovvalgRegisterdataForNyesteAktuelleKrav,
     ;

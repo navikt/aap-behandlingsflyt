@@ -554,7 +554,6 @@ class InformasjonskravGrunnlagTest {
                     medlemskapUnntakRepository = repositoryProvider.provide(),
                     tidligereVurderinger = FakeTidligereVurderinger(),
                     medlemskapGateway = gatewayProvider.provide(),
-                    arbeidsForholdGateway = gatewayProvider.provide(),
                     enhetsregisteretGateway = gatewayProvider.provide(),
                     inntektskomponentenGateway = gatewayProvider.provide(),
                     unleashGateway = LokalUnleash,

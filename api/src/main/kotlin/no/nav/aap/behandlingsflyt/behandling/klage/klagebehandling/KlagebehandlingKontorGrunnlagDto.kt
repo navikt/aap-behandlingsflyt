@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 data class KlagebehandlingKontorGrunnlagDto(
     val vurdering: KlagevurderingKontorDto? = null,
     val harTilgangTilÅSaksbehandle: Boolean,
-    val påklagetVedtakType: PåklagetVedtakType
+    val påklagetVedtakType: PåklagetVedtakType?
 )
 
 data class KlagevurderingKontorDto(
@@ -47,7 +47,7 @@ internal fun KlagebehandlingKontorGrunnlag.tilDto(
     harTilgangTilÅSaksbehandle: Boolean,
     vurdertAvService: VurdertAvService,
     behandlingId: BehandlingId,
-    påklagetVedtakType: PåklagetVedtakType
+    påklagetVedtakType: PåklagetVedtakType?
 ) =
     KlagebehandlingKontorGrunnlagDto(
         vurdering = vurdering.tilDto(vurdertAvService, behandlingId),

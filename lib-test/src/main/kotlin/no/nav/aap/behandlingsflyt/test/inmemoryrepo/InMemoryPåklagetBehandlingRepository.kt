@@ -15,7 +15,7 @@ object InMemoryPåklagetBehandlingRepository : PåklagetBehandlingRepository {
     }
 
     override fun hentPåklagetVedtakstype(behandlingId: BehandlingId) =
-        requireNotNull(memory[behandlingId]).vurdering.påklagetVedtakType
+        memory[behandlingId]?.vurdering?.påklagetVedtakType
 
     override fun hentGjeldendeVurderingMedReferanse(behandlingReferanse: BehandlingReferanse): PåklagetBehandlingVurderingMedReferanse? {
         val behandling = InMemoryBehandlingRepository.hent(behandlingReferanse)
