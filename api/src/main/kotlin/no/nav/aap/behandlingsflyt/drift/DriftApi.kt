@@ -15,7 +15,9 @@ import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.TidligereVurde
 import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.TidligereVurderingerReq
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelse2Dto
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseService
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
+import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeDriftsinfoService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
@@ -43,6 +45,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøkna
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -70,6 +73,7 @@ import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.bruker
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -381,6 +385,36 @@ fun NormalOpenAPIRoute.driftApi(
                 krevDtoErUtenFødselsnummer(tilkjentYtelseDto)
 
                 respond(tilkjentYtelseDto)
+            }
+        }
+
+        route("/behandling/{referanse}/vedtakslengde") {
+            authorizedGet<BehandlingReferanse, List<VedtakslengdeVurderingDriftsinfoDto>>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse"),
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                    operasjon = Operasjon.DRIFT_LES
+                )
+            ) { referanse ->
+                val vurderinger = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val vedtakslengdeRepository = repositoryProvider.provide<VedtakslengdeRepository>()
+
+                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(referanse)
+                    val virkningstidspunktService = VirkningstidspunktService(repositoryProvider, gatewayProvider)
+                    val grunnlag = vedtakslengdeRepository.hentHvisEksisterer(behandling.id)
+                    val startdato = virkningstidspunktService.finnVirkningstidspunkt(behandling)
+                        ?: sakRepository.hent(behandling.sakId).rettighetsperiode.fom
+
+                    grunnlag?.gjeldendeVurderinger(startdato)
+                        ?.segmenter()
+                        ?.map { it.tilDriftsinfoDto(behandling.id) } ?: emptyList()
+                }
+
+                krevDtoErUtenFødselsnummer(vurderinger)
+                respond(vurderinger)
             }
         }
 
