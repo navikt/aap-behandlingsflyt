@@ -55,7 +55,12 @@ class TrekkSøknadLøser(
         )
 
         if (søknader.isEmpty()) {
-            forsøkTrekkLegeerklæring(kontekst, løsning, behandling)
+            if (Vurderingsbehov.MIGRERING_FRA_ARENA in behandling.vurderingsbehov().map { it.type }) {
+                log.info("Trekker migreringsbehandling fra Arena uten søknad (sakId=${kontekst.sakId()}, behandlingId=${kontekst.behandlingId()})")
+                trekkVurdering(journalpostId = null, kontekst, løsning)
+            } else {
+                forsøkTrekkLegeerklæring(kontekst, løsning, behandling)
+            }
         } else {
             søknader.forEach { søknad ->
                 log.info("Trekker søknad (sakId=${søknad.sakId}, behandlingId=${søknad.behandlingId})")
@@ -106,7 +111,7 @@ class TrekkSøknadLøser(
     }
 
     private fun trekkVurdering(
-        journalpostId: JournalpostId,
+        journalpostId: JournalpostId?,
         kontekst: AvklaringsbehovKontekst,
         løsning: TrekkSøknadLøsning,
     ) {

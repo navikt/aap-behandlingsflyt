@@ -7,10 +7,12 @@ import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.util.*
 
+@Tag("db")
 class BehandlingReferanseServiceTest {
     companion object {
         private lateinit var dataSource: TestDataSource

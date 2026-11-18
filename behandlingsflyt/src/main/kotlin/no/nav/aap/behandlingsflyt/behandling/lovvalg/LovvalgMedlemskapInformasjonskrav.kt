@@ -10,11 +10,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdagForBehandling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.informasjonskravExecutor
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ARBEIDSFORHOLDSTATUSER
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.tilDomene
@@ -54,7 +51,6 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
     private val medlemskapUnntakRepository: MedlemskapUnntakRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val medlemskapGateway: MedlemskapGateway,
-    private val arbeidsForholdGateway: ArbeidsforholdGateway,
     private val enhetsregisteretGateway: EnhetsregisteretGateway,
     private val inntektskomponentenGateway: InntektkomponentenGateway,
     private val stønadsperiodeRepository: StønadsperiodeRepository,
@@ -73,7 +69,6 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
 
     data class LovvalgRegisterData(
         val medlemskapPerioder: List<MedlemskapDataIntern>,
-        val arbeidGrunnlag: List<ArbeidINorgeGrunnlag>,
         val inntektPerDato: Map<LocalDate, List<ArbeidsInntektMåned>>,
         val enhetGrunnlag: List<EnhetGrunnlag>
     ) : InformasjonskravRegisterdata
@@ -93,7 +88,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         }
 
         return fellesRegler
-                && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
+                && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): LovvalgInput {
@@ -158,8 +153,6 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         val executor = informasjonskravExecutor
         val medlemskapPerioderFuture = CompletableFuture
             .supplyAsync(withMdc { medlemskapGateway.innhent(sak.person, sak.rettighetsperiode) }, executor)
-        val arbeidGrunnlagFuture = CompletableFuture
-            .supplyAsync(withMdc { innhentAARegisterGrunnlag(sak) }, executor)
 
         val inntektGrunnlagFutures = if (input.skalHentePerKrav) {
             datoerSomInntektSkalHentesIForholdTil.map { dato ->
@@ -181,14 +174,12 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         }
 
         val medlemskapPerioder = medlemskapPerioderFuture.get()
-        val arbeidGrunnlag = arbeidGrunnlagFuture.get()
 
         val inntektPerDato = inntektGrunnlagFutures.associate { it.first to it.second.get() }
         val enhetGrunnlag = innhentEREGGrunnlag(inntektPerDato.flatMap { it.value })
 
         return LovvalgRegisterData(
             medlemskapPerioder = medlemskapPerioder,
-            arbeidGrunnlag = arbeidGrunnlag,
             inntektPerDato = inntektPerDato,
             enhetGrunnlag = enhetGrunnlag
         )
@@ -199,7 +190,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         registerdata: LovvalgRegisterData,
         kontekst: FlytKontekstMedPerioder
     ): Informasjonskrav.Endret {
-        val (medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag) = registerdata
+        val (medlemskapPerioder, inntektGrunnlag, enhetGrunnlag) = registerdata
 
         val eksisterendeData = input.eksisterendeData
 
@@ -216,7 +207,6 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
 
         val nyRegisterdata = LovvalgMedlemskapRegisterGrunnlag(
             inntekterINorgeGrunnlag = InntekterINorgeRegisterGrunnlag(gjeldendeInntekter),
-            arbeiderINorgeGrunnlag = arbeidGrunnlag,
             medlemskapUnntakGrunnlag = medlemskapPerioder
                 .takeIf { it.isNotEmpty() }
                 ?.let { MedlemskapUnntakGrunnlag(it.tilDomene()) }
@@ -232,14 +222,6 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         }
 
         return IKKE_ENDRET
-    }
-
-    private fun innhentAARegisterGrunnlag(sak: Sak): List<ArbeidINorgeGrunnlag> {
-        val request = ArbeidsforholdRequest(
-            arbeidstakerId = sak.person.aktivIdent().identifikator,
-            arbeidsforholdstatuser = listOf(ARBEIDSFORHOLDSTATUSER.AKTIV.toString())
-        )
-        return arbeidsForholdGateway.hentAARegisterData(request)
     }
 
     private fun innhentEREGGrunnlag(inntektGrunnlag: List<ArbeidsInntektMåned>): List<EnhetGrunnlag> {
@@ -314,7 +296,6 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
                 medlemskapUnntakRepository = repositoryProvider.provide<MedlemskapUnntakRepository>(),
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 medlemskapGateway = gatewayProvider.provide(),
-                arbeidsForholdGateway = gatewayProvider.provide(),
                 enhetsregisteretGateway = gatewayProvider.provide(),
                 inntektskomponentenGateway = gatewayProvider.provide(),
                 unleashGateway = gatewayProvider.provide(),

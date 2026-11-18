@@ -72,6 +72,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
@@ -85,6 +86,7 @@ import java.util.*
 import kotlin.time.Duration.Companion.milliseconds
 
 @Fakes
+@Tag("db")
 // FIXME testene i klassen bruker samme database og er timing-sensitive. Derfor SAME_THREAD.
 @Execution(ExecutionMode.SAME_THREAD)
 class ApiTest {

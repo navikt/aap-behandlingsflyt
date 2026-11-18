@@ -10,7 +10,10 @@ data class ForeslåVedtakDto(
     val periode: Periode,
     val utfall: Utfall,
     val rettighetsType: RettighetsType?,
-    val avslagsårsak: AvslagsårsakDto
+    val avslagsårsak: AvslagsårsakDto,
+    val tidligerePerioder: List<Periode> = emptyList(),
+    val tidligereVarÅpen: Boolean = false,
+    val erNy: Boolean = false,
 )
 
 data class AvslagsårsakDto(

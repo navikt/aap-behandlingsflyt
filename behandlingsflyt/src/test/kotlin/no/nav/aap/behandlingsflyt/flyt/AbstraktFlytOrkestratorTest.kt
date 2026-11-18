@@ -166,6 +166,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.params.provider.Arguments
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -177,6 +178,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as Avklaringsb
 
 
 @Fakes
+@Tag("db")
+@Tag("flyt")
 open class AbstraktFlytOrkestratorTest(
     private val configuredUnleashGateway: KClass<out UnleashGateway>,
 ) {

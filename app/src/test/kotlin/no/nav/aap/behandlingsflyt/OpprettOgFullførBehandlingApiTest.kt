@@ -50,12 +50,14 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
+import org.junit.jupiter.api.Tag
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.net.URI
 import java.time.LocalDate
 import kotlin.time.Duration.Companion.milliseconds
 
+@Tag("db")
 @Fakes
 @Execution(ExecutionMode.SAME_THREAD)
 class OpprettOgFullførBehandlingApiTest {
