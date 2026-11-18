@@ -42,7 +42,7 @@ object InMemoryLovvalgMedlemskapRepository : LovvalgMedlemskapRepository {
                 behandlingId,
                 LovvalgMedlemskapGrunnlag(
                     registerGrunnlag = forrige?.registerGrunnlag
-                        ?: LovvalgMedlemskapRegisterGrunnlag(null, null, emptyList()),
+                        ?: LovvalgMedlemskapRegisterGrunnlag(null, null),
                     vurderinger = vurderinger
                 )
             )

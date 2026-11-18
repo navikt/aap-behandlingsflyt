@@ -20,8 +20,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Tag
 import java.time.Instant
 
+@Tag("db")
 class TrukketSøknadRepositoryImplTest {
     companion object {
         private lateinit var dataSource: TestDataSource
@@ -86,9 +88,28 @@ class TrukketSøknadRepositoryImplTest {
         }
     }
 
-    fun behandling(): BehandlingId {
+    @Test
+    fun `lagrer og henter vurdering uten journalpost`() {
+        val behandling = behandling(Ident("1".repeat(11)))
+        val vurdering = TrukketSøknadVurdering(
+            journalpostId = null,
+            begrunnelse = "migrering trekkes",
+            vurdertAv = Bruker("Z00000"),
+            skalTrekkes = true,
+            aarsak = AarsakTilTrekkSoknad.ANNET,
+            vurdert = Instant.parse("2020-01-01T12:12:12Z"),
+        )
+
+        dataSource.transaction { connection ->
+            val trukketSøknadRepo = TrukketSøknadRepositoryImpl(connection)
+            trukketSøknadRepo.lagreTrukketSøknadVurdering(behandling, vurdering)
+            assertThat(trukketSøknadRepo.hentTrukketSøknadVurderinger(behandling)).isEqualTo(listOf(vurdering))
+        }
+    }
+
+    fun behandling(ident: Ident = Ident("0".repeat(11))): BehandlingId {
         return dataSource.transaction { connection ->
-            val person = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(Ident("0".repeat(11))))
+            val person = PersonRepositoryImpl(connection).finnEllerOpprett(listOf(ident))
             val sak = SakRepositoryImpl(connection).finnEllerOpprett(person, 1 januar 2025)
             val behandling = BehandlingRepositoryImpl(connection).opprettBehandling(
                 sakId = sak.id,

@@ -8,7 +8,10 @@ import no.nav.aap.behandlingsflyt.arena.ArenaOppholdskrav
 import no.nav.aap.behandlingsflyt.arena.ArenaVedtaksperiode
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TrekkSøknadLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKravLøsning
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
+import no.nav.aap.behandlingsflyt.behandling.søknad.flate.AarsakTilTrekkSoknadDto
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapRepository
@@ -109,6 +112,54 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
                 behandling.assertRettighetstype(
                     Periode(startDato, startDato.plusMonths(6)) to RettighetsType.BISTANDSBEHOV
                 )
+            }
+    }
+
+    @Test
+    fun `kan trekke søknad i migreringsbehandling etter at noen steg er løst`() {
+        val (sak, migreringsbehandling) = migrerFraArena()
+        val startDato = sak.rettighetsperiode.fom
+
+        migreringsbehandling
+            .løsAvklaringsBehov(
+                VurderKravLøsning(
+                    kravVurderinger = setOf(
+                        MigrertKravLøsningDto(
+                            begrunnelse = "en begrunnelse",
+                            virkningstidspunktArena = startDato.minusMonths(5),
+                            muligRettFra = startDato,
+                            arenaSaksnummer = "2016-123456",
+                            rettighetstype = MigrertRettighetstype.ORDINÆR,
+                            resterendeKvoteOrdinær = 300,
+                        )
+                    )
+                )
+            )
+            .løsLovvalg(startDato, medlem = true)
+            .løsSykdom(startDato, erOppfylt = true)
+            .medKontekst {
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                    .containsExactly(Definisjon.AVKLAR_BISTANDSBEHOV)
+            }
+            .leggTilVurderingsbehov(Vurderingsbehov.SØKNAD_TRUKKET)
+            .medKontekst {
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                    .contains(Definisjon.VURDER_TREKK_AV_SØKNAD)
+            }
+            .løsAvklaringsBehov(
+                TrekkSøknadLøsning(
+                    begrunnelse = "trekker søknaden",
+                    aarsak = AarsakTilTrekkSoknadDto.ANNET
+                )
+            )
+            .medKontekst {
+                assertThat(avklaringsbehovSomMåLøses).isEmpty()
+                assertThat(behandling.status()).isEqualTo(AVSLUTTET)
+                assertThat(hentVedtakHvisEksisterer()).isNull()
+                val trukket = repositoryProvider.provide<TrukketSøknadRepository>()
+                    .hentTrukketSøknadVurderinger(behandling.id)
+                assertThat(trukket).hasSize(1)
+                assertThat(trukket.single().journalpostId).isNull()
             }
     }
 

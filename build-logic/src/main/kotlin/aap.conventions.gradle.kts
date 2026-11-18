@@ -23,11 +23,6 @@ testing {
     suites {
         @Suppress("UnstableApiUsage")
         named<JvmTestSuite>("test") {
-            targets.all {
-                testTask {
-                    environment("TZ", "Europe/Oslo")
-                }
-            }
             useJUnitJupiter()
         }
     }
@@ -88,13 +83,25 @@ private fun bestemAntallTestTråder(): Int {
     return antallTråder
 }
 
+val dockerTagger = arrayOf("db", "kafka", "flyt")
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+    environment("TZ", "Europe/Oslo")
+    maxParallelForks = bestemAntallTestTråder()
+    systemProperty("junit.jupiter.execution.timeout.default", "3m")
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+}
+
 tasks {
     test {
-        useJUnitPlatform()
-        maxParallelForks = bestemAntallTestTråder()
-        systemProperty("junit.jupiter.execution.timeout.default", "3m")
-        testLogging {
-            events("passed", "skipped", "failed")
+        if (providers.gradleProperty("coreTestsOnly").map(String::toBooleanStrict).getOrElse(false)) {
+            useJUnitPlatform {
+                excludeTags(*dockerTagger)
+            }
+            environment("TESTCONTAINERS_IMAGE_SUBSTITUTOR", "no.nav.aap.behandlingsflyt.test.DockerIkkeTillattIKjernetester")
         }
     }
 

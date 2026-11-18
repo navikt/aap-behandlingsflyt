@@ -15,9 +15,11 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
+@Tag("db")
 class FullmektigRepositoryImplTest {
     companion object {
         private lateinit var dataSource: TestDataSource

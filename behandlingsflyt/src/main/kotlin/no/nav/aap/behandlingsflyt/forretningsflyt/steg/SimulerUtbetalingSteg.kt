@@ -2,6 +2,8 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingService
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
@@ -23,6 +25,7 @@ private val VURDERINGSTYPER_FOR_SIMULERING = listOf(
 class SimulerUtbetalingSteg private constructor(
     private val utbetalingService: UtbetalingService,
     private val utbetalingGateway: UtbetalingGateway,
+    private val tidligereVurderinger: TidligereVurderinger,
     private val unleashGateway: UnleashGateway,
 ) : BehandlingSteg {
 
@@ -30,6 +33,9 @@ class SimulerUtbetalingSteg private constructor(
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (unleashGateway.isDisabled(BehandlingsflytFeature.SimuleringStegForNyttUtbetalingsgrensesnitt)) {
+            return Fullført
+        }
+        if (tidligereVurderinger.girIngenBehandlingsgrunnlag(kontekst, type())) {
             return Fullført
         }
         if (kontekst.vurderingType in VURDERINGSTYPER_FOR_SIMULERING) {
@@ -56,6 +62,7 @@ class SimulerUtbetalingSteg private constructor(
             return SimulerUtbetalingSteg(
                 utbetalingService = UtbetalingService(repositoryProvider, gatewayProvider),
                 utbetalingGateway = gatewayProvider.provide(),
+                tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 unleashGateway = gatewayProvider.provide(),
             )
         }

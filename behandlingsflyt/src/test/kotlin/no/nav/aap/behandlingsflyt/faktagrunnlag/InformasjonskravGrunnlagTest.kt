@@ -71,11 +71,13 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
+@Tag("db")
 @Fakes
 class InformasjonskravGrunnlagTest {
 
@@ -552,7 +554,6 @@ class InformasjonskravGrunnlagTest {
                     medlemskapUnntakRepository = repositoryProvider.provide(),
                     tidligereVurderinger = FakeTidligereVurderinger(),
                     medlemskapGateway = gatewayProvider.provide(),
-                    arbeidsForholdGateway = gatewayProvider.provide(),
                     enhetsregisteretGateway = gatewayProvider.provide(),
                     inntektskomponentenGateway = gatewayProvider.provide(),
                     unleashGateway = LokalUnleash,
