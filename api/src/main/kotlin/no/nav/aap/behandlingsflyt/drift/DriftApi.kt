@@ -17,7 +17,6 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelse2Dto
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
-import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeDriftsinfoService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
@@ -73,7 +72,6 @@ import no.nav.aap.komponenter.httpklient.exception.VerdiIkkeFunnetException
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.bruker
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
