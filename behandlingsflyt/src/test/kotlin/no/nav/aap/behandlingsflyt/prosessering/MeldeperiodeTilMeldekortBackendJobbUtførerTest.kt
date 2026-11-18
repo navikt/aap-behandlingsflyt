@@ -191,7 +191,6 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
         saksnummer = Saksnummer("s1"),
         person = person(identer = listOf(Ident("1".repeat(11), aktivIdent = true))),
         rettighetsperiode = Periode(LocalDate.parse("2025-03-31"), LocalDate.parse("2026-03-30")),
-        status = Status.UTREDES,
     )
 
     private fun fritaksvurdering(harFritak: Boolean, fom: String, tom: String) = Fritaksvurdering(
