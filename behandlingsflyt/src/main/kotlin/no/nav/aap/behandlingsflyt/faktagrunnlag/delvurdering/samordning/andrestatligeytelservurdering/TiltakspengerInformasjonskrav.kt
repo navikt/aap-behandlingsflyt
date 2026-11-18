@@ -8,15 +8,14 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.gateway.TiltakspengerPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdagForBehandling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.tiltakspenger.TiltakspengerRepository
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -26,7 +25,6 @@ class TiltakspengerInformasjonskrav(
     private val tiltakspengerGateway: TiltakspengerGateway,
     private val tiltakspengerRepository: TiltakspengerRepository,
     private val sakService: SakService,
-    private val unleashGateway: UnleashGateway
 ) : Informasjonskrav<TiltakspengerInformasjonskrav.TiltakspengerInput, TiltakspengerInformasjonskrav.TiltakspengerRegisterdata> {
     override val navn = Companion.navn
 
@@ -112,7 +110,6 @@ class TiltakspengerInformasjonskrav(
                 tiltakspengerGateway = gatewayProvider.provide(),
                 tiltakspengerRepository = repositoryProvider.provide(),
                 sakService = SakService(repositoryProvider, gatewayProvider),
-                unleashGateway = gatewayProvider.provide()
             )
         }
     }

@@ -31,14 +31,6 @@ class Vilkårsvurdering(
         return utfall == Utfall.OPPFYLT
     }
 
-    fun erIkkeRelevant(): Boolean {
-        return utfall == Utfall.IKKE_RELEVANT
-    }
-
-    fun erVurdert(): Boolean {
-        return utfall != Utfall.IKKE_VURDERT
-    }
-    
     fun erIkkeOppfylt(): Boolean {
         return utfall == Utfall.IKKE_OPPFYLT
     }

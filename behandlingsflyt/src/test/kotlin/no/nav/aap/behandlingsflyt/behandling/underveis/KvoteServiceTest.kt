@@ -23,7 +23,6 @@ import kotlin.test.Test
 
 class KvoteServiceTest {
 
-    private val behandlingRepository = InMemoryBehandlingRepository
     private val kravRepository = InMemoryKravRepository
 
     private val kvoteService = KvoteService(inMemoryRepositoryProvider, minimalGatewayProvider { })

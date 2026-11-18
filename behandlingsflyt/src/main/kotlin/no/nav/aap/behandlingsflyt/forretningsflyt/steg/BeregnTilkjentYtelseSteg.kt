@@ -50,7 +50,6 @@ class BeregnTilkjentYtelseSteg private constructor(
     private val reduksjon11_9Repository: Reduksjon11_9Repository,
     private val aktivitetsplikt11_9repository: Aktivitetsplikt11_9Repository,
     private val barnepensjonRepository: BarnepensjonRepository,
-    private val unleashGateway: UnleashGateway,
     private val behandlingRepository: BehandlingRepository,
     private val sporingService: SporingService,
     ) : BehandlingSteg {
@@ -68,7 +67,6 @@ class BeregnTilkjentYtelseSteg private constructor(
         reduksjon11_9Repository = repositoryProvider.provide(),
         aktivitetsplikt11_9repository = repositoryProvider.provide(),
         barnepensjonRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
         sporingService = SporingService(repositoryProvider, gatewayProvider),
     )

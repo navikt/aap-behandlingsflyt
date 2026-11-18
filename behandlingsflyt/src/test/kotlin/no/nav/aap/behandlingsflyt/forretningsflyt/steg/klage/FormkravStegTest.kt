@@ -111,7 +111,6 @@ class FormkravStegTest {
                 AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
                 
             ),
-            unleashGateway = gatewayProvider.provide()
         )
 
         steg.utfør(kontekst)
@@ -173,7 +172,6 @@ class FormkravStegTest {
                 AlleAvskruddUnleash,
                 AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
             ),
-            unleashGateway = gatewayProvider.provide()
         )
 
 
@@ -237,7 +235,6 @@ class FormkravStegTest {
                 AlleAvskruddUnleash,
                 AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
             ),
-            unleashGateway = gatewayProvider.provide()
         )
 
         every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
@@ -304,7 +301,6 @@ class FormkravStegTest {
                 AlleAvskruddUnleash,
                 AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
             ),
-            unleashGateway = gatewayProvider.provide()
         )
 
         every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
@@ -413,7 +409,6 @@ class FormkravStegTest {
                 AlleAvskruddUnleash,
                 AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
             ),
-            unleashGateway = gatewayProvider.provide()
         )
 
         steg.utfør(kontekst)
@@ -463,7 +458,6 @@ class FormkravStegTest {
                 AlleAvskruddUnleash,
                 AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
             ),
-            unleashGateway = gatewayProvider.provide()
         )
 
         every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
@@ -539,7 +533,6 @@ class FormkravStegTest {
                 AlleAvskruddUnleash,
                 AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
             ),
-            unleashGateway = gatewayProvider.provide()
         )
 
         every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(

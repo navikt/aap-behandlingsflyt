@@ -18,7 +18,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedP
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -28,7 +27,6 @@ class UføreSøknadInformasjonskrav(
     private val uføreSøknadRepository: UføreSøknadRepository,
     private val uføreRegisterGateway: UføreRegisterGateway,
     private val tidligereVurderinger: TidligereVurderinger,
-    private val unleashGateway: UnleashGateway,
 ) : Informasjonskrav<UføreSøknadInformasjonskrav.UføreSøknadInput, UføreSøknadInformasjonskrav.UføreSøknadRegisterdata>,
     KanTriggeRevurdering {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -36,7 +34,6 @@ class UføreSøknadInformasjonskrav(
         uføreSøknadRepository = repositoryProvider.provide(),
         uføreRegisterGateway = gatewayProvider.provide(),
         tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
-        unleashGateway = gatewayProvider.provide(),
     )
 
     override val navn = Companion.navn

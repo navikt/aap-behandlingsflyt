@@ -36,7 +36,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -55,7 +54,6 @@ class BehandlingHendelseServiceImpl(
     private val pipService: PipService,
     private val behandlingService: BehandlingService,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val unleashGateway: UnleashGateway,
     private val gjenståendeSykedagerRepository: GjenståendeSykedagerRepository,
 ) : BehandlingHendelseService {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -65,7 +63,6 @@ class BehandlingHendelseServiceImpl(
         pipService = PipService(repositoryProvider),
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
-        unleashGateway = gatewayProvider.provide(),
         gjenståendeSykedagerRepository = repositoryProvider.provide(),
     )
 

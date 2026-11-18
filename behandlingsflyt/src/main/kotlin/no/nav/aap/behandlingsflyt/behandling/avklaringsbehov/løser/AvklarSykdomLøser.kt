@@ -10,11 +10,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurd
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -23,14 +21,15 @@ class AvklarSykdomLøser(
     private val behandlingRepository: BehandlingRepository,
     private val sykdomRepository: SykdomRepository,
     private val yrkersskadeRepository: YrkesskadeRepository,
-    private val unleashGateway: UnleashGateway,
 ) : AvklaringsbehovsLøser<AvklarSykdomLøsning> {
 
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+    constructor(
+        repositoryProvider: RepositoryProvider,
+        @Suppress("unused") gatewayProvider: GatewayProvider,
+    ) : this(
         behandlingRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         yrkersskadeRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)

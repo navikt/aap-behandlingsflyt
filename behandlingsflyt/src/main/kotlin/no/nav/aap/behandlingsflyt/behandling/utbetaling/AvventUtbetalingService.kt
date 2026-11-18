@@ -21,7 +21,6 @@ class AvventUtbetalingService(
     private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
     private val vedtakService: VedtakService,
     private val behandlingRepository: BehandlingRepository,
-    private val unleashGateway: UnleashGateway,
 ) {
 
     fun finnEventuellAvventUtbetaling(

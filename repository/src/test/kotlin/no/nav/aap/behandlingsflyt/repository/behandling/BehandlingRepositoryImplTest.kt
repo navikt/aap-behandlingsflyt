@@ -318,7 +318,7 @@ internal class BehandlingRepositoryImplTest {
             behandlingRepository.oppdaterBehandlingStatus(behandlingForSakFerdig.id, Status.AVSLUTTET)
 
             val sakÅpen = sak(connection)
-            val behandlingForSakÅpen = finnEllerOpprettBehandling(connection, sakÅpen)
+            finnEllerOpprettBehandling(connection, sakÅpen)
             val sakTrukket = sak(connection)
             val behandlingForSakTrukket = finnEllerOpprettBehandling(connection, sakTrukket)
             behandlingRepository.oppdaterBehandlingStatus(behandlingForSakTrukket.id, Status.AVSLUTTET)

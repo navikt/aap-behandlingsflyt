@@ -8,13 +8,10 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.DatoFraDokumentUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Tid
@@ -30,7 +27,6 @@ class VurderRettighetsperiodeLøser(
     private val sakService: SakService,
     private val mottattDokumentRepository: MottattDokumentRepository,
     private val migrerKravService: MigrerKravService,
-    private val unleashGateway: UnleashGateway
 ) : AvklaringsbehovsLøser<VurderRettighetsperiodeLøsning> {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -42,7 +38,6 @@ class VurderRettighetsperiodeLøser(
         sakService = SakService(repositoryProvider, gatewayProvider),
         mottattDokumentRepository = repositoryProvider.provide(),
         migrerKravService = MigrerKravService(repositoryProvider),
-        unleashGateway = gatewayProvider.provide()
     )
 
     override fun løs(kontekst: AvklaringsbehovKontekst, løsning: VurderRettighetsperiodeLøsning): LøsningsResultat {

@@ -54,8 +54,6 @@ class ForeslåVedtakStegTest {
             createGatewayProvider { register<AlleAvskruddUnleash>() })
     )
     private val steg = ForeslåVedtakSteg(avklaringsbehovRepository, FakeTidligereVurderinger(), avklaringsbehovService)
-    private val sakRepository = InMemorySakRepository
-
 
     private val behandlingRepository = InMemoryBehandlingRepository
 

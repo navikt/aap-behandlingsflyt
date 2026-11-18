@@ -10,11 +10,8 @@ import no.nav.aap.behandlingsflyt.integrasjon.samordning.DagpengerPeriodeRespons
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.DagpengerRequest
 import no.nav.aap.behandlingsflyt.integrasjon.samordning.DagpengerResponse
 import no.nav.aap.behandlingsflyt.test.TestPersonService
-import org.slf4j.LoggerFactory
 
 class DagpengerFake(private val fakePersoner: () -> TestPersonService) : FakeServer() {
-    private val logger = LoggerFactory.getLogger(javaClass)
-
     override val server = embeddedServer(Netty, port = 0, module = module())
     override fun start() { server.start() }
 

@@ -15,12 +15,12 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVBRYT_REVURDERING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_STUDENT
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_STØNADSPERIODE
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_SYKDOM
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.FASTSETT_MELDEPERIODER
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.FATTE_VEDTAK
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.IVERKSETT_VEDTAK
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.KRAV
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.AVKLAR_STØNADSPERIODE
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SEND_FORVALTNINGSMELDING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.START_BEHANDLING
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType.SØKNAD
@@ -61,7 +61,6 @@ class EnklereFlytOrkestratorTest {
         ),
         behandlingService = InMemoryBehandlingService,
         informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
-        sakRepository = sakRepository,
         avklaringsbehovRepository = avklaringsbehovRepository,
         behandlingRepository = behandlingRepository,
         ventebehovEvaluererService = DummyVentebehovEvaluererService(),
@@ -82,7 +81,6 @@ class EnklereFlytOrkestratorTest {
         ),
         behandlingService = InMemoryBehandlingService,
         informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
-        sakRepository = sakRepository,
         avklaringsbehovRepository = avklaringsbehovRepository,
         behandlingRepository = behandlingRepository,
         ventebehovEvaluererService = DummyVentebehovEvaluererService(),
@@ -219,7 +217,6 @@ class EnklereFlytOrkestratorTest {
             informasjonskravGrunnlag = DummyInformasjonskravGrunnlag(),
             behandlingRepository = behandlingRepository,
             ventebehovEvaluererService = DummyVentebehovEvaluererService(),
-            sakRepository = sakRepository,
             avklaringsbehovRepository = avklaringsbehovRepository,
             behandlingHendelseService = behandlingHendelseService,
             behandlingService = InMemoryBehandlingService,
