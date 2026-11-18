@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterINorgeRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgRegisterGrunnlag
@@ -43,7 +44,7 @@ class LovvalgMedlemskapVurderingServiceTest {
                             )
                         )
                     ),
-                    inntekterINorgeGrunnlag = InntekterINorgeGrunnlag(emptySet()),
+                    inntekterINorgeGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet()),
                 ) 
             ),
             personopplysning = Personopplysning(
@@ -90,7 +91,7 @@ class LovvalgMedlemskapVurderingServiceTest {
                             )
                         )
                     ),
-                    inntekterINorgeGrunnlag = InntekterINorgeGrunnlag(emptySet()),
+                    inntekterINorgeGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet()),
                     
                 ),
             ),
@@ -139,7 +140,7 @@ class LovvalgMedlemskapVurderingServiceTest {
                             )
                         )
                     ),
-                    inntekterINorgeGrunnlag = InntekterINorgeGrunnlag(emptySet()),
+                    inntekterINorgeGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet()),
                     
                 ),
             ),
@@ -264,7 +265,7 @@ class LovvalgMedlemskapVurderingServiceTest {
         lovvalgMedlemskapGrunnlag = LovvalgMedlemskapGrunnlag(
             registerGrunnlag = LovvalgMedlemskapRegisterGrunnlag(
                 medlemskapUnntakGrunnlag = MedlemskapUnntakGrunnlag(emptyList()),
-                inntekterINorgeGrunnlag = InntekterINorgeGrunnlag(emptySet()),
+                inntekterINorgeGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet()),
                 
             ),
         ),
