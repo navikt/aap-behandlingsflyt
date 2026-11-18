@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravValiderin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -40,14 +41,19 @@ class VurderKravLøser(
             vurderingDto.tilVurdering(kontekst.behandlingId(), kontekst.bruker, Instant.now())
         }.toSet()
 
-        validerGyldighet(kontekst.behandlingId(), nyeVurderinger, søknaderISak)
+        val eksisterendeVurderinger = kravRepository.hentHvisEksisterer(kontekst.behandlingId())?.vurderinger.orEmpty() +
+                kontekst.kontekst.forrigeBehandlingId?.let { kravRepository.hentHvisEksisterer(it) }
+                    ?.vurderinger.orEmpty()
 
-        val iverksatteVurderinger = kontekst.kontekst.forrigeBehandlingId?.let {
-            kravRepository.hentHvisEksisterer(it)
-        }?.vurderinger.orEmpty()
+        // Frontend sender kun endrede krav. Resten hentes fra databasen slik at validering skjer mot full oversikt
+        val innsendteReferanser = nyeVurderinger.map { it.referanse }.toSet()
+        val uendredeVurderinger = eksisterendeVurderinger.gjeldendeVurderinger()
+            .filter { it.referanse !in innsendteReferanser }
+            .toSet()
 
-        val alleVurderinger = nyeVurderinger + iverksatteVurderinger
+        validerGyldighet(kontekst.behandlingId(), nyeVurderinger, nyeVurderinger + uendredeVurderinger, søknaderISak)
 
+        val alleVurderinger = eksisterendeVurderinger + nyeVurderinger
         kravRepository.lagre(kontekst.behandlingId(), alleVurderinger)
 
         // Midlertidig hack for å overstyre startdato. På sikt burde kravet i seg selv være nok til å sette datoen
@@ -64,23 +70,24 @@ class VurderKravLøser(
     }
 
     private fun validerGyldighet(
-        behnadlingId: BehandlingId,
-        vurderinger: Set<KravVurdering>,
+        behandlingId: BehandlingId,
+        nyeVurderinger: Set<KravVurdering>,
+        gjeldendeVurderinger: Set<KravVurdering>,
         søknaderISak: Set<MottattDokument>
     ) {
-        val søknaderIBehandling = søknaderISak.filter { it.behandlingId == behnadlingId }.toSet()
+        val søknaderIBehandling = søknaderISak.filter { it.behandlingId == behandlingId }.toSet()
 
-        if (!KravValidering.erKravVurderingTilstrekkeligVurdert(søknaderIBehandling, vurderinger)) {
+        if (!KravValidering.erKravVurderingTilstrekkeligVurdert(søknaderIBehandling, gjeldendeVurderinger)) {
             throw UgyldigForespørselException("Mangler vurdering av krav for innsendt søknad.")
         }
 
-        val migrerteKravVurderinger = vurderinger.filterIsInstance<MigrertKrav>()
+        val migrerteKravVurderinger = gjeldendeVurderinger.filterIsInstance<MigrertKrav>()
 
         if (migrerteKravVurderinger.size > 1) {
             throw UgyldigForespørselException("Man kan kun sende inn 1 migrert krav.")
         }
 
-        vurderinger.forEach { vurdering ->
+        nyeVurderinger.forEach { vurdering ->
             if (vurdering is RelevantKrav) {
                 validerRelevantKrav(
                     vurdering,
