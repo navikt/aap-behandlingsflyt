@@ -43,7 +43,7 @@ class LovvalgMedlemskapVurderingServiceTest {
                             )
                         )
                     ),
-                    inntekterINorgeGrunnlag = null,
+                    inntekterINorgeGrunnlag = InntekterINorgeGrunnlag(emptySet()),
                 ) 
             ),
             personopplysning = Personopplysning(
@@ -90,7 +90,7 @@ class LovvalgMedlemskapVurderingServiceTest {
                             )
                         )
                     ),
-                    inntekterINorgeGrunnlag = null,
+                    inntekterINorgeGrunnlag = InntekterINorgeGrunnlag(emptySet()),
                     
                 ),
             ),
@@ -139,7 +139,7 @@ class LovvalgMedlemskapVurderingServiceTest {
                             )
                         )
                     ),
-                    inntekterINorgeGrunnlag = null,
+                    inntekterINorgeGrunnlag = InntekterINorgeGrunnlag(emptySet()),
                     
                 ),
             ),
@@ -264,7 +264,7 @@ class LovvalgMedlemskapVurderingServiceTest {
         lovvalgMedlemskapGrunnlag = LovvalgMedlemskapGrunnlag(
             registerGrunnlag = LovvalgMedlemskapRegisterGrunnlag(
                 medlemskapUnntakGrunnlag = MedlemskapUnntakGrunnlag(emptyList()),
-                inntekterINorgeGrunnlag = null,
+                inntekterINorgeGrunnlag = InntekterINorgeGrunnlag(emptySet()),
                 
             ),
         ),
