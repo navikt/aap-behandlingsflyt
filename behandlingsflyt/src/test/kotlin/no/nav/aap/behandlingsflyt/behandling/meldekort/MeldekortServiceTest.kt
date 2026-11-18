@@ -78,6 +78,43 @@ class MeldekortServiceTest {
     )
 
     @Test
+    fun `henter samme lagrede meldedato fra en oppdelt meldeperiode`() {
+        stubSakOgBehandling()
+        val meldedato = 9 januar 2025
+        stubUnderveisgrunnlag(
+            underveisperiode(Utfall.OPPFYLT, Periode(6 januar 2025, 8 januar 2025), meldeperiode),
+            underveisperiode(
+                Utfall.OPPFYLT, Periode(9 januar 2025, 12 januar 2025), meldeperiode, meldedato
+            ),
+            underveisperiode(
+                Utfall.OPPFYLT, Periode(13 januar 2025, 19 januar 2025), meldeperiode, meldedato
+            )
+        )
+        every { meldekortRepository.hentHvisEksisterer(behandlingId) } returns null
+
+        assertThat(service().hentMeldeperioderMedMeldekort(saksnummer).meldeperioderMedMeldekort.single().meldedato)
+            .isEqualTo(meldedato)
+    }
+
+    @Test
+    fun `avviser motstridende lagrede meldedatoer for samme meldeperiode`() {
+        stubSakOgBehandling()
+        stubUnderveisgrunnlag(
+            underveisperiode(
+                Utfall.OPPFYLT, Periode(6 januar 2025, 12 januar 2025), meldeperiode, 8 januar 2025
+            ),
+            underveisperiode(
+                Utfall.OPPFYLT, Periode(13 januar 2025, 19 januar 2025), meldeperiode, 9 januar 2025
+            )
+        )
+        every { meldekortRepository.hentHvisEksisterer(behandlingId) } returns null
+
+        assertThatThrownBy { service().hentMeldeperioderMedMeldekort(saksnummer) }
+            .isInstanceOf(IllegalStateException::class.java)
+            .hasMessage("[Utviklerfeil] Flere meldedatoer for samme meldeperiode")
+    }
+
+    @Test
     fun `kaster feil når underveisgrunnlag mangler`() {
         stubSakOgBehandling()
         every { underveisRepository.hentHvisEksisterer(behandlingId) } returns null
@@ -325,6 +362,7 @@ class MeldekortServiceTest {
         utfall: Utfall,
         periode: Periode,
         meldePeriode: Periode = periode,
+        meldedato: LocalDate? = null,
     ) = Underveisperiode(
         periode = periode,
         meldePeriode = meldePeriode,
@@ -344,5 +382,6 @@ class MeldekortServiceTest {
         institusjonsoppholdReduksjon = `0_PROSENT`,
         meldepliktStatus = MeldepliktStatus.MELDT_SEG,
         meldepliktGradering = `0_PROSENT`,
+        meldedato = meldedato,
     )
 }

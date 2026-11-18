@@ -21,6 +21,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.time.LocalDate
 
 class UnderveisRepositoryImplTest {
 
@@ -54,9 +55,35 @@ class UnderveisRepositoryImplTest {
         }
 
         assertThat(grunnlag.perioder.single().arbeidsgradering.andelArbeid).isEqualTo(`0_PROSENT`)
+        assertThat(grunnlag.perioder.single().meldedato).isNull()
     }
 
-    private fun oppfyltPeriode(periode: Periode) = Underveisperiode(
+    @Test
+    fun `meldedato lagres og endring av bare meldedato oppretter nytt grunnlag`() {
+        val sak = dataSource.transaction { sak(it, 1 januar 2025) }
+        val periode = Periode(1 januar 2025, 14 januar 2025)
+        val behandling = dataSource.transaction { finnEllerOpprettBehandling(it, sak, gatewayProvider = gatewayProvider) }
+
+        dataSource.transaction { connection ->
+            val repository = UnderveisRepositoryImpl(connection)
+            val input = object : Faktagrunnlag {}
+            repository.lagre(behandling.id, listOf(oppfyltPeriode(periode, 3 januar 2025)), input)
+            val førsteGrunnlag = repository.hent(behandling.id)
+            assertThat(førsteGrunnlag.perioder.single().meldedato).isEqualTo(3 januar 2025)
+
+            val endredePerioder = listOf(oppfyltPeriode(periode, 4 januar 2025))
+            repository.lagre(behandling.id, endredePerioder, input)
+            val endretGrunnlag = repository.hent(behandling.id)
+            assertThat(endretGrunnlag.id).isNotEqualTo(førsteGrunnlag.id)
+            assertThat(endretGrunnlag.perioder).isEqualTo(endredePerioder)
+            assertThat(repository.hentBulk(listOf(behandling.id))[behandling.id]).isEqualTo(endretGrunnlag)
+
+            repository.lagre(behandling.id, endredePerioder, input)
+            assertThat(repository.hent(behandling.id).id).isEqualTo(endretGrunnlag.id)
+        }
+    }
+
+    private fun oppfyltPeriode(periode: Periode, meldedato: LocalDate? = null) = Underveisperiode(
         periode = periode,
         meldePeriode = periode,
         utfall = Utfall.OPPFYLT,
@@ -75,5 +102,6 @@ class UnderveisRepositoryImplTest {
         institusjonsoppholdReduksjon = `0_PROSENT`,
         meldepliktStatus = null,
         meldepliktGradering = null,
+        meldedato = meldedato,
     )
 }

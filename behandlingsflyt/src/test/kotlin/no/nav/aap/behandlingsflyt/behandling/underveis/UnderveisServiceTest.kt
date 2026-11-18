@@ -23,9 +23,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.help.genererVilkårsresultat
+import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
+import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -33,6 +35,30 @@ import java.time.LocalDate
 
 class UnderveisServiceTest {
     private val kvoter = tomKvoter
+
+    @Test
+    fun `bevarer datoen fra første melding i underveisresultatet`() {
+        val meldeperiode = Periode(20 januar 2025, 2 februar 2025)
+        val rettighetsperiode = Periode(6 januar 2025, meldeperiode.tom)
+        val input = tomUnderveisInput(
+            rettighetsperiode = rettighetsperiode,
+            vilkårsresultat = genererVilkårsresultat(rettighetsperiode),
+            innsendingsTidspunkt = mapOf(
+                23 januar 2025 to JournalpostId("første"),
+                24 januar 2025 to JournalpostId("korrigert")
+            )
+        )
+
+        val perioder = UnderveisService.tilUnderveisperioder(UnderveisService.vurderRegler(input))
+        val meldtePerioder = perioder.filter { it.meldePeriode == meldeperiode }
+
+        assertThat(meldtePerioder).isNotEmpty()
+        assertThat(meldtePerioder.map { it.meldedato }).containsOnly(23 januar 2025)
+        assertThat(perioder.filter { it.meldePeriode != meldeperiode }.map { it.meldedato }).containsOnlyNulls()
+        val kopiertPeriode = meldtePerioder.first().let { it.copy(it.periode, it.meldepliktStatus) }
+        assertThat(kopiertPeriode.meldedato)
+            .isEqualTo(23 januar 2025)
+    }
 
     @Test
     fun `skal vurdere alle reglene`() {

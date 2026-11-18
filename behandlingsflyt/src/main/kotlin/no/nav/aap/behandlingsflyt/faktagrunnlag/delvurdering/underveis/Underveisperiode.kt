@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.Prosent
+import java.time.LocalDate
 import java.util.*
 
 /**
@@ -28,6 +29,7 @@ class Underveisperiode(
     val meldepliktStatus: MeldepliktStatus?,
     val meldepliktGradering: Prosent?,
     private val backFillStansOpphorEnabled: Boolean = false,
+    val meldedato: LocalDate? = null,
 ) : Comparable<Underveisperiode> {
     init {
         if (utfall == Utfall.IKKE_OPPFYLT) requireNotNull(avslagsårsak) { "Må ha avslagsårsak om utfall ikke oppfylt." }
@@ -70,6 +72,7 @@ class Underveisperiode(
         meldepliktStatus = meldepliktStatus,
         meldepliktGradering = meldepliktGradering,
         backFillStansOpphorEnabled = backFillStansOpphorEnabled,
+        meldedato = meldedato,
     )
 
     override fun equals(other: Any?) =
@@ -85,12 +88,13 @@ class Underveisperiode(
                 this.trekk == other.trekk &&
                 this.brukerAvKvoter == other.brukerAvKvoter &&
                 this.meldepliktStatus == other.meldepliktStatus &&
-                this.meldepliktGradering == other.meldepliktGradering
+                this.meldepliktGradering == other.meldepliktGradering &&
+                this.meldedato == other.meldedato
 
     override fun hashCode() = Objects.hash(
         periode, meldePeriode, utfall, rettighetsType, avslagsårsak, grenseverdi,
         institusjonsoppholdReduksjon, arbeidsgradering, trekk, brukerAvKvoter,
-        meldepliktStatus, meldepliktGradering,
+        meldepliktStatus, meldepliktGradering, meldedato,
     )
 
     override fun toString() = """
