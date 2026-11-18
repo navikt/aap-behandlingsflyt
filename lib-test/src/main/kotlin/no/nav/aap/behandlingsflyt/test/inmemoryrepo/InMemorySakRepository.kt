@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.utils.FarligMutering
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
-import java.util.concurrent.atomic.*
+import java.util.concurrent.atomic.AtomicLong
 
 object InMemorySakRepository : SakRepository {
 

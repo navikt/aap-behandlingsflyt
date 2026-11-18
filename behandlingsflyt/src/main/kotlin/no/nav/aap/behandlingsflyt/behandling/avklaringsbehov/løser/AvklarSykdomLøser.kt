@@ -12,6 +12,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.utils.Validation
 import no.nav.aap.behandlingsflyt.utils.toHumanReadable
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -22,7 +23,10 @@ class AvklarSykdomLøser(
     private val yrkersskadeRepository: YrkesskadeRepository,
 ) : AvklaringsbehovsLøser<AvklarSykdomLøsning> {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(
+        repositoryProvider: RepositoryProvider,
+        @Suppress("unused") gatewayProvider: GatewayProvider,
+    ) : this(
         behandlingRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
         yrkersskadeRepository = repositoryProvider.provide(),
