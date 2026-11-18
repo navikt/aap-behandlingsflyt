@@ -152,7 +152,7 @@ private fun utledFallbackDelvurderinger(
                     sak.id
                 )
 
-        return LovvalgMedlemskapVurderingService().vurderTilhørighet(
+        return LovvalgMedlemskapVurderingService.vurderTilhørighet(
             MedlemskapLovvalgRegisterGrunnlag.fra(
                 medlemskapArbeidInntektGrunnlag,
                 brukerPersonopplysning,
