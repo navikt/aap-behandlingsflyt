@@ -72,6 +72,17 @@ class KlagebehandlingKontorGrunnlagApiTest : BaseApiTest() {
             .isEqualTo(PåklagetVedtakType.TILBAKEKREVING.name)
     }
 
+    @Test
+    fun `skal returnere null for påklaget vedtakstype og vurdering ved manglende grunnlag`() {
+        val klagebehandling = opprettBehandling(opprettInMemorySak(), TypeBehandling.Klage)
+
+        val respons = hentGrunnlag(klagebehandling.referanse.referanse.toString())
+
+        assertThat(respons.has("påklagetVedtakType")).isTrue()
+        assertThat(respons.get("påklagetVedtakType").isNull).isTrue()
+        assertThat(respons.path("vurdering").isNull).isTrue()
+    }
+
     private fun lagreGrunnlag(
         behandlingId: BehandlingId,
         påklagetBehandlingVurdering: PåklagetBehandlingVurdering,
