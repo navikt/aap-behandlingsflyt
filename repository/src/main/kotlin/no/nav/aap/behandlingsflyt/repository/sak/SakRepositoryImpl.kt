@@ -280,6 +280,7 @@ where not exists (
     }
 
     override fun finnSakerMedBarnetillegg(påDato: LocalDate): List<SakId> {
+        // gjeldende_vedtatte_behandliger er definert view i db/flyway
         val sql = """
 select distinct b.sak_id as id
 from tilkjent_ytelse ty

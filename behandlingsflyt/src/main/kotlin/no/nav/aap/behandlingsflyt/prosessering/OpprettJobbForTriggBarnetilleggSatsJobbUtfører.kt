@@ -11,6 +11,7 @@ import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import no.nav.aap.motor.cron.CronExpression
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 /**
  * Denne jobben brukes til å automatisk sende ut brev ved endring av barnetillegg-sats. Jobben er konfigurert til å
@@ -42,7 +43,9 @@ class OpprettJobbForTriggBarnetilleggSatsJobbUtfører(
             return
         }
 
-        val saker = sakRepository.finnSakerMedBarnetillegg(LocalDate.of(2026, 1, 1))
+        // forutsetter at jobb kjører 2. januar hvert år
+        val førsteDagMedNyttBarnetillegg = LocalDate.now().withDayOfYear(1)
+        val saker = sakRepository.finnSakerMedBarnetillegg(førsteDagMedNyttBarnetillegg)
         log.info("Fant ${saker.size} saker med barnetillegg.")
 
         saker.forEach {
@@ -51,9 +54,11 @@ class OpprettJobbForTriggBarnetilleggSatsJobbUtfører(
     }
 
     companion object : ProvidersJobbSpesifikasjon {
+        val formatter = DateTimeFormatter.ofPattern("ddMMyyyy")
+        val datoForJobb = LocalDate.now().format(formatter)
         var jobbKonfigurasjon: JobbKonfigurasjon = JobbKonfigurasjon(
             erAktiv = false,
-            unikBrevreferanseForSak = "02012026"
+            unikBrevreferanseForSak = datoForJobb
         )
 
         override val type = "satsendring-lag-jobber"

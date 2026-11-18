@@ -91,7 +91,7 @@ object BeregnTilkjentYtelse : Sporbar<TilkjentYtelseGrunnlag, Tidslinje<Tilkjent
             gradering(grunnlag),
             Grunnbeløp.tilTidslinje(),
             grunnlag.barnepensjonGrunnlag?.tilTidslinje().orEmpty(),
-            BARNETILLEGGSATS_TIDSLINJE,
+            aktivBarnetilleggsatsTidslinje(),
             grunnlag.barnetilleggGrunnlag.perioder.tilTidslinje(),
         ) { underveisperiode, dagsats, graderingGrunnlag, grunnbeløp, barnepensjon, barnetilleggsats, rettTilBarnetillegg ->
             if (underveisperiode == null || dagsats == null || graderingGrunnlag == null || grunnbeløp == null) {
