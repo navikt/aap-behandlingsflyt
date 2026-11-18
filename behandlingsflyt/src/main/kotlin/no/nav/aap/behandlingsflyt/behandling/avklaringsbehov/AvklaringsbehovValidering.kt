@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningMedPeriodiserteVurderinger
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.vilkårstyper
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
@@ -18,13 +17,11 @@ import no.nav.aap.behandlingsflyt.utils.tilNorskFormat
 import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
-import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
-import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class AvklaringsbehovValidering(
@@ -48,68 +45,54 @@ class AvklaringsbehovValidering(
             return
         }
 
-        validerMotKravPerioder(bruker, kontekst, løsning)
-        validerMotPerioderVedtakBehøverVurdering(kontekst, løsning, avklaringsbehovene)
+        validerPerioderMotVedtakBehøverVurderingOgKrav(kontekst, bruker, løsning, avklaringsbehovene)
     }
 
-    private fun validerMotKravPerioder(
+    private fun validerPerioderMotVedtakBehøverVurderingOgKrav(
+        kontekst: FlytKontekst,
         bruker: Bruker,
-        kontekst: FlytKontekst,
-        løsning: PeriodisertAvklaringsbehovLøsning<*>
-    ) {
-        if (løsning is LøsningMedPeriodiserteVurderinger) {
-            val vedtatteVurderinger = kontekst.forrigeBehandlingId?.let {
-                løsning.hentVurderinger(
-                    kontekst.forrigeBehandlingId,
-                    repositoryProvider
-                )
-            }.orEmpty()
-            val nye = løsning.somVurderinger(bruker, kontekst.behandlingId) + vedtatteVurderinger
-            val kravMedUgyldigLøsning =
-                nårKravHarLøsning(løsning.definisjon(), nye.gjeldendeVurderinger(), kontekst)
-                    .segmenter()
-                    .filter { !it.verdi }
-            if (kravMedUgyldigLøsning.isNotEmpty()) {
-                throw UgyldigForespørselException(
-                    "Mangler vurderinger på eller etter dato ${
-                        kravMedUgyldigLøsning.joinToString(",") { it.periode.fom.tilNorskFormat() }
-                    } på grunn av krav"
-                )
-            }
-        }
-    }
-
-    private fun validerMotPerioderVedtakBehøverVurdering(
-        kontekst: FlytKontekst,
         løsning: PeriodisertAvklaringsbehovLøsning<*>,
         avklaringsbehovene: Avklaringsbehovene
     ) {
         val behovForDefinisjon = avklaringsbehovene.hentBehovForDefinisjon(løsning.definisjon())
         if (behovForDefinisjon != null) {
+            val nyeVurderinger = løsning.somVurderinger(bruker, kontekst.behandlingId)
 
-            val perioderDekketAvLøsning = løsning.løsningerForPerioder.sortedBy { it.fom }
-                .somTidslinje { Periode(fom = it.fom, tom = it.tom ?: Tid.MAKS) }
-                .map { true }.komprimer()
+            val vedtatteVurderinger = kontekst.forrigeBehandlingId?.let {
+                løsning.hentVurderinger(it, repositoryProvider)
+            }.orEmpty()
 
-            val perioderDekketAvVedtatteVurderinger = kontekst.forrigeBehandlingId?.let {
-                løsning.hentLagredeLøstePerioder(it, repositoryProvider, gatewayProvider)
-            }.orEmpty().map { true }.komprimer()
-
-            val perioderDekket = perioderDekketAvVedtatteVurderinger.kombiner(
-                perioderDekketAvLøsning,
-                StandardSammenslåere.prioriterHøyreSideCrossJoin()
-            ).komprimer()
-
+            val gjeldendeTidslinje = (nyeVurderinger + vedtatteVurderinger).gjeldendeVurderinger()
+            
             val perioderSomSkalLøses =
-                behovForDefinisjon.perioderVedtaketBehøverVurdering().orEmpty().somTidslinje { it }
+                behovForDefinisjon.perioderVedtaketBehøverVurdering()
+                    .orEmpty()
+                    .somTidslinje({ it }, { Unit })
+                    .komprimer()
 
             val perioderSomManglerLøsning =
-                perioderSomSkalLøses.leftJoin(perioderDekket) { _, periodeILøsning ->
+                perioderSomSkalLøses.leftJoin(gjeldendeTidslinje) { _, periodeILøsning ->
                     periodeILøsning != null
                 }.filter { !it.verdi }.perioder().toSet()
 
+
+            val perioderKravManglerLøsning =
+                perioderSomSkalLøses.leftJoin(
+                    nårKravHarLøsning(løsning.definisjon(), gjeldendeTidslinje, kontekst)
+                ) { _, harLøsningForKrav -> harLøsningForKrav != false }
+                    .filter { !it.verdi }.perioder().toSet()
+
+
             if (perioderSomManglerLøsning.isNotEmpty()) {
                 throw UgyldigForespørselException("Du mangler vurdering for ${perioderSomManglerLøsning.toHumanReadable()}")
+            }
+
+            if (perioderKravManglerLøsning.isNotEmpty()) {
+                throw UgyldigForespørselException(
+                    "Mangler vurderinger på eller etter dato ${
+                        perioderKravManglerLøsning.joinToString(",") { it.fom.tilNorskFormat() }
+                    } på grunn av krav"
+                )
             }
         }
     }
@@ -154,11 +137,15 @@ class AvklaringsbehovValidering(
         definisjon: Definisjon, gjeldendeVurderinger: Tidslinje<out PeriodisertVurdering>
     ): Boolean {
         return when (stønadsperiodeVurdering.relevantKravType) {
-            RelevantKravType.NY_STØNADSPERIODE, RelevantKravType.MIGRERT_STØNADSPERIODE -> harVurderingForKrav(gjeldendeVurderinger, kravPeriode)
+            RelevantKravType.NY_STØNADSPERIODE, RelevantKravType.MIGRERT_STØNADSPERIODE -> harVurderingForKrav(
+                gjeldendeVurderinger,
+                kravPeriode
+            )
 
             is RelevantKravType.GJENOPPTAK_ETTER_STANS -> {
-                val stansensVilkår = stønadsperiodeVurdering.relevantKravType.gjennopptakEtter.flatMap { it.vilkårstyper } .toSet()
-                    .map { it.kontraktversjon }.toSet()
+                val stansensVilkår =
+                    stønadsperiodeVurdering.relevantKravType.gjennopptakEtter.flatMap { it.vilkårstyper }.toSet()
+                        .map { it.kontraktversjon }.toSet()
                 val definisjonensVilkår = setOfNotNull(definisjon.vurdererVilkår)
                 stansensVilkår.disjoint(definisjonensVilkår)
             }
