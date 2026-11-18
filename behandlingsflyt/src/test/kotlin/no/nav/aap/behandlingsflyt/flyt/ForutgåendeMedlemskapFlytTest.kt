@@ -459,8 +459,6 @@ class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
         nullstillInformasjonskravOppdatert(InformasjonskravNavn.FORUTGÅENDE_MEDLEMSKAP, sak.id)
 
         val revurdering = sak.sendInnSøknad(søknad = TestSøknader.STANDARD_SØKNAD)
-            // Avklaringsbehovet tvinges pga MOTTATT_SØKNAD - løser på nytt
-            .løsLovvalg(sak.rettighetsperiode.fom, true)
 
         revurdering.medKontekst {
             assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)

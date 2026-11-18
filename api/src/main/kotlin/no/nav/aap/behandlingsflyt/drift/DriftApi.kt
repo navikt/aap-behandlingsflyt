@@ -772,6 +772,7 @@ private data class BehandlingDriftsinfo(
     val opprettet: LocalDateTime,
     val vedtatt: LocalDateTime?,
     val avklaringsbehov: List<ForenkletAvklaringsbehov>,
+    val aktivtSteg: StegType,
 ) {
     companion object {
         fun fra(
@@ -790,6 +791,7 @@ private data class BehandlingDriftsinfo(
                 opprettet = behandling.opprettetTidspunkt,
                 avklaringsbehov = avklaringsbehovene,
                 vedtatt = vedtatt,
+                aktivtSteg = behandling.aktivtSteg()
             )
     }
 }

@@ -1,9 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.etterlevelse.sporing.SporbartResultatRepo
 import no.nav.aap.lookup.repository.Repository
 
-interface LovvalgDelvurderingRepository : Repository {
+interface LovvalgDelvurderingRepository : Repository, SporbartResultatRepo<List<LovvalgDelvurderingerGrunnlag>> {
 
     fun hentAlle(behandlingId: BehandlingId): List<LovvalgDelvurderingerGrunnlag>
 
@@ -12,7 +13,7 @@ interface LovvalgDelvurderingRepository : Repository {
         hentAlle(behandlingId).maxByOrNull { it.relevantDato }
 
     /** Erstatter hele settet med delvurderinger. Det skrives ikke ny historikk dersom settet er uendret. */
-    fun lagre(behandlingId: BehandlingId, delvurderinger: List<LovvalgDelvurderingerGrunnlag>)
+    override fun lagre(behandlingId: BehandlingId, resultat: List<LovvalgDelvurderingerGrunnlag>)
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

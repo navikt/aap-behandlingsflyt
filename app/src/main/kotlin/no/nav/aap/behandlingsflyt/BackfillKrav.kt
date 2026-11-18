@@ -117,6 +117,12 @@ class BackfillKrav(
                                         log.info("Backfilled krav for {} behandlinger", antallBackfillUtført)
                                     }
                                 }
+                                
+                                BackfillBehandlingResultat.KunneIkkeBackfille -> {
+                                    log.warn(
+                                        "Kunne ikke backfille krav for behandling ${behandling.id.toLong()} i sak ${sak.id.toLong()}, hopper over"
+                                    )
+                                }
                             }
                         }
                     }

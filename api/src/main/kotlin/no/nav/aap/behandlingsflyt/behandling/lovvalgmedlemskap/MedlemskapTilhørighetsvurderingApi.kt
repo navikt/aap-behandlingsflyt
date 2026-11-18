@@ -133,7 +133,7 @@ private fun utledFallbackKanBehandlesAutomatiskVurdering(
                 sak.id
             )
 
-    return LovvalgMedlemskapVurderingService().vurderTilhørighet(
+    return LovvalgMedlemskapVurderingService.vurderTilhørighet(
         MedlemskapLovvalgRegisterGrunnlag.fra(
             medlemskapArbeidInntektGrunnlag,
             brukerPersonopplysning,
