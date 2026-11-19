@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.stønadsperiode
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
@@ -38,11 +39,29 @@ fun NormalOpenAPIRoute.stønadsperiodeGrunnlagApi(
                 val vedtattGrunnlag =
                     behandling.forrigeBehandlingId?.let { stønadsperiodeRepository.hentHvisEksisterer(it) }
 
+
+                val kravRepository = repositoryProvider.provide<KravRepository>()
+                val kravGrunnlag = kravRepository.hentHvisEksisterer(behandling.id)
+                val vedtattKravGrunnlag = behandling.forrigeBehandlingId?.let { kravRepository.hentHvisEksisterer(it) }
+
+                val gjeldendeVurderinger = if (kravGrunnlag != null && stønadsperiodeGrunnlag != null) {
+                    stønadsperiodeGrunnlag.gjeldendeVurderingerForGjeldendeKrav(kravGrunnlag)
+                } else {
+                    emptyList()
+                }
+
+                val vedtatteVurderinger = if (vedtattKravGrunnlag != null && vedtattGrunnlag != null) {
+                    vedtattGrunnlag.gjeldendeVurderingerForGjeldendeKrav(vedtattKravGrunnlag)
+                } else {
+                    emptyList()
+                }
+
                 StønadsperiodeGrunnlagResponse(
                     harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                     nyeVurderinger = stønadsperiodeGrunnlag?.gjeldendeVurderinger()
                         .orEmpty().filter { it.vurdertIBehandling == behandling.id }.map { it.tilResponse() },
-                    vedtatteVurderinger = vedtattGrunnlag?.gjeldendeVurderinger().orEmpty().map { it.tilResponse() }
+                    vedtatteVurderinger = vedtatteVurderinger.map { it.tilResponse() },
+                    gjeldendeVurderinger = gjeldendeVurderinger.map { it.tilResponse() }
                 )
             }
             respond(response)
