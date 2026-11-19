@@ -13,16 +13,22 @@ data class KravGrunnlag(
         return vurderinger.gjeldendeVurderinger()
     }
 
+    /** Alle gjeldende relevante krav, både fra søknad og fra migrering. */
     fun kravtidslinje(): Tidslinje<RelevantKrav> {
         return vurderinger.kravtidslinje()
     }
 
+    /** Alle gjeldende relevante krav, både fra søknad og fra migrering. */
     fun gjeldendeRelevanteKrav(): Set<RelevantKrav> {
         return this.gjeldendeVurderinger().filterIsInstance<RelevantKrav>().toSet()
     }
 
-    fun gjeldendeMigrertKrav(): MigrertKrav? {
-        return this.gjeldendeVurderinger().filterIsInstance<MigrertKrav>().singleOrNull()
+    fun gjeldendeSøknadKrav(): Set<RelevantSøknadKrav> {
+        return this.gjeldendeVurderinger().filterIsInstance<RelevantSøknadKrav>().toSet()
+    }
+
+    fun gjeldendeMigrertKrav(): RelevantMigrertKrav? {
+        return this.gjeldendeVurderinger().filterIsInstance<RelevantMigrertKrav>().singleOrNull()
     }
 }
 

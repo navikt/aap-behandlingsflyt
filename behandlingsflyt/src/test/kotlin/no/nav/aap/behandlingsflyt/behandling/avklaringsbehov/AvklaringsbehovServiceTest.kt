@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.AarsakTilTrekkSoknad
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
@@ -1297,8 +1297,8 @@ class AvklaringsbehovServiceTest {
         override val vurdertAv = bruker
     }
 
-    private fun opprettNyttKrav(behandlingId: BehandlingId, kravdato: LocalDate): RelevantKrav {
-        return RelevantKrav(
+    private fun opprettNyttKrav(behandlingId: BehandlingId, kravdato: LocalDate): RelevantSøknadKrav {
+        return RelevantSøknadKrav(
             referanse = Kravreferanse.ny(),
             journalpostId = JournalpostId("JP-001"),
             vurdertAv = Bruker("Z123456"),

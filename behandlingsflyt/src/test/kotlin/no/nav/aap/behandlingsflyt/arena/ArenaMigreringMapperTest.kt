@@ -281,7 +281,7 @@ class ArenaMigreringMapperTest {
     }
 
     @Test
-    fun `ArenaMigreringMapper mapper ArenaKrav til MigrertKrav`() {
+    fun `ArenaMigreringMapper mapper ArenaKrav til RelevantMigrertKrav`() {
         val behandlingId = BehandlingId(1)
         val fraArena = ArenaKrav(
             arenaSaksnummer = "2016-123456",
