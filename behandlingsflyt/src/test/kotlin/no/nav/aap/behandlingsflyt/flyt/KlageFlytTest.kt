@@ -780,7 +780,7 @@ class KlageFlytTest : AbstraktFlytOrkestratorTest(KlageFlytTestUnleash::class) {
                     fullmektigVurdering = FullmektigLøsningDto(
                         harFullmektig = true,
                         fullmektigIdentMedType = IdentMedType(
-                            "22128209852",
+                            "10108000398",
                             IdentType.FNR_DNR
                         )
                     )
