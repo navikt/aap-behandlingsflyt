@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
@@ -104,6 +105,48 @@ class MeldekortServiceTest {
 
         val meldeperioder = service().hentMeldeperioderMedMeldekort(saksnummer).meldeperioderMedMeldekort
         assertThat(meldeperioder.single { it.meldeperiode == meldeperiode }.meldedato).isEqualTo(30 januar 2025)
+    }
+
+    @Test
+    fun `henter første meldedato fra begge segmenter når to meldekort gjelder samme meldeperiode`() {
+        stubSakOgBehandling()
+        val meldeperiode = Periode(20 januar 2025, 2 februar 2025)
+        val rettighetsperiode = Periode(6 januar 2025, meldeperiode.tom)
+        val førsteUke = Periode(20 januar 2025, 26 januar 2025)
+        val andreUke = Periode(27 januar 2025, 2 februar 2025)
+        val input = tomUnderveisInput(
+            rettighetsperiode = rettighetsperiode,
+            vilkårsresultat = genererVilkårsresultat(rettighetsperiode),
+            kvoter = Kvoter.create(ordinærkvote = 20, sykepengeerstatningkvote = 0),
+            meldekort = listOf(
+                Meldekort(
+                    journalpostId = JournalpostId("første"),
+                    timerArbeidPerPeriode = setOf(ArbeidIPeriode(førsteUke, TimerArbeid(BigDecimal.ZERO))),
+                    mottattTidspunkt = (23 januar 2025).atStartOfDay(),
+                    opprettetTidspunkt = (23 januar 2025).atStartOfDay()
+                ),
+                Meldekort(
+                    journalpostId = JournalpostId("andre"),
+                    timerArbeidPerPeriode = setOf(ArbeidIPeriode(andreUke, TimerArbeid(BigDecimal("7")))),
+                    mottattTidspunkt = (24 januar 2025).atStartOfDay(),
+                    opprettetTidspunkt = (24 januar 2025).atStartOfDay()
+                )
+            ),
+            innsendingsTidspunkt = mapOf(
+                23 januar 2025 to JournalpostId("første"),
+                24 januar 2025 to JournalpostId("andre")
+            )
+        )
+        val underveisperioder = UnderveisService.tilUnderveisperioder(UnderveisService.vurderRegler(input))
+        stubUnderveisgrunnlag(*underveisperioder.toTypedArray())
+        every { meldekortRepository.hentHvisEksisterer(behandlingId) } returns null
+
+        val segmenter = underveisperioder.filter { it.meldePeriode == meldeperiode }
+        assertThat(segmenter.map { it.periode }).containsExactly(førsteUke, andreUke)
+        assertThat(segmenter.map { it.meldedato }).containsExactly(23 januar 2025, 23 januar 2025)
+
+        val meldeperioder = service().hentMeldeperioderMedMeldekort(saksnummer).meldeperioderMedMeldekort
+        assertThat(meldeperioder.single { it.meldeperiode == meldeperiode }.meldedato).isEqualTo(23 januar 2025)
     }
 
     @Test
