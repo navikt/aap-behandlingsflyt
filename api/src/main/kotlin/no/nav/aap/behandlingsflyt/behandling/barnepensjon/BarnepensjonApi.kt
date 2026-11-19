@@ -42,12 +42,15 @@ fun NormalOpenAPIRoute.barnepensjonGrunnlagApi(
                         BehandlingReferanseService(behandlingRepository).behandling(req)
                     val barnepensjonGrunnlag = barnepensjonRepository.hentHvisEksisterer(behandling.id)
                     val historiskeVurderinger = barnepensjonRepository.hentHistoriskeVurderinger(behandling.sakId, behandling.id)
-                    
+                    val vedtattGrunnlag = behandlingRepository.finnGjeldendeVedtattBehandlingForSak(behandling.sakId)
+                        ?.let { barnepensjonRepository.hentHvisEksisterer(it.behandlingId) }
+
                     BarnepensjonGrunnlagDto.fraDomene(
                         kanSaksbehandle(),
                         vurdertAvService,
                         barnepensjonGrunnlag,
-                        historiskeVurderinger
+                        historiskeVurderinger,
+                        vedtattGrunnlag,
                     )
                 }
 

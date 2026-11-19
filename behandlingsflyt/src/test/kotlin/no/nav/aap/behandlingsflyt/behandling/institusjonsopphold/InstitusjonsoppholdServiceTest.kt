@@ -1,22 +1,20 @@
 package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggPeriode
+import no.nav.aap.barnetillegg.BarnIdentifikator
+import no.nav.aap.barnetillegg.BarnetilleggPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Helseoppholdvurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Soningsvurderinger
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.Soningsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.OppholdVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBarnetilleggRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryInstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -34,7 +32,6 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         institusjonsoppholdRepository,
         InMemorySakRepository,
         InMemoryBehandlingRepository,
-        FakeUnleashBase(mapOf(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true))
     )
 
     // --- Hjelpefunksjoner ---
@@ -65,6 +62,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
                 vurdertAv = Bruker("ident"),
                 vurdertTidspunkt = LocalDateTime.now()
             )
+
             else -> error("Uventet type for soningsvurderinger")
         },
         barnetillegg = barnetillegg,
@@ -76,6 +74,7 @@ internal class InstitusjonsoppholdUtlederServiceTest {
                 vurderinger = vurderinger.filterIsInstance<HelseinstitusjonVurdering>(),
                 vurdertTidspunkt = LocalDateTime.now()
             )
+
             else -> error("Uventet type for helsevurderinger")
         },
         rettighetsperiode = rettighetsperiode
@@ -89,16 +88,6 @@ internal class InstitusjonsoppholdUtlederServiceTest {
             )
         ),
         rettighetsperiode = Periode(fom.minusYears(1), tom.plusYears(2))
-    )
-
-    private fun soningsvurderinger(
-        vararg vurderinger: Soningsvurdering,
-        vurdertAv: Bruker = Bruker("ident"),
-        vurdertTidspunkt: LocalDateTime = LocalDateTime.now()
-    ) = Soningsvurderinger(
-        vurderinger = vurderinger.toList(),
-        vurdertAv = vurdertAv,
-        vurdertTidspunkt = vurdertTidspunkt
     )
 
     private fun helsevurderinger(
@@ -323,7 +312,8 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         assertThat(res.harBehovForAvklaring()).isFalse
         val vurderinger = res.perioderTilVurdering.segmenter().map { it.verdi.helse?.vurdering }
         assertThat(vurderinger).doesNotContain(OppholdVurdering.UAVKLART)
-        val gapMedGodkjent = res.perioderTilVurdering.segmenter().first { it.periode.fom == oppholdFom && it.periode.tom == vurderingFom.minusDays(1) }
+        val gapMedGodkjent = res.perioderTilVurdering.segmenter()
+            .first { it.periode.fom == oppholdFom && it.periode.tom == vurderingFom.minusDays(1) }
         assertThat(gapMedGodkjent.verdi.helse?.vurdering).isEqualTo(OppholdVurdering.GODKJENT)
     }
 
@@ -1386,5 +1376,99 @@ internal class InstitusjonsoppholdUtlederServiceTest {
         // alene eller smittet fra opphold2 (for langt unna)
         val opphold1Segmenter = res.perioderTilVurdering.segmenter().filter { it.periode.fom < fom2 }
         assertThat(opphold1Segmenter).isEmpty()
+    }
+
+    // -------------------------------------------------------------------------
+    // Historiske vurderinger
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `historisk vurdering utenfor oppholdets periode matches via oppholdId og gir ingen avklaring`() {
+        val fom = LocalDate.now().minusMonths(5)
+        val tom = LocalDate.now().minusMonths(1)
+        val opphold = hsOpphold(fom, tom)
+
+        val historiskVurdering = HelseinstitusjonVurdering(
+            periode = Periode(fom.plusMonths(4), fom.plusMonths(4)), // utenfor oppholdet
+            begrunnelse = "historisk",
+            faarFriKostOgLosji = true,
+            forsoergerEktefelle = false,
+            harFasteUtgifter = false,
+            vurdertIBehandling = BehandlingId(1L),
+            vurdertAv = Bruker("ident"),
+            vurdertTidspunkt = LocalDateTime.now(),
+            erHistoriskUtenReduksjonsberegning = true,
+            oppholdId = lagOppholdId("Helgelandssykehuset", fom)
+        )
+
+        val res = utlederService.utledBehov(
+            institusjonsoppholdInput(
+                institusjonsOpphold = listOf(opphold),
+                helsevurderinger = listOf(historiskVurdering),
+                rettighetsperiode = Periode(fom.minusYears(1), tom.plusYears(1))
+            )
+        )
+
+        assertThat(res.harBehovForAvklaring()).isFalse
+        val vurdering = res.perioderTilVurdering.segmenter().first().verdi.helse
+        assertThat(vurdering?.vurdering).isEqualTo(OppholdVurdering.GODKJENT)
+        assertThat(vurdering?.umiddelbarReduksjon).isFalse
+    }
+
+    @Test
+    fun `historisk vurdering uten matchende oppholdId ignoreres`() {
+        val fom = LocalDate.now().minusMonths(5)
+        val tom = LocalDate.now().minusMonths(1)
+        val opphold = hsOpphold(fom, tom)
+
+        val historiskVurdering = HelseinstitusjonVurdering(
+            periode = Periode(fom.plusMonths(10), fom.plusMonths(10)),
+            begrunnelse = "historisk uten match",
+            faarFriKostOgLosji = true,
+            forsoergerEktefelle = false,
+            harFasteUtgifter = false,
+            vurdertIBehandling = BehandlingId(1L),
+            vurdertAv = Bruker("ident"),
+            vurdertTidspunkt = LocalDateTime.now(),
+            erHistoriskUtenReduksjonsberegning = true,
+            oppholdId = "ikke-eksisterende-opphold-id"
+        )
+
+        val res = utlederService.utledBehov(
+            institusjonsoppholdInput(
+                institusjonsOpphold = listOf(opphold),
+                helsevurderinger = listOf(historiskVurdering),
+                rettighetsperiode = Periode(fom.minusYears(1), tom.plusYears(1))
+            )
+        )
+
+        // Ingen gyldig match -> oppholdet forblir UAVKLART og krever fortsatt avklaring
+        assertThat(res.harBehovForAvklaring()).isTrue
+    }
+
+    @Test
+    fun `vurdering som dekker kun siste del av sammenhengende kjede markerer hele kjeden som vurdert`() {
+        val oppholdFom1 = LocalDate.now().minusMonths(8)
+        val oppholdTom1 = oppholdFom1.plusMonths(3).minusDays(1)
+        val oppholdFom2 = oppholdTom1.plusDays(1) // sammenhengende (0 dagers gap)
+        val oppholdTom2 = oppholdFom2.plusMonths(4)
+
+        val input = institusjonsoppholdInput(
+            institusjonsOpphold = listOf(
+                Segment(Periode(oppholdFom1, oppholdTom1), Institusjon(Institusjonstype.HS, Oppholdstype.D, "1", "A")),
+                Segment(Periode(oppholdFom2, oppholdTom2), Institusjon(Institusjonstype.HS, Oppholdstype.D, "2", "B")),
+            ),
+            helsevurderinger = listOf(
+                helsevurdering(oppholdFom2, oppholdTom2, faarFriKostOgLosji = true)
+            ),
+            rettighetsperiode = Periode(oppholdFom1.minusYears(1), oppholdTom2.plusYears(1))
+        )
+
+        val res = utlederService.utledBehov(input)
+
+        assertThat(res.harBehovForAvklaring()).isFalse
+        assertThat(res.perioderTilVurdering.segmenter()).isNotEmpty
+        assertThat(res.perioderTilVurdering.segmenter().map { it.verdi.helse?.vurdering })
+            .doesNotContain(OppholdVurdering.UAVKLART)
     }
 }

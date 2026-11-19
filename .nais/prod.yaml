@@ -14,10 +14,10 @@ spec:
     max: 4
   resources:
     limits:
-      memory: 1536Mi
+      memory: 2048Mi
     requests:
-      cpu: 1000m
-      memory: 1024Mi
+      cpu: 1200m
+      memory: 1250Mi
   observability:
     autoInstrumentation:
       enabled: true
@@ -38,6 +38,8 @@ spec:
         pointInTimeRecovery: true
         databases:
           - name: behandlingsflyt
+            users:
+              - name: datastream
         flags:
           - name: cloudsql.enable_pgaudit
             value: "true"
@@ -47,17 +49,23 @@ spec:
             value: "on"
           - name: "pgaudit.log_relation"
             value: "on"
+          - name: cloudsql.logical_decoding
+            value: "on"
   terminationGracePeriodSeconds: 30
+  startup:
+    path: /actuator/live
+    # Trenger 25 + 5x8 = 65 sek
+    initialDelay: 25
+    periodSeconds: 5
+    failureThreshold: 8
   liveness:
     path: /actuator/live
-    initialDelay: 3
     periodSeconds: 3
-    failureThreshold: 21
+    failureThreshold: 3
   readiness:
     path: /actuator/ready
-    initialDelay: 3
     periodSeconds: 3
-    failureThreshold: 21
+    failureThreshold: 3
   prometheus:
     enabled: true
     path: /actuator/metrics

@@ -10,10 +10,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForForutgåendeMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.forutgåendemedlemskap.ForutgåendeMedlemskapRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakePersoner
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
@@ -460,8 +459,6 @@ class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
         nullstillInformasjonskravOppdatert(InformasjonskravNavn.FORUTGÅENDE_MEDLEMSKAP, sak.id)
 
         val revurdering = sak.sendInnSøknad(søknad = TestSøknader.STANDARD_SØKNAD)
-            // Avklaringsbehovet tvinges pga MOTTATT_SØKNAD - løser på nytt
-            .løsLovvalg(sak.rettighetsperiode.fom, true)
 
         revurdering.medKontekst {
             assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Revurdering)
@@ -473,11 +470,11 @@ class ForutgåendeMedlemskapFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddU
         assertThat(medlemskapRevurdering).allMatch { it.erOppfylt() && it.manuellVurdering }
 
         val manuelleVurderingerFørstegangsbehandling = dataSource.transaction {
-            MedlemskapArbeidInntektForutgåendeRepositoryImpl(it)
+            ForutgåendeMedlemskapRepositoryImpl(it)
                 .hentHvisEksisterer(førstegangsbehandling.id)?.vurderinger
         }
         val manuelleVurderingerRevurdering = dataSource.transaction {
-            MedlemskapArbeidInntektForutgåendeRepositoryImpl(it)
+            ForutgåendeMedlemskapRepositoryImpl(it)
                 .hentHvisEksisterer(revurdering.id)?.vurderinger
         }
         assertThat(manuelleVurderingerRevurdering).isEqualTo(manuelleVurderingerFørstegangsbehandling)

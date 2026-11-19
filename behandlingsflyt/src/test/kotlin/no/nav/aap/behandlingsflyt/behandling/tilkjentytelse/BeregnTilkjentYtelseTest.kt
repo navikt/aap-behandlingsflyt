@@ -1,0 +1,1615 @@
+package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
+
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
+import no.nav.aap.meldeplikt.MeldepliktStatus
+import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.FastsettGrenseverdiArbeidRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.GraderingArbeidRegel
+import no.nav.aap.meldeplikt.MeldepliktRegel
+import no.nav.aap.meldeplikt.UtledMeldeperiodeRegel
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Vurdering
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
+import no.nav.aap.barnetillegg.BarnetilleggGrunnlag
+import no.nav.aap.barnetillegg.BarnetilleggPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag11_19
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.arbeidsgiver.SamordningArbeidsgiverVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArbeidIPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
+import no.nav.aap.barnetillegg.BarnIdentifikator
+import no.nav.aap.behandlingsflyt.help.assertTidslinje
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.test.august
+import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.behandlingsflyt.test.februar
+import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.juli
+import no.nav.aap.behandlingsflyt.test.juni
+import no.nav.aap.behandlingsflyt.test.mars
+import no.nav.aap.behandlingsflyt.test.september
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Beløp
+import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.komponenter.verdityper.Dagsatser
+import no.nav.aap.komponenter.verdityper.GUnit
+import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.TimerArbeid
+import no.nav.aap.verdityper.dokument.JournalpostId
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.ValueSource
+import java.math.BigDecimal
+import java.time.Instant
+import java.time.LocalDate
+import java.time.YearMonth
+
+class BeregnTilkjentYtelseTest {
+
+    @Test
+    fun `årlig ytelse beregnes til 66 prosent av grunnlaget og dagsatsen er lik årlig ytelse delt på 260, og sjekker split av periode ved endring i Grunnbeløp`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(4)),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+
+        val periode = Periode(LocalDate.of(2023, 4, 30), LocalDate.of(2023, 5, 1))
+
+        val underveisgrunnlag = underveisgrunnlag(periode)
+
+        val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
+            vurdering = SamordningArbeidsgiverVurdering(
+                "",
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
+            )
+        )
+
+
+
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                utenBarnetillegg(),
+                utenSamordningGrunnlag(),
+                utenSamordningUføre(),
+                samordningArbeidsgiver,
+                utenBarnepensjon(),
+            )
+        )
+
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
+            Segment(
+                periode = Periode(LocalDate.of(2023, 4, 30), LocalDate.of(2023, 4, 30)), verdi = Tilkjent(
+                    dagsats = Beløp("1131.92"), //4*0.66*111477/260
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = nullTimerArbeidOgFullYtelseGraderingGrunnlag(),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("111477"),
+                    antallBarn = 0,
+                    barnepensjonDagsats = Beløp(0),
+                    barnetilleggsats = Beløp("35.00"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(1132)
+                )
+            ), Segment(
+                periode = Periode(LocalDate.of(2023, 5, 1), LocalDate.of(2023, 5, 1)), verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*118620/260
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = nullTimerArbeidOgFullYtelseGraderingGrunnlag(),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620.00"),
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
+                    barnetilleggsats = Beløp("35.00"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(1204)
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `bruker får barnetillegg dersom bruker har barn`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(4)),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+        val periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1))
+
+        val underveisgrunnlag = underveisgrunnlag(periode)
+
+        val barnetilleggGrunnlag = BarnetilleggGrunnlag(
+            listOf(
+                BarnetilleggPeriode(
+                    Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1).plusYears(18)),
+                    setOf(BarnIdentifikator.BarnIdent("12345678910"))
+                )
+            )
+        )
+
+        val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
+            vurdering = SamordningArbeidsgiverVurdering(
+                "",
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
+            )
+        )
+
+
+
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                utenSamordningGrunnlag(),
+                utenSamordningUføre(),
+                samordningArbeidsgiver,
+                utenBarnepensjon(),
+            )
+        )
+
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
+            Segment(
+                periode = periode, verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*118620/260+36
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = nullTimerArbeidOgFullYtelseGraderingGrunnlag(),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620"),
+                    antallBarn = 1, barnepensjonDagsats = Beløp(0),
+                    barnetilleggsats = Beløp("36"),
+                    barnetillegg = Beløp("36"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(1240)
+                )
+            )
+        )
+    }
+
+    // Sjekker at utbetalingsdato blir satt til samme dag som opplysninger mottatt for helligdagsunntak
+    @ValueSource(ints = [17, 22])
+    @ParameterizedTest
+    fun `utbetalingsdato i desember`(levererMeldekortPåDato: Int) {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(4)),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+        // Periode det skrives timer for
+        val periode = Periode(LocalDate.of(2025, 12, 8), LocalDate.of(2025, 12, 21))
+        val underveisgrunnlag = UnderveisGrunnlag(
+            1L, perioder = listOf(
+                underveisperiode(
+                    periode = periode,
+                    meldePeriode = periode,
+                    gradering = Prosent.`100_PROSENT`,
+                    institusjonsOppholdReduksjon = Prosent.`0_PROSENT`,
+                    meldepliktStatus = MeldepliktStatus.MELDT_SEG,
+                    opplysningerMottatt = LocalDate.of(2025, 12, levererMeldekortPåDato),
+                ),
+            )
+        )
+
+
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                utenBarnetillegg(),
+                utenSamordningGrunnlag(),
+                utenSamordningUføre(),
+                utenSamordningArbeidsgiver(),
+                utenBarnepensjon(),
+            )
+        )
+
+        assertTidslinje(beregnTilkjentYtelse, Periode(8 desember 2025, 21 desember 2025) to {
+            assertThat(it.utbetalingsdato).isEqualTo(LocalDate.of(2025, 12, levererMeldekortPåDato))
+        })
+
+        assertThat(beregnTilkjentYtelse.segmenter()).hasSize(1)
+        assertThat(beregnTilkjentYtelse.segmenter().first().verdi.utbetalingsdato)
+            .isEqualTo(LocalDate.of(2025, 12, levererMeldekortPåDato))
+    }
+
+    @Test
+    fun `tidligere utbetalingsdato for fritak i desember`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(4)),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+        // Periode det skrives timer for
+        val periode = Periode(LocalDate.of(2025, 12, 8), LocalDate.of(2025, 12, 21))
+
+        val underveisgrunnlag = UnderveisGrunnlag(
+            1L, perioder = listOf(
+                underveisperiode(
+                    periode = periode,
+                    meldePeriode = periode,
+                    gradering = Prosent.`100_PROSENT`,
+                    institusjonsOppholdReduksjon = Prosent.`0_PROSENT`,
+                    meldepliktStatus = MeldepliktStatus.FRITAK,
+                    opplysningerMottatt = null
+                ),
+            )
+        )
+
+
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                utenBarnetillegg(),
+                utenSamordningGrunnlag(),
+                utenSamordningUføre(),
+                utenSamordningArbeidsgiver(),
+                utenBarnepensjon(),
+            )
+        )
+
+        assertThat(beregnTilkjentYtelse.segmenter()).hasSize(1)
+        assertThat(beregnTilkjentYtelse.segmenter().first().verdi.utbetalingsdato)
+            .isEqualTo(LocalDate.of(2025, 12, 22))
+    }
+
+
+    @Test
+    fun `sender inn meldekort før meldeperioden er passert pga delvis innvilget meldeperiode`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(4)),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+        // Starter på mandag - slutter på onsdag
+        val periodeMedRett = Periode(LocalDate.of(2026, 3, 2), LocalDate.of(2026, 3, 4))
+        val periodeUtenRett = Periode(LocalDate.of(2026, 3, 5), LocalDate.of(2026, 3, 15))
+        val meldePeriode = periodeMedRett.utvid(periodeUtenRett)
+        val meldeDato = LocalDate.of(2026, 3, 5)
+        val sisteMuligeMeldedato = periodeUtenRett.tom.plusDays(9)
+
+        val underveisgrunnlag = UnderveisGrunnlag(
+            1L, perioder = listOf(
+                underveisperiode(
+                    periode = periodeMedRett,
+                    meldePeriode = meldePeriode,
+                    gradering = Prosent.`100_PROSENT`,
+                    institusjonsOppholdReduksjon = Prosent.`0_PROSENT`,
+                    meldepliktStatus = MeldepliktStatus.FØR_VEDTAK,
+                    opplysningerMottatt = meldeDato
+                ),
+                underveisperiode(
+                    periode = periodeUtenRett,
+                    meldePeriode = meldePeriode,
+                    gradering = Prosent.`0_PROSENT`,
+                    institusjonsOppholdReduksjon = Prosent.`0_PROSENT`,
+                    meldepliktStatus = MeldepliktStatus.UTEN_RETT,
+                    opplysningerMottatt = null,
+                ),
+            )
+        )
+
+
+
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                utenBarnetillegg(),
+                utenSamordningGrunnlag(),
+                utenSamordningUføre(),
+                utenSamordningArbeidsgiver(),
+                utenBarnepensjon(),
+            )
+        )
+
+        assertThat(beregnTilkjentYtelse.segmenter()).hasSize(2)
+        assertThat(beregnTilkjentYtelse.segmenter().first().verdi.utbetalingsdato).isEqualTo(meldeDato)
+        assertThat(beregnTilkjentYtelse.segmenter().last().verdi.utbetalingsdato).isEqualTo(sisteMuligeMeldedato)
+    }
+
+    @Test
+    fun `tidligere utbetalingsdato for fritak i påske`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(4)),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+
+        val periode = Periode(LocalDate.of(2026, 3, 16), LocalDate.of(2026, 3, 29))
+
+        val underveisgrunnlag = UnderveisGrunnlag(
+            1L, perioder = listOf(
+                underveisperiode(
+                    periode = periode,
+                    meldePeriode = periode,
+                    gradering = Prosent.`100_PROSENT`,
+                    institusjonsOppholdReduksjon = Prosent.`0_PROSENT`,
+                    meldepliktStatus = MeldepliktStatus.FRITAK,
+                    opplysningerMottatt = null
+                ),
+            )
+        )
+
+
+
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                utenBarnetillegg(),
+                utenSamordningGrunnlag(),
+                utenSamordningUføre(),
+                utenSamordningArbeidsgiver(),
+                utenBarnepensjon(),
+            )
+        )
+
+        assertThat(beregnTilkjentYtelse.segmenter()).hasSize(1)
+        assertThat(beregnTilkjentYtelse.segmenter().first().verdi.utbetalingsdato)
+            .isEqualTo(LocalDate.of(2026, 3, 30))
+    }
+
+    @Test
+    fun `Hva skjer med etterpåklatt`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(4)),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+        val periode = Periode(LocalDate.of(2023, 12, 30), LocalDate.of(2024, 1, 1))
+        val underveisgrunnlag = underveisgrunnlag(periode)
+
+        val barnetilleggGrunnlag = BarnetilleggGrunnlag(
+            listOf(
+                BarnetilleggPeriode(
+                    Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1).plusYears(18)),
+                    setOf(BarnIdentifikator.BarnIdent("12345678910"))
+                ), BarnetilleggPeriode(
+                    Periode(LocalDate.of(2023, 12, 30).minusYears(18), LocalDate.of(2023, 12, 31)),
+                    setOf(BarnIdentifikator.BarnIdent("12345678911"))
+                )
+            )
+        )
+
+        val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
+            vurdering = SamordningArbeidsgiverVurdering(
+                "",
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
+            )
+        )
+
+
+
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                barnetilleggGrunnlag,
+                utenSamordningGrunnlag(),
+                utenSamordningUføre(),
+                samordningArbeidsgiver,
+                utenBarnepensjon()
+            )
+        )
+
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
+            Segment(
+                periode = Periode(LocalDate.of(2023, 12, 30), LocalDate.of(2023, 12, 31)), verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*118620/260+36
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = nullTimerArbeidOgFullYtelseGraderingGrunnlag(),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620"),
+                    antallBarn = 1, barnepensjonDagsats = Beløp(0),
+                    barnetilleggsats = Beløp("35"),
+                    barnetillegg = Beløp("35"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(1239)
+                )
+            ), Segment(
+                periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 1)), verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*118620/260+36
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = nullTimerArbeidOgFullYtelseGraderingGrunnlag(),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620"),
+                    antallBarn = 1, barnepensjonDagsats = Beløp(0),
+                    barnetilleggsats = Beløp("36"),
+                    barnetillegg = Beløp("36"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(1240)
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `minste årlige ytelse er lik 2G før 1 juli 2024 og lik 2,041G fom 1 juli 2024`() {
+        // Denne må oppdateres når grunnbeløper endres 1. mai 2025
+        val fødeselsdato = Fødselsdato(LocalDate.of(1985, 4, 1))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(0)),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+        val periode = Periode(LocalDate.of(2024, 6, 30), LocalDate.of(2024, 7, 1))
+        val underveisgrunnlag = underveisgrunnlag(periode)
+
+        val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
+            vurdering = SamordningArbeidsgiverVurdering(
+                "",
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
+            )
+        )
+
+
+
+        val beregnetTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødeselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                utenBarnetillegg(),
+                utenSamordningGrunnlag(),
+                utenSamordningUføre(),
+                samordningArbeidsgiver,
+                utenBarnepensjon()
+            )
+        )
+
+        assertThat(beregnetTilkjentYtelse.segmenter()).containsExactly(
+            Segment(
+                periode = Periode(LocalDate.of(2024, 6, 30), LocalDate.of(2024, 6, 30)), verdi = Tilkjent(
+                    dagsats = Beløp("954.06"), //118620*2/260
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = nullTimerArbeidOgFullYtelseGraderingGrunnlag(),
+                    grunnlagsfaktor = GUnit("0.0076923077"),
+                    grunnbeløp = Beløp("124028"),
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
+                    barnetilleggsats = Beløp("36.00"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.MINSTESATS_OVER_25,
+                    redusertDagsats = Beløp(954)
+                )
+            ), Segment(
+                periode = Periode(LocalDate.of(2024, 7, 1), LocalDate.of(2024, 7, 1)), verdi = Tilkjent(
+                    dagsats = Beløp("973.62"), // 124_028 * 2.041/260
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = nullTimerArbeidOgFullYtelseGraderingGrunnlag(),
+                    grunnlagsfaktor = GUnit("0.0078500000"),
+                    grunnbeløp = Beløp("124028"),
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
+                    barnetilleggsats = Beløp("36.00"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.MINSTESATS_OVER_25,
+                    redusertDagsats = Beløp(974)
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `Minste Årlig Ytelse justeres ift alder`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1995, 4, 1))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(0)),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+        val periode = Periode(LocalDate.of(2020, 3, 31), LocalDate.of(2020, 4, 1))
+        val underveisgrunnlag = underveisgrunnlag(periode)
+
+        val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
+            vurdering = SamordningArbeidsgiverVurdering(
+                "",
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
+            )
+        )
+
+
+
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                utenBarnetillegg(),
+                utenSamordningGrunnlag(),
+                utenSamordningUføre(),
+                samordningArbeidsgiver,
+                utenBarnepensjon()
+            )
+        )
+
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
+            Segment(
+                periode = Periode(LocalDate.of(2020, 3, 31), LocalDate.of(2020, 3, 31)), verdi = Tilkjent(
+                    dagsats = Beløp("512.09"), //2*2/3*99858/260
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = nullTimerArbeidOgFullYtelseGraderingGrunnlag(),
+                    grunnlagsfaktor = GUnit("0.0051282051"),
+                    grunnbeløp = Beløp("99858"),
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
+                    barnetilleggsats = Beløp("27.00"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.MINSTESATS_UNDER_25,
+                    redusertDagsats = Beløp(512)
+                )
+            ), Segment(
+                periode = Periode(LocalDate.of(2020, 4, 1), LocalDate.of(2020, 4, 1)), verdi = Tilkjent(
+                    dagsats = Beløp("768.14"), //2*99858/260
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = nullTimerArbeidOgFullYtelseGraderingGrunnlag(),
+                    grunnlagsfaktor = GUnit("0.0076923077"),
+                    grunnbeløp = Beløp("99858"),
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
+                    barnetilleggsats = Beløp("27.00"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.MINSTESATS_OVER_25,
+                    redusertDagsats = Beløp(768)
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `justerer institusjonsopphold med prosent, ikke prosent-poeng`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = object : Grunnlag {
+            override fun grunnlaget(): GUnit {
+                return GUnit(BigDecimal(4))
+            }
+        }
+        val periode = Periode(1 juni 2023, 1 august 2023)
+
+        val underveisgrunnlag = underveisgrunnlag(periode, institusjonsOppholdReduksjon = Prosent.`50_PROSENT`)
+
+        val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
+            vurdering = SamordningArbeidsgiverVurdering(
+                "",
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
+            )
+        )
+
+
+
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                utenBarnetillegg(),
+                utenSamordningGrunnlag(),
+                utenSamordningUføre(),
+                samordningArbeidsgiver,
+                utenBarnepensjon(),
+            )
+        )
+
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
+            Segment(
+                periode = Periode(1 juni 2023, 1 august 2023), verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*111477/260
+                    gradering = Prosent.`50_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
+                        samordningGradering = Prosent.`0_PROSENT`,
+                        institusjonGradering = Prosent.`50_PROSENT`,
+                        arbeidGradering = Prosent.`100_PROSENT`,
+                        samordningUføregradering = Prosent.`0_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                    ),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620"),
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
+                    barnetilleggsats = Beløp("35.00"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(602)
+                )
+            ),
+        )
+    }
+
+    @Test
+    fun `graderer tilkjent ytelse med samordning-graderinger`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = object : Grunnlag {
+            override fun grunnlaget(): GUnit {
+                return GUnit(BigDecimal(4))
+            }
+        }
+        val periode = Periode(1 juni 2023, 1 september 2023)
+
+        val underveisgrunnlag = underveisgrunnlag(periode)
+
+
+
+        // Samordning-perioden overlapper delvis med perioden det beregnes for
+        val samordningsgrunnlag = SamordningGrunnlag(
+            setOf(
+                SamordningPeriode(
+                    periode = Periode(1 mars 2023, 1 august 2023), gradering = Prosent.`70_PROSENT`
+                )
+            )
+        )
+
+        val samordningUføre = SamordningUføreGrunnlag(
+            vurdering = SamordningUføreVurdering(
+                "", listOf(
+                    SamordningUføreVurderingPeriode(virkningstidspunkt = 1 juli 2023, Prosent.`30_PROSENT`),
+                    SamordningUføreVurderingPeriode(virkningstidspunkt = 2 august 2023, Prosent.`0_PROSENT`)
+                ),
+                Bruker("ident")
+            )
+        )
+
+        val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
+            vurdering = SamordningArbeidsgiverVurdering(
+                "",
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
+            )
+        )
+
+
+        
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                utenBarnetillegg(),
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver,
+                utenBarnepensjon()
+            )
+        )
+
+        // Forventer 30 prosent grunnlag først, deretter 100 prosent
+        assertThat(
+            beregnTilkjentYtelse.segmenter().map { it.verdi.gradering }).containsExactly(
+            Prosent.`30_PROSENT`, Prosent.`0_PROSENT`, Prosent.`100_PROSENT`
+        )
+
+        assertThat(beregnTilkjentYtelse.segmenter()).hasSize(3)
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
+            Segment(
+                periode = Periode(1 juni 2023, 30 juni 2023), verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*111477/260
+                    gradering = Prosent.`30_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
+                        Prosent.`70_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                        Prosent.`100_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                    ),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620"),
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
+                    barnetilleggsats = Beløp("35.00"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(361)
+                )
+            ),
+            Segment(
+                periode = Periode(1 juli 2023, 1 august 2023), verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*111477/260
+                    gradering = Prosent.`0_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
+                        Prosent.`70_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                        Prosent.`100_PROSENT`,
+                        Prosent.`30_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                    ),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620"),
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
+                    barnetilleggsats = Beløp("35.00"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(0)
+                )
+            ), Segment(
+                periode = Periode(2 august 2023, 1 september 2023), verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*118620/260
+                    gradering = Prosent.`100_PROSENT`,
+                    graderingGrunnlag = nullTimerArbeidOgFullYtelseGraderingGrunnlag(),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620.00"),
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
+                    barnetilleggsats = Beløp("35.00"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(1204)
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `graderer tilkjent ytelse med samordning uføre`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = object : Grunnlag {
+            override fun grunnlaget(): GUnit {
+                return GUnit(BigDecimal(4))
+            }
+        }
+        val periode = Periode(1 juni 2023, 1 august 2023)
+
+        val underveisgrunnlag = underveisgrunnlag(periode)
+
+        // Samordning-perioden overlapper delvis med perioden det beregnes for
+        val samordningsgrunnlag = SamordningGrunnlag(
+            setOf(),
+        )
+
+        val samordningUføre = SamordningUføreGrunnlag(
+            vurdering = SamordningUføreVurdering(
+                "", listOf(
+                    SamordningUføreVurderingPeriode(virkningstidspunkt = 1 mars 2023, Prosent.`50_PROSENT`),
+                    SamordningUføreVurderingPeriode(virkningstidspunkt = 1 juli 2023, Prosent.`70_PROSENT`)
+                ),
+                Bruker("ident")
+            )
+        )
+
+        val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
+            vurdering = SamordningArbeidsgiverVurdering(
+                "",
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
+            )
+        )
+
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                utenBarnetillegg(),
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver,
+                utenBarnepensjon()
+            )
+        )
+
+        // Forventer 30 prosent grunnlag først, deretter 100 prosent
+        assertThat(
+            beregnTilkjentYtelse.segmenter().map { it.verdi.gradering }).containsExactly(
+            Prosent.`50_PROSENT`, Prosent.`30_PROSENT`
+        )
+
+        assertThat(beregnTilkjentYtelse.segmenter()).hasSize(2)
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
+            Segment(
+                periode = Periode(1 juni 2023, 30 juni 2023), verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*111477/260
+                    gradering = Prosent.`50_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
+                        Prosent.`0_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                        Prosent.`100_PROSENT`,
+                        Prosent.`50_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                    ),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620"),
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
+                    barnetilleggsats = Beløp("35.00"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(602)
+                )
+            ), Segment(
+                periode = Periode(1 juli 2023, 1 august 2023), verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*118620/260
+                    gradering = Prosent.`30_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
+                        Prosent.`0_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                        Prosent.`100_PROSENT`,
+                        Prosent.`70_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                    ),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620.00"),
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
+                    barnetilleggsats = Beløp("35.00"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(361)
+                )
+            )
+        )
+    }
+
+
+    @Test
+    fun `arbeidsgrad reduserer tilkjent endelig utbetalingsgrad`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = object : Grunnlag {
+            override fun grunnlaget(): GUnit {
+                return GUnit(BigDecimal(4))
+            }
+        }
+        val periode = Periode(1 juni 2023, 1 august 2023)
+
+        val underveisgrunnlag = underveisgrunnlag(periode, gradering = Prosent.`70_PROSENT`)
+
+        val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
+            vurdering = SamordningArbeidsgiverVurdering(
+                "",
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
+            )
+        )
+
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                utenBarnetillegg(),
+                utenSamordningGrunnlag(),
+                utenSamordningUføre(),
+                samordningArbeidsgiver,
+                utenBarnepensjon()
+            ),
+        )
+
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
+            Segment(
+                periode = Periode(1 juni 2023, 1 august 2023),
+                verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*111477/260
+                    gradering = Prosent.`70_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
+                        samordningGradering = Prosent.`0_PROSENT`,
+                        institusjonGradering = Prosent.`0_PROSENT`,
+                        arbeidGradering = Prosent.`70_PROSENT`,
+                        samordningUføregradering = Prosent.`0_PROSENT`,
+                        samordningArbeidsgiverGradering = Prosent.`0_PROSENT`,
+                        meldepliktGradering = Prosent.`0_PROSENT`,
+                    ),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620"),
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
+                    barnetilleggsats = Beløp("35.00"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(843)
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `meldekort levert etter frist reduserer utbetaling fram til levering`() {
+        val rettighetsperiode = Periode(6 januar 2020, 1 mars 2020)
+        val input = tomUnderveisInput(
+            rettighetsperiode = rettighetsperiode,
+            meldekort = listOf(
+                meldekortUtenArbeid(JournalpostId("1"), Periode(6 januar 2020, 19 januar 2020), 20 januar 2020),
+                meldekortUtenArbeid(JournalpostId("2"), Periode(20 januar 2020, 2 februar 2020), 11 februar 2020),
+                meldekortUtenArbeid(JournalpostId("3"), Periode(3 februar 2020, 16 februar 2020), 17 februar 2020),
+                meldekortUtenArbeid(JournalpostId("4"), Periode(17 februar 2020, 1 mars 2020), 2 mars 2020),
+            ),
+            innsendingsTidspunkt = mapOf(
+                20 januar 2020 to JournalpostId("1"),
+                11 februar 2020 to JournalpostId("2"),
+                17 februar 2020 to JournalpostId("3"),
+                2 mars 2020 to JournalpostId("4"),
+            ),
+            vedtaksdatoFørstegangsbehandling = 5 januar 2020,
+        )
+
+        val vurderinger = GraderingArbeidRegel().vurder(
+            input,
+            FastsettGrenseverdiArbeidRegel().vurder(
+                input,
+                MeldepliktRegel().vurder(
+                    input,
+                    UtledMeldeperiodeRegel().vurder(
+                        input,
+                        Tidslinje(input.periodeForVurdering, Vurdering(fårAapEtter = RettighetsType.BISTANDSBEHOV))
+                    )
+                )
+            )
+        )
+        val underveisperioder = UnderveisService.tilUnderveisperioder(vurderinger)
+        assertThat(underveisperioder.first { it.periode == Periode(3 februar 2020, 10 februar 2020) }.meldepliktStatus)
+            .isEqualTo(MeldepliktStatus.IKKE_MELDT_SEG)
+
+        val tilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2)),
+                beregningsgrunnlag = GUnit(BigDecimal(4)),
+                underveisgrunnlag = UnderveisGrunnlag(1L, underveisperioder),
+                barnetilleggGrunnlag = utenBarnetillegg(),
+                samordningGrunnlag = utenSamordningGrunnlag(),
+                samordningUføre = utenSamordningUføre(),
+                samordningArbeidsgiver = utenSamordningArbeidsgiver(),
+                barnepensjonGrunnlag = utenBarnepensjon(),
+            )
+        )
+
+        assertThat(tilkjentYtelse.segmenter()).satisfiesExactly(
+            {
+                assertThat(it.periode).isEqualTo(Periode(6 januar 2020, 19 januar 2020))
+                assertThat(it.verdi.utbetalingsdato).isEqualTo(20 januar 2020)
+                assertThat(it.verdi.gradering).isEqualTo(Prosent.`100_PROSENT`)
+                assertThat(it.verdi.redusertDagsats()).isNotEqualTo(Beløp(0))
+            },
+            {
+                assertThat(it.periode).isEqualTo(Periode(20 januar 2020, 2 februar 2020))
+                assertThat(it.verdi.utbetalingsdato).isEqualTo(11 februar 2020)
+                assertThat(it.verdi.gradering).isEqualTo(Prosent.`100_PROSENT`)
+                assertThat(it.verdi.redusertDagsats()).isNotEqualTo(Beløp(0))
+            },
+            {
+                assertThat(it.periode).isEqualTo(Periode(3 februar 2020, 10 februar 2020))
+                assertThat(it.verdi.utbetalingsdato).isEqualTo(17 februar 2020)
+                assertThat(it.verdi.gradering).isEqualTo(Prosent.`0_PROSENT`)
+                assertThat(it.verdi.redusertDagsats()).isEqualTo(Beløp(0))
+            },
+            {
+                assertThat(it.periode).isEqualTo(Periode(11 februar 2020, 16 februar 2020))
+                assertThat(it.verdi.utbetalingsdato).isEqualTo(17 februar 2020)
+                assertThat(it.verdi.gradering).isEqualTo(Prosent.`100_PROSENT`)
+                assertThat(it.verdi.redusertDagsats()).isNotEqualTo(Beløp(0))
+            },
+            {
+                assertThat(it.periode).isEqualTo(Periode(17 februar 2020, 1 mars 2020))
+                assertThat(it.verdi.utbetalingsdato).isEqualTo(2 mars 2020)
+                assertThat(it.verdi.gradering).isEqualTo(Prosent.`100_PROSENT`)
+                assertThat(it.verdi.redusertDagsats()).isNotEqualTo(Beløp(0))
+            },
+        )
+    }
+
+    @Test
+    fun `arbeidsgrad og samordning reduserer tilkjent endelig utbetalingsgrad`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = object : Grunnlag {
+            override fun grunnlaget(): GUnit {
+                return GUnit(BigDecimal(4))
+            }
+        }
+        val periode = Periode(1 juni 2023, 1 august 2023)
+
+        val underveisgrunnlag = underveisgrunnlag(periode, gradering = Prosent.`70_PROSENT`)
+
+        val samordningsgrunnlag = SamordningGrunnlag(
+            setOf(
+                SamordningPeriode(
+                    periode = Periode(1 juni 2023, 1 august 2023),
+                    gradering = Prosent.`50_PROSENT`
+                )
+            )
+        )
+
+        val samordningUføre = null
+
+        val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
+            vurdering = SamordningArbeidsgiverVurdering(
+                "",
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
+            )
+        )
+
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                utenBarnetillegg(),
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver,
+                utenBarnepensjon()
+            )
+        )
+
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
+            Segment(
+                periode = Periode(1 juni 2023, 1 august 2023),
+                verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*111477/260
+                    gradering = Prosent(20),
+                    graderingGrunnlag = GraderingGrunnlag(
+                        Prosent.`50_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                        Prosent.`70_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                    ),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620"),
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
+                    barnetilleggsats = Beløp("35.00"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(241)
+                )
+            )
+        )
+    }
+
+    private fun underveisgrunnlag(
+        periode: Periode,
+        institusjonsOppholdReduksjon: Prosent = Prosent.`0_PROSENT`,
+        gradering: Prosent = Prosent.`100_PROSENT`
+    ): UnderveisGrunnlag {
+        return UnderveisGrunnlag(
+            id = 1L, perioder = listOf(
+                underveisperiode(periode, periode, gradering, institusjonsOppholdReduksjon)
+            )
+        )
+    }
+
+    private fun underveisperiode(
+        periode: Periode,
+        meldePeriode: Periode,
+        gradering: Prosent,
+        institusjonsOppholdReduksjon: Prosent,
+        meldepliktStatus: MeldepliktStatus = MeldepliktStatus.MELDT_SEG,
+        opplysningerMottatt: LocalDate? = null,
+    ): Underveisperiode = Underveisperiode(
+        periode = periode,
+        meldePeriode = meldePeriode,
+        utfall = Utfall.OPPFYLT,
+        rettighetsType = RettighetsType.BISTANDSBEHOV,
+        avslagsårsak = null,
+        grenseverdi = Prosent.`100_PROSENT`,
+        arbeidsgradering = ArbeidsGradering(
+            totaltAntallTimer = TimerArbeid(BigDecimal(10)),
+            andelArbeid = Prosent.`50_PROSENT`,
+            fastsattArbeidsevne = Prosent.`50_PROSENT`,
+            gradering = gradering,
+            opplysningerMottatt = opplysningerMottatt,
+        ),
+        trekk = Dagsatser(0),
+        brukerAvKvoter = setOf(Kvote.ORDINÆR),
+        institusjonsoppholdReduksjon = institusjonsOppholdReduksjon,
+        meldepliktStatus = meldepliktStatus,
+        meldepliktGradering = Prosent.`0_PROSENT`,
+    )
+
+    private fun meldekortUtenArbeid(
+        journalpostId: JournalpostId,
+        periode: Periode,
+        mottattDato: LocalDate,
+    ): Meldekort = Meldekort(
+        journalpostId = journalpostId,
+        timerArbeidPerPeriode = periode.dager().map {
+            ArbeidIPeriode(
+                periode = Periode(it, it),
+                timerArbeid = TimerArbeid(BigDecimal.ZERO),
+            )
+        }.toSet(),
+        mottattTidspunkt = mottattDato.atStartOfDay(),
+        opprettetTidspunkt = mottattDato.atStartOfDay(),
+    )
+
+    @Test
+    fun `sluttpakke fra arbeidsgiver reduserer tilkjent endelig utbetalingsgrad`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = object : Grunnlag {
+            override fun grunnlaget(): GUnit {
+                return GUnit(BigDecimal(4))
+            }
+        }
+        val periode = Periode(1 juni 2023, 1 august 2023)
+
+        val underveisgrunnlag = underveisgrunnlag(periode, gradering = Prosent.`70_PROSENT`)
+
+        val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
+            vurdering = SamordningArbeidsgiverVurdering(
+                "Har fått sluttpakke",
+                listOf(Periode(LocalDate.of(2023, 6, 1), LocalDate.of(2023, 8, 1))), vurdertAv = Bruker("ident")
+            )
+        )
+
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                utenBarnetillegg(),
+                utenSamordningGrunnlag(),
+                utenSamordningUføre(),
+                samordningArbeidsgiver,
+                utenBarnepensjon()
+            )
+        )
+
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
+            Segment(
+                periode = Periode(1 juni 2023, 1 august 2023),
+                verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*111477/260
+                    gradering = Prosent.`0_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
+                        Prosent.`0_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                        Prosent.`70_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                        Prosent.`100_PROSENT`,
+                        Prosent.`0_PROSENT`,
+                    ),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620"),
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
+                    barnetilleggsats = Beløp("35.00"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(0)
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `justerer institusjonsopphold etter å ha samordnet uføre og sykepenger`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = object : Grunnlag {
+            override fun grunnlaget(): GUnit {
+                return GUnit(BigDecimal(4))
+            }
+        }
+        val periode = Periode(1 juni 2023, 1 august 2023)
+
+        val underveisgrunnlag = underveisgrunnlag(periode, institusjonsOppholdReduksjon = Prosent.`50_PROSENT`)
+
+        val samordningsgrunnlag = SamordningGrunnlag(
+            setOf(
+                SamordningPeriode(
+                    periode = periode, gradering = Prosent(10)
+                )
+            )
+        )
+
+        val samordningUføre = SamordningUføreGrunnlag(
+            vurdering = SamordningUføreVurdering(
+                "", listOf(
+                    SamordningUføreVurderingPeriode(virkningstidspunkt = periode.fom, Prosent.`30_PROSENT`)
+                ),
+                Bruker("ident")
+            )
+        )
+
+        val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
+            vurdering = SamordningArbeidsgiverVurdering(
+                "",
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
+            )
+        )
+
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                utenBarnetillegg(),
+                samordningsgrunnlag,
+                samordningUføre,
+                samordningArbeidsgiver,
+                utenBarnepensjon()
+            )
+        )
+
+        assertThat(beregnTilkjentYtelse.segmenter()).containsExactly(
+            Segment(
+                periode = Periode(1 juni 2023, 1 august 2023), verdi = Tilkjent(
+                    dagsats = Beløp("1204.45"), //4*0.66*111477/260
+                    gradering = Prosent.`30_PROSENT`,
+                    graderingGrunnlag = GraderingGrunnlag(
+                        samordningGradering = Prosent(10),
+                        institusjonGradering = Prosent.`50_PROSENT`,
+                        arbeidGradering = Prosent.`100_PROSENT`,
+                        samordningUføregradering = Prosent.`30_PROSENT`,
+                        samordningArbeidsgiverGradering = Prosent.`0_PROSENT`,
+                        meldepliktGradering = Prosent.`0_PROSENT`,
+                    ),
+                    grunnlagsfaktor = GUnit("0.0101538462"),
+                    grunnbeløp = Beløp("118620"),
+                    antallBarn = 0, barnepensjonDagsats = Beløp(0),
+                    barnetilleggsats = Beløp("35.00"),
+                    barnetillegg = Beløp("0"),
+                    utbetalingsdato = periode.tom.plusDays(9),
+                    minsteSats = Minstesats.IKKE_MINSTESATS,
+                    redusertDagsats = Beløp(361)
+                )
+            ),
+        )
+    }
+
+
+    // https://confluence.adeo.no/spaces/PAAP/pages/720916013/Utbetalingsgrad
+    @CsvSource(
+        useHeadersInDisplayName = true,
+        textBlock = """arbeidsgrad,	sykepengegrad,	uforegrad,	institusjon,	   effektivGradering
+                       25	               ,25	         ,25  	      ,0	                  ,25
+                       0	               ,50	         ,0  	      ,50	                  ,25
+                       10	               ,25	         ,25	      ,50	                  ,20
+                       50	               ,0	         ,0	          ,50	                  ,25
+                       0	               ,50	         ,50	      ,0	                  ,0
+                       0	               ,50	         ,50	      ,50	                  ,0
+                       50	               ,30	         ,0	          ,50	                  ,10
+                       0	               ,10	         ,30	      ,50	                  ,30
+"""
+    )
+    @ParameterizedTest
+    fun `mange test caser`(
+        arbeidsgrad: Int,
+        sykepengegrad: Int,
+        uforegrad: Int,
+        institusjon: Int,
+        effektivGradering: Double
+    ) {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = object : Grunnlag {
+            override fun grunnlaget(): GUnit {
+                return GUnit(BigDecimal(4))
+            }
+        }
+        val periode = Periode(1 juni 2023, 1 august 2023)
+
+        val underveisgrunnlag = underveisgrunnlag(
+            periode,
+            institusjonsOppholdReduksjon = Prosent(institusjon),
+            // Komplement siden gradering = 100% - hvor mange prosent arbeid.
+            gradering = Prosent(arbeidsgrad).komplement(),
+        )
+
+        val samordningsgrunnlag = SamordningGrunnlag(
+            setOf(
+                SamordningPeriode(
+                    periode = periode, gradering = Prosent(sykepengegrad)
+                )
+            )
+        )
+
+        val samordningUføre = SamordningUføreGrunnlag(
+            vurdering = SamordningUføreVurdering(
+                "", listOf(
+                    SamordningUføreVurderingPeriode(virkningstidspunkt = periode.fom, Prosent(uforegrad))
+                ),
+                Bruker("ident")
+            )
+        )
+
+
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                utenBarnetillegg(),
+                samordningsgrunnlag,
+                samordningUføre,
+                utenSamordningArbeidsgiver(),
+                utenBarnepensjon()
+            )
+        )
+
+        assertThat(beregnTilkjentYtelse.segmenter())
+            .usingRecursiveComparison()
+            .ignoringFields("verdi.redusertDagsats")
+            .isEqualTo(
+                listOf(
+                    Segment(
+                        periode = Periode(1 juni 2023, 1 august 2023), verdi = Tilkjent(
+                            dagsats = Beløp("1204.45"), //4*0.66*111477/260
+                            gradering = Prosent(effektivGradering.toInt()),
+                            graderingGrunnlag = GraderingGrunnlag(
+                                samordningGradering = Prosent(sykepengegrad),
+                                institusjonGradering = Prosent(institusjon),
+                                arbeidGradering = Prosent(arbeidsgrad).komplement(),
+                                samordningUføregradering = Prosent(uforegrad),
+                                samordningArbeidsgiverGradering = Prosent.`0_PROSENT`,
+                                meldepliktGradering = Prosent.`0_PROSENT`,
+                            ),
+                            grunnlagsfaktor = GUnit("0.0101538462"),
+                            grunnbeløp = Beløp("118620"),
+                            antallBarn = 0,
+                            barnetilleggsats = Beløp("35.00"),
+                            barnetillegg = Beløp("0"),
+                            utbetalingsdato = periode.tom.plusDays(9),
+                            minsteSats = Minstesats.IKKE_MINSTESATS,
+                            redusertDagsats = null,
+                            barnepensjonDagsats = Beløp(0)
+                        )
+                    )
+                )
+            )
+    }
+
+    @Test
+    fun `skal sette riktig utbetalingsdato basert på ulike meldepliktstatuser - fritak, meldt seg eller før vedtak`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(4)),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+        val periode1 = Periode(LocalDate.of(2023, 1, 1), LocalDate.of(2023, 1, 14))
+        val periode2 = Periode(LocalDate.of(2023, 1, 15), LocalDate.of(2023, 1, 29))
+        val periode3 = Periode(LocalDate.of(2023, 1, 30), LocalDate.of(2023, 2, 13))
+
+        val underveisgrunnlag = UnderveisGrunnlag(
+            1L, perioder = listOf(
+                underveisperiode(periode1, periode1,Prosent.`100_PROSENT`, Prosent.`0_PROSENT`, MeldepliktStatus.FØR_VEDTAK),
+                underveisperiode(periode2, periode2, Prosent.`100_PROSENT`, Prosent.`0_PROSENT`, MeldepliktStatus.FRITAK),
+                underveisperiode(
+                    periode3,
+                    periode3,
+                    Prosent.`100_PROSENT`,
+                    Prosent.`0_PROSENT`,
+                    MeldepliktStatus.MELDT_SEG,
+                    opplysningerMottatt = periode3.tom.plusDays(1)
+                ),
+            )
+        )
+
+
+        val samordningArbeidsgiver = SamordningArbeidsgiverGrunnlag(
+            vurdering = SamordningArbeidsgiverVurdering(
+                "",
+                listOf(Periode(LocalDate.now(), LocalDate.now())), vurdertAv = Bruker("ident")
+            )
+        )
+
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                utenBarnetillegg(),
+                utenSamordningGrunnlag(),
+                utenSamordningUføre(),
+                samordningArbeidsgiver,
+                utenBarnepensjon()
+            )
+        )
+
+        val tilkjent = Tilkjent(
+            dagsats = Beløp("1131.92"), //4*0.66*118620/260
+            gradering = Prosent.`100_PROSENT`,
+            graderingGrunnlag = nullTimerArbeidOgFullYtelseGraderingGrunnlag(),
+            grunnlagsfaktor = GUnit("0.0101538462"),
+            grunnbeløp = Beløp("111477"),
+            antallBarn = 0,
+            barnetilleggsats = Beløp("27.00"),
+            barnetillegg = Beløp("0"),
+            utbetalingsdato = LocalDate.now(),
+            minsteSats = Minstesats.IKKE_MINSTESATS,
+            redusertDagsats = Beløp(1132),
+            barnepensjonDagsats = Beløp(0)
+        )
+        assertThat(beregnTilkjentYtelse.segmenter()).usingRecursiveComparison().isEqualTo(
+            listOf(
+                Segment(periode = periode1, verdi = tilkjent.copy(utbetalingsdato = periode1.tom.plusDays(9))),
+                Segment(periode = periode2, verdi = tilkjent.copy(utbetalingsdato = periode2.tom.plusDays(1))),
+                Segment(
+                    periode = Periode(periode3.fom, LocalDate.of(2023, 1, 31)),
+                    verdi = tilkjent.copy(utbetalingsdato = periode3.tom.plusDays(1))
+                ),
+                Segment(
+                    periode = Periode(LocalDate.of(2023, 2, 1), periode3.tom),
+                    verdi = tilkjent.copy(barnetilleggsats = Beløp("35.00"), utbetalingsdato = periode3.tom.plusDays(1))
+                ),
+            )
+        )
+    }
+
+    @Test
+    fun `barnepensjon skal være heltall og trekkes fra redusert dagsats`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(4)),
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+
+        val periode = Periode(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31))
+
+        val underveisgrunnlag = underveisgrunnlag(periode)
+
+        // Barnepensjon: 10335.66 per måned
+        // Dagsats = 10335.66 * 12 / 260 = 477.03, avrundet til 477 (heltall)
+        val barnepensjonGrunnlag = no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonGrunnlag(
+            vurdering = no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonVurdering(
+                begrunnelse = "Mottar barnepensjon",
+                perioder = setOf(
+                    no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonPeriode(
+                        fom = YearMonth.of(2024, 1),
+                        tom = YearMonth.of(2024, 1),
+                        månedsats = Beløp("10335.66")
+                    )
+                ),
+                vurdertIBehandling = BehandlingId(2),
+                vurdertAv = Bruker("test"),
+                opprettet = Instant.now()
+            )
+        )
+
+        val beregnTilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                utenBarnetillegg(),
+                utenSamordningGrunnlag(),
+                utenSamordningUføre(),
+                utenSamordningArbeidsgiver(),
+                barnepensjonGrunnlag,
+            )
+        )
+
+        assertThat(beregnTilkjentYtelse.segmenter()).hasSize(1)
+        val tilkjent = beregnTilkjentYtelse.segmenter().first().verdi
+
+        // Dagsats = 4 * 0.66 / 260 * 118 620 = 1204.45
+        assertThat(tilkjent.dagsats).isEqualTo(Beløp("1204.45"))
+        
+        // Barnepensjon dagsats skal være heltall: 10335.66 * 12 / 260 = 477 
+        assertThat(tilkjent.barnepensjonDagsats).isEqualTo(Beløp(477))
+        
+        // Redusert dagsats = 1204.45 - 477
+        assertThat(tilkjent.redusertDagsats().verdi.toInt()).isEqualTo(727)
+    }
+
+    @Test
+    fun `negativ redusert dagsats skal defaulte til 0`() {
+        val fødselsdato = Fødselsdato(LocalDate.of(1985, 1, 2))
+        val beregningsgrunnlag = Grunnlag11_19(
+            grunnlaget = GUnit(BigDecimal(2)), // Fører til minste årlige ytelse over 25
+            erGjennomsnitt = false,
+            gjennomsnittligInntektIG = GUnit(0),
+            inntekter = emptyList()
+        )
+
+        val periode = Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 31))
+
+        val underveisgrunnlag = underveisgrunnlag(periode)
+
+        // Barnepensjon: 25000 per måned
+        // Barnepensjon dagsats = 25000 * 12 / 260 = 1154
+        val barnepensjonGrunnlag = no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonGrunnlag(
+            vurdering = no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonVurdering(
+                begrunnelse = "Mottar barnepensjon",
+                perioder = setOf(
+                    no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonPeriode(
+                        fom = YearMonth.of(2025, 1),
+                        tom = YearMonth.of(2025, 1),
+                        månedsats = Beløp("25000")
+                    )
+                ),
+                vurdertIBehandling = BehandlingId(3),
+                vurdertAv = Bruker("test"),
+                opprettet = Instant.now()
+            )
+        )
+
+        val beregnet = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato,
+                beregningsgrunnlag.grunnlaget(),
+                underveisgrunnlag,
+                utenBarnetillegg(),
+                utenSamordningGrunnlag(),
+                utenSamordningUføre(),
+                utenSamordningArbeidsgiver(),
+                barnepensjonGrunnlag,
+            )
+        )
+
+        assertThat(beregnet.segmenter()).hasSize(1)
+        val tilkjent = beregnet.segmenter().first().verdi
+
+        // Dagsats = 2.041 * 124 028 / 260 = 973.62
+        assertThat(tilkjent.dagsats).isEqualTo(Beløp("973.62"))
+        
+        assertThat(tilkjent.barnepensjonDagsats).isEqualTo(Beløp(1154))
+        
+        assertThat(tilkjent.redusertDagsats()).isEqualTo(Beløp(0))
+    }
+
+    private fun utenSamordningGrunnlag(): SamordningGrunnlag = SamordningGrunnlag(emptySet())
+
+    private fun utenBarnetillegg(): BarnetilleggGrunnlag = BarnetilleggGrunnlag(emptyList())
+
+    private fun utenSamordningUføre(): SamordningUføreGrunnlag =
+        SamordningUføreGrunnlag(SamordningUføreVurdering("", emptyList(), Bruker("ident")))
+
+    private fun utenSamordningArbeidsgiver(): SamordningArbeidsgiverGrunnlag = SamordningArbeidsgiverGrunnlag(
+        vurdering = SamordningArbeidsgiverVurdering(
+            "",
+            emptyList(), vurdertAv = Bruker("ident")
+        )
+    )
+    private fun utenBarnepensjon() = null
+
+    private fun nullTimerArbeidOgFullYtelseGraderingGrunnlag(): GraderingGrunnlag = GraderingGrunnlag(
+        Prosent.`0_PROSENT`,
+        Prosent.`0_PROSENT`,
+        Prosent.`100_PROSENT`,
+        Prosent.`0_PROSENT`,
+        Prosent.`0_PROSENT`,
+        Prosent.`0_PROSENT`,
+    )
+
+
+}

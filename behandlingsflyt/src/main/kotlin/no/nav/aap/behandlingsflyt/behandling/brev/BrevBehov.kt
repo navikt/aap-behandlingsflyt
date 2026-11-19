@@ -2,7 +2,7 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
+import no.nav.aap.barnetillegg.VurderingAvForeldreAnsvar
 import no.nav.aap.meldeplikt.MeldepliktGrunnlag
 import java.time.LocalDate
 
@@ -21,12 +21,35 @@ data class Innvilgelse(
     val yrkesSkadeISøknadIkkeIRegister: Boolean? = null
 ) : BrevBehov(TypeBrev.VEDTAK_INNVILGELSE)
 
+data class OrdinærInnvilgelse(
+    val virkningstidspunkt: LocalDate,
+    val sisteDagMedYtelse: LocalDate, // lurer på om jeg kan sløyfe denne siden den vil være lik uansett
+    val grunnlagBeregning: GrunnlagBeregning?,
+    val tilkjentYtelse: TilkjentYtelse?,
+    val sykdomsvurdering: String?,
+    val forholdTilAndreYtelser: ForholdTilAndreYtelser?,
+    val yrkesskadeBeregning: YrkesskadeBeregningBrev? = null,
+    val foreldreansvarVurderinger: List<VurderingAvForeldreAnsvar>? = null,
+    val meldepliktGrunnlag: MeldepliktGrunnlag? = null,
+    val yrkesSkadeISøknadIkkeIRegister: Boolean? = null
+)
+
 data class VurderesForUføretrygd(
     val kravdatoUføretrygd: LocalDate,
     val sisteDagMedYtelse: LocalDate,
     val grunnlagBeregning: GrunnlagBeregning?,
     val tilkjentYtelse: TilkjentYtelse?
 ) : BrevBehov(TypeBrev.VEDTAK_11_18)
+
+data class UføreVurdering(
+    val kravdatoUføretrygd: LocalDate,
+    val sisteDagMedYtelse: LocalDate,
+)
+
+data class VurderesForUføretrygdV2(
+    val uføreVurdering: UføreVurdering,
+    val ordinærAAP: OrdinærInnvilgelse?
+): BrevBehov(TypeBrev.VEDTAK_11_18)
 
 data class Arbeidssøker(
     val datoAvklartForJobbsøk: LocalDate,
@@ -56,7 +79,7 @@ data class VedtakEndringDødsfall(
 sealed class AvslagBrev(typeBrev: TypeBrev) : BrevBehov(typeBrev) {
     abstract val sykdomsvurdering: String?
     data class AvslagUnder17År9Måneder(override val sykdomsvurdering: String?) : AvslagBrev(TypeBrev.VEDTAK_AVSLAG_11_4_BRUKER_UNDER_17_ÅR_9_MÅNEDER)
-    data class AvslagSykdomsvilkåret(override val sykdomsvurdering: String?) : AvslagBrev(TypeBrev.VEDTAK_AVSLAG_11_5)
+    data class AvslagSykdomsvilkåret(override val sykdomsvurdering: String?, val yrkesSkadeISøknadIkkeIRegister: Boolean? = null) : AvslagBrev(TypeBrev.VEDTAK_AVSLAG_11_5)
     data class Avslag(
         override val sykdomsvurdering: String?,
         val avslagsårsak: Avslagsårsak? = null,

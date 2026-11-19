@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.utils.FarligMutering
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.Row
 import no.nav.aap.komponenter.type.Periode
@@ -52,32 +53,16 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         val saksnummer = Saksnummer.valueOf(sakId)
         val periode = Periode(søknadsdato, Tid.MAKS)
         val keys = connection.executeReturnKey(
-            """INSERT INTO SAK (saksnummer, person_id, rettighetsperiode, status) VALUES (?, ?, ?::daterange, ?)"""
+            """INSERT INTO SAK (saksnummer, person_id, rettighetsperiode) VALUES (?, ?, ?::daterange)"""
         ) {
             setParams {
                 setString(1, saksnummer.toString())
                 setLong(2, person.id.id)
                 setPeriode(3, periode)
-                setEnumName(4, Status.OPPRETTET)
             }
         }
         log.info("Opprettet sak med ID: $keys. Saksnummer: $saksnummer")
         return Sak(SakId(keys), saksnummer, person, periode)
-    }
-
-    @WithSpan
-    override fun oppdaterSakStatus(sakId: SakId, status: Status) {
-        val query = """UPDATE sak SET status = ? WHERE ID = ?"""
-
-        return connection.execute(query) {
-            setParams {
-                setEnumName(1, status)
-                setLong(2, sakId.toLong())
-            }
-            setResultValidator {
-                require(it == 1)
-            }
-        }
     }
 
     override fun finnAlleSakIder(): List<SakId> {
@@ -201,12 +186,12 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         person = personRepository.hent(row.getLong("person_id").let(::PersonId)),
         rettighetsperiode = row.getPeriode("rettighetsperiode"),
         saksnummer = Saksnummer(row.getString("saksnummer")),
-        status = row.getEnum("status"),
         opprettetTidspunkt = row.getLocalDateTime("opprettet_tid")
     )
 
+    @FarligMutering
     @WithSpan
-    override fun oppdaterRettighetsperiode(sakId: SakId, periode: Periode) {
+    override fun oppdaterRettighetsperiode(sak: Sak, periode: Periode) {
         val query = """
             UPDATE SAK SET rettighetsperiode = ?::daterange WHERE id = ?
         """.trimIndent()
@@ -214,7 +199,7 @@ class SakRepositoryImpl(private val connection: DBConnection) : SakRepository {
         connection.execute(query) {
             setParams {
                 setPeriode(1, periode)
-                setLong(2, sakId.toLong())
+                setLong(2, sak.id.toLong())
             }
         }
     }

@@ -21,12 +21,16 @@ data class StønadsperiodeGrunnlag(
 ) : VurderingForKravGrunnlag<StønadsperiodeVurdering> {
     override fun tilTidslinje(kravGrunnlag: KravGrunnlag): Tidslinje<StønadsperiodeVurdering> {
         val gjeldendeKravreferanser = kravGrunnlag.gjeldendeRelevanteKrav().map { it.referanse }
+        val gjeldendeMigrertKrav = kravGrunnlag.gjeldendeMigrertKrav()?.referanse
 
         return gjeldendeVurderinger()
-            .filter { stønadsperiodeVurdering -> stønadsperiodeVurdering.referanse in gjeldendeKravreferanser }
+            .filter { stønadsperiodeVurdering -> stønadsperiodeVurdering.referanse in gjeldendeKravreferanser + gjeldendeMigrertKrav }
             .sortedBy { it.startDato }
             .somTidslinje { Periode(it.startDato, Tid.MAKS) }
     }
+
+    fun gjeldendeVurderingerForGjeldendeKrav(kravGrunnlag: KravGrunnlag) =
+        this.tilTidslinje(kravGrunnlag).segmenter().map { it.verdi }
 }
 
 data class StønadsperiodeVurdering(
@@ -40,6 +44,10 @@ data class StønadsperiodeVurdering(
     val harGjenværendeKvote: Boolean,
     val relevantKravType: RelevantKravType,
     val startDato: LocalDate,
+    /**
+     * Startdatoen er satt til dagen etter maksdato i tilstøtende Arena-sak.
+     */
+    val erKantIKantMedArena: Boolean = false,
 ) : VurderingForKrav {
     init {
 

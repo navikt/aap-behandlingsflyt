@@ -158,7 +158,7 @@ class MeldingOmVedtakBrevSteg(
     }
 
     private fun unikReferanse(brevBehov: BrevBehov, kontekst: FlytKontekstMedPerioder): String {
-        val behandling = behandlingRepository.hent(kontekst.behandlingId)
+        val referanse = behandlingRepository.hentReferanse(kontekst.behandlingId)
 
         return when (brevBehov) {
             is BarnetilleggSatsRegulering -> {
@@ -172,7 +172,7 @@ class MeldingOmVedtakBrevSteg(
             }
 
             else -> {
-                "${behandling.referanse}-${brevBehov.typeBrev}"
+                "$referanse-${brevBehov.typeBrev}"
             }
         }
     }
@@ -180,6 +180,7 @@ class MeldingOmVedtakBrevSteg(
     private fun brukApiV3(behandlingId: BehandlingId, typeBrev: TypeBrev): Boolean {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
         if (typeBrev != TypeBrev.VEDTAK_AVSLAG_11_5 &&
+            typeBrev != TypeBrev.KLAGE_OPPRETTHOLDELSE &&
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK) == null
         ) {
             return false
@@ -205,7 +206,9 @@ class MeldingOmVedtakBrevSteg(
             "J158692",
             "R152079",
             "B156492",
-            "S154973"
+            "S154973",
+            "S154176",
+            "Z990265"
         )
         val brevtyperSomSkalBrukeBrevbygger = listOf(TypeBrev.VEDTAK_INNVILGELSE)
         return typeBrev in brevtyperSomSkalBrukeBrevbygger && (bruker.ident in brukereSomSkalBrukeBrevbygger || Miljø.erDev())

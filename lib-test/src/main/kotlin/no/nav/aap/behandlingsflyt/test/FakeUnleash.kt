@@ -1,11 +1,17 @@
 package no.nav.aap.behandlingsflyt.test
 
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.utbetaling.UtbetalingGateway
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.FeatureToggle
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.verdityper.Bruker
+import no.nav.aap.utbetal.simulering.UtbetalingOgSimuleringDto
+import no.nav.aap.utbetal.simuleringv2.SimuleringDto
+import no.nav.aap.utbetal.simuleringv2.SimuleringsresponseDto
+import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto
+import no.nav.aap.utbetal.trekk.TrekkResponsDto
 
 open class FakeUnleashBase(
     private val flags: Map<BehandlingsflytFeature, Boolean>,
@@ -67,6 +73,7 @@ open class FakeUnleashBaseWithDefaultDisabled(
 object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
+        BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende to false,
         BehandlingsflytFeature.BrevtyperTilNyBrevbygger to false,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
@@ -76,9 +83,12 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.VentStatusForTilbakekrevingIBehandlingsflyt to true,
         BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
         BehandlingsflytFeature.SynkroniserArenaMeldeperiodesyklus to false,
+        BehandlingsflytFeature.HandtereMaksdatoForKantTilKant to true,
         BehandlingsflytFeature.DynamiskFrivilligSykestipend to true,
+        BehandlingsflytFeature.MaksdatoSykepenger to true,
         
         // --- Krav ---
+        BehandlingsflytFeature.BackfillKrav to true,
         BehandlingsflytFeature.KravSteg to true,
         BehandlingsflytFeature.KravManuellVurdering to true,
         BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov to true,
@@ -88,20 +98,23 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.MigrerRefusjonskravFraArenaAutomatisk to true,
         BehandlingsflytFeature.MigrererKravFraArenaAutomatisk to true,
         BehandlingsflytFeature.MigrererOppholdskravFraArenaAutomatisk to true,
+        BehandlingsflytFeature.MigrererForutgaaendeMedlemskapFraArenaAutomatisk to true,
+        BehandlingsflytFeature.MigrererVedtakslengdeFraArenaAutomatisk to true,
+        BehandlingsflytFeature.MigrererBeregningstidspunktFraArenaAutomatisk to true,
 
         // --- Utbetaling ---
-        BehandlingsflytFeature.FjerneAvventUtbetalingForSamordningArbeidsgiver to false,
+        BehandlingsflytFeature.SimuleringStegForNyttUtbetalingsgrensesnitt to true,
 
         // ------
         BehandlingsflytFeature.Avslag11_27 to true,
         BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp to true,
-        BehandlingsflytFeature.HoppOverBeslutterVedAvslagSykdom to true,
         BehandlingsflytFeature.KanVurdereRefusjonIRevurdering to false,
         BehandlingsflytFeature.KunEnAktivKlagebehandling to true,
         BehandlingsflytFeature.KlagePaaTilbakekreving to true,
-        BehandlingsflytFeature.NySoknadTilApiIntern to true,
-        BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true,
         BehandlingsflytFeature.DatadelingBehandlingVisning to true,
+        BehandlingsflytFeature.HentInnLovvalgRegisterdataForNyesteAktuelleKrav to true,
+        BehandlingsflytFeature.OvergangUfoereBrevbygger to true,
+        BehandlingsflytFeature.VedtaksperiodeBeslutter to true,
     )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {
@@ -110,6 +123,10 @@ object LokalUnleash : FakeUnleashBase(
                 BehandlingsflytFeature.NyttKravPeriodiserteAvklaringsbehov,
                 "saksnumre"
             ) -> "LoCAL_4LDW2A8"
+            Pair(
+                BehandlingsflytFeature.BackfillKrav,
+                "backfill-saker-ider"
+            ) -> "2,3" //LoCAL_4LDSUJK,LoCAL_4LDRRYo
             else -> "1,100"
         }
     }
@@ -133,3 +150,26 @@ object AlleAvskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
         BehandlingsflytFeature.IngenValidering, // Vi må ha på validering, slik oppførselen er i prod. Dette er egentlig for å støtte superbruker
     )
 )
+
+object FakeUtbetalingGateway : UtbetalingGateway {
+    override fun utbetal(tilkjentYtelseDto: TilkjentYtelseDto) {
+        TODO("Not yet implemented")
+    }
+
+    override fun simulering(tilkjentYtelseDto: TilkjentYtelseDto): List<UtbetalingOgSimuleringDto> {
+        TODO("Not yet implemented")
+    }
+
+    override fun simuleringV2(tilkjentYtelseDto: TilkjentYtelseDto): SimuleringsresponseDto {
+        return SimuleringDto(perioder = emptyList())
+    }
+
+    override fun hentTrekk(saksnummer: String): TrekkResponsDto {
+        TODO("Not yet implemented")
+    }
+
+    override fun erMigrert(personIdent: String, saksnummer: String): Boolean {
+        return true
+    }
+
+}

@@ -22,6 +22,10 @@ Filen viser avhengigheter til tredjeparts- og NAV-artefakter for hver modul i de
 
 ## Lokalt utviklingsmiljø:
 
+Tester og lokal kjøring bruker applikasjonsversjonen `development`, slik at nye commits ikke alene ugyldiggjør testcachen.
+Ved `:app:shadowJar` erstattes denne med commit-SHA fra `GIT_COMMIT`, `GITHUB_SHA` eller `git rev-parse --verify HEAD`,
+i den rekkefølgen. Produksjonspakking feiler hvis en gyldig commit-SHA ikke kan finnes.
+
 AAP-Behandlingsflyt benytter test containers for integrasjonstester med databasen så et verktøy for å kjøre Docker
 containers er nødvendig.<br>
 
@@ -30,6 +34,20 @@ For macOS og Linux anbefaler vi Colima. Det kan være nødvendig med et par tilp
 - `export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=$HOME/.colima/docker.sock`
 - `export DOCKER_HOST=unix://$TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE`
 - `export TESTCONTAINERS_RYUK_DISABLED=true`
+
+### Tester
+
+Kjør de raske testene uten Docker:
+
+```bash
+./gradlew test -PcoreTestsOnly=true
+```
+
+Kjør alle tester, inkludert de tregere integrasjons- og flyttestene (krever Docker):
+
+```bash
+./gradlew test
+```
 
 ### Code quality
 
@@ -169,4 +187,3 @@ Spørsmål knyttet til koden eller repositoryet kan stilles som issues her på G
 ### For Nav-ansatte
 
 Interne henvendelser kan sendes via Slack i kanalen [`#ytelse-app-værsågod`](https://nav-it.slack.com/archives/C0312J501GX).
-

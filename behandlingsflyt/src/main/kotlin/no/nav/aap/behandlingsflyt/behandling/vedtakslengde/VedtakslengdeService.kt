@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vedtakslengde
 
+import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
 import no.nav.aap.behandlingsflyt.behandling.underveis.RettighetstypeService
@@ -24,6 +25,7 @@ import org.slf4j.LoggerFactory
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 class VedtakslengdeService(
     private val vedtakslengdeRepository: VedtakslengdeRepository,
@@ -144,6 +146,51 @@ class VedtakslengdeService(
         )
     }
 
+    /**
+     * Sjekker om siste rettighetstype har gått fra en unntaksrettighet i forrige behandling til bistandsbehov i
+     * inneværende behandling. Bistandsbehov utvider ikke vedtakslengden automatisk ved revurdering, så dette må vurderes manuelt.
+     */
+    fun harOvergangFraUnntakTilBistandsbehov(
+        behandlingId: BehandlingId,
+        forrigeBehandlingId: BehandlingId?,
+    ): Boolean {
+        if (forrigeBehandlingId == null) return false
+
+        val forrigeSisteRettighet = rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(forrigeBehandlingId)
+            .segmenter().lastOrNull()?.verdi
+        val sisteRettighet = rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandlingId)
+            .segmenter().lastOrNull()?.verdi
+
+        val harOvergang = forrigeSisteRettighet in unntaksrettighetstyper() && sisteRettighet == RettighetsType.BISTANDSBEHOV
+        log.info("Siste rettighetstype i forrige behandling $forrigeBehandlingId: $forrigeSisteRettighet, i behandling $behandlingId: $sisteRettighet. Overgang fra unntak til bistandsbehov: $harOvergang")
+
+        return harOvergang
+    }
+
+    /**
+     * Dersom det finnes en vedtatt sluttdato fra forrige behandling som har mindre enn
+     * [ANTALL_DAGER_FØR_UTVIDELSE] dager igjen, og rettighetstype i gjeldende behandling er lengre enn dette.
+     */
+    fun vedtakslengdeNærmerSegSluttOgRettighetGårLenger(
+        behandlingId: BehandlingId,
+        forrigeBehandlingId: BehandlingId?,
+    ): Boolean {
+        if (forrigeBehandlingId == null) return false
+
+        val vedtattSluttdato = hentVedtattSluttdato(
+            forrigeBehandlingId,
+            vedtakslengdeRepository.hentHvisEksisterer(forrigeBehandlingId)
+        ) ?: return false
+
+        val dagerIgjen = ChronoUnit.DAYS.between(LocalDate.now(clock), vedtattSluttdato)
+        if (dagerIgjen >= ANTALL_DAGER_FØR_UTVIDELSE) return false
+
+        val sluttdatoGjeldendeRettighet = rettighetstypeService.rettighetstypeTidslinjeBakoverkompatibel(behandlingId)
+            .segmenter().lastOrNull()?.periode?.tom
+
+        return sluttdatoGjeldendeRettighet != null && sluttdatoGjeldendeRettighet > vedtattSluttdato
+    }
+
     fun hentAvslagsårsakerVedStansEllerOpphør(
         behandlingId: BehandlingId,
         stansEllerOpphørFom: LocalDate
@@ -156,6 +203,13 @@ class VedtakslengdeService(
             .toSet()
 
         return avslagsårsakerFørsteDagUtenBistandsbehovRettighet
+    }
+
+    /** Erstatter en tidligere migrert vurdering ved re-kjøring, og bevarer alle andre vurderinger. */
+    fun lagreMigrertVedtakslengde(behandlingId: BehandlingId, vurdering: VedtakslengdeVurdering) {
+        val andreVurderinger = vedtakslengdeRepository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
+            .filterNot { it.vurdertAv == ARENA_MIGRERING_BRUKER }
+        vedtakslengdeRepository.lagre(behandlingId, andreVurderinger + vurdering)
     }
 
     fun lagreAutomatiskVedtakslengde(
@@ -171,12 +225,28 @@ class VedtakslengdeService(
         val vedtattUtvidelse = vedtattVedtakslengdeGrunnlag?.gjeldendeVurdering()?.utvidetMed
         val sluttdato = utledSluttdato(behandlingId, rettighetsperiode, vedtattSluttdato)
 
-        // Henter forrige automatiske vurdering for å sammenligne med ny automatisk beregnet sluttdato
-        val sisteAutomatiskeVurdering = vedtakslengdeGrunnlag?.vurderinger.orEmpty()
+        val vurderingerFraBehandlingen =
+            vedtakslengdeGrunnlag?.vurderinger.orEmpty().filter { it.vurdertIBehandling == behandlingId }
+        val automatiskVurderingFraBehandlingen = vurderingerFraBehandlingen
             .filter { it.vurdertAutomatisk }
             .maxByOrNull { it.opprettet }
 
-        if (sisteAutomatiskeVurdering?.sluttdato != sluttdato && vedtattSluttdato != sluttdato) {
+        // Det kan kun være en ny manuell vurdering pr behandling
+        val manuellVurderingFraBehandlingen = vurderingerFraBehandlingen.filter { it.vurdertManuelt }.also {
+            require(it.size <= 1) { "Det skal kun være opp til én manuell vurdering per behandling, fant ${it.size} for behandling $behandlingId" }
+        }
+        val vedtatteVurderinger = vedtattVedtakslengdeGrunnlag?.vurderinger.orEmpty()
+
+        if (sluttdato == vedtattSluttdato) {
+            // Ingen utvidelse - fjerner eventuell automatisk vurdering lagret tidligere i behandlingen
+            if (automatiskVurderingFraBehandlingen != null) {
+                log.info("Fjerner automatisk vurdering av sluttdato ${automatiskVurderingFraBehandlingen.sluttdato} for behandling $behandlingId, sluttdato er uendret fra vedtatt $vedtattSluttdato")
+                vedtakslengdeRepository.lagre(
+                    behandlingId = behandlingId,
+                    vurderinger = vedtatteVurderinger + manuellVurderingFraBehandlingen
+                )
+            }
+        } else if (automatiskVurderingFraBehandlingen?.sluttdato != sluttdato) {
             log.info("Automatisk vurdering av sluttdato endret fra $vedtattSluttdato til $sluttdato for behandling $behandlingId")
 
             val nyAutomatiskVurdering = VedtakslengdeVurdering(
@@ -189,18 +259,9 @@ class VedtakslengdeService(
                 begrunnelse = "Automatisk vurdert"
             )
 
-            val vedtatteVurderinger = vedtattVedtakslengdeGrunnlag?.vurderinger.orEmpty()
-            val nyeVurderingerFraBehandlingen =
-                vedtakslengdeGrunnlag?.vurderinger?.filter { it.vurdertIBehandling == behandlingId }.orEmpty()
-
-            // Det kan kun være en ny manuell vurdering pr behandling
-            val nyManuellVurderingFraBehandlingen = nyeVurderingerFraBehandlingen.filter { it.vurdertManuelt }.also {
-                require(it.size <= 1) { "Det skal kun være opp til én manuell vurdering per behandling, fant ${it.size} for behandling $behandlingId" }
-            }
-
             vedtakslengdeRepository.lagre(
                 behandlingId = behandlingId,
-                vurderinger = vedtatteVurderinger + nyManuellVurderingFraBehandlingen + nyAutomatiskVurdering
+                vurderinger = vedtatteVurderinger + manuellVurderingFraBehandlingen + nyAutomatiskVurdering
             )
         }
         return sluttdato
@@ -233,9 +294,9 @@ class VedtakslengdeService(
 
         log.info("Sluttdato for siste bistandsbehov: $sluttdatoSisteBistandsbehov")
 
-        // Logikken rundt sluttdato når det ligger et bistandsbehov til slutt, må gåes opp. Inntil videre gis det
-        // opp til initiell sluttdato / vedtatt sluttdato.
-        val sluttdatoBistandsbehov = if (sluttdatoSisteBistandsbehov != null) {
+        // Bistandsbehov gir kun sluttdato når det ikke finnes en vedtatt sluttdato (førstegangsbehandling).
+        // Ved revurdering skal bistandsbehov ikke utvide vedtakslengden - det gjøres kun via UTVID_VEDTAKSLENGDE.
+        val sluttdatoBistandsbehov = if (sluttdatoSisteBistandsbehov != null && vedtattSluttdato == null) {
             // Returnere til og med kvote-slutt dersom denne datoen kommer før utledet sluttdato
             listOfNotNull(sluttdatoSisteBistandsbehov, initiellSluttdato).min()
         } else null

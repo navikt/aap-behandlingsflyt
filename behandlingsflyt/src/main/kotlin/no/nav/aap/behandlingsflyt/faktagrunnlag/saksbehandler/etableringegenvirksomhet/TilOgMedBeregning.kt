@@ -1,0 +1,39 @@
+package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet
+
+import no.nav.aap.behandlingsflyt.behandling.etableringegenvirksomhet.VirksomhetEtableringResultat
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
+import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Tid
+import java.time.LocalDate
+
+sealed interface TilOgMedBeregning {
+    data class Beregnet(val tom: LocalDate) : TilOgMedBeregning
+    data class Feil(val feilmelding: String, val feilObjekt: VirksomhetEtableringResultat.Ugyldig) :
+        TilOgMedBeregning
+}
+
+fun beregnTomForSistePeriode(
+    vurderinger: List<EtableringEgenVirksomhetVurdering>,
+    sisteVurdering: EtableringEgenVirksomhetVurdering
+): TilOgMedBeregning {
+    val fase = requireNotNull(sisteVurdering.fase)
+
+    val maksHverdager = fase.maksHverdager
+    val brukteHverdager = vurderinger
+        .somFasetidslinje()
+        .begrensetTil(Periode(Tid.MIN, sisteVurdering.fom.minusDays(1)))
+        .antallHverdagerIFase(fase)
+
+    val gjenståendeHverdager = maksHverdager - brukteHverdager
+    if (gjenståendeHverdager <= 0) {
+        return TilOgMedBeregning.Feil(
+            "Kvoten for $fase er brukt opp. Brukt: $brukteHverdager, maks: $maksHverdager",
+            VirksomhetEtableringResultat.Ugyldig.OverstigerKvoter(
+                fase = fase,
+                brukteDager = brukteHverdager
+            )
+        )
+    }
+
+    return TilOgMedBeregning.Beregnet(Hverdager(gjenståendeHverdager).fraOgMed(sisteVurdering.fom))
+}

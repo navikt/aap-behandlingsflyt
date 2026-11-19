@@ -79,7 +79,7 @@ fun NormalOpenAPIRoute.brevApi(
                     val bestilling = brevbestillingRepository.hent(brevbestillingReferanse)
                         ?: throw VerdiIkkeFunnetException("Fant ikke brevbestilling med referanse $brevbestillingReferanse")
 
-                    behandlingRepository.hent(bestilling.behandlingId).referanse.referanse
+                    behandlingRepository.hentReferanse(bestilling.behandlingId).referanse
                 }
             })
     )

@@ -4,25 +4,24 @@ import no.nav.aap.behandlingsflyt.behandling.gregulering.GReguleringService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.desember
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTilkjentYtelseRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.mars
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -106,12 +105,10 @@ class GrunnbeløpInformasjonskravTest {
 
         InMemoryTilkjentYtelseRepository.lagre(
             kontekst.behandlingId,
-            listOf(
+            tidslinjeOf(
                 lagTilkjentYtelsePeriode(periode1Fom, periode1Tom, gForPeriode1),
                 lagTilkjentYtelsePeriode(periode2Fom, periode2Tom, utdatertG),
             ),
-            tomtTilkjentYtelseGrunnlag,
-            ""
         )
         lagreOppfyltUnderveis(kontekst, periode1Fom, periode2Tom)
 
@@ -224,9 +221,7 @@ class GrunnbeløpInformasjonskravTest {
     ) {
         InMemoryTilkjentYtelseRepository.lagre(
             kontekst.behandlingId,
-            listOf(lagTilkjentYtelsePeriode(fom, tom, grunnbeløp)),
-            tomtTilkjentYtelseGrunnlag,
-            ""
+            tidslinjeOf(lagTilkjentYtelsePeriode(fom, tom, grunnbeløp)),
         )
     }
 
@@ -285,30 +280,27 @@ class GrunnbeløpInformasjonskravTest {
         fom: LocalDate,
         tom: LocalDate,
         grunnbeløp: Beløp
-    ): TilkjentYtelsePeriode {
-        return TilkjentYtelsePeriode(
-            periode = Periode(fom, tom),
-            tilkjent = Tilkjent(
-                dagsats = Beløp(1000),
-                gradering = `100_PROSENT`,
-                graderingGrunnlag = GraderingGrunnlag(
-                    samordningGradering = `0_PROSENT`,
-                    institusjonGradering = `0_PROSENT`,
-                    arbeidGradering = `0_PROSENT`,
-                    samordningUføregradering = `0_PROSENT`,
-                    samordningArbeidsgiverGradering = `0_PROSENT`,
-                    meldepliktGradering = `0_PROSENT`,
-                ),
-                grunnlagsfaktor = GUnit(java.math.BigDecimal("2.0")),
-                grunnbeløp = grunnbeløp,
-                antallBarn = 0,
-                barnetilleggsats = Beløp(0),
-                barnetillegg = Beløp(0),
-                barnepensjonDagsats = Beløp(0),
-                utbetalingsdato = fom,
-                minsteSats = Minstesats.IKKE_MINSTESATS,
-                redusertDagsats = null,
-            )
+    ): Pair<Periode, Tilkjent> {
+        return Periode(fom, tom) to Tilkjent(
+            dagsats = Beløp(1000),
+            gradering = `100_PROSENT`,
+            graderingGrunnlag = GraderingGrunnlag(
+                samordningGradering = `0_PROSENT`,
+                institusjonGradering = `0_PROSENT`,
+                arbeidGradering = `0_PROSENT`,
+                samordningUføregradering = `0_PROSENT`,
+                samordningArbeidsgiverGradering = `0_PROSENT`,
+                meldepliktGradering = `0_PROSENT`,
+            ),
+            grunnlagsfaktor = GUnit(BigDecimal("2.0")),
+            grunnbeløp = grunnbeløp,
+            antallBarn = 0,
+            barnetilleggsats = Beløp(0),
+            barnetillegg = Beløp(0),
+            barnepensjonDagsats = Beløp(0),
+            utbetalingsdato = fom,
+            minsteSats = Minstesats.IKKE_MINSTESATS,
+            redusertDagsats = null,
         )
     }
 }

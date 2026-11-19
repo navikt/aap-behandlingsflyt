@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold
 
+import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.lagOppholdId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
@@ -33,11 +34,13 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+@Tag("db")
 class InstitusjonsoppholdRepositoryImplTest {
     companion object {
         private lateinit var dataSource: TestDataSource
@@ -421,8 +424,7 @@ class InstitusjonsoppholdRepositoryImplTest {
             // Vurderingen strekker seg over hele kjeden, ikke bare ett enkelt segment
             repo.lagreHelseVurdering(
                 behandling.id,
-                listOf(vurdering(Periode(1 mai 2026, 31 desember 2026), behandling.id)),
-                true
+                listOf(vurdering(Periode(1 mai 2026, 31 desember 2026), behandling.id))
             )
 
             val grunnlag = requireNotNull(repo.hentHvisEksisterer(behandling.id))
@@ -450,8 +452,7 @@ class InstitusjonsoppholdRepositoryImplTest {
 
             repo.lagreHelseVurdering(
                 behandling.id,
-                listOf(vurdering(Periode(1 mai 2026, 1 september 2026), behandling.id)),
-                true
+                listOf(vurdering(Periode(1 mai 2026, 1 september 2026), behandling.id))
             )
 
             val grunnlag = requireNotNull(repo.hentHvisEksisterer(behandling.id))
@@ -545,6 +546,128 @@ class InstitusjonsoppholdRepositoryImplTest {
 
             assertThat(exception.message)
                 .contains("Ingen helseinstitusjon-opphold funnet for periode ${vurderingsperiode.fom} - ${vurderingsperiode.tom}")
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Historiske vurderinger utenfor oppholdets periode
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `lagreHelseVurdering - historisk vurdering utenfor oppholdets periode lagres og kobles via oppholdId`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val repo = InstitusjonsoppholdRepositoryImpl(connection)
+
+            repo.lagreOpphold(
+                behandling.id,
+                listOf(
+                    hsOpphold(1 januar 2026, 30 juni 2026),
+                    hsOpphold(1 oktober 2026, 31 desember 2026),
+                )
+            )
+            val opphold = requireNotNull(repo.hentHvisEksisterer(behandling.id)).oppholdene!!.opphold
+                .sortedBy { it.periode.fom }
+            val førsteOppholdId = lagOppholdId(opphold.first().verdi.navn, opphold.first().periode.fom)
+
+            repo.lagreHelseVurdering(
+                behandling.id,
+                listOf(
+                    vurdering(Periode(1 november 2026, 1 november 2026), behandling.id)
+                        .copy(erHistoriskUtenReduksjonsberegning = true, oppholdId = førsteOppholdId)
+                )
+            )
+
+            val lagret = requireNotNull(repo.hentHvisEksisterer(behandling.id))
+                .helseoppholdvurderinger!!.vurderinger.single()
+            assertThat(lagret.erHistoriskUtenReduksjonsberegning).isTrue()
+            assertThat(lagret.oppholdId).isEqualTo(førsteOppholdId)
+
+            val gruppert = repo.hentVurderingerGruppertPerOpphold(behandling.id)
+            assertThat(gruppert.keys).containsExactly(opphold.first().periode)
+        }
+    }
+
+    @Test
+    fun `lagreHelseVurdering - ikke-historisk vurdering utenfor alle opphold feiler fortsatt`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val repo = InstitusjonsoppholdRepositoryImpl(connection)
+
+            repo.lagreOpphold(behandling.id, listOf(hsOpphold(1 januar 2026, 30 juni 2026)))
+
+            assertThrows<IllegalArgumentException> {
+                repo.lagreHelseVurdering(
+                    behandling.id,
+                    listOf(vurdering(Periode(1 november 2026, 1 november 2026), behandling.id))
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `lagreHelseVurdering - historisk vurdering uten oppholdId og uten overlapp knyttes til siste opphold`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val repo = InstitusjonsoppholdRepositoryImpl(connection)
+
+            repo.lagreOpphold(
+                behandling.id,
+                listOf(
+                    hsOpphold(1 januar 2026, 30 juni 2026),
+                    hsOpphold(1 oktober 2026, 31 desember 2026),
+                )
+            )
+            val opphold = requireNotNull(repo.hentHvisEksisterer(behandling.id)).oppholdene!!.opphold
+                .sortedBy { it.periode.fom }
+            val sisteOppholdId = lagOppholdId(opphold.last().verdi.navn, opphold.last().periode.fom)
+
+            repo.lagreHelseVurdering(
+                behandling.id,
+                listOf(
+                    vurdering(Periode(1 november 2027, 1 november 2027), behandling.id)
+                        .copy(erHistoriskUtenReduksjonsberegning = true)
+                )
+            )
+
+            val lagret = requireNotNull(repo.hentHvisEksisterer(behandling.id))
+                .helseoppholdvurderinger!!.vurderinger.single()
+            assertThat(lagret.oppholdId).isEqualTo(sisteOppholdId)
+        }
+    }
+
+    @Test
+    fun `lagreHelseVurdering - eksplisitt oppholdId vinner over overlapp`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val repo = InstitusjonsoppholdRepositoryImpl(connection)
+
+            repo.lagreOpphold(
+                behandling.id,
+                listOf(
+                    hsOpphold(1 januar 2026, 30 juni 2026),
+                    hsOpphold(1 oktober 2026, 31 desember 2026),
+                )
+            )
+            val opphold = requireNotNull(repo.hentHvisEksisterer(behandling.id)).oppholdene!!.opphold
+                .sortedBy { it.periode.fom }
+            val andreOppholdId = lagOppholdId(opphold.last().verdi.navn, opphold.last().periode.fom)
+
+            // Perioden overlapper første opphold, men oppholdId peker på andre opphold
+            repo.lagreHelseVurdering(
+                behandling.id,
+                listOf(
+                    vurdering(Periode(1 mai 2026, 1 juni 2026), behandling.id)
+                        .copy(erHistoriskUtenReduksjonsberegning = true, oppholdId = andreOppholdId)
+                )
+            )
+
+            val gruppert = repo.hentVurderingerGruppertPerOpphold(behandling.id)
+            assertThat(gruppert.keys).containsExactly(opphold.last().periode)
         }
     }
 

@@ -4,7 +4,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Etablering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EierVirksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.etableringegenvirksomhet.EtableringEgenVirksomhetRepositoryImpl
@@ -102,13 +101,13 @@ class EtableringEgenVirksomhetFlytTest : AbstraktFlytOrkestratorTest(AlleAvskrud
         assertThat(etableringGrunnlag?.vurderinger?.size).isEqualTo(2)
         assertThat(oppdatertBehandling.status()).isEqualTo(Status.AVSLUTTET)
 
+        val oppfyltVurdering = requireNotNull(etableringGrunnlag?.vurderinger)
+            .single { it.virksomhetErNy == true }
+        val ikkeOppfyltVurdering = requireNotNull(etableringGrunnlag.vurderinger)
+            .single { it.virksomhetErNy == false }
 
-        val oppfylt = etableringGrunnlag?.vurderinger?.first()!!.evaluerVirksomhetVurdering()
-        val ikkeOppfyltVurdering = etableringGrunnlag.vurderinger.last().evaluerVirksomhetVurdering()
-
-        assertThat(oppfylt).isEqualTo(true)
-        assertThat(ikkeOppfyltVurdering).isEqualTo(false)
-
+        assertThat(oppfyltVurdering.evaluerVirksomhetVurdering()).isEqualTo(true)
+        assertThat(ikkeOppfyltVurdering.evaluerVirksomhetVurdering()).isEqualTo(false)
     }
 
     @Test

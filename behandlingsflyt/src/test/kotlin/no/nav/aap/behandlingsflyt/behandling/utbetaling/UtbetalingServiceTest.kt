@@ -7,12 +7,10 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9Repository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
-import no.nav.aap.meldeplikt.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.help.person
@@ -27,10 +25,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.november
+import no.nav.aap.komponenter.tidslinje.Tidslinje
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.meldeplikt.MeldeperiodeRepository
 import no.nav.aap.utbetal.tilkjentytelse.MeldeperiodeDto
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -74,7 +75,12 @@ class UtbetalingServiceTest {
         every { behandlingRepository.hent(førstegangsbehandling.id) } returns førstegangsbehandling
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
         every { behandlingRepository.hentAlleFor(any<SakId>()) } returns emptyList()
-        every { meldeperiodeRepository.hentMeldeperioder(any<BehandlingId>(), any<Periode>()) } returns meldeperioderSomDekker2025
+        every {
+            meldeperiodeRepository.hentMeldeperioder(
+                any<BehandlingId>(),
+                any<Periode>()
+            )
+        } returns meldeperioderSomDekker2025
 
         every { vedtakRepository.hent(førstegangsbehandling.id) } returns Vedtak(
             VedtakId(0),
@@ -120,7 +126,12 @@ class UtbetalingServiceTest {
         every { behandlingRepository.hent(førstegangsbehandling.id) } returns førstegangsbehandling
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
         every { behandlingRepository.hentAlleFor(any<SakId>()) } returns emptyList()
-        every { meldeperiodeRepository.hentMeldeperioder(any<BehandlingId>(), any<Periode>()) } returns meldeperioderSomDekker2025
+        every {
+            meldeperiodeRepository.hentMeldeperioder(
+                any<BehandlingId>(),
+                any<Periode>()
+            )
+        } returns meldeperioderSomDekker2025
 
         every { vedtakRepository.hent(førstegangsbehandling.id) } returns Vedtak(
             VedtakId(0),
@@ -160,7 +171,12 @@ class UtbetalingServiceTest {
         every { behandlingRepository.hent(førstegangsbehandling.id) } returns førstegangsbehandling
         every { behandlingRepository.hent(revurdering.id) } returns revurdering
         every { behandlingRepository.hentAlleFor(any<SakId>()) } returns listOf(revurdering, førstegangsbehandling)
-        every { meldeperiodeRepository.hentMeldeperioder(any<BehandlingId>(), any<Periode>()) } returns meldeperioderSomDekker2025
+        every {
+            meldeperiodeRepository.hentMeldeperioder(
+                any<BehandlingId>(),
+                any<Periode>()
+            )
+        } returns meldeperioderSomDekker2025
         every { underveisRepository.hentHvisEksisterer(revurdering.id) } returns UnderveisGrunnlag(
             id = 0L,
             perioder = emptyList()
@@ -184,21 +200,12 @@ class UtbetalingServiceTest {
             startdato
         )
 
-        every { tilkjentYtelseRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns listOf(
-            TilkjentYtelsePeriode(
-                periode = Periode(29 november 2025, 7 desember 2025),
-                tilkjent = tilkjentYtelseDto(8 desember 2025)
-            ),
+        every { tilkjentYtelseRepository.hentHvisEksisterer(førstegangsbehandling.id) } returns tidslinjeOf(
+            Periode(29 november 2025, 7 desember 2025) to tilkjentYtelseDto(8 desember 2025)
         )
-        every { tilkjentYtelseRepository.hentHvisEksisterer(revurdering.id) } returns listOf(
-            TilkjentYtelsePeriode(
-                periode = Periode(29 november 2025, 7 desember 2025),
-                tilkjent = tilkjentYtelseDto(8 desember 2025)
-            ),
-            TilkjentYtelsePeriode(
-                periode = Periode(8 desember 2025, 21 desember 2025),
-                tilkjent = tilkjentYtelseDto(17 desember 2025)
-            )
+        every { tilkjentYtelseRepository.hentHvisEksisterer(revurdering.id) } returns tidslinjeOf(
+            Periode(29 november 2025, 7 desember 2025) to tilkjentYtelseDto(8 desember 2025),
+            Periode(8 desember 2025, 21 desember 2025) to tilkjentYtelseDto(17 desember 2025),
         )
 
         val tilkjentYtelseDtoRevurdering = utbetalingService.lagTilkjentYtelseForUtbetaling(sak.id, revurdering.id)
@@ -213,30 +220,15 @@ class UtbetalingServiceTest {
     }
 
 
-    private fun tilkjentYtelseForFørstegangsbehandling(): List<TilkjentYtelsePeriode> = listOf(
-        TilkjentYtelsePeriode(
-            periode = førsteTilkjentYtelsePeriode,
-            tilkjent = tilkjentYtelseDto(andreTilkjentYtelsePeriode.tom)
-        ),
-        TilkjentYtelsePeriode(
-            periode = andreTilkjentYtelsePeriode,
-            tilkjent = tilkjentYtelseDto(andreTilkjentYtelsePeriode.tom)
-        )
+    private fun tilkjentYtelseForFørstegangsbehandling(): Tidslinje<Tilkjent> = tidslinjeOf(
+        førsteTilkjentYtelsePeriode to tilkjentYtelseDto(andreTilkjentYtelsePeriode.tom),
+        andreTilkjentYtelsePeriode to tilkjentYtelseDto(andreTilkjentYtelsePeriode.tom),
     )
 
-    private fun tilkjentYtelseForRevurdering(): List<TilkjentYtelsePeriode> = listOf(
-        TilkjentYtelsePeriode(
-            periode = førsteTilkjentYtelsePeriode,
-            tilkjent = tilkjentYtelseDto(andreTilkjentYtelsePeriode.tom)
-        ),
-        TilkjentYtelsePeriode(
-            periode = andreTilkjentYtelsePeriode,
-            tilkjent = tilkjentYtelseDto(andreTilkjentYtelsePeriode.tom)
-        ),
-        TilkjentYtelsePeriode(
-            periode = tredjeTilkjentYtelsePeriode,
-            tilkjent = tilkjentYtelseDto(tredjeTilkjentYtelsePeriode.tom)
-        )
+    private fun tilkjentYtelseForRevurdering(): Tidslinje<Tilkjent> = tidslinjeOf(
+        førsteTilkjentYtelsePeriode to tilkjentYtelseDto(andreTilkjentYtelsePeriode.tom),
+        andreTilkjentYtelsePeriode to tilkjentYtelseDto(andreTilkjentYtelsePeriode.tom),
+        tredjeTilkjentYtelsePeriode to tilkjentYtelseDto(tredjeTilkjentYtelsePeriode.tom),
     )
 
     private fun tilkjentYtelseDto(utbetalingsdato: LocalDate): Tilkjent {

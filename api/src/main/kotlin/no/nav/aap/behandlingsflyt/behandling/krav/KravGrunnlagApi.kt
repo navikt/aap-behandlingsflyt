@@ -68,9 +68,10 @@ fun NormalOpenAPIRoute.kravGrunnlagApi(
                     BehandlingsflytFeature.KravManuellVurdering, "saksnummer", saksnummer)
 
                 val erMigreringsbehandling = behandling.årsakTilOpprettelse === ÅrsakTilOpprettelse.MIGRERING_FRA_ARENA
+                val harMigrertKravIGrunnlag = kravGrunnlag?.gjeldendeMigrertKrav() != null
 
                 KravGrunnlagDto(
-                    harTilgangTilÅSaksbehandle = kanSaksbehandle() && (erManuellVurderingPåskrudd || erMigreringsbehandling),
+                    harTilgangTilÅSaksbehandle = kanSaksbehandle() && (erManuellVurderingPåskrudd || harMigrertKravIGrunnlag || erMigreringsbehandling),
                     nyeVurderinger = nyeVurderinger,
                     vedtatteVurderinger = sisteVedtatte,
                     søknaderUtenKravvurdering = søknaderUtenKravvurdering,

@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivBrevA
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SkrivVedtaksbrevLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingRepository
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.flyt.FlytOrkestrator
 import no.nav.aap.behandlingsflyt.hendelse.datadeling.ApiInternGateway
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -23,6 +24,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.finnUgyldigRettighetsperiode
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.db.PersonRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -50,6 +53,8 @@ class Driftfunksjoner(
     private val identGateway: IdentGateway,
     private val meldekortGateway: MeldekortGateway,
     private val apiInternGateway: ApiInternGateway,
+    private val trukketSøknadRepository: TrukketSøknadRepository,
+    private val sakService: SakService,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         flytJobbRepository = repositoryProvider.provide(),
@@ -69,6 +74,8 @@ class Driftfunksjoner(
         identGateway = gatewayProvider.provide(),
         meldekortGateway = gatewayProvider.provide(),
         apiInternGateway = gatewayProvider.provide(),
+        trukketSøknadRepository = repositoryProvider.provide(),
+        sakService = SakService(repositoryProvider, gatewayProvider),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -147,7 +154,7 @@ class Driftfunksjoner(
             validerGyldigTilstandFørUtvidelseAvRettighetsperiode(behandling, stegType)
 
             log.info("Utvider rettighetsperiode til Tid.MAKS og setter aktivt steg fra ${behandling.aktivtSteg()} til $stegType")
-            sakRepository.oppdaterRettighetsperiode(behandling.sakId, Periode(sak.rettighetsperiode.fom, Tid.MAKS))
+            sakService.overstyrRettighetsperioden(sak, sak.rettighetsperiode.fom, Tid.MAKS)
             behandlingRepository.leggTilNyttAktivtSteg(
                 behandling.id, StegTilstand(
                     stegType = stegType,
@@ -251,5 +258,25 @@ class Driftfunksjoner(
                 throw UgyldigForespørselException("Ulik status på avklaringsbehov før og etter endring for ${etter.definisjon}, ruller tilbake. Før=${avklaringsbehovFørEndring} etter=${avklaringsbehovEtterEndring}")
             }
         }
+    }
+
+    /**
+     * Setter rettighetsperioden til en sak med trukket søknad tilbake til første ledige dato fra [Tid.MIN],
+     * slik at rettighetsperiodene til personens trukne saker forblir unike.
+     */
+    fun tilbakestillRettighetsperiodeForTrukketSak(saksnummer: Saksnummer): Periode {
+        val sak = sakRepository.hent(saksnummer)
+
+        val harTrukketSøknad = behandlingRepository.hentAlleFor(sak.id).any { behandling ->
+            trukketSøknadRepository.hentTrukketSøknadVurderinger(behandling.id).any { it.skalTrekkes }
+        }
+        if (!harTrukketSøknad) {
+            throw UgyldigForespørselException("Saken har ingen trukket søknad, rettighetsperioden kan ikke tilbakestilles")
+        }
+
+        val nyPeriode = sakRepository.finnUgyldigRettighetsperiode(sak.id)
+        log.info("Tilbakestiller rettighetsperiode for trukket sak $saksnummer til $nyPeriode")
+        sakService.overstyrRettighetsperioden(sak, nyPeriode)
+        return nyPeriode
     }
 }

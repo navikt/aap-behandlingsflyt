@@ -5,10 +5,9 @@ import no.nav.aap.behandlingsflyt.behandling.inntektsbortfall.InntektsbortfallRe
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.behandling.rettighetsperiode.VurderRettighetsperiodeRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Repository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggRepository
+import no.nav.aap.barnetillegg.BarnetilleggRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningRepository
@@ -20,11 +19,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveis
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
+import no.nav.aap.barnetillegg.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.LovvalgMedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
@@ -39,7 +38,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
+import no.nav.aap.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningRepository
@@ -95,8 +94,8 @@ class VedtakDokumentGenerator(
     private val beregningVurderingRepository: BeregningVurderingRepository,
     private val kravRepository: KravRepository,
     private val vurderRettighetsperiodeRepository: VurderRettighetsperiodeRepository,
-    private val medlemskapArbeidInntektRepository: MedlemskapArbeidInntektRepository,
-    private val medlemskapArbeidInntektForutgåendeRepository: MedlemskapArbeidInntektForutgåendeRepository,
+    private val lovvalgMedlemskapRepository: LovvalgMedlemskapRepository,
+    private val forutgåendeMedlemskapRepository: ForutgåendeMedlemskapRepository,
     private val oppholdskravGrunnlagRepository: OppholdskravGrunnlagRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
@@ -141,8 +140,8 @@ class VedtakDokumentGenerator(
         beregningVurderingRepository = repositoryProvider.provide(),
         kravRepository = repositoryProvider.provide(),
         vurderRettighetsperiodeRepository = repositoryProvider.provide(),
-        medlemskapArbeidInntektRepository = repositoryProvider.provide(),
-        medlemskapArbeidInntektForutgåendeRepository = repositoryProvider.provide(),
+        lovvalgMedlemskapRepository = repositoryProvider.provide(),
+        forutgåendeMedlemskapRepository = repositoryProvider.provide(),
         oppholdskravGrunnlagRepository = repositoryProvider.provide(),
     )
 
@@ -178,15 +177,13 @@ class VedtakDokumentGenerator(
             behandling = behandling,
             behandlinger = behandlinger,
             vilkårsresultat = vilkårsresultatRepository.hent(behandlingId),
-            tilkjentYtelse = tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)
-                ?.tilTidslinje().orEmpty(),
+            tilkjentYtelse = tilkjentYtelseRepository.hentHvisEksisterer(behandlingId).orEmpty(),
             underveis = underveisRepository.hentHvisEksisterer(behandlingId)?.somTidslinje().orEmpty(),
             mottatteDokumenter = mottattDokumentRepository.hentDokumenterForSak(sakId).toList(),
             beregningsgrunnlag = beregningsgrunnlagRepository.hentHvisEksisterer(behandlingId),
 
             forrigeTilkjentYtelse = forrigeBehandlingId
-                ?.let { tilkjentYtelseRepository.hentHvisEksisterer(it) }
-                ?.tilTidslinje().orEmpty(),
+                ?.let { tilkjentYtelseRepository.hentHvisEksisterer(it) }.orEmpty(),
             forrigeUnderveis = forrigeBehandlingId
                 ?.let { underveisRepository.hentHvisEksisterer(it) }
                 ?.somTidslinje().orEmpty(),
@@ -230,8 +227,8 @@ class VedtakDokumentGenerator(
             beregningVurderingGrunnlag = beregningVurderingRepository.hentHvisEksisterer(behandlingId),
             kravGrunnlag = kravRepository.hentHvisEksisterer(behandlingId),
             rettighetsperiodeVurdering = vurderRettighetsperiodeRepository.hentVurdering(behandlingId),
-            lovvalgMedlemskapGrunnlag = medlemskapArbeidInntektRepository.hentHvisEksisterer(behandlingId),
-            forutgåendeMedlemskapGrunnlag = medlemskapArbeidInntektForutgåendeRepository.hentHvisEksisterer(
+            lovvalgMedlemskapGrunnlag = lovvalgMedlemskapRepository.hentHvisEksisterer(behandlingId),
+            forutgåendeMedlemskapGrunnlag = forutgåendeMedlemskapRepository.hentHvisEksisterer(
                 behandlingId
             ),
             oppholdskravGrunnlag = oppholdskravGrunnlagRepository.hentHvisEksisterer(behandlingId),

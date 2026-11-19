@@ -27,6 +27,8 @@ import no.nav.aap.behandlingsflyt.utils.diff.Endret
 import no.nav.aap.behandlingsflyt.utils.diff.Fjernet
 import no.nav.aap.behandlingsflyt.utils.diff.LagtTil
 import no.nav.aap.behandlingsflyt.utils.diff.Uendret
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -67,15 +69,13 @@ class TilkjentYtelseApiTest : BaseApiTest() {
 
             val tilkjentYtelseVerdi = lagTilkjentYtelse(rettighetsperiode.fom)
 
-            val tilkjentYtelsePerioder = perioder.mapIndexed { index, periode ->
+            val tilkjentYtelsePerioder = Tidslinje(perioder.mapIndexed { index, periode ->
                 lagTilkjentYtelsePeriode(periode, tilkjentYtelseVerdi, index)
-            }
+            })
 
             InMemoryTilkjentYtelseRepository.lagre(
                 behandling.id,
-                tilkjent = tilkjentYtelsePerioder,
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = ""
+                resultat = tilkjentYtelsePerioder,
             )
 
             InMemoryMeldekortRepository.lagre(
@@ -181,15 +181,13 @@ class TilkjentYtelseApiTest : BaseApiTest() {
             InMemoryMeldeperiodeRepository.lagreFastsattDag(behandling.id, perioder.first().fom)
 
             val tilkjentYtelseVerdi = lagTilkjentYtelse(rettighetsperiode.fom)
-            val tilkjentYtelsePerioder = perioder.mapIndexed { index, periode ->
+            val tilkjentYtelsePerioder = Tidslinje(perioder.mapIndexed { index, periode ->
                 lagTilkjentYtelsePeriode(periode, tilkjentYtelseVerdi, index)
-            }
+            })
 
             InMemoryTilkjentYtelseRepository.lagre(
                 behandling.id,
-                tilkjent = tilkjentYtelsePerioder,
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = ""
+                resultat = tilkjentYtelsePerioder,
             )
 
             InMemoryUnderveisRepository.lagre(
@@ -233,30 +231,26 @@ class TilkjentYtelseApiTest : BaseApiTest() {
 
             val tilkjentYtelseVerdi = lagTilkjentYtelse(rettighetsperiodeB1.fom)
 
-            val tilkjentYtelsePerioderFørsteBehandling = perioderFørsteBehandling.mapIndexed { index, periode ->
+            val tilkjentYtelsePerioderFørsteBehandling = Tidslinje(perioderFørsteBehandling.mapIndexed { index, periode ->
                 lagTilkjentYtelsePeriode(
                     periode,
                     tilkjentYtelseVerdi,
                     (index + 1) * (index + 1)
                 )  // Hack for at første periode skal bli uendret til neste behandling, men andre periode endres
-            }
+            })
 
-            val tilkjentYtelsePerioderAndreBehandling = perioderAndreBehandling.mapIndexed { index, periode ->
+            val tilkjentYtelsePerioderAndreBehandling = Tidslinje(perioderAndreBehandling.mapIndexed { index, periode ->
                 lagTilkjentYtelsePeriode(periode, tilkjentYtelseVerdi, index)
-            }
+            })
 
             InMemoryTilkjentYtelseRepository.lagre(
                 behandling.id,
-                tilkjent = tilkjentYtelsePerioderFørsteBehandling,
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = ""
+                resultat = tilkjentYtelsePerioderFørsteBehandling,
             )
 
             InMemoryTilkjentYtelseRepository.lagre(
                 behandling2.id,
-                tilkjent = tilkjentYtelsePerioderAndreBehandling,
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = ""
+                resultat = tilkjentYtelsePerioderAndreBehandling,
             )
 
             val meldekortPeriode = Periode(
@@ -449,12 +443,12 @@ class TilkjentYtelseApiTest : BaseApiTest() {
         periode: Periode,
         tilkjentYtelseVerdi: Tilkjent,
         index: Int
-    ): TilkjentYtelsePeriode = TilkjentYtelsePeriode(
+    ): Segment<Tilkjent> = Segment(
         Periode(
             fom = periode.fom,
             tom = periode.tom,
         ),
-        tilkjent = tilkjentYtelseVerdi.copy(
+        tilkjentYtelseVerdi.copy(
             dagsats = Beløp(400 + index * 100.00.toLong()),
             redusertDagsats = null
         )

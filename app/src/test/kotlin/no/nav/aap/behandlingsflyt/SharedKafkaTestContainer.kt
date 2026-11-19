@@ -18,7 +18,7 @@ internal object SharedKafkaTestContainer {
         KafkaContainer(DockerImageName.parse("apache/kafka-native:4.1.0"))
             .waitingFor(Wait.forListeningPort())
             .withStartupTimeout(Duration.ofSeconds(180))
-            .withLogConsumer { Slf4jLogConsumer(logger) }
+            .withLogConsumer(Slf4jLogConsumer(logger))
             .also { it.start() }
     }
 }

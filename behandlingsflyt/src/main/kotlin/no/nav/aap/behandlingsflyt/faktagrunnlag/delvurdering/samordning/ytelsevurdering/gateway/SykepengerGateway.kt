@@ -4,6 +4,8 @@ import no.nav.aap.komponenter.gateway.Gateway
 import java.time.LocalDate
 
 interface SykepengerGateway : Gateway {
+    fun hentGjenståendeSykedager(fødselsnummer: String): GjenståendeSykedager
+
     fun hentYtelseSykepenger(
         personidentifikatorer: Set<String>,
         fom: LocalDate,

@@ -12,6 +12,7 @@ enum class BehandlingsflytFeature(
 ): FeatureToggle {
     // Se: https://aap-unleash-web.iap.nav.cloud.nais.io/projects/default
     IngenValidering,
+    AutomatiskOpphorUforeTilbakevirkende,
     BrevtyperTilNyBrevbygger,
     Under18,
     VisIkkeRelevantPeriode,
@@ -21,33 +22,41 @@ enum class BehandlingsflytFeature(
     VentStatusForTilbakekrevingIBehandlingsflyt,
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
     SynkroniserArenaMeldeperiodesyklus,
+    HandtereMaksdatoForKantTilKant,
     DynamiskFrivilligSykestipend,
+    MaksdatoSykepenger,
 
     // --- Krav ---
+    BackfillKrav,
     KravSteg, // Visning
     KravManuellVurdering,
     NyttKravPeriodiserteAvklaringsbehov,
+
+    // --- Utbetaling ---
+    SimuleringStegForNyttUtbetalingsgrensesnitt,
 
     // --- Migrering ---
     MigererSykdomFraArenaAutomatisk,
     MigrerRefusjonskravFraArenaAutomatisk,
     MigrererKravFraArenaAutomatisk,
     MigrererOppholdskravFraArenaAutomatisk,
-
-    // --- Utbetaling ---
-    FjerneAvventUtbetalingForSamordningArbeidsgiver,
+    MigrererForutgaaendeMedlemskapFraArenaAutomatisk,
+    MigrererVedtakslengdeFraArenaAutomatisk,
+    MigrererBeregningstidspunktFraArenaAutomatisk,
 
     // ------
     Avslag11_27,
-    MeldeperiodeTilMeldekortBackendBasertPaaGjeldendeYtelsesbehandling,
     BosattStatsborgerskapGjennomslipp,
-    HoppOverBeslutterVedAvslagSykdom,
     KanVurdereRefusjonIRevurdering,
     KunEnAktivKlagebehandling,
     KlagePaaTilbakekreving,
-    NySoknadTilApiIntern,
-    SammenhengendeInstitusjonsopphold,
-    DatadelingBehandlingVisning
+    DatadelingBehandlingVisning,
+    OvergangUfoereBrevbygger,
+    BackfillRedusertDagsats,
+    VedtaksperiodeBeslutter,
+
+    // -- Lovvalg
+    HentInnLovvalgRegisterdataForNyesteAktuelleKrav,
     ;
 
     override fun key(): String = name

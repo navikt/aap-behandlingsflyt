@@ -4,7 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovServ
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingValidator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
@@ -12,12 +13,10 @@ import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class SamordningUføreSteg(
@@ -63,7 +62,7 @@ class SamordningUføreSteg(
 
             },
             erTilstrekkeligVurdert = {
-                harVurdertAllePerioder(kontekst.rettighetsperiode, kontekst.behandlingId)
+                harVurdertAllePerioder(kontekst)
             },
             tilbakestillGrunnlag = {
                 kontekst.forrigeBehandlingId
@@ -78,32 +77,25 @@ class SamordningUføreSteg(
     }
 
     private fun vedtakBehøverVurdering(kontekst: FlytKontekstMedPerioder): Boolean {
-        val tidligereVurderinger =
+        val vurderingerIForrigeBehandling =
             kontekst.forrigeBehandlingId?.let { samordningUføreRepository.hentHvisEksisterer(it) }?.vurdering?.vurderingPerioder.orEmpty()
-        val uføreGrunnlag = hentVurderingPerioder(kontekst.behandlingId)?.vedtak.orEmpty()
-        return uføreGrunnlag.any { uføre ->
-            tidligereVurderinger.none { vurdering -> vurdering.virkningstidspunkt == uføre.virkningstidspunkt }
-        }
-
+        return manglendeVurderinger(kontekst, vurderingerIForrigeBehandling).isNotEmpty()
     }
 
-
-    private fun hentVurderingPerioder(behandlingId: BehandlingId): UføreGrunnlag? {
-        val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId = behandlingId)
-        return uføreGrunnlag
+    private fun harVurdertAllePerioder(kontekst: FlytKontekstMedPerioder): Boolean {
+        val vurderinger = samordningUføreRepository.hentHvisEksisterer(kontekst.behandlingId)
+            ?.vurdering?.vurderingPerioder.orEmpty()
+        return manglendeVurderinger(kontekst, vurderinger).isEmpty()
     }
 
-    private fun harVurdertAllePerioder(rettighetsperiode: Periode, behandlingId: BehandlingId): Boolean {
-        val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId = behandlingId)
-        val samordningUføreGrunnlag = samordningUføreRepository.hentHvisEksisterer(behandlingId)
-        val vurderinger = samordningUføreGrunnlag?.vurdering?.vurderingPerioder
-
-        return uføreGrunnlag?.vedtak.orEmpty()
-            .filter { it.uføregradTom == null || it.uføregradTom >= rettighetsperiode.fom }
-            .all { uføre ->
-                vurderinger?.any { vurdering -> vurdering.virkningstidspunkt == uføre.virkningstidspunkt } ?: false
-            }
-    }
+    private fun manglendeVurderinger(
+        kontekst: FlytKontekstMedPerioder,
+        vurderinger: List<SamordningUføreVurderingPeriode>
+    ) = SamordningUføreVurderingValidator.manglendeVurderinger(
+        behandlingsutfall = tidligereVurderinger.behandlingsutfall(kontekst, type()),
+        uførevedtak = uføreRepository.hentHvisEksisterer(kontekst.behandlingId)?.vedtak.orEmpty(),
+        vurderinger = vurderinger,
+    )
 
     private fun erManueltTriggetRevurdering(
         kontekst: FlytKontekstMedPerioder,

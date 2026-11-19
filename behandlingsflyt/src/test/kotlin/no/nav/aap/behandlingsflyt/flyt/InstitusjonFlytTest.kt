@@ -1,20 +1,21 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.barnetillegg.Relasjon
+import no.nav.aap.barnetillegg.VurderingAvForeldreAnsvarDto
+import no.nav.aap.barnetillegg.VurderingerForBarnetillegg
+import no.nav.aap.barnetillegg.VurdertBarnDto
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarBarnetilleggLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarHelseinstitusjonLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.institusjonsopphold.InstitusjonsoppholdUtlederService
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Relasjon
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonsopphold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjonstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Oppholdstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvarDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingerForBarnetillegg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarnDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurderingerDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.OppholdVurdering
@@ -22,12 +23,11 @@ import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.help.ident
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.PersonNavn
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.august
@@ -41,9 +41,6 @@ import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.test.september
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -52,7 +49,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjonsoppholdUnleash::class) {
+class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::class) {
     @Test
     fun `Stopper opp på institusjonssteget i førstegangsbehandling når innleggelsesdato er mer enn 2 mnd siden`() {
         val søknadsdato = LocalDate.now()
@@ -132,21 +129,20 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
             .løsVedtaksbrev()
             .medKontekst {
                 val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
-                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
-                assertThat(tidslinje.isNotEmpty()).isTrue()
+                assertThat(tilkjentYtelse.isNotEmpty()).isTrue()
 
                 val periodeUtenReduksjon = Periode(fom, tidligsteReduksjonsdato.minusDays(1))
                 val periodeMedReduksjon = Periode(tidligsteReduksjonsdato, oppholdTom)
 
                 assertTidslinje(
-                    tidslinje.begrensetTil(periodeUtenReduksjon),
+                    tilkjentYtelse.begrensetTil(periodeUtenReduksjon),
                     periodeUtenReduksjon to {
                         assertThat(it.graderingGrunnlag.institusjonGradering).isEqualTo(Prosent.`0_PROSENT`)
                     }
                 )
                 assertTidslinje(
-                    tidslinje.begrensetTil(periodeMedReduksjon),
+                    tilkjentYtelse.begrensetTil(periodeMedReduksjon),
                     periodeMedReduksjon to {
                         assertThat(it.graderingGrunnlag.institusjonGradering).isEqualTo(Prosent.`50_PROSENT`)
                     }
@@ -183,13 +179,12 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
             .løsVedtaksbrev()
             .medKontekst {
                 val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
-                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
-                assertThat(tidslinje.isNotEmpty()).isTrue()
+                assertThat(tilkjentYtelse.isNotEmpty()).isTrue()
 
-                val helePerioden = tilkjentYtelse.tilTidslinje().helePerioden()
+                val helePerioden = tilkjentYtelse.helePerioden()
                 assertTidslinje(
-                    tidslinje.begrensetTil(helePerioden),
+                    tilkjentYtelse.begrensetTil(helePerioden),
                     helePerioden to {
                         assertThat(it.graderingGrunnlag.institusjonGradering).isEqualTo(Prosent.`0_PROSENT`)
                         assertThat(it.barnetillegg).isEqualTo(Beløp(0))
@@ -227,11 +222,10 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
             .løsVedtaksbrev()
             .medKontekst {
                 val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
-                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
-                val helePerioden = tilkjentYtelse.tilTidslinje().helePerioden()
+                val helePerioden = tilkjentYtelse.helePerioden()
 
                 assertTidslinje(
-                    tidslinje.begrensetTil(helePerioden),
+                    tilkjentYtelse.begrensetTil(helePerioden),
                     helePerioden to {
                         assertThat(it.graderingGrunnlag.institusjonGradering).isEqualTo(Prosent.`0_PROSENT`)
                     }
@@ -279,14 +273,13 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
             .løsVedtaksbrev()
             .medKontekst {
                 val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
-                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
-                assertThat(tidslinje.isNotEmpty()).isTrue()
+                assertThat(tilkjentYtelse.isNotEmpty()).isTrue()
 
                 // Periode uten reduksjon: full AAP og barnetillegg
-                val periodeMedBarnetillegg = Periode(tidslinje.minDato(), barnetilleggTom.minusDays(1))
+                val periodeMedBarnetillegg = Periode(tilkjentYtelse.minDato(), barnetilleggTom.minusDays(1))
                 assertTidslinje(
-                    tidslinje.begrensetTil(periodeMedBarnetillegg),
+                    tilkjentYtelse.begrensetTil(periodeMedBarnetillegg),
                     periodeMedBarnetillegg to {
                         assertThat(it.graderingGrunnlag.institusjonGradering).isEqualTo(Prosent.`0_PROSENT`)
                         assertThat(it.antallBarn).isEqualTo(1)
@@ -297,7 +290,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
                 // Periode med reduksjon: institusjongradering=50%, men barnetillegg beholdes
                 val periodeMedReduksjon = Periode(tidligsteReduksjonsdato, oppholdTom)
                 assertTidslinje(
-                    tidslinje.begrensetTil(periodeMedReduksjon),
+                    tilkjentYtelse.begrensetTil(periodeMedReduksjon),
                     periodeMedReduksjon to {
                         assertThat(it.graderingGrunnlag.institusjonGradering).isEqualTo(Prosent.`50_PROSENT`)
                         assertThat(it.antallBarn).isEqualTo(0)
@@ -339,24 +332,23 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
             .løsVedtaksbrev()
             .medKontekst {
                 val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
-                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
-                assertThat(tidslinje.isNotEmpty()).isTrue()
+                assertThat(tilkjentYtelse.isNotEmpty()).isTrue()
 
                 val barnetilleggPerioden = Periode(fom, barnetilleggTom.minusDays(1))
                 assertTidslinje(
-                    tidslinje.begrensetTil(barnetilleggPerioden),
+                    tilkjentYtelse.begrensetTil(barnetilleggPerioden),
                     barnetilleggPerioden to {
                         assertThat(it.graderingGrunnlag.institusjonGradering).isEqualTo(Prosent.`0_PROSENT`)
                         assertThat(it.antallBarn).isEqualTo(1)
                     }
                 )
 
-                val segment2025 = tidslinje.segmenter().find { it.periode.fom.year == 2025 }
+                val segment2025 = tilkjentYtelse.segmenter().find { it.periode.fom.year == 2025 }
                 assertThat(segment2025).isNotNull
                 assertThat(segment2025!!.verdi.barnetillegg).isEqualTo(Beløp(37))
 
-                val segment2026 = tidslinje.segmenter().find { it.periode.fom.year == 2026 }
+                val segment2026 = tilkjentYtelse.segmenter().find { it.periode.fom.year == 2026 }
                 assertThat(segment2026).isNotNull
                 assertThat(segment2026!!.verdi.barnetillegg).isEqualTo(Beløp(38))
             }
@@ -410,15 +402,14 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
             .løsVedtaksbrev()
             .medKontekst {
                 val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
-                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
-                assertThat(tidslinje.isNotEmpty()).isTrue()
+                assertThat(tilkjentYtelse.isNotEmpty()).isTrue()
                 val periodeMedBarnetillegUnderInstitusjonsopphold =
                     Periode(tidligsteReduksjonsdato, barnetilleggTom1.minusDays(1))
 
                 // Verifiser at barnetillegg ikke er 0 i perioden med institusjon-reduksjon
                 val tilkjentMedBarnetilleggOgReduksjon =
-                    tidslinje.begrensetTil(periodeMedBarnetillegUnderInstitusjonsopphold)
+                    tilkjentYtelse.begrensetTil(periodeMedBarnetillegUnderInstitusjonsopphold)
                 tilkjentMedBarnetilleggOgReduksjon.segmenter().forEach { segment ->
                     assertThat(segment.verdi.barnetillegg)
                         .`as`("Barnetillegg skal ikke bortfalle ved institusjonsreduksjon")
@@ -427,7 +418,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
 
                 val periodeMedInstitusjonsoppholdReduksjon = Periode(barnetilleggTom1, oppholdTom)
                 val tilkjentMedInstitusjonsoppholdReduksjon =
-                    tidslinje.begrensetTil(periodeMedInstitusjonsoppholdReduksjon)
+                    tilkjentYtelse.begrensetTil(periodeMedInstitusjonsoppholdReduksjon)
                 tilkjentMedInstitusjonsoppholdReduksjon.segmenter().forEach { segment ->
                     assertThat(segment.verdi.graderingGrunnlag.institusjonGradering)
                         .`as`("Institusjonsgradering skal være 50% i perioden med institusjonsopphold")
@@ -437,7 +428,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
                 val periodeMedBarnetilleggEtterInstitusjonsopphold =
                     Periode(barnetilleggFom2, barnetilleggTom2.minusDays(1))
                 val tilkjentMedBarnetilleggEtterInstitusjonsopphold =
-                    tidslinje.begrensetTil(periodeMedBarnetilleggEtterInstitusjonsopphold)
+                    tilkjentYtelse.begrensetTil(periodeMedBarnetilleggEtterInstitusjonsopphold)
                 tilkjentMedBarnetilleggEtterInstitusjonsopphold.segmenter().forEach { segment ->
                     assertThat(segment.verdi.barnetillegg)
                         .`as`("Barnetillegg etter institusjonsopphold")
@@ -503,15 +494,14 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
             .løsVedtaksbrev()
             .medKontekst {
                 val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
-                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
                 // Verifisere perioder med barnetillegg
-                assertThat(tidslinje.isNotEmpty()).isTrue()
+                assertThat(tilkjentYtelse.isNotEmpty()).isTrue()
                 val periodeMedBarnetillegg1 =
                     Periode(barnetilleggFom1, barnetilleggTom1.minusDays(1))
 
                 val tilkjentPeriodeMedBarnetillegg1 =
-                    tidslinje.begrensetTil(periodeMedBarnetillegg1)
+                    tilkjentYtelse.begrensetTil(periodeMedBarnetillegg1)
                 tilkjentPeriodeMedBarnetillegg1.segmenter().forEach { segment ->
                     assertThat(segment.verdi.barnetillegg)
                         .`as`("Barnetillegg periode 1")
@@ -520,7 +510,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
 
                 val periodePåOpphold1MedReduksjon1 = Periode(tidligsteReduksjonsdato1, barnetilleggFom1.minusDays(1))
                 val tilkjentPeriodePåOpphold1MedReduksjon1 =
-                    tidslinje.begrensetTil(periodePåOpphold1MedReduksjon1)
+                    tilkjentYtelse.begrensetTil(periodePåOpphold1MedReduksjon1)
                 tilkjentPeriodePåOpphold1MedReduksjon1.segmenter().forEach { segment ->
                     assertThat(segment.verdi.graderingGrunnlag.institusjonGradering)
                         .`as`("Institusjonsgradering for opphold1 skal være 50% i periode 1 med institusjonsopphold")
@@ -529,7 +519,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
 
                 val periodePåOpphold1MedReduksjon2 = Periode(barnetilleggTom1, oppholdTom1)
                 val tilkjentPeriodePåOpphold1MedReduksjon2 =
-                    tidslinje.begrensetTil(periodePåOpphold1MedReduksjon2)
+                    tilkjentYtelse.begrensetTil(periodePåOpphold1MedReduksjon2)
                 tilkjentPeriodePåOpphold1MedReduksjon2.segmenter().forEach { segment ->
                     assertThat(segment.verdi.graderingGrunnlag.institusjonGradering)
                         .`as`("Institusjonsgradering for opphold1 skal være 50% i periode 2 med institusjonsopphold")
@@ -540,7 +530,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
                     Periode(barnetilleggFom2, barnetilleggTom2.minusDays(1))
 
                 val tilkjentPeriodeMedBarnetillegg2 =
-                    tidslinje.begrensetTil(periodeMedBarnetillegg2)
+                    tilkjentYtelse.begrensetTil(periodeMedBarnetillegg2)
                 tilkjentPeriodeMedBarnetillegg2.segmenter().forEach { segment ->
                     assertThat(segment.verdi.barnetillegg)
                         .`as`("Barnetillegg periode 2")
@@ -549,7 +539,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
 
                 val periodePåOpphold2MedReduksjon1 = Periode(barnetilleggTom2, oppholdTom2)
                 val tilkjentPeriodePåOpphold2MedReduksjon1 =
-                    tidslinje.begrensetTil(periodePåOpphold2MedReduksjon1)
+                    tilkjentYtelse.begrensetTil(periodePåOpphold2MedReduksjon1)
                 tilkjentPeriodePåOpphold2MedReduksjon1.segmenter().forEach { segment ->
                     assertThat(segment.verdi.graderingGrunnlag.institusjonGradering)
                         .`as`("Institusjonsgradering for opphold2 skal være 50% i periode 1")
@@ -558,7 +548,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
 
                 val periodePåOpphold2MedReduksjon2 = Periode(barnetilleggTom2, oppholdTom2)
                 val tilkjentPeriodePåOpphold2MedReduksjon2 =
-                    tidslinje.begrensetTil(periodePåOpphold2MedReduksjon2)
+                    tilkjentYtelse.begrensetTil(periodePåOpphold2MedReduksjon2)
                 tilkjentPeriodePåOpphold2MedReduksjon2.segmenter().forEach { segment ->
                     assertThat(segment.verdi.graderingGrunnlag.institusjonGradering)
                         .`as`("Institusjonsgradering for opphold2 skal være 50% i periode 2")
@@ -601,12 +591,11 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
             .løsVedtaksbrev()
             .medKontekst {
                 val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
-                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
-                assertThat(tidslinje.isNotEmpty()).isTrue()
+                assertThat(tilkjentYtelse.isNotEmpty()).isTrue()
 
                 val periodeMedReduksjon = Periode(tidligsteReduksjonsdato, oppholdTom.minusDays(1))
-                val tilkjentPeriodeMedReduksjon = tidslinje.begrensetTil(periodeMedReduksjon)
+                val tilkjentPeriodeMedReduksjon = tilkjentYtelse.begrensetTil(periodeMedReduksjon)
                 tilkjentPeriodeMedReduksjon.segmenter().forEach { segment ->
                     assertThat(segment.verdi.graderingGrunnlag.institusjonGradering)
                         .`as`("Institusjonsgradering skal være 50% i perioden med institusjonsopphold")
@@ -628,11 +617,10 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
             .fattVedtak()
             .medKontekst {
                 val tilkjentYtelse = hentTilkjentYtelse(revurdering.id)
-                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
-                val helePerioden = tilkjentYtelse.tilTidslinje().helePerioden()
+                val helePerioden = tilkjentYtelse.helePerioden()
 
                 assertTidslinje(
-                    tidslinje.begrensetTil(helePerioden),
+                    tilkjentYtelse.begrensetTil(helePerioden),
                     helePerioden to {
                         assertThat(it.graderingGrunnlag.institusjonGradering).isEqualTo(Prosent.`0_PROSENT`)
                     }
@@ -677,12 +665,11 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
             .medKontekst {
 
                 val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
-                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
-                assertThat(tidslinje.isNotEmpty()).isTrue()
+                assertThat(tilkjentYtelse.isNotEmpty()).isTrue()
 
                 val periodeMedBarnetillegg = Periode(fom, barnetilleggTom.minusDays(1))
-                val tilkjentPeriodeMedBarnetillegg = tidslinje.begrensetTil(periodeMedBarnetillegg)
+                val tilkjentPeriodeMedBarnetillegg = tilkjentYtelse.begrensetTil(periodeMedBarnetillegg)
                 tilkjentPeriodeMedBarnetillegg.segmenter().forEach { segment ->
                     assertThat(segment.verdi.barnetillegg)
                         .`as`("Barnetillegg skal være tilstede i førstegangsbehandling")
@@ -698,18 +685,19 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
         val revurdering =
             sak.opprettManuellRevurdering(listOf(Vurderingsbehov.BARNETILLEGG))
 
+        val sluttdatoFørsteInnvilgelse = fom.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
         revurdering
             .løsAvklaringsBehov(løsNeiTilBarnetillegg(barn, barnetilleggFom))
             .løsAvklaringsBehov(løsHelseinstitusjonMedReduksjon(fom, oppholdTom))
             .løsAndreStatligeYtelser()
+            .løsVedtakslengde(sluttdatoFørsteInnvilgelse, sluttdatoFørsteInnvilgelse.plussEtÅrMedHverdager(ÅrMedHverdager.ANDRE_ÅR))
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
             .medKontekst {
                 val tilkjentYtelse = hentTilkjentYtelse(revurdering.id)
-                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
                 val periodeMedReduksjon = Periode(tidligsteReduksjonsdato, oppholdTom)
-                val tilkjentPeriodeMedReduksjon = tidslinje.begrensetTil(periodeMedReduksjon)
+                val tilkjentPeriodeMedReduksjon = tilkjentYtelse.begrensetTil(periodeMedReduksjon)
                 tilkjentPeriodeMedReduksjon.segmenter().forEach { segment ->
                     assertThat(segment.verdi.barnetillegg)
                         .`as`("Barnetillegg er fjernet fra revurdering")
@@ -752,12 +740,11 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
             .løsVedtaksbrev()
             .medKontekst {
                 val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
-                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
-                assertThat(tidslinje.isNotEmpty()).isTrue()
+                assertThat(tilkjentYtelse.isNotEmpty()).isTrue()
 
                 val periodeMedReduksjon = Periode(tidligsteReduksjonsdato, pågåendeOpphold)
-                val tilkjentPeriodeMedReduksjon = tidslinje.begrensetTil(periodeMedReduksjon)
+                val tilkjentPeriodeMedReduksjon = tilkjentYtelse.begrensetTil(periodeMedReduksjon)
                 tilkjentPeriodeMedReduksjon.segmenter().forEach { segment ->
                     assertThat(segment.verdi.graderingGrunnlag.institusjonGradering)
                         .`as`("Institusjonsgradering skal være 50% i perioden med institusjonsopphold")
@@ -794,10 +781,9 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
             .fattVedtak()
             .medKontekst {
                 val tilkjentYtelse = hentTilkjentYtelse(revurdering.id)
-                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
                 val periodeMedReduksjon = Periode(tidligsteReduksjonsdato, oppholdTom)
-                val tilkjentPeriodeMedReduksjon = tidslinje.begrensetTil(periodeMedReduksjon)
+                val tilkjentPeriodeMedReduksjon = tilkjentYtelse.begrensetTil(periodeMedReduksjon)
                 tilkjentPeriodeMedReduksjon.segmenter().forEach { segment ->
                     assertThat(segment.verdi.graderingGrunnlag.institusjonGradering)
                         .`as`("Institusjonsgradering skal være 50% i perioden med institusjonsopphold")
@@ -847,21 +833,20 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
             .løsVedtaksbrev()
             .medKontekst {
                 val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
-                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
-                assertThat(tidslinje.isNotEmpty()).isTrue()
+                assertThat(tilkjentYtelse.isNotEmpty()).isTrue()
 
                 val periodeUtenReduksjon = Periode(oppholdFom1, tidligsteReduksjonsdato.minusDays(1))
                 val periodeMedReduksjon = Periode(tidligsteReduksjonsdato, oppholdTom2)
 
                 assertTidslinje(
-                    tidslinje.begrensetTil(periodeUtenReduksjon),
+                    tilkjentYtelse.begrensetTil(periodeUtenReduksjon),
                     periodeUtenReduksjon to {
                         assertThat(it.graderingGrunnlag.institusjonGradering).isEqualTo(Prosent.`0_PROSENT`)
                     }
                 )
                 assertTidslinje(
-                    tidslinje.begrensetTil(periodeMedReduksjon),
+                    tilkjentYtelse.begrensetTil(periodeMedReduksjon),
                     periodeMedReduksjon to {
                         assertThat(it.graderingGrunnlag.institusjonGradering)
                             .`as`("Reduksjon skal gjelde over hele den sammenhengende kjeden, uavhengig av institusjonsbytte")
@@ -909,11 +894,10 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
             .løsVedtaksbrev()
             .medKontekst {
                 val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
-                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
                 // Andre opphold er innen 3 måneder etter at første opphold sluttet -> umiddelbar reduksjon fra oppholdFom2
                 val periodeMedUmiddelbarReduksjon = Periode(tidligsteReduksjonsdato2, oppholdTom2)
-                val tilkjentPeriodeMedReduksjon = tidslinje.begrensetTil(periodeMedUmiddelbarReduksjon)
+                val tilkjentPeriodeMedReduksjon = tilkjentYtelse.begrensetTil(periodeMedUmiddelbarReduksjon)
                 tilkjentPeriodeMedReduksjon.segmenter().forEach { segment ->
                     assertThat(segment.verdi.graderingGrunnlag.institusjonGradering)
                         .`as`("Reduksjon kan starte umiddelbart siden opphold 2 er innen 3 måneder fra opphold 1")
@@ -976,11 +960,10 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
                 assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).doesNotContain(Definisjon.AVKLAR_HELSEINSTITUSJON)
 
                 val tilkjentYtelse = hentTilkjentYtelse(behandling.id)
-                val tidslinje = tilkjentYtelse.map { Segment(it.periode, it.tilkjent) }.let(::Tidslinje)
 
                 val periodeMedReduksjonFørBarnetillegg = Periode(tidligsteReduksjonsdato, barnetilleggFom.minusDays(1))
                 assertTidslinje(
-                    tidslinje.begrensetTil(periodeMedReduksjonFørBarnetillegg),
+                    tilkjentYtelse.begrensetTil(periodeMedReduksjonFørBarnetillegg),
                     periodeMedReduksjonFørBarnetillegg to {
                         assertThat(it.graderingGrunnlag.institusjonGradering)
                             .`as`("Reduksjon skal gjelde over hele kjeden før barnetillegget, uavhengig av splitten")
@@ -989,7 +972,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
                 )
                 val periodeMedReduksjonEtterBarnetillegg = Periode(barnetilleggTom, oppholdTom2)
                 assertTidslinje(
-                    tidslinje.begrensetTil(periodeMedReduksjonEtterBarnetillegg),
+                    tilkjentYtelse.begrensetTil(periodeMedReduksjonEtterBarnetillegg),
                     periodeMedReduksjonEtterBarnetillegg to {
                         assertThat(it.graderingGrunnlag.institusjonGradering)
                             .`as`("Reduksjon skal gjelde over hele kjeden etter barnetillegget, uavhengig av splitten")
@@ -1140,7 +1123,7 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
                 assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).contains(Definisjon.AVKLAR_HELSEINSTITUSJON)
 
                 // Det er selve PERIODEN til det nye, korte oppholdet som IKKE skal trenge vurdering.
-                val utlederService = InstitusjonsoppholdUtlederService(repositoryProvider, gatewayProvider)
+                val utlederService = InstitusjonsoppholdUtlederService(repositoryProvider)
                 val behov = utlederService.utled(revurdering.id)
 
                 val perioderSomTrengerVurdering = behov.perioderTilVurdering.segmenter()
@@ -1361,8 +1344,4 @@ class InstitusjonFlytTest : AbstraktFlytOrkestratorTest(SammenhengendeInstitusjo
             )
         )
     }
-
-    object SammenhengendeInstitusjonsoppholdUnleash : FakeUnleashBaseWithDefaultDisabled(
-        listOf(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)
-    )
 }

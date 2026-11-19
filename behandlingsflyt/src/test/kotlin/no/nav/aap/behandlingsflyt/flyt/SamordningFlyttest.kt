@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVe
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.RefusjonkravLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.SamordningAndreStatligeYtelserVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
@@ -21,7 +20,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.Vurderi
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
 import no.nav.aap.behandlingsflyt.integrasjon.institusjonsopphold.InstitusjonsoppholdJSON
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.StudentStatus
@@ -36,8 +34,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.transaction
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -166,8 +162,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
             { "Tilkjent ytelse skal være beregnet her." }
 
         val periodeMedFullSamordning =
-            uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent.graderingGrunnlag.samordningGradering) }
-                .let(::Tidslinje)
+            uthentetTilkjentYtelse.map { it.graderingGrunnlag.samordningGradering }
                 .filter { it.verdi == Prosent.`100_PROSENT` }.helePerioden()
 
         // Verifiser at samordningen ble fanget opp
@@ -208,12 +203,12 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
             requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(revurdering.id) }) { "Tilkjent ytelse skal være beregnet her." }
 
         assertTidslinje(
-            tilkjentYtelse.tilTidslinje(),
+            tilkjentYtelse,
             sykePengerPeriode.overlapp(Periode(søknadsdato, søknadsdato.plusYears(3)))!! to {
                 assertThat(it.graderingGrunnlag.samordningGradering).isEqualTo(Prosent.`100_PROSENT`)
                 assertThat(it.redusertDagsats()).isEqualTo(Beløp(0))
             },
-            Periode(sykePengerPeriode.tom.plusDays(1), tilkjentYtelse.tilTidslinje().helePerioden().tom) to {
+            Periode(sykePengerPeriode.tom.plusDays(1), tilkjentYtelse.helePerioden().tom) to {
                 assertThat(it.graderingGrunnlag.samordningGradering).isEqualTo(Prosent.`0_PROSENT`)
                 assertThat(it.redusertDagsats()).isNotEqualTo(Beløp(0))
             }
@@ -391,15 +386,14 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
             requireNotNull(dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(behandling.id) }) { "Tilkjent ytelse skal være beregnet her." }
 
         val periodeMedFullSamordning =
-            uthentetTilkjentYtelse.map { Segment(it.periode, it.tilkjent.graderingGrunnlag.samordningGradering) }
-                .let(::Tidslinje)
+            uthentetTilkjentYtelse.map { it.graderingGrunnlag.samordningGradering }
                 .filter { it.verdi == Prosent.`100_PROSENT` }.helePerioden()
 
         // Verifiser at samordningen ble fanget opp
         assertThat(periodeMedFullSamordning).isEqualTo(
             Periode(
                 fom = sykePengerPeriode.fom,
-                tom = minOf(sykePengerPeriode.tom, uthentetTilkjentYtelse.maxOf { it.periode.tom })
+                tom = minOf(sykePengerPeriode.tom, uthentetTilkjentYtelse.perioder().maxOf { it.tom })
             )
         )
         behandling = behandling.løsVedtaksbrev()
@@ -469,7 +463,7 @@ class SamordningFlyttest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::clas
         val tilkjentYtelse =
             dataSource.transaction { TilkjentYtelseRepositoryImpl(it).hentHvisEksisterer(revurdering.id) }
 
-        assertThat(tilkjentYtelse?.first()?.tilkjent?.utbetalingsdato).isEqualTo(meldekortInnsendingsdato.toLocalDate())
+        assertThat(tilkjentYtelse?.verdier()?.first()?.utbetalingsdato).isEqualTo(meldekortInnsendingsdato.toLocalDate())
 
     }
 }

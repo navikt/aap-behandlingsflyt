@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.gregulering
 
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
@@ -38,11 +37,10 @@ class GReguleringService(
         val underveisGrunnlag = underveisRepository.hentHvisEksisterer(behandlingId)
             ?: return false
 
-        val tilkjentYtelsePerioder = tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)
+        val tilkjentYtelseTidslinje = tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)
             ?: return false
 
         val oppfyltUnderveisTidslinje = underveisGrunnlag.somTidslinje().filter { it.verdi.utfall == Utfall.OPPFYLT }
-        val tilkjentYtelseTidslinje = tilkjentYtelsePerioder.tilTidslinje()
         val grunnbeløpTidslinje = Grunnbeløp.tilTidslinje()
 
         /*

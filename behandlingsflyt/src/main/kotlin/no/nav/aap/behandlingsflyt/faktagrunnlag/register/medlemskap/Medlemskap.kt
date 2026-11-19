@@ -1,5 +1,9 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
 
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
+
 data class Unntak(
     val status: String,
     val statusaarsak: String?,
@@ -25,7 +29,27 @@ data class MedlemskapDataIntern(
     val helsedel: Boolean,
     val lovvalgsland: String?,
     val kilde: KildesystemMedl?
-)
+) {
+    fun tilDomene(): Segment<Unntak> {
+        return Segment(
+            Periode(LocalDate.parse(fraOgMed), LocalDate.parse(tilOgMed)),
+            Unntak(
+                status = status,
+                statusaarsak = statusaarsak,
+                medlem = medlem,
+                grunnlag = grunnlag,
+                lovvalg = lovvalg,
+                helsedel = helsedel,
+                lovvalgsland = lovvalgsland,
+                kilde = kilde
+            )
+        )
+    }
+}
+
+fun List<MedlemskapDataIntern>.tilDomene(): List<Segment<Unntak>> {
+    return this.map { it.tilDomene() }
+}
 
 data class KildesystemMedl(
     val kildesystemKode: KildesystemKode,

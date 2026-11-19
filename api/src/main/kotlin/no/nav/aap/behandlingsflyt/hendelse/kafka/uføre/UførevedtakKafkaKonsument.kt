@@ -1,4 +1,4 @@
-package no.nav.aap.behandlingsflyt.hendelse.kafka.`uføre`
+package no.nav.aap.behandlingsflyt.hendelse.kafka.uføre
 
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument

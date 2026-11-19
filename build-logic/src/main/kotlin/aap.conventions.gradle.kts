@@ -23,11 +23,6 @@ testing {
     suites {
         @Suppress("UnstableApiUsage")
         named<JvmTestSuite>("test") {
-            targets.all {
-                testTask {
-                    environment("TZ", "Europe/Oslo")
-                }
-            }
             useJUnitJupiter()
         }
     }
@@ -88,13 +83,25 @@ private fun bestemAntallTestTråder(): Int {
     return antallTråder
 }
 
+val dockerTagger = arrayOf("db", "kafka", "flyt")
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+    environment("TZ", "Europe/Oslo")
+    maxParallelForks = bestemAntallTestTråder()
+    systemProperty("junit.jupiter.execution.timeout.default", "3m")
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+}
+
 tasks {
     test {
-        useJUnitPlatform()
-        maxParallelForks = bestemAntallTestTråder()
-        systemProperty("junit.jupiter.execution.timeout.default", "3m")
-        testLogging {
-            events("passed", "skipped", "failed")
+        if (providers.gradleProperty("coreTestsOnly").map(String::toBooleanStrict).getOrElse(false)) {
+            useJUnitPlatform {
+                excludeTags(*dockerTagger)
+            }
+            environment("TESTCONTAINERS_IMAGE_SUBSTITUTOR", "no.nav.aap.behandlingsflyt.test.DockerIkkeTillattIKjernetester")
         }
     }
 
@@ -109,9 +116,9 @@ tasks {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
     compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25)
         apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_4)
         languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_4)
 
@@ -128,7 +135,7 @@ kotlin {
 
 // Pass på at når vi kaller JavaExec eller Test tasks så bruker vi samme språk-versjon som vi kompilerer til
 val toolchainLauncher = javaToolchains.launcherFor {
-    languageVersion.set(JavaLanguageVersion.of(21))
+    languageVersion.set(JavaLanguageVersion.of(25))
 }
 tasks.withType<Test>().configureEach { javaLauncher.set(toolchainLauncher) }
 tasks.withType<JavaExec>().configureEach { javaLauncher.set(toolchainLauncher) }

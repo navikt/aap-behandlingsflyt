@@ -176,8 +176,8 @@ class FormkravSteg (
     private fun bestillEllerGjenopprettFårhåndsvarselBrev(behandlingId: BehandlingId) {
         val brevbestilling = hentBrevbestilling(behandlingId)
         if (brevbestilling == null) {
-            val behandling = behandlingRepository.hent(behandlingId)
-            val vårReferanse = "${behandling.referanse}-${brevBehov.typeBrev}"
+            val referanse = behandlingRepository.hentReferanse(behandlingId)
+            val vårReferanse = "$referanse-${brevBehov.typeBrev}"
 
             val brevReferanse = brevbestillingService.bestill(
                 behandlingId,

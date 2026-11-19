@@ -1,22 +1,24 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
-import no.nav.aap.behandlingsflyt.flyt.InstitusjonFlytTest
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
+import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
+import no.nav.aap.behandlingsflyt.utils.FarligMutering
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
+@OptIn(FarligMutering::class)
 class InstitusjonsoppholdInformasjonskravIntegrasjonsTest {
 
     object FakeInstitusjonsoppholdGateway : InstitusjonsoppholdGateway {
@@ -29,16 +31,17 @@ class InstitusjonsoppholdInformasjonskravIntegrasjonsTest {
         }
     }
 
-    private val gatewayProvider = minimalGatewayProvider(InstitusjonFlytTest.SammenhengendeInstitusjonsoppholdUnleash::class) {
+    private val gatewayProvider = minimalGatewayProvider(AlleAvskruddUnleash::class) {
         register<FakeInstitusjonsoppholdGateway>()
     }
 
     private fun institusjonsopphold(
         fom: LocalDate,
         tom: LocalDate?,
-        institusjonsnavn: String
+        institusjonsnavn: String,
+        type: Institusjonstype = Institusjonstype.HS,
     ) = Institusjonsopphold(
-        institusjonstype = Institusjonstype.HS,
+        institusjonstype = type,
         kategori = Oppholdstype.H,
         startdato = fom,
         sluttdato = tom,
@@ -47,9 +50,47 @@ class InstitusjonsoppholdInformasjonskravIntegrasjonsTest {
     )
 
     @Test
+    fun `AS filtreres bort før lagring med og uten sammenhengende opphold`() {
+        val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = 1 mars 2026)
+        FakeInstitusjonsoppholdGateway.response = listOf(
+            institusjonsopphold(1 mars 2026, 10 mars 2026, "Aldershjem", Institusjonstype.AS),
+            institusjonsopphold(11 mars 2026, 20 mars 2026, "Helseinstitusjon"),
+            institusjonsopphold(21 mars 2026, null, "Fengsel", Institusjonstype.FO),
+        )
+
+        val informasjonskrav = InstitusjonsoppholdInformasjonskrav.konstruer(inMemoryRepositoryProvider, gatewayProvider)
+        val kontekst = flytKontekstMedPerioder {
+            this.behandling = behandling
+            rettighetsperiode = sak.rettighetsperiode
+        }
+        val input = informasjonskrav.klargjør(kontekst)
+        val registerdata = informasjonskrav.hentData(input)
+
+        informasjonskrav.oppdater(input, registerdata, kontekst)
+
+        assertThat(informasjonskrav.hentHvisEksisterer(behandling.id)?.oppholdene?.opphold?.map { it.verdi.type })
+            .containsExactlyInAnyOrder(Institusjonstype.HS, Institusjonstype.FO)
+    }
+
+    @Test
+    fun `AS skal ikke knytte et gammelt helseopphold til rettighetsperioden`() {
+        val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = 1 mars 2026)
+        FakeInstitusjonsoppholdGateway.response = listOf(
+            institusjonsopphold(1 januar 2026, 1 februar 2026, "Helseinstitusjon"),
+            institusjonsopphold(1 mars 2026, null, "Aldershjem", Institusjonstype.AS),
+        )
+        val informasjonskrav = InstitusjonsoppholdInformasjonskrav.konstruer(inMemoryRepositoryProvider, gatewayProvider)
+
+        val registerdata = informasjonskrav.hentData(InstitusjonsoppholdInformasjonskrav.Input(sak))
+
+        assertThat(registerdata.opphold).isEmpty()
+        assertThat(informasjonskrav.behovForRevurdering(behandling.id)).isEmpty()
+    }
+
+    @Test
     fun `sammenhengende opphold som strekker seg inn i rettighetsperioden skal begge lagres, selv om kun det siste overlapper isolert sett`() {
         val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = 1 mars 2026)
-        InMemorySakRepository.oppdaterRettighetsperiode(sak.id, Periode(1 mars 2026, Tid.MAKS))
+        InMemorySakRepository.oppdaterRettighetsperiode(sak, Periode(1 mars 2026, Tid.MAKS))
 
         val oppholdA = institusjonsopphold(1 januar 2026, 1 februar 2026, "Institusjon A")
         val oppholdB = institusjonsopphold(1 februar 2026, null, "Institusjon B")
@@ -82,7 +123,7 @@ class InstitusjonsoppholdInformasjonskravIntegrasjonsTest {
     @Test
     fun `opphold med gap skal ikke dras inn selv om det ligger i registeret`() {
         val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = 1 mars 2026)
-        InMemorySakRepository.oppdaterRettighetsperiode(sak.id, Periode(1 mars 2026, Tid.MAKS))
+        InMemorySakRepository.oppdaterRettighetsperiode(sak, Periode(1 mars 2026, Tid.MAKS))
 
         val gammeltOpphold = institusjonsopphold(1 januar 2026, 1 februar 2026, "Gammel institusjon")
         val relevantOpphold = institusjonsopphold(3 februar 2026, null, "Relevant institusjon")

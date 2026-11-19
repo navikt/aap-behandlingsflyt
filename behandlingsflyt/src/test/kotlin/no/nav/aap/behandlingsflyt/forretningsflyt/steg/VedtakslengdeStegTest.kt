@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
+import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.rettighetstype.vurderRettighetsType
 import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
@@ -20,6 +21,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
+import no.nav.aap.behandlingsflyt.test.FakeArenaOppslagGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
@@ -36,6 +38,10 @@ import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryRettighetstypeRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
@@ -58,6 +64,7 @@ class VedtakslengdeStegTest {
     private val behandlingRepository = InMemoryBehandlingRepository
     private val gatewayProvider = createGatewayProvider {
         register<AlleAvskruddUnleash>()
+        register<FakeArenaOppslagGateway>()
     }
 
     @Test
@@ -125,11 +132,102 @@ class VedtakslengdeStegTest {
             ),
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider),
             tidligereVurderinger = FakeTidligereVurderinger(),
+            arenaMigreringService = ArenaMigreringService(inMemoryRepositoryProvider, gatewayProvider),
+            unleashGateway = gatewayProvider.provide(),
         )
 
         steg.utfør(kontekst)
 
         assertThat(vedtakslengdeRepository.hentHvisEksisterer(inneværendeBehandling.id)).isNotNull
+    }
+
+    @Test
+    fun `Skal opprette avklaringsbehov når siste rettighet går fra unntak til bistandsbehov i revurdering`() {
+        val inneværendeBehandling = kjørRevurderingMedSisteRettighet(
+            forrigeRettighetstyper = listOf(
+                Segment(Periode(1 januar 2020, 31 desember 2020), RettighetsType.STUDENT)
+            ),
+            nåværendeRettighetstyper = listOf(
+                Segment(Periode(1 januar 2020, 31 desember 2020), RettighetsType.STUDENT),
+                Segment(Periode(1 januar 2021, 31 desember 2021), RettighetsType.BISTANDSBEHOV),
+            ),
+        )
+
+        assertThat(
+            InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(inneværendeBehandling.id)
+                .hentBehovForDefinisjon(Definisjon.AVKLAR_VEDTAKSLENGDE)?.erÅpent()
+        ).isTrue
+    }
+
+    @Test
+    fun `Skal ikke opprette avklaringsbehov når siste rettighet er bistandsbehov i begge behandlinger`() {
+        val inneværendeBehandling = kjørRevurderingMedSisteRettighet(
+            forrigeRettighetstyper = listOf(
+                Segment(Periode(1 januar 2020, 31 desember 2020), RettighetsType.BISTANDSBEHOV)
+            ),
+            nåværendeRettighetstyper = listOf(
+                Segment(Periode(1 januar 2020, 31 desember 2021), RettighetsType.BISTANDSBEHOV)
+            ),
+        )
+
+        assertThat(
+            InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(inneværendeBehandling.id)
+                .hentBehovForDefinisjon(Definisjon.AVKLAR_VEDTAKSLENGDE)
+        ).isNull()
+    }
+
+    private fun kjørRevurderingMedSisteRettighet(
+        forrigeRettighetstyper: List<Segment<RettighetsType>>,
+        nåværendeRettighetstyper: List<Segment<RettighetsType>>,
+    ): Behandling {
+        val rettighetsperiode = Periode(1 januar 2020, Tid.MAKS)
+        val sak = opprettInMemorySak(rettighetsperiode.fom)
+        val forrigeBehandling = førstegangsbehandling(sak.id)
+        val vilkårsresultat = genererVilkårsresultat(
+            rettighetsperiode,
+            straffePeriode = Periode(1 januar 2030, 31 januar 2030)
+        )
+
+        val inneværendeBehandling = revurdering(
+            sak.id,
+            forrigeBehandling.id,
+            VurderingsbehovOgÅrsak(
+                årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_STUDENT))
+            )
+        )
+
+        InMemoryVilkårsresultatRepository.lagre(inneværendeBehandling.id, vilkårsresultat)
+        InMemoryRettighetstypeRepository.lagre(
+            behandlingId = forrigeBehandling.id,
+            rettighetstypeTidslinje = Tidslinje(forrigeRettighetstyper),
+            faktagrunnlag = RettighetstypeFaktagrunnlag(vilkårsresultat),
+            versjon = "1",
+        )
+        InMemoryRettighetstypeRepository.lagre(
+            behandlingId = inneværendeBehandling.id,
+            rettighetstypeTidslinje = Tidslinje(nåværendeRettighetstyper),
+            faktagrunnlag = RettighetstypeFaktagrunnlag(vilkårsresultat),
+            versjon = "1",
+        )
+
+        val kontekst =
+            FlytKontekstMedPeriodeService(SakService(sakRepository, behandlingRepository), behandlingRepository)
+                .utled(inneværendeBehandling.flytKontekst(), StegType.FASTSETT_VEDTAKSLENGDE)
+
+        VedtakslengdeSteg(
+            vedtakslengdeService = VedtakslengdeService(
+                inMemoryRepositoryProvider,
+                gatewayProvider,
+                clock = fixedClock(10 desember 2020),
+            ),
+            avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider),
+            tidligereVurderinger = FakeTidligereVurderinger(),
+            arenaMigreringService = ArenaMigreringService(inMemoryRepositoryProvider, gatewayProvider),
+            unleashGateway = gatewayProvider.provide(),
+        ).utfør(kontekst)
+
+        return inneværendeBehandling
     }
 
     private fun revurdering(

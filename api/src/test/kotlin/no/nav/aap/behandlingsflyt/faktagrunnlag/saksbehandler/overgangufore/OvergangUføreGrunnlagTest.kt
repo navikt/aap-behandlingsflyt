@@ -13,7 +13,7 @@ import kotlin.random.Random
 class OvergangUføreGrunnlagTest {
 
     @Test
-    fun `kravdatoUføretrygd`() {
+    fun kravdatoUføretrygd() {
         val gittKravdato = 30 november 2025
         val grunnlag = OvergangUføreGrunnlag(
             vurderinger = listOf(

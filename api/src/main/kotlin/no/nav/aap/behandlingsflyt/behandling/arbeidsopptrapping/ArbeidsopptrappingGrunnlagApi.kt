@@ -90,9 +90,7 @@ fun NormalOpenAPIRoute.arbeidsopptrappingGrunnlagApi(
                     )
                 }
 
-            respond(
-                response
-            )
+            respond(response)
         }
     }
 }
@@ -105,9 +103,8 @@ private fun utledIkkeVurderbarePerioder(
     val bistandsvurderinger =
         bistandGrunnlag?.somBistandsvurderingstidslinje().orEmpty()
 
-    val mapped = Tidslinje.zip2(sykdomsvurderinger, bistandsvurderinger)
+    return Tidslinje.zip2(sykdomsvurderinger, bistandsvurderinger)
         .filter {
             it.verdi.first?.erOppfyltForOrdinærEllerYrkesskadeSettBortIfraÅrsakssammenheng() != true || it.verdi.second?.erBehovForBistand() != true
-        }
-    return mapped.perioder().toList()
+        }.perioder().toList()
 }

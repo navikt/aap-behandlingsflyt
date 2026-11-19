@@ -69,16 +69,14 @@ class KravSteg(
             return Fullført
         }
 
-        val erManuellVurderingAktivertForSak = unleashGateway.erPåskruddForSak(
+        val manuellVurderingIkkeAktivertForSak = !unleashGateway.erPåskruddForSak(
             BehandlingsflytFeature.KravManuellVurdering,
             "saksnummer"
         ) { sakRepository.hent(kontekst.sakId).saksnummer }
 
-        if (!erManuellVurderingAktivertForSak) {
+        if (manuellVurderingIkkeAktivertForSak && harIkkeMigrertKrav(kontekst)) {
             vurderHelautomatisk(kontekst)
-        }
-
-        if (erManuellVurderingAktivertForSak) {
+        } else {
             when (kontekst.behandlingType) {
                 TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
                     when (kontekst.vurderingType) {
@@ -107,7 +105,6 @@ class KravSteg(
                         }
                     }
                 }
-
                 else -> {}
             }
         }
@@ -209,7 +206,7 @@ class KravSteg(
 
         val gjeldendeOverstyring = overstyringFraDenneBehandlingen ?: overstyringFraVedtattKrav
 
-        val vurderinger = alleDokumenter.mapIndexedNotNull { index, dokument ->
+        val vurderinger = alleDokumenter.mapIndexed { index, dokument ->
             val erNyttKrav = dokumentSomOvertarSomKrav?.referanse == dokument.referanse
                     || (gjeldendeKravFraForrige == null && index == 0)
             when {
@@ -292,15 +289,21 @@ class KravSteg(
             arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, StegType.KRAV, kravdataFraArena)
             kravRepository.lagre(
                 kontekst.behandlingId,
-                setOf(ArenaMigreringMapper.mapMigrertKrav(kravdataFraArena, kontekst.behandlingId))
+                setOf(ArenaMigreringMapper.tilMigrertKrav(kravdataFraArena, kontekst.behandlingId))
             )
 
+            val sak = sakService.hent(kontekst.sakId)
             sakService.overstyrRettighetsperioden(
-                sakId = kontekst.sakId,
+                sak = sak,
                 startDato = kravdataFraArena.migreringsdato,
                 sluttDato = Tid.MAKS
             )
         }
+    }
+
+    private fun harIkkeMigrertKrav(kontekst: FlytKontekstMedPerioder): Boolean {
+        val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
+        return kravGrunnlag?.gjeldendeMigrertKrav() == null
     }
 
     private fun validerAtAlleMeldekortErBehandlet(krav: ArenaKrav) {

@@ -13,7 +13,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdagForBehandling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
@@ -36,8 +36,8 @@ import java.util.concurrent.CompletableFuture
 
 class ForutgåendeMedlemskapInformasjonskrav private constructor(
     private val sakService: SakService,
-    private val medlemskapForutgåendeRepository: MedlemskapForutgåendeRepository,
-    private val grunnlagRepository: MedlemskapArbeidInntektForutgåendeRepository,
+    private val medlemskapUnntakForutgåendeRepository: MedlemskapUnntakForutgåendeRepository,
+    private val grunnlagRepository: ForutgåendeMedlemskapRepository,
     private val tidligereVurderinger: TidligereVurderinger,
     private val medlemskapGateway: MedlemskapGateway,
     private val arbeidsforholdGateway: ArbeidsforholdGateway,
@@ -61,7 +61,7 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
         }
 
         return fellesRegler
-                && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
+                && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
     data class MedlemsskapInput(val sak: Sak) : InformasjonskravInput
@@ -169,7 +169,7 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
         inntektGrunnlag: List<ArbeidsInntektMåned>,
         enhetGrunnlag: List<EnhetGrunnlag>
     ) {
-        val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapForutgåendeRepository.lagreUnntakMedlemskap(
+        val medlId = if (medlemskapGrunnlag.isNotEmpty()) medlemskapUnntakForutgåendeRepository.lagreUnntakMedlemskap(
             behandlingId,
             medlemskapGrunnlag
         ) else null
@@ -189,10 +189,10 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
             repositoryProvider: RepositoryProvider,
             gatewayProvider: GatewayProvider
         ): ForutgåendeMedlemskapInformasjonskrav {
-            val grunnlagRepository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
+            val grunnlagRepository = repositoryProvider.provide<ForutgåendeMedlemskapRepository>()
             return ForutgåendeMedlemskapInformasjonskrav(
                 sakService = SakService(repositoryProvider, gatewayProvider),
-                medlemskapForutgåendeRepository = repositoryProvider.provide(),
+                medlemskapUnntakForutgåendeRepository = repositoryProvider.provide(),
                 grunnlagRepository = grunnlagRepository,
                 tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
                 medlemskapGateway = gatewayProvider.provide(),

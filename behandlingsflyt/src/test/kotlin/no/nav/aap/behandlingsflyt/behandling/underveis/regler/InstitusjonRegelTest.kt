@@ -17,22 +17,20 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.Barnetil
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockConnection
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
+import no.nav.aap.meldeplikt.MeldepliktVurdering
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
-import no.nav.aap.meldeplikt.MeldepliktVurdering
 
 @Fakes
 class InstitusjonRegelTest {
@@ -42,7 +40,6 @@ class InstitusjonRegelTest {
         InstitusjonsoppholdRepositoryImpl(mockConnection),
         SakRepositoryImpl(mockConnection),
         BehandlingRepositoryImpl(mockConnection),
-        FakeUnleashBase(mapOf(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true))
     )
 
     val regel = InstitusjonRegel()

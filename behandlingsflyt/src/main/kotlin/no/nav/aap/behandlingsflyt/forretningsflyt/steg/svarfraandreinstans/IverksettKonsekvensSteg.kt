@@ -97,7 +97,7 @@ class IverksettKonsekvensSteg private constructor(
             vurderingsbehov = vurderingsbehov,
             beskrivelse = beskrivelse,
             kilde = Omgjøringskilde.KLAGEINSTANS,
-            kildeReferanse = behandlingRepository.hent(kontekst.behandlingId).referanse.referanse
+            kildeReferanse = behandlingRepository.hentReferanse(kontekst.behandlingId).referanse
         )
     }
 

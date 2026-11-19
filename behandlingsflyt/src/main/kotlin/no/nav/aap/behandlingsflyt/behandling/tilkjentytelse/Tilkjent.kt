@@ -62,7 +62,7 @@ data class Tilkjent(
          * ned. Regner derfor ut her. Burde vurdere å backfille, slik at
          * vi ikke trenger denne kodesnutten.
          */
-        return BeregnTilkjentYtelseService.redusertDagsats(
+        return BeregnTilkjentYtelse.redusertDagsats(
             dagsats = dagsats,
             barnetillegg = barnetillegg,
             barnepensjonDagsats = barnepensjonDagsats,
@@ -70,9 +70,11 @@ data class Tilkjent(
         )
     }
 
+    fun redusertDagsatsOrNull(): Beløp? = redusertDagsats
+
     @Suppress("FunctionName")
     fun dagsatsFor11_9Reduksjon(): Beløp {
-        return BeregnTilkjentYtelseService.redusertDagsats(
+        return BeregnTilkjentYtelse.redusertDagsats(
             dagsats = dagsats,
             barnetillegg = barnetillegg,
             barnepensjonDagsats = barnepensjonDagsats,

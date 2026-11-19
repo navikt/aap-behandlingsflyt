@@ -13,10 +13,10 @@ spec:
     - https://aap-behandlingsflyt.intern.dev.nav.no
   resources:
     limits:
-      memory: 1024Mi
+      memory: 1536Mi
     requests:
-      cpu: 500m
-      memory: 750Mi
+      cpu: 600m
+      memory: 900Mi
   observability:
     autoInstrumentation:
       enabled: true
@@ -37,16 +37,27 @@ spec:
         pointInTimeRecovery: true
         databases:
           - name: behandlingsflyt
+            users:
+              - name: datastream
         flags:
           - name: cloudsql.enable_pgaudit
             value: "true"
+          - name: cloudsql.logical_decoding
+            value: "on"
   terminationGracePeriodSeconds: 30
+  startup:
+    path: /actuator/live
+    initialDelay: 25
+    periodSeconds: 5
+    failureThreshold: 8
   liveness:
     path: /actuator/live
-    initialDelay: 5
+    periodSeconds: 3
+    failureThreshold: 3
   readiness:
     path: /actuator/ready
-    initialDelay: 5
+    periodSeconds: 3
+    failureThreshold: 3
   prometheus:
     enabled: true
     path: /actuator/metrics

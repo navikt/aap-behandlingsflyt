@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentRepository
+import no.nav.aap.student.StudentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.hendelse.oppgavestyring.OppgavestyringGateway
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse

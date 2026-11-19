@@ -15,7 +15,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.behandlingsflyt.help.person
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -76,7 +75,6 @@ class MeldeperiodeTilMeldekortBackendJobbUtførerTest {
                     )
                 ),
                 rettighetsperiode = Periode(LocalDate.parse("2025-03-31"), LocalDate.parse("2026-03-30")),
-                status = Status.UTREDES,
             ),
             meldeperioder = underveisperioder.map { it.meldePeriode }.toSet().sorted(),
             vedtaksdatoFørsteInnvilgelse = LocalDate.parse("2025-05-13"),

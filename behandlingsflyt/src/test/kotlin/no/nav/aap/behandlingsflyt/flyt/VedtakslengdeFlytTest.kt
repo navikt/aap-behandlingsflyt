@@ -16,10 +16,8 @@ import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
-import no.nav.aap.bistandsbehov.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.PeriodisertStudentDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
@@ -28,7 +26,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.Vedt
 import no.nav.aap.behandlingsflyt.flyt.TestSøknader.SØKNAD_INGEN_MEDLEMSKAP
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.prosessering.OpprettJobbUtvidVedtakslengdeJobbUtfører
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -41,11 +38,13 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
+import no.nav.aap.bistandsbehov.BistandLøsningDto
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.motor.FlytJobbRepositoryImpl
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.student.PeriodisertStudentDto
 import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -569,8 +568,9 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
             assertThat(sisteUnderveisperiode.utfall).isEqualTo(Utfall.OPPFYLT)
             assertThat(sisteUnderveisperiode.rettighetsType).isEqualTo(RettighetsType.BISTANDSBEHOV)
 
-            val rettighetstypeTidslinje = RettighetstypeRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)!!
-                .rettighetstypeTidslinje
+            val rettighetstypeTidslinje =
+                RettighetstypeRepositoryImpl(connection).hentHvisEksisterer(førstegangsbehandling.id)!!
+                    .rettighetstypeTidslinje
 
             // Rettighetstidslinjen er begrenset av kvote, ikke vedtakslengde
             assertThat(rettighetstypeTidslinje.perioder().maxOfOrNull { it.tom }).isEqualTo(maksdato)
@@ -599,8 +599,9 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
             assertThat(sisteUnderveisperiode.utfall).isEqualTo(Utfall.OPPFYLT)
             assertThat(sisteUnderveisperiode.rettighetsType).isEqualTo(RettighetsType.BISTANDSBEHOV)
 
-            val rettighetstypeTidslinje = RettighetstypeRepositoryImpl(connection).hentHvisEksisterer(automatiskBehandling.id)!!
-                .rettighetstypeTidslinje
+            val rettighetstypeTidslinje =
+                RettighetstypeRepositoryImpl(connection).hentHvisEksisterer(automatiskBehandling.id)!!
+                    .rettighetstypeTidslinje
 
             // Rettighetstidslinjen begrenses av maksdato, ikke vedtakslengde
             assertThat(rettighetstypeTidslinje.perioder().maxOfOrNull { it.tom }).isEqualTo(maksdato)
@@ -862,7 +863,7 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                     )
                 )
                 assertThat(this.avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
-                    .containsExactlyInAnyOrder(Definisjon.FATTE_VEDTAK)
+                    .containsExactlyInAnyOrder(Definisjon.AVKLAR_VEDTAKSLENGDE)
             }
 
         val sluttdatoFørstegangsbehandling = dataSource.transaction { connection ->
@@ -888,6 +889,11 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
         }
 
         kjørUtvidVedtakslengdeJobb()
+        åpenBehandling.løsAvklaringsBehov(
+            avklaringsBehovLøsning = AvklarVedtakslengdeLøsning(
+                løsningerForPerioder = emptyList()
+            )
+        )
 
         dataSource.transaction { connection ->
             val automatiskBehandling = BehandlingService(
@@ -992,6 +998,8 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
                 )
                 assertThat(vedtakslengdeGrunnlag?.gjeldendeVurdering()?.utvidetMed).isEqualTo(ÅrMedHverdager.ANDRE_ÅR)
             }
+            .løsAvklaringsBehov(avklaringsBehovLøsning = AvklarVedtakslengdeLøsning(løsningerForPerioder = emptyList()))
+            .foreslåVedtak()
             .fattVedtak()
             .løsVedtaksbrev(TypeBrev.VEDTAK_11_17)
 

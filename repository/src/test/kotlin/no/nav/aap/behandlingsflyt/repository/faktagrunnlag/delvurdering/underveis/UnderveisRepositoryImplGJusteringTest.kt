@@ -3,9 +3,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.underve
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Kvote
-import no.nav.aap.meldeplikt.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
@@ -15,7 +13,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
-import no.nav.aap.behandlingsflyt.help.tomtTilkjentYtelseGrunnlag
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.tilkjentytelse.TilkjentYtelseRepositoryImpl
@@ -24,6 +21,7 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Dagsatser
@@ -31,14 +29,17 @@ import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.TimerArbeid
+import no.nav.aap.meldeplikt.MeldepliktStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+@Tag("db")
 class UnderveisRepositoryImplGJusteringTest {
 
     private lateinit var dataSource: TestDataSource
@@ -232,14 +233,12 @@ class UnderveisRepositoryImplGJusteringTest {
             // Tilkjent ytelse allerede beregnet med nytt grunnbeløp — saken trenger ikke G-regulering
             TilkjentYtelseRepositoryImpl(connection).lagre(
                 behandlingId = behandling.id,
-                tilkjent = listOf(
+                resultat = tidslinjeOf(
                     tilkjentYtelsePeriode(
                         periode = Periode(LocalDate.of(2025, 4, 1), LocalDate.of(2025, 5, 31)),
                         grunnbeløp = nyttGrunnbeløp,
                     )
                 ),
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = "test",
             )
         }
 
@@ -269,14 +268,12 @@ class UnderveisRepositoryImplGJusteringTest {
             // Tilkjent ytelse beregnet med gammelt grunnbeløp — saken trenger G-regulering
             TilkjentYtelseRepositoryImpl(connection).lagre(
                 behandlingId = behandling.id,
-                tilkjent = listOf(
+                resultat = tidslinjeOf(
                     tilkjentYtelsePeriode(
                         periode = Periode(LocalDate.of(2025, 4, 1), LocalDate.of(2025, 5, 31)),
                         grunnbeløp = gammeltGrunnbeløp,
                     )
                 ),
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = "test",
             )
         }
 
@@ -309,14 +306,12 @@ class UnderveisRepositoryImplGJusteringTest {
             // — perioden etter pausen har ingen TY ennå
             TilkjentYtelseRepositoryImpl(connection).lagre(
                 behandlingId = behandling.id,
-                tilkjent = listOf(
+                resultat = tidslinjeOf(
                     tilkjentYtelsePeriode(
                         periode = Periode(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 4, 30)),
                         grunnbeløp = gammeltGrunnbeløp,
                     )
                 ),
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = "test",
             )
         }
 
@@ -348,14 +343,12 @@ class UnderveisRepositoryImplGJusteringTest {
             // Tilkjent ytelse for perioden etter pausen er beregnet med gammelt grunnbeløp
             TilkjentYtelseRepositoryImpl(connection).lagre(
                 behandlingId = behandling.id,
-                tilkjent = listOf(
+                resultat = tidslinjeOf(
                     tilkjentYtelsePeriode(
                         periode = Periode(LocalDate.of(2025, 6, 1), LocalDate.of(2025, 7, 31)),
                         grunnbeløp = gammeltGrunnbeløp,
                     )
                 ),
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = "test",
             )
         }
 
@@ -386,14 +379,12 @@ class UnderveisRepositoryImplGJusteringTest {
             // Tilkjent ytelse for perioden etter pausen er allerede beregnet med nytt grunnbeløp
             TilkjentYtelseRepositoryImpl(connection).lagre(
                 behandlingId = behandling.id,
-                tilkjent = listOf(
+                resultat = tidslinjeOf(
                     tilkjentYtelsePeriode(
                         periode = Periode(LocalDate.of(2025, 6, 1), LocalDate.of(2025, 7, 31)),
                         grunnbeløp = nyttGrunnbeløp,
                     )
                 ),
-                faktagrunnlag = tomtTilkjentYtelseGrunnlag,
-                versjon = "test",
             )
         }
 
@@ -404,9 +395,8 @@ class UnderveisRepositoryImplGJusteringTest {
         assertThat(resultat).isEmpty()
     }
 
-    private fun tilkjentYtelsePeriode(periode: Periode, grunnbeløp: Beløp) = TilkjentYtelsePeriode(
-        periode = periode,
-        tilkjent = Tilkjent(
+    private fun tilkjentYtelsePeriode(periode: Periode, grunnbeløp: Beløp) =
+        periode to Tilkjent(
             dagsats = Beløp(1_000),
             gradering = Prosent.`100_PROSENT`,
             graderingGrunnlag = GraderingGrunnlag(
@@ -427,7 +417,6 @@ class UnderveisRepositoryImplGJusteringTest {
             redusertDagsats = null,
             barnepensjonDagsats = Beløp(0),
         )
-    )
 
     private fun oppfyltPeriode(periode: Periode) = Underveisperiode(
         periode = periode,

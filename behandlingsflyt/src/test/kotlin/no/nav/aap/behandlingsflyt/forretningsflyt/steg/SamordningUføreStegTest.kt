@@ -4,6 +4,8 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarSamordningUføreLøser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriodeDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
@@ -21,8 +23,11 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUføreRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juni
+import no.nav.aap.komponenter.tidslinje.tidslinjeOf
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -98,6 +103,54 @@ class SamordningUføreStegTest {
         assertThat(hentAvklaringsbehov(behandling)?.erÅpent()).isFalse
     }
 
+    @Test
+    fun `skal ikke kreve vurdering av uførevedtak som kun gjelder perioder uten rett til AAP`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling(1 juni 2026)
+
+        InMemoryUføreRepository.lagre(
+            behandling.id, setOf(
+                Uføre(
+                    virkningstidspunkt = 1 januar 2026,
+                    uføregrad = Prosent(100),
+                    uføregradFom = 1 januar 2026,
+                    uføregradTom = null
+                )
+            )
+        )
+        val utenRett = FakeTidligereVurderinger(
+            tidslinjeOf(
+                Periode(1 januar 2026, Tid.MAKS) to TidligereVurderinger.UunngåeligAvslag(Vilkårtype.SYKDOMSVILKÅRET)
+            )
+        )
+        samordningUføreSteg(utenRett).utfør(flytKontekstMedPerioder { this.behandlingId = behandling.id })
+
+        assertThat(hentAvklaringsbehov(behandling)?.erÅpent()).isNotEqualTo(true)
+    }
+
+    @Test
+    fun `skal kreve vurdering når uførevedtak overlapper med periode med rett til AAP`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling(1 juni 2026)
+
+        InMemoryUføreRepository.lagre(
+            behandling.id, setOf(
+                Uføre(
+                    virkningstidspunkt = 1 januar 2026,
+                    uføregrad = Prosent(100),
+                    uføregradFom = 1 januar 2026,
+                    uføregradTom = null
+                )
+            )
+        )
+        val medRettIDelAvPerioden = FakeTidligereVurderinger(
+            tidslinjeOf(
+                Periode(1 juni 2026, 30 juni 2026) to TidligereVurderinger.UunngåeligAvslag(Vilkårtype.SYKDOMSVILKÅRET)
+            )
+        )
+        samordningUføreSteg(medRettIDelAvPerioden).utfør(flytKontekstMedPerioder { this.behandlingId = behandling.id })
+
+        assertThat(hentAvklaringsbehov(behandling)?.erÅpent()).isTrue
+    }
+
     private fun hentAvklaringsbehov(behandling: Behandling): Avklaringsbehov? =
         InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
             .hentBehovForDefinisjon(Definisjon.AVKLAR_SAMORDNING_UFØRE)
@@ -109,10 +162,12 @@ class SamordningUføreStegTest {
         steg.utfør(flytKontekstMedPerioder { this.behandlingId = behandling.id })
     }
 
-    private fun samordningUføreSteg(): SamordningUføreSteg = SamordningUføreSteg(
+    private fun samordningUføreSteg(
+        tidligereVurderinger: FakeTidligereVurderinger = FakeTidligereVurderinger()
+    ): SamordningUføreSteg = SamordningUføreSteg(
         InMemorySamordningUføreRepository,
         InMemoryUføreRepository,
-        FakeTidligereVurderinger(),
+        tidligereVurderinger,
         AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider)
     )
 
@@ -121,7 +176,7 @@ class SamordningUføreStegTest {
         løsning: List<SamordningUføreVurderingPeriodeDto>
     ) {
         val behovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-        AvklarSamordningUføreLøser(inMemoryRepositoryProvider).løs(
+        AvklarSamordningUføreLøser(inMemoryRepositoryProvider, gatewayProvider).løs(
             avklaringsbehovKontekst { this.behandling = behandling }, AvklarSamordningUføreLøsning(
                 samordningUføreVurdering = SamordningUføreVurderingDto(
                     begrunnelse = "...", vurderingPerioder = løsning

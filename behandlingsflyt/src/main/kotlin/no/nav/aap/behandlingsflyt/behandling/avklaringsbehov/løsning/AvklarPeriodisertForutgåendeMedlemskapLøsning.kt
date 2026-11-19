@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.AvklarForutg
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.LøsningsResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForForutgåendeMedlemskapDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapArbeidInntektForutgåendeRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_FORUTGÅENDE_MEDLEMSKAP_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
@@ -38,7 +38,7 @@ class AvklarPeriodisertForutgåendeMedlemskapLøsning(
         repositoryProvider: RepositoryProvider,
         gatewayProvider: GatewayProvider
     ): Tidslinje<*> {
-        val repository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
+        val repository = repositoryProvider.provide<ForutgåendeMedlemskapRepository>()
         return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger() ?: Tidslinje<Unit>()
     }
 
@@ -46,7 +46,7 @@ class AvklarPeriodisertForutgåendeMedlemskapLøsning(
         behandlingId: BehandlingId,
         repositoryProvider: RepositoryProvider
     ): List<PeriodisertVurdering> {
-        val repository = repositoryProvider.provide<MedlemskapArbeidInntektForutgåendeRepository>()
+        val repository = repositoryProvider.provide<ForutgåendeMedlemskapRepository>()
         return repository.hentHvisEksisterer(behandlingId)?.vurderinger.orEmpty()
     }
 

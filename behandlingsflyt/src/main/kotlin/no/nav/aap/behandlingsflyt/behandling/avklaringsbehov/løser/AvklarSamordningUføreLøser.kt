@@ -2,14 +2,17 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSamordningUføreLøsning
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
+import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.uførevurdering.SamordningUføreVurderingValidator
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
+import no.nav.aap.behandlingsflyt.forretningsflyt.steg.SamordningUføreSteg
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
+import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
+import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -17,31 +20,34 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class AvklarSamordningUføreLøser(
     private val samordningUføreRepository: SamordningUføreRepository,
     private val uføreRepository: UføreRepository,
-    private val sakRepository: SakRepository,
+    private val tidligereVurderinger: TidligereVurderinger,
+    private val flytKontekstMedPeriodeService: FlytKontekstMedPeriodeService,
 ) : AvklaringsbehovsLøser<AvklarSamordningUføreLøsning> {
 
-    constructor(repositoryProvider: RepositoryProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         samordningUføreRepository = repositoryProvider.provide(),
         uføreRepository = repositoryProvider.provide(),
-        sakRepository = repositoryProvider.provide(),
+        tidligereVurderinger = TidligereVurderingerImpl(repositoryProvider, gatewayProvider),
+        flytKontekstMedPeriodeService = FlytKontekstMedPeriodeService(repositoryProvider, gatewayProvider),
     )
 
     override fun løs(
         kontekst: AvklaringsbehovKontekst,
         løsning: AvklarSamordningUføreLøsning
     ): LøsningsResultat {
-        validerAllePerioderErVurdert(kontekst.sakId(), kontekst.behandlingId(), løsning)
+        val vurderingPerioder = løsning.samordningUføreVurdering.vurderingPerioder.map {
+            SamordningUføreVurderingPeriode(
+                virkningstidspunkt = it.virkningstidspunkt,
+                uføregradTilSamordning = Prosent(it.uføregradTilSamordning)
+            )
+        }
+        validerAllePerioderErVurdert(kontekst, vurderingPerioder)
         validerIkkeDupliserteVurderinger(løsning)
         samordningUføreRepository.lagre(
             kontekst.behandlingId(),
             SamordningUføreVurdering(
                 begrunnelse = løsning.samordningUføreVurdering.begrunnelse,
-                vurderingPerioder = løsning.samordningUføreVurdering.vurderingPerioder.map {
-                    SamordningUføreVurderingPeriode(
-                        virkningstidspunkt = it.virkningstidspunkt,
-                        uføregradTilSamordning = it.uføregradTilSamordning.let(::Prosent)
-                    )
-                },
+                vurderingPerioder = vurderingPerioder,
                 vurdertAv = kontekst.bruker
             )
         )
@@ -61,24 +67,20 @@ class AvklarSamordningUføreLøser(
     }
 
     private fun validerAllePerioderErVurdert(
-        sakId: SakId,
-        behandlingId: BehandlingId,
-        løsning: AvklarSamordningUføreLøsning
+        kontekst: AvklaringsbehovKontekst,
+        vurderinger: List<SamordningUføreVurderingPeriode>
     ) {
-        val uføreGrunnlag = uføreRepository.hentHvisEksisterer(behandlingId = behandlingId)
-        val vurderinger = løsning.samordningUføreVurdering.vurderingPerioder
-        val rettighetsperiode = sakRepository.hent(sakId).rettighetsperiode
-
-        val harVurdertAllePerioder = uføreGrunnlag?.vedtak.orEmpty()
-            .filter { it.uføregradTom == null || it.uføregradTom >= rettighetsperiode.fom }
-            .all { uføre ->
-                vurderinger.any { vurdering -> vurdering.virkningstidspunkt == uføre.virkningstidspunkt }
-            }
-        if (!harVurdertAllePerioder) {
+        val stegType = SamordningUføreSteg.type()
+        val flytKontekst = flytKontekstMedPeriodeService.utled(kontekst.kontekst, stegType)
+        val manglendeVurderinger = SamordningUføreVurderingValidator.manglendeVurderinger(
+            behandlingsutfall = tidligereVurderinger.behandlingsutfall(flytKontekst, stegType),
+            uførevedtak = uføreRepository.hentHvisEksisterer(kontekst.behandlingId())?.vedtak.orEmpty(),
+            vurderinger = vurderinger,
+        )
+        if (manglendeVurderinger.isNotEmpty()) {
             throw UgyldigForespørselException(message = "Har ikke vurdert alle perioder for samordning med delvis uføre.")
         }
     }
-
 
     override fun forBehov(): Definisjon {
         return Definisjon.AVKLAR_SAMORDNING_UFØRE

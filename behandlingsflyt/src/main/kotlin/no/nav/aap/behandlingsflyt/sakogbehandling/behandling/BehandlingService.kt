@@ -63,6 +63,10 @@ class BehandlingService(
         return ytelsesbehandlinger.sortedWith(comparator(ytelsesbehandlinger))
     }
 
+    fun finnBehandlingerSomManglerRedusertDagsats(sakId: SakId): List<BehandlingId> {
+        return behandlingRepository.finnBehandlingerSomManglerRedusertDagsats(sakId)
+    }
+
     /** Siste ikke-avbrutte ytelsesbehandling, uavhengig av om den er åpen eller vedtatt.
      *
      * Er du sikker på at du ikke bryr deg om behandlingen du får er siste vedtatte eller en åpen behandling?

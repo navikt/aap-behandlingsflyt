@@ -10,9 +10,37 @@ application {
     mainClass.set("no.nav.aap.behandlingsflyt.AppKt")
 }
 
+val deploymentCommit = providers.environmentVariable("GIT_COMMIT")
+    .filter { it.isNotBlank() }
+    .orElse(providers.environmentVariable("GITHUB_SHA").filter { it.isNotBlank() })
+    .orElse(providers.exec {
+        workingDir(rootDir)
+        commandLine("git", "rev-parse", "--verify", "HEAD")
+    }.standardOutput.asText)
+    .map { value ->
+        value.trim().also {
+            require(it.matches(Regex("[0-9a-fA-F]{40}|[0-9a-fA-F]{64}"))) {
+                "Production packaging requires a valid Git commit SHA."
+            }
+        }
+    }
+
+val deploymentVersion = tasks.register<WriteProperties>("deploymentVersion") {
+    group = "build"
+    description = "Generates the Git commit version for the production JAR."
+    destinationFile = layout.buildDirectory.file("generated/deployment-version.properties")
+    property("project.version", deploymentCommit)
+}
+
 tasks {
 
     withType<ShadowJar> {
+        // Exclude the development resource; renaming happens after source-path filtering.
+        exclude("behandlingsflyt-version.properties")
+        from(deploymentVersion) {
+            rename("deployment-version.properties", "behandlingsflyt-version.properties")
+        }
+
         // Duplikate class og ressurs-filer kan skape runtime-feil, fordi JVM-en velger den første på classpath
         // ved duplikater, og det kan være noe annet enn vår kode (og libs vi bruker) forventer.
         // Derfor logger vi en advarsel hvis vi oppdager duplikater.

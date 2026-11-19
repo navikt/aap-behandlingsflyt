@@ -5,13 +5,13 @@ import io.ktor.server.netty.*
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.runBlocking
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Barn
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.OppgitteBarn
+import no.nav.aap.barnetillegg.Barn
+import no.nav.aap.barnetillegg.BarnRepository
+import no.nav.aap.barnetillegg.OppgitteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.BarnIdentifikator
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurderingAvForeldreAnsvar
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.barn.VurdertBarn
+import no.nav.aap.barnetillegg.BarnIdentifikator
+import no.nav.aap.barnetillegg.VurderingAvForeldreAnsvar
+import no.nav.aap.barnetillegg.VurdertBarn
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.pip.IdenterDTO
@@ -36,11 +36,13 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.io.InputStream
 import java.net.URI
 import java.time.LocalDate
 
+@Tag("db")
 @Fakes
 class PipTest {
     companion object {

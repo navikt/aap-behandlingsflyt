@@ -1,10 +1,12 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgInformasjonskrav
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnbeløpInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdatoInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.DagpengerInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.andrestatligeytelservurdering.TiltakspengerInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.GjenståendeSykedagerInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Aktivitetsplikt11_7Informasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Aktivitetsplikt11_9Informasjonskrav
@@ -12,7 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArenaMeldeperiod
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.LegeerklæringInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.søknad.SøknadInformasjonskrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.BarnInformasjonskrav
+import no.nav.aap.barnetillegg.BarnInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapInformasjonskrav
@@ -27,9 +29,9 @@ import no.nav.aap.behandlingsflyt.flyt.BehandlingFlytBuilder
 import no.nav.aap.behandlingsflyt.flyt.BehandlingType
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.ArbeidsopptrappingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvbrytRevurderingSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvklarStudentStegV2
+import no.nav.aap.student.AvklarStudentStegV2
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvklarStønadsperiodeSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BarnetilleggSteg
+import no.nav.aap.barnetillegg.BarnetilleggSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BekreftVurderingerOppfølgingSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregnTilkjentYtelseSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.BeregningAvklarFaktaSteg
@@ -77,7 +79,7 @@ import no.nav.aap.bistandsbehov.VurderBistandsbehovSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderForutgåendeMedlemskapSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderLovvalgSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderOppholdskravSteg
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderStudentSteg
+import no.nav.aap.student.VurderStudentSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykdomSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderSykepengeErstatningSteg
 import no.nav.aap.behandlingsflyt.forretningsflyt.steg.VurderYrkesskadeSteg
@@ -88,7 +90,7 @@ object Revurdering : BehandlingType {
         return BehandlingFlytBuilder()
             .medSteg(
                 steg = StartBehandlingSteg,
-                informasjonskrav = listOf(SøknadInformasjonskrav, BarnInformasjonskrav),  // TODO: Mulig vi ønsker å endre disse ifb krav?
+                informasjonskrav = listOf(SøknadInformasjonskrav, BarnInformasjonskrav, GjenståendeSykedagerInformasjonskrav),  // TODO: Mulig vi ønsker å endre disse ifb krav?
                 vurderingsbehovRelevanteForSteg = Vurderingsbehov.alle()
             )
             .medSteg(
@@ -110,7 +112,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = AvklarStønadsperiodeSteg,
-                informasjonskrav = emptyList(),
+                informasjonskrav = listOf(ArenaMaksdatoInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = emptyList()
             )
             .medSteg(
@@ -123,7 +125,7 @@ object Revurdering : BehandlingType {
             )
             .medSteg(
                 steg = VurderLovvalgSteg,
-                informasjonskrav = listOf(PersonopplysningInformasjonskrav, LovvalgInformasjonskrav),
+                informasjonskrav = listOf(PersonopplysningInformasjonskrav, LovvalgMedlemskapInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
                     Vurderingsbehov.MIGRERING_FRA_ARENA,
@@ -161,6 +163,7 @@ object Revurdering : BehandlingType {
                     Vurderingsbehov.MOTTATT_DIALOGMELDING,
                     Vurderingsbehov.MOTTATT_LEGEERKLÆRING,
                     Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND,
+                    Vurderingsbehov.REVURDER_SYKEPENGEERSTATNING,
                     Vurderingsbehov.BRUKER_TILBAKE_I_ARBEID,
                     Vurderingsbehov.HELHETLIG_VURDERING,
                     Vurderingsbehov.DØDSFALL_BRUKER,
@@ -437,7 +440,6 @@ object Revurdering : BehandlingType {
                 informasjonskrav = listOf(DagpengerInformasjonskrav, TiltakspengerInformasjonskrav),
                 vurderingsbehovRelevanteForSteg = listOf(
                     Vurderingsbehov.MOTTATT_SØKNAD,
-                    Vurderingsbehov.MIGRERING_FRA_ARENA,
                     Vurderingsbehov.SAMORDNING_OG_AVREGNING,
                     Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_STATLIGE_YTELSER,
                     Vurderingsbehov.VURDER_RETTIGHETSPERIODE,
@@ -500,4 +502,3 @@ object Revurdering : BehandlingType {
     }
 
 }
-

@@ -107,12 +107,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Tag
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
+@Tag("db")
 @Fakes
 class StatistikkJobbUtførerTest {
     private val gatewayProvider = minimalGatewayProvider {
@@ -698,7 +700,7 @@ class StatistikkJobbUtførerTest {
                 versjon = ApplikasjonsVersjon.versjon,
                 soknadsFormat = Kanal.PAPIR,
                 mottattTid = tidligsteMottattTid,
-                sakStatus = no.nav.aap.behandlingsflyt.kontrakt.sak.Status.OPPRETTET,
+                sakStatus = no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES,
                 hendelsesTidspunkt = hendelsesTidspunkt,
                 identerForSak = listOf("1234"),
                 årsakTilOpprettelse = no.nav.aap.behandlingsflyt.kontrakt.behandling.ÅrsakTilOpprettelse.SØKNAD,

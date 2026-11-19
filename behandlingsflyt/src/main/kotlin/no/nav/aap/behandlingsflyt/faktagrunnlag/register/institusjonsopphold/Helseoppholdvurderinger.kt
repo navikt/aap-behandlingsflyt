@@ -10,5 +10,11 @@ data class Helseoppholdvurderinger(
     val vurderinger: List<HelseinstitusjonVurdering>,
     val vurdertTidspunkt: LocalDateTime
 ) {
-    fun tilTidslinje(): Tidslinje<HelseinstitusjonVurdering> = vurderinger.somTidslinje { it.periode }
+    val periodiserteVurderinger: List<HelseinstitusjonVurdering>
+        get() = vurderinger.filterNot { it.erHistoriskUtenReduksjonsberegning }
+
+    val historiskeVurderinger: List<HelseinstitusjonVurdering>
+        get() = vurderinger.filter { it.erHistoriskUtenReduksjonsberegning }
+
+    fun tilTidslinje(): Tidslinje<HelseinstitusjonVurdering> = periodiserteVurderinger.somTidslinje { it.periode }
 }

@@ -44,15 +44,19 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringSerializer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.time.Duration.Companion.milliseconds
 
+@Tag("db")
+@Tag("kafka")
 class KabalKafkaKonsumentTest {
     companion object {
         private val repositoryRegistry = postgresRepositoryRegistry
+        private const val UBRUKT_BROKER_ADRESSE = "localhost:9092"
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         private lateinit var dataSource: TestDataSource
@@ -206,7 +210,7 @@ class KabalKafkaKonsumentTest {
     @Test
     fun `Skal opprette feiljobb for meldinger som skal til Kelvin, men som vi ikke finner saksnummer for`() {
         val konsument = KabalKafkaKonsument(
-            testConfig(SharedKafkaTestContainer.kafka.bootstrapServers),
+            testConfig(UBRUKT_BROKER_ADRESSE),
             dataSource = dataSource,
             repositoryRegistry = repositoryRegistry,
             pollTimeout = 50.milliseconds,
@@ -217,7 +221,7 @@ class KabalKafkaKonsumentTest {
         konsument.håndter(melding)
 
         dataSource.transaction { connection ->
-            val jobber = hentJobber(connection)
+            val jobber = hentJobber(connection).filter { it.payload == melding }
             assertThat(jobber).hasSize(1)
             assertThat(jobber.first().type).isEqualTo(KafkaFeilJobbUtfører.type)
             assertThat(jobber.first().parameters.trimIndent()).isEqualTo("meldingkilde=KABAL")

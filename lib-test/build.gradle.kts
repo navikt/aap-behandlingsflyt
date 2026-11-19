@@ -27,4 +27,5 @@ dependencies {
     implementation(kelvinLibs.nimbus.jose.jwt)
 
     implementation(kelvinLibs.bundles.junit)
+    compileOnly(kelvinLibs.testcontainers)
 }

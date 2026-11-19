@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.integrasjon.pdl
 
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.Dødsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Dødsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.AdresseType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.FolkeregisterStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus.bosatt
@@ -24,7 +24,7 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
 
     override fun innhent(person: Person): Personopplysning {
         val request = PdlRequest(PERSON_QUERY, IdentVariables(person.aktivIdent().identifikator))
-        val response: PdlPersoninfoDataResponse = PdlGateway.query(request)
+        val response: PdlPersoninfoDataResponse = PdlGatewayImpl.query(request)
 
         val foedselsdato = PdlParser.utledFødselsdato(response.data?.hentPerson?.foedselsdato)
             ?: error("fødselsdato skal alltid eksistere i PDL")
@@ -63,7 +63,7 @@ object PdlPersonopplysningGateway : PersonopplysningGateway {
 
     override fun innhentMedHistorikk(person: Person): PersonopplysningMedHistorikk {
         val request = PdlRequest(PERSON_QUERY_HISTORIKK, IdentVariables(person.aktivIdent().identifikator))
-        val response: PdlPersoninfoDataResponse = PdlGateway.query(request)
+        val response: PdlPersoninfoDataResponse = PdlGatewayImpl.query(request)
        
         val foedselsdato = PdlParser.utledFødselsdato(response.data?.hentPerson?.foedselsdato)
             ?: error("fødselsdato skal alltid eksistere i PDL")

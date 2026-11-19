@@ -77,7 +77,7 @@ class OmgjøringSteg private constructor(
             vurderingsbehov = vurderingsbehov,
             beskrivelse = beskrivelse,
             kilde = Omgjøringskilde.KELVIN,
-            kildeReferanse = behandlingRepo.hent(kontekst.behandlingId).referanse.referanse
+            kildeReferanse = behandlingRepo.hentReferanse(kontekst.behandlingId).referanse
         )
     }
 

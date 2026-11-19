@@ -16,7 +16,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_BESLUTTER
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status.UTREDES
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -120,10 +119,6 @@ class FlytOrkestrator(
         avklaringsbehovene.validerTilstand(behandling = behandling)
 
         val behandlingFlyt = behandling.flyt()
-
-        if (!behandling.harBehandlingenStartet()) {
-            sakRepository.oppdaterSakStatus(kontekst.sakId, UTREDES)
-        }
 
         behandlingFlyt.forberedFlyt(behandling.aktivtSteg())
 

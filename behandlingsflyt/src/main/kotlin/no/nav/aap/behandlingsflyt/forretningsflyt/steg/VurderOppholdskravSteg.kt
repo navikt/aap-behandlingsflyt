@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.arena.ArenaMigreringMapper
 import no.nav.aap.behandlingsflyt.arena.ArenaMigreringService
-import no.nav.aap.behandlingsflyt.arena.erOppfyltEllerIkkeVurdert
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovMetadataUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
@@ -140,10 +139,11 @@ class VurderOppholdskravSteg private constructor(
         val oppholdskrav = arenaMigreringService.hentOppholdskrav(kontekst.sakId)
         arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, stegType, oppholdskrav)
 
-        val vurdering = ArenaMigreringMapper.mapOppfyltOppholdskravVurdering(
+        val vurdering = ArenaMigreringMapper.tilOppfyltOppholdskravVurdering(
             fraArena = oppholdskrav,
             behandlingId = kontekst.behandlingId,
             fom = kontekst.rettighetsperiode.fom,
+            virkningstidspunkt = arenaMigreringService.hentVirkningstidspunkt(kontekst.behandlingId),
         )
 
         oppholdskravGrunnlagRepository.lagre(

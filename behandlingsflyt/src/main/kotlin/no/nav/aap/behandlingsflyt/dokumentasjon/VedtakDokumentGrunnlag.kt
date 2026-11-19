@@ -1,14 +1,14 @@
 package no.nav.aap.behandlingsflyt.dokumentasjon
 
 import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Grunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapArbeidInntektGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapArbeidInntektGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Grunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_9Grunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.barnetillegg.BarnetilleggGrunnlag
+import no.nav.aap.barnetillegg.BarnetilleggGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Beregningsgrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.SamordningGrunnlag
@@ -19,7 +19,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevu
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.barn.VurderteBarn
+import no.nav.aap.barnetillegg.VurderteBarn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.ManuellInntektGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsevne.ArbeidsevneGrunnlag
@@ -37,7 +37,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.barnepensjon.BarnepensjonGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.StudentGrunnlag
+import no.nav.aap.student.StudentGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykepengerErstatningGrunnlag
@@ -93,7 +93,7 @@ data class VedtakDokumentGrunnlag(
     val beregningVurderingGrunnlag: BeregningGrunnlag?,
     val kravGrunnlag: KravGrunnlag?,
     val rettighetsperiodeVurdering: RettighetsperiodeVurdering?,
-    val lovvalgMedlemskapGrunnlag: MedlemskapArbeidInntektGrunnlag?,
-    val forutgåendeMedlemskapGrunnlag: ForutgåendeMedlemskapArbeidInntektGrunnlag?,
+    val lovvalgMedlemskapGrunnlag: LovvalgMedlemskapGrunnlag?,
+    val forutgåendeMedlemskapGrunnlag: ForutgåendeMedlemskapGrunnlag?,
     val oppholdskravGrunnlag: OppholdskravGrunnlag?,
 )

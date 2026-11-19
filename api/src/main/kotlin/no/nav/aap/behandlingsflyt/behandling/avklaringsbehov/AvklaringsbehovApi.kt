@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.LøsAvklaringsbehovPåBehandling
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.flate.LøsPeriodisertAvklaringsbehovPåBehandling
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklaringsbehovLøsning
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningForPeriode
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.validerVurderingsperioder
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.mdc.LogKontekst
 import no.nav.aap.behandlingsflyt.mdc.LoggingKontekst
@@ -20,10 +20,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.tilgang.relevanteIdenterForBehandlingResolver
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.komponenter.server.auth.bruker
-import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.Operasjon
@@ -89,7 +87,7 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(
                     operasjon = Operasjon.SAKSBEHANDLE,
                 )
             ) { _, request ->
-                validerPerioder(request.behov.løsningerForPerioder)
+                validerVurderingsperioder(request.behov.løsningerForPerioder)
                 løsAvklaringsbehov(
                     behandlingReferanse = BehandlingReferanse(request.referanse),
                     avklaringsbehovLøsning = request.behov,
@@ -97,34 +95,5 @@ fun NormalOpenAPIRoute.avklaringsbehovApi(
                 )
             }
         }
-    }
-}
-
-fun validerPerioder(løsninger: List<LøsningForPeriode>) {
-    val ugyldigePerioder = løsninger
-        .mapNotNull {
-            val tom = it.tom
-            when {
-                tom == null || it.fom <= tom -> null
-                else -> "${it.fom}–$tom"
-            }
-        }
-    if (ugyldigePerioder.isNotEmpty()) {
-        throw UgyldigForespørselException("Ny vurderinger med ugyldige perioder: $ugyldigePerioder")
-    }
-
-    val overlapp = løsninger
-        .sortedBy { it.fom }
-        .windowed(2, 1)
-        .mapNotNull { (vurdering, nesteVurdering) ->
-            val tom = vurdering.tom ?: Tid.MAKS
-
-            if (tom < vurdering.fom || tom >= nesteVurdering.fom)
-                "${vurdering.fom}–${vurdering.tom ?: "…"} og ${nesteVurdering.fom}–${nesteVurdering.tom ?: "…"}"
-            else
-                null
-        }
-    if (overlapp.isNotEmpty()) {
-        throw UgyldigForespørselException("Vurderinger har overlappende perioder: ${overlapp.joinToString()}")
     }
 }

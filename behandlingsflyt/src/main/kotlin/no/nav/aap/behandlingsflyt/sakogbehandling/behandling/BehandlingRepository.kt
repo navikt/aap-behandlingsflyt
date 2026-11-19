@@ -38,6 +38,8 @@ interface BehandlingRepository : Repository {
 
     fun hent(behandlingId: BehandlingId): Behandling
 
+    fun hentReferanse(behandlingId: BehandlingId): BehandlingReferanse
+
     fun hent(referanse: BehandlingReferanse): Behandling
 
     fun oppdaterVurderingsbehovOgÅrsak(behandling: Behandling, vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak)
@@ -60,5 +62,7 @@ interface BehandlingRepository : Repository {
     fun finnAlleGjeldendeVedtatteBehandlinger(): List<SakOgBehandling>
 
     fun finnGjeldendeVedtattBehandlingForSak(sakId: SakId): SakOgBehandling?
+
+    fun finnBehandlingerSomManglerRedusertDagsats(sakId: SakId): List<BehandlingId>
 }
 

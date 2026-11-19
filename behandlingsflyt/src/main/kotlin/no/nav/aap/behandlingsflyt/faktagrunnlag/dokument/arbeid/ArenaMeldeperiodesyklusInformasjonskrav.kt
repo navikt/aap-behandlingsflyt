@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.meldeplikt.MeldeperiodeRepository
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -28,6 +29,8 @@ class ArenaMeldeperiodesyklusInformasjonskrav(
     private val unleashGateway: UnleashGateway,
     private val arenaOppslagGateway: ArenaOppslagGateway,
 ) : Informasjonskrav<ArenaMeldeperiodesyklusInformasjonskrav.Input, ArenaMeldeperiodesyklusInformasjonskrav.Registerdata> {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     class Input(val ident: Ident) : InformasjonskravInput
 
     sealed interface Registerdata : InformasjonskravRegisterdata
@@ -66,13 +69,14 @@ class ArenaMeldeperiodesyklusInformasjonskrav(
         registerdata: Registerdata,
         kontekst: FlytKontekstMedPerioder
     ): Informasjonskrav.Endret {
+        log.info("Mottok meldeperiodesyklus {} fra Arena for sak {}", registerdata, kontekst.sakId)
         when (registerdata) {
             IngenSyklus -> {
                 return Informasjonskrav.Endret.IKKE_ENDRET
             }
             is HarSyklus -> {
                 val (år, isoUke) = registerdata
-                val fastsattDag = LocalDate.parse("$år-W$isoUke-1", DateTimeFormatter.ISO_WEEK_DATE)
+                val fastsattDag = LocalDate.parse("$år-W${isoUke.toString().padStart(2, '0')}-1", DateTimeFormatter.ISO_WEEK_DATE)
                 meldeperiodeRepository.lagreFastsattDag(kontekst.behandlingId, fastsattDag)
                 return Informasjonskrav.Endret.ENDRET
             }

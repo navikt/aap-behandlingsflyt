@@ -4,9 +4,8 @@ import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Reduksjon11_9Repository
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelsePeriode
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Tilkjent
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
-import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.tilTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
@@ -23,6 +22,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.meldeplikt.MeldeperiodeRepository
@@ -93,8 +93,8 @@ class UtbetalingService(
             forrigeBehandling?.id?.let { tilkjentYtelseRepository.hentHvisEksisterer(forrigeBehandling.id) }
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
 
-        return if (!tilkjentYtelse.isNullOrEmpty()) {
-            val helePerioden = tilkjentYtelse.minMaxPeriode()
+        return if (tilkjentYtelse != null && !tilkjentYtelse.isEmpty()) {
+            val helePerioden = tilkjentYtelse.helePerioden()
             val meldeperioder = meldeperiodeRepository.hentMeldeperioder(behandlingId, helePerioden)
             val saksnummer = sak.saksnummer.toString()
             val behandlingsreferanse = behandling.referanse.referanse
@@ -146,46 +146,41 @@ class UtbetalingService(
      *  aap-utbetal utleder nye perioder som skal sendes basert på vedtakstidspunkt >= utbetalingsdato og periode.tom <= vedtaksdato
      */
     private fun utledNyMeldeperiode(
-        tilkjentYtelse: List<TilkjentYtelsePeriode>,
-        forrigeTilkjentYtelse: List<TilkjentYtelsePeriode>?,
+        tilkjentYtelse: Tidslinje<Tilkjent>,
+        forrigeTilkjentYtelse: Tidslinje<Tilkjent>?,
         vedtaksdatoGjeldendeBehandling: LocalDate,
         vedtaksdatoForrigeBehandling: LocalDate?,
     ): MeldeperiodeDto? {
 
         log.info("Utleder ny meldeperiode for tilkjent ytelse med vedtaksdato: $vedtaksdatoGjeldendeBehandling")
-        val alleredeUtbetaltPeriode = forrigeTilkjentYtelse?.filter {
-            it.tilkjent.utbetalingsdato <= vedtaksdatoForrigeBehandling && it.tilkjent.redusertDagsats().verdi() > BigDecimal.ZERO
-        }?.let {
-            if (it.isNotEmpty()) {
-                it.tilTidslinje().helePerioden()
-            } else {
-                null
-            }
-        }
+        val alleredeUtbetaltPeriode = forrigeTilkjentYtelse?.filter { (_, tilkjent) ->
+            tilkjent.utbetalingsdato <= vedtaksdatoForrigeBehandling && tilkjent.redusertDagsats()
+                .verdi() > BigDecimal.ZERO
+        }?.helePeriodenOrNull()
 
         log.info("Allerede utbetalt periode: $alleredeUtbetaltPeriode")
 
         val perioderSomKanUtbetales =
-            tilkjentYtelse.filter { it.tilkjent.utbetalingsdato <= vedtaksdatoGjeldendeBehandling && it.tilkjent.redusertDagsats().verdi() > BigDecimal.ZERO }
+            tilkjentYtelse.filter { (_, tilkjent) ->
+                tilkjent.utbetalingsdato <= vedtaksdatoGjeldendeBehandling && tilkjent.redusertDagsats()
+                    .verdi() > BigDecimal.ZERO
+            }
 
-        log.info("Antall perioder som kan utbetales: ${perioderSomKanUtbetales.size}")
+        log.info("Antall perioder som kan utbetales: ${perioderSomKanUtbetales.segmenter().count()}")
 
         val nyePerioderSomKanUtbetales =
-            alleredeUtbetaltPeriode?.let { periode -> perioderSomKanUtbetales.filterNot { periode.inneholder(it.periode) } }
+            alleredeUtbetaltPeriode
+                ?.let { periode -> perioderSomKanUtbetales.filter { !periode.inneholder(it.periode) } }
                 ?: perioderSomKanUtbetales
 
-        return if (nyePerioderSomKanUtbetales.isNotEmpty()) {
-            MeldeperiodeDto(
-                fom = nyePerioderSomKanUtbetales.minOf { it.periode.fom },
-                tom = nyePerioderSomKanUtbetales.maxOf { it.periode.tom }
-            )
-        } else {
-            null
+        return when (val periode = nyePerioderSomKanUtbetales.helePeriodenOrNull()) {
+            is Periode -> MeldeperiodeDto(fom = periode.fom, tom = periode.tom)
+            null -> null
         }
     }
 
     private fun utledAvventUtbetaling(
-        tilkjentYtelse: List<TilkjentYtelsePeriode>,
+        tilkjentYtelse: Tidslinje<Tilkjent>,
         sakId: SakId,
         behandling: Behandling,
     ): TilkjentYtelseAvventDto? {
@@ -197,7 +192,7 @@ class UtbetalingService(
             avventUtbetalingService.finnEventuellAvventUtbetaling(
                 behandling,
                 førsteVedtak,
-                tilkjentYtelse.finnHelePerioden()
+                tilkjentYtelse.helePerioden()
             )
         } else {
             null
@@ -227,16 +222,8 @@ class UtbetalingService(
         return null
     }
 
-    private fun List<TilkjentYtelsePeriode>.finnHelePerioden() =
-        Periode(
-            fom = this.minOf { it.periode.fom },
-            tom = this.maxOf { it.periode.tom }
-        )
-
-    private fun List<TilkjentYtelsePeriode>.tilTilkjentYtelsePeriodeDtoer(meldeperioder: List<Periode>)  =
-        map { segment ->
-            val periode = segment.periode
-            val detaljer = segment.tilkjent
+    private fun Tidslinje<Tilkjent>.tilTilkjentYtelsePeriodeDtoer(meldeperioder: List<Periode>) =
+        segmenter().map { (periode, detaljer) ->
             val meldeperiode = meldeperioder.firstOrNull { Periode(it.fom, it.tom).inneholder(periode) }
             TilkjentYtelsePeriodeDto(
                 fom = periode.fom,
@@ -265,13 +252,5 @@ class UtbetalingService(
                 it.dagsats.verdi().intValueExact()
             )
         }
-
-}
-
-private fun List<TilkjentYtelsePeriode>.minMaxPeriode(): Periode {
-    return Periode(
-        fom = this.minOf { it.periode.fom },
-        tom = this.maxOf { it.periode.tom }
-    )
 
 }

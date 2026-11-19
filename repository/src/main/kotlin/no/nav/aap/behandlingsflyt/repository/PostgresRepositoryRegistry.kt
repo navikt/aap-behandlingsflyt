@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.BeregningsgrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepositoryImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.dokumentinnhenting.KandidatForPåminnelseRepositoryImpl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapForutgåendeRepositoryImpl
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.forretningsflyt.gjenopptak.GjenopptakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.avklaringsbehov.AvklaringsbehovRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
@@ -24,6 +24,7 @@ import no.nav.aap.meldeplikt.MeldeperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningAndreStatligeYtelserRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.GjenståendeSykedagerRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningUføreRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.SamordningYtelseRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurderingRepositoryImpl
@@ -40,17 +41,20 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.Klagebehandling
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.KlagebehandlingNayRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.PåklagetBehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.klage.TrekkKlageRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektForutgåendeRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.medlemskaplovvalg.MedlemskapArbeidInntektRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.forutgåendemedlemskap.ForutgåendeMedlemskapRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap.LovvalgMedlemskapRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap.OppgittUtenlandsopplysningerRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.lovvalgmedlemskap.LovvalgDelvurderingRepositoryImpl
 import no.nav.aap.overgangarbeid.OvergangArbeidRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningForutgåendeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.personopplysning.PersonopplysningRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.arena.ArenaMaksdatoRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.barn.BarnRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.dagpenger.DagpengerRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.InntektGrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.inntekt.ManuellInntektGrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.MedlemskapRepositoryImpl
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.medlemsskap.MedlemskapUnntakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.opphold.OppholdskravGrunnlagRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.tiltakspenger.TiltakspengerRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.uføre.UføreRepositoryImpl
@@ -74,7 +78,7 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.overgan
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.rettighetsperiode.VurderRettighetsperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.samordning.BarnepensjonRepositoryImpl
-import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.StudentRepositoryImpl
+import no.nav.aap.student.StudentRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.student.SykestipendRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
@@ -92,6 +96,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.ArenaMigreringRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.ArenaMigreringsdataRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.test.TestAutomatiskMeldekortSakRepositoryImpl
+import no.nav.aap.etterlevelse.sporing.SporingRepositoryImpl
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepositoryImpl
 
@@ -124,16 +129,18 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<SykepengerOgFerieOppgittISøknadRepositoryImpl>()
     .register<UføreRepositoryImpl>()
     .register<UføreSøknadRepositoryImpl>()
-    .register<MedlemskapArbeidInntektRepositoryImpl>()
+    .register<LovvalgMedlemskapRepositoryImpl>()
+    .register<OppgittUtenlandsopplysningerRepositoryImpl>()
     .register<SykepengerErstatningRepositoryImpl>()
     .register<SamordningVurderingRepositoryImpl>()
     .register<SamordningYtelseRepositoryImpl>()
+    .register<GjenståendeSykedagerRepositoryImpl>()
     .register<SamordningUføreRepositoryImpl>()
     .register<SamordningAndreStatligeYtelserRepositoryImpl>()
     .register<SamordningArbeidsgiverRepositoryImpl>()
     .register<StudentRepositoryImpl>()
     .register<MeldepliktRepositoryImpl>()
-    .register<MedlemskapArbeidInntektForutgåendeRepositoryImpl>()
+    .register<ForutgåendeMedlemskapRepositoryImpl>()
     .register<PersonopplysningForutgåendeRepositoryImpl>()
     .register<BarnRepositoryImpl>()
     .register<InstitusjonsoppholdRepositoryImpl>()
@@ -149,8 +156,8 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<FormkravRepositoryImpl>()
     .register<PåklagetBehandlingRepositoryImpl>()
     .register<BehandlendeEnhetRepositoryImpl>()
-    .register<MedlemskapRepositoryImpl>()
-    .register<MedlemskapForutgåendeRepositoryImpl>()
+    .register<MedlemskapUnntakRepositoryImpl>()
+    .register<MedlemskapUnntakForutgåendeRepositoryImpl>()
     .register<TjenestepensjonRefusjonskravVurderingRepositoryImpl>()
     .register<BehandlingRepositoryImpl>()
     .register<KlagebehandlingKontorRepositoryImpl>()
@@ -188,4 +195,7 @@ val postgresRepositoryRegistry = RepositoryRegistry()
     .register<TestAutomatiskMeldekortSakRepositoryImpl>()
     .register<Avslag11_27RepositoryImpl>()
     .register<StønadsperiodeRepositoryImpl>()
+    .register<ArenaMaksdatoRepositoryImpl>()
     .register<KandidatForPåminnelseRepositoryImpl>()
+    .register<LovvalgDelvurderingRepositoryImpl>()
+    .register<SporingRepositoryImpl>()

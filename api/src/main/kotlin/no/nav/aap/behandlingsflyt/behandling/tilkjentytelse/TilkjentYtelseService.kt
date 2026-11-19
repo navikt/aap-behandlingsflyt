@@ -51,9 +51,7 @@ class TilkjentYtelseService(
                 .orEmpty()
 
         val tilkjentYtelseTidslinje =
-            tilkjentYtelseRepository.hentHvisEksisterer(behandlingId)
-                ?.tilTidslinje()
-                .orEmpty()
+            tilkjentYtelseRepository.hentHvisEksisterer(behandlingId).orEmpty()
 
         val underveisTidslinje: Tidslinje<UnderveisFelter> =
             underveisRepository.hentHvisEksisterer(behandlingId)

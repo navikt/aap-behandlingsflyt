@@ -14,10 +14,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.Grunnlag1
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.beregning.GrunnlagInntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemKode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.KildesystemMedl
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapDataIntern
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.Fødselsdato
 import no.nav.aap.behandlingsflyt.flyt.ArenaStatusDTO
+import no.nav.aap.behandlingsflyt.flyt.BehandlingEgenskaperDTO
 import no.nav.aap.behandlingsflyt.flyt.VilkårDTO
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -60,6 +62,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenPr
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureOBOTokenProvider
+import no.nav.aap.komponenter.tidslinje.Segment
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.verdityper.dokument.JournalpostId
@@ -68,6 +72,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
@@ -81,6 +86,7 @@ import java.util.*
 import kotlin.time.Duration.Companion.milliseconds
 
 @Fakes
+@Tag("db")
 // FIXME testene i klassen bruker samme database og er timing-sensitive. Derfor SAME_THREAD.
 @Execution(ExecutionMode.SAME_THREAD)
 class ApiTest {
@@ -186,23 +192,24 @@ class ApiTest {
                 typeBehandling = TypeBehandling.Førstegangsbehandling,
                 forrigeBehandlingId = null
             )
-            val medlRepo = postgresRepositoryRegistry.provider(connection).provide<MedlemskapRepository>()
+            val medlRepo = postgresRepositoryRegistry.provider(connection).provide<MedlemskapUnntakRepository>()
             medlRepo.lagreUnntakMedlemskap(
                 behandlingId = behandling.id,
-                listOf(
-                    MedlemskapDataIntern(
-                        unntakId = 123,
-                        fraOgMed = "2017-02-13",
-                        tilOgMed = "2018-02-13",
-                        grunnlag = "grunnlag",
-                        helsedel = true,
-                        ident = "02429118789",
-                        lovvalg = "lovvalg",
-                        medlem = true,
-                        status = "GYLD",
-                        statusaarsak = null,
-                        lovvalgsland = "NORGE",
-                        kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+                MedlemskapUnntakGrunnlag(
+                    listOf(
+                        Segment(
+                            periode = Periode(LocalDate.of(2017, 2, 13), LocalDate.of(2018, 2, 13)),
+                            Unntak(
+                                grunnlag = "grunnlag",
+                                helsedel = true,
+                                lovvalg = "lovvalg",
+                                medlem = true,
+                                status = "GYLD",
+                                statusaarsak = null,
+                                lovvalgsland = "NORGE",
+                                kilde = KildesystemMedl(KildesystemKode.MEDL, "MEDL")
+                            )
+                        )
                     )
                 )
             )
@@ -219,6 +226,7 @@ class ApiTest {
         assertThat(medlemskapGrunnlag?.kanVurderes).isNotEmpty
     }
 
+    @Suppress("DEPRECATION")
     @Test
     fun `hente arena-status fra sak-endepunkt`() {
         val sak = dataSource.transaction { connection ->
@@ -233,6 +241,32 @@ class ApiTest {
 
         assertThat(arenaStatus).isNotNull
         assertThat(arenaStatus?.harArenaHistorikk).isFalse()
+    }
+
+    @Test
+    fun `hente egenskaper fra behandling-endepunkt`() {
+        val referanse = dataSource.transaction { connection ->
+            val sak = opprettSak(connection, LocalDate.now())
+            BehandlingRepositoryImpl(connection).opprettBehandling(
+                sakId = sak.id,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(type = Vurderingsbehov.MOTTATT_SØKNAD)),
+                    årsak = ÅrsakTilOpprettelse.SØKNAD,
+                ),
+                typeBehandling = TypeBehandling.Førstegangsbehandling,
+                forrigeBehandlingId = null
+            ).referanse
+        }
+
+        val egenskaper: BehandlingEgenskaperDTO? = client.get(
+            URI.create("http://localhost:$port/")
+                .resolve("api/behandling/${referanse.referanse}/egenskaper"),
+            GetRequest(currentToken = getToken())
+        )
+
+        assertThat(egenskaper).isNotNull
+        assertThat(egenskaper?.erMigrertFraArena).isFalse()
+        assertThat(egenskaper?.harArenaHistorikk).isFalse()
     }
 
     @Test

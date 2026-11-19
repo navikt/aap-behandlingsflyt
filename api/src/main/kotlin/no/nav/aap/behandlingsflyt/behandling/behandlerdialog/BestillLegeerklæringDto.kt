@@ -37,16 +37,3 @@ data class ForhåndsvisBrevRequest(
 
 data class HentStatusLegeerklæring(@param:PathParam("saksnummer") val saksnummer: String)
 
-data class PurringLegeerklæringRequest(
-    val dialogmeldingPurringUUID: UUID,
-    val behandlingsReferanse: UUID
-) : Behandlingsreferanse {
-    override fun hentPåkrevdRolle(): List<Rolle> {
-        return Definisjon.BESTILL_LEGEERKLÆRING.løsesAv
-    }
-
-    override fun behandlingsreferanseResolverInput(): String {
-        return behandlingsReferanse.toString()
-    }
-}
-

@@ -15,10 +15,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Tag
 import java.time.Instant
 import java.time.LocalDate
 import java.util.*
 
+@Tag("db")
 class StønadsperiodeRepositoryImplTest {
 
     companion object {
@@ -194,6 +196,24 @@ class StønadsperiodeRepositoryImplTest {
         }
 
         assertThat(grunnlag).isNotNull
+    }
+
+    @Test
+    fun `kant i kant med Arena lagres og hentes`() {
+        val behandlingId = opprettBehandlingId()
+        val kantIKant = vurdering(behandlingId).copy(erKantIKantMedArena = true)
+        val vanlig = vurdering(behandlingId)
+
+        dataSource.transaction { connection ->
+            StønadsperiodeRepositoryImpl(connection).lagre(behandlingId, setOf(kantIKant, vanlig))
+        }
+
+        val vurderinger = dataSource.transaction(readOnly = true) { connection ->
+            StønadsperiodeRepositoryImpl(connection).hentHvisEksisterer(behandlingId)
+        }!!.vurderinger.associateBy { it.referanse }
+
+        assertThat(vurderinger.getValue(kantIKant.referanse).erKantIKantMedArena).isTrue()
+        assertThat(vurderinger.getValue(vanlig.referanse).erKantIKantMedArena).isFalse()
     }
 
     val eksempelKravTyper = listOf(

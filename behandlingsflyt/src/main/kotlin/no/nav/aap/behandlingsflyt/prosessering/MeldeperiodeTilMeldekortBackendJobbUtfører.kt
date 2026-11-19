@@ -6,11 +6,9 @@ import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.meldeplikt.MeldeperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
-import no.nav.aap.meldeplikt.Fritaksvurdering
 import no.nav.aap.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.meldeplikt.MeldepliktRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Status
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
@@ -19,8 +17,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.meldekort.kontrakt.Periode
@@ -71,7 +67,8 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                 val underveisGrunnlag = underveisRepository.hentHvisEksisterer(gjeldendeYtelsesbehandling.id)
                 val underveisperiode = underveisGrunnlag?.somTidslinje()?.helePerioden()
                     ?: error("Skal ha underveisperiode for avsluttet behandling ${gjeldendeYtelsesbehandling.id}")
-                val meldeperioder = meldeperiodeRepository.hentMeldeperioder(gjeldendeYtelsesbehandling.id, underveisperiode)
+                val meldeperioder =
+                    meldeperiodeRepository.hentMeldeperioder(gjeldendeYtelsesbehandling.id, underveisperiode)
                 opplysningerVedVedtak(
                     sak = sak,
                     meldeperioder = meldeperioder,
@@ -147,24 +144,12 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
             meldepliktGrunnlag: MeldepliktGrunnlag?,
             underveisGrunnlag: UnderveisGrunnlag?
         ): MeldeperioderV0 {
-            val underveisperioder = underveisGrunnlag
-                ?.perioder
-                .orEmpty()
-                .map { Segment(it.periode, it) }
-                .let(::Tidslinje)
+            val underveisperioder = underveisGrunnlag?.somTidslinje().orEmpty()
 
-            val fritaksvurderinger: Tidslinje<Fritaksvurdering.FritaksvurderingData> =
-                meldepliktGrunnlag
-                    ?.tilTidslinje()
-                    .orEmpty()
+            val fritaksvurderinger = meldepliktGrunnlag?.tilTidslinje().orEmpty()
 
             return MeldeperioderV0(
-                sakStatus = when (sak.status()) {
-                    Status.OPPRETTET -> null
-                    Status.UTREDES -> SakStatus.UTREDES
-                    Status.LØPENDE -> SakStatus.LØPENDE
-                    Status.AVSLUTTET -> SakStatus.AVSLUTTET
-                },
+                sakStatus = SakStatus.UTREDES,
                 saksnummer = sak.saksnummer.toString(),
                 personIdenter = sak.person.identer().somKontraktIdenter,
                 sakenGjelderFor = sak.rettighetsperiode.somKontraktperiode,

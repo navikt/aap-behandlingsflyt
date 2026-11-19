@@ -1,0 +1,27 @@
+code.language-diff .token.inserted {
+    color: #116329;
+    background-color: #dafbe1;
+}
+
+code.language-diff .token.deleted {
+    color: #82071e;
+    background-color: #ffebe9;
+}
+
+code.language-diff .token.coord {
+    color: #0550ae;
+}
+
+.theme-dark code.language-diff .token.inserted {
+    color: #aff5b4;
+    background-color: #033a16;
+}
+
+.theme-dark code.language-diff .token.deleted {
+    color: #ffdcd7;
+    background-color: #67060c;
+}
+
+.theme-dark code.language-diff .token.coord {
+    color: #a5d6ff;
+}

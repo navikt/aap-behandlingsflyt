@@ -5,9 +5,13 @@ import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoMedVedtakResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaBeregningstidspunktResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaForutgaaendeMedlemskapResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVedtaksperiodeResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVilkar as ArenaVilkarKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaDiagnose as ArenaDiagnoseKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
@@ -19,7 +23,7 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
 
-class FakeArenaOppslagGateway : ArenaOppslagGateway {
+open class FakeArenaOppslagGateway : ArenaOppslagGateway {
     companion object : Factory<ArenaOppslagGateway> {
         override fun konstruer(): ArenaOppslagGateway {
             return FakeArenaOppslagGateway()
@@ -48,6 +52,10 @@ class FakeArenaOppslagGateway : ArenaOppslagGateway {
         )
     }
 
+    override fun hentMaksdato(ident: Ident): MaksdatoMedVedtakResponse {
+        return MaksdatoMedVedtakResponse(sak = null)
+    }
+
 
     override fun hentKravDataForSak(arenasaksnummer: String): KravResponse {
         val migreringsdato = LocalDate.now().with(TemporalAdjusters.previous(DayOfWeek.MONDAY)).minusWeeks(1)
@@ -70,6 +78,10 @@ class FakeArenaOppslagGateway : ArenaOppslagGateway {
         return ArenaRefusjonskravResponse(refusjonskrav = null)
     }
 
+    override fun hentBeregningstidspunkt(saksnummerArena: String): ArenaBeregningstidspunktResponse {
+        return ArenaBeregningstidspunktResponse(beregningstidspunkt = LocalDate.now().minusMonths(6))
+    }
+
     override fun hentOppholdskrav(saksnummerArena: String): ArenaOppholdskravResponse {
         return ArenaOppholdskravResponse(
             vedtakId = 1,
@@ -79,6 +91,26 @@ class FakeArenaOppslagGateway : ArenaOppslagGateway {
                 status = "V",
                 begrunnelse = null,
             ),
+        )
+    }
+
+    override fun hentForutgaaendeMedlemskap(saksnummerArena: String): ArenaForutgaaendeMedlemskapResponse {
+        return ArenaForutgaaendeMedlemskapResponse(
+            vedtakId = 1,
+            vilkar = ArenaVilkarKontrakt(
+                id = 5,
+                kode = "MEDLSKAP5",
+                status = "J",
+                begrunnelse = null,
+            ),
+        )
+    }
+
+    override fun hentVedtaksperiode(saksnummerArena: String): ArenaVedtaksperiodeResponse {
+        return ArenaVedtaksperiodeResponse(
+            vedtakId = 1,
+            fraDato = LocalDate.now().minusYears(1),
+            tilDato = LocalDate.now().plusYears(1),
         )
     }
 

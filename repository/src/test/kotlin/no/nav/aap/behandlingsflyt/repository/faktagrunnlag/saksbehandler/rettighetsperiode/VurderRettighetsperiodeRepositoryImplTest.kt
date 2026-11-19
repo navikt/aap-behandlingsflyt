@@ -10,10 +10,12 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+@Tag("db")
 class VurderRettighetsperiodeRepositoryImplTest {
 
     private lateinit var dataSource: TestDataSource
@@ -40,7 +42,7 @@ class VurderRettighetsperiodeRepositoryImplTest {
             val vurdering = RettighetsperiodeVurdering(
                 startDato = LocalDate.now().minusDays(10),
                 begrunnelse = "begrunnelse",
-                harRettUtoverSøknadsdato = RettighetsperiodeHarRett.`HarRettIkkeIStandTilÅSøkeTidligere`,
+                harRettUtoverSøknadsdato = RettighetsperiodeHarRett.HarRettIkkeIStandTilÅSøkeTidligere,
                 vurdertAv = Bruker("NAVident"),
                 vurdertDato = LocalDateTime.now()
             )
@@ -94,7 +96,7 @@ class VurderRettighetsperiodeRepositoryImplTest {
             val vurdering = RettighetsperiodeVurdering(
                 startDato = LocalDate.now().minusDays(10),
                 begrunnelse = "begrunnelse",
-                harRettUtoverSøknadsdato = RettighetsperiodeHarRett.`HarRettIkkeIStandTilÅSøkeTidligere`,
+                harRettUtoverSøknadsdato = RettighetsperiodeHarRett.HarRettIkkeIStandTilÅSøkeTidligere,
                 vurdertAv = Bruker("NAVident"),
                 vurdertDato = LocalDateTime.now()
             )

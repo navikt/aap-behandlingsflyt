@@ -1,11 +1,26 @@
 package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.HelseinstitusjonVurderingDto
 import no.nav.aap.komponenter.tidslinje.Segment
 import java.time.LocalDate
 
 fun lagOppholdId(institusjonNavn: String, fom: LocalDate): String =
     "${institusjonNavn}::${fom}"
+
+fun HelseinstitusjonVurdering.giReduksjon(): Boolean =
+    !erHistoriskUtenReduksjonsberegning &&
+            faarFriKostOgLosji &&
+            forsoergerEktefelle == false &&
+            harFasteUtgifter == false
+
+fun HelseinstitusjonVurderingDto.giReduksjon(): Boolean =
+    !erHistoriskUtenReduksjonsberegning &&
+            faarFriKostOgLosji &&
+            forsoergerEktefelle == false &&
+            harFasteUtgifter == false
+
 
 /**
  * Grupperer opphold i sammenhengende kjeder og beregner tidligste reduksjonsdato per kjede.
@@ -15,52 +30,27 @@ fun lagOppholdId(institusjonNavn: String, fom: LocalDate): String =
  * reduksjon for et senere opphold innenfor 3-månedersgrensen.
  */
 fun beregnTidligsteReduksjonsdatoPerKjede(
-    opphold: List<Segment<Institusjon>>
+    opphold: List<Segment<Institusjon>>,
+    harInnvilgetReduksjon: (SammenhengendeOppholdGruppe) -> Boolean = { false },
 ): Map<SammenhengendeOppholdGruppe, LocalDate> {
     if (opphold.isEmpty()) return emptyMap()
 
-    val kjeder = grupperSammenhengendeOppholdSegmenter(opphold)
+    val kjeder = grupperSammenhengendeOppholdSegmenter(opphold).sortedBy { it.periode.fom }
+    val result = mutableMapOf<SammenhengendeOppholdGruppe, LocalDate>()
 
-    // Ett representant-segment per kjede: kjedens fulle periode (første fom - siste tom)
-    val kjedeTilRepresentant = kjeder.associateWith { kjede ->
-        Segment(kjede.periode, kjede.elementer.first().verdi)
-    }
-
-    val tidligsteReduksjonsdatoPerRepresentant =
-        beregnTidligsteReduksjonsdatoPerOpphold(kjedeTilRepresentant.values.toList())
-
-    return kjedeTilRepresentant.mapNotNull { (kjede, representant) ->
-        tidligsteReduksjonsdatoPerRepresentant[representant]?.let { kjede to it }
-    }.toMap()
-}
-
-fun beregnTidligsteReduksjonsdatoPerOpphold(
-    opphold: List<Segment<Institusjon>>
-): Map<Segment<Institusjon>, LocalDate> {
-    if (opphold.isEmpty()) return emptyMap()
-
-    val sortert = opphold.sortedBy { it.periode.fom }
-    val result = mutableMapOf<Segment<Institusjon>, LocalDate>()
-
-    sortert.forEachIndexed { index, nåværende ->
-        val tidligsteReduksjonsdato = if (index == 0) {
-            // Første opphold: innleggelsesmåned + 3 måneder (dvs. 1. dag i måned 4 etter innleggelse)
-            nåværende.periode.fom.withDayOfMonth(1).plusMonths(4)
+    kjeder.forEachIndexed { index, kjede ->
+        result[kjede] = if (index == 0) {
+            kjede.periode.fom.withDayOfMonth(1).plusMonths(4)
         } else {
-            val forrige = sortert[index - 1]
-            val treMånederEtterForrigeUtskrivelse = forrige.periode.tom.plusMonths(3)
-            val erInnenTreMåneder = !nåværende.periode.fom.isAfter(treMånederEtterForrigeUtskrivelse)
+            val forrige = kjeder[index - 1]
+            val erInnenTreMåneder = !kjede.periode.fom.isAfter(forrige.periode.tom.plusMonths(3))
 
-            if (erInnenTreMåneder) {
-                // Nytt opphold innen tre måneder: reduksjon kan starte fra innleggelsesdato
-                nåværende.periode.fom
+            if (erInnenTreMåneder && harInnvilgetReduksjon(forrige)) {
+                kjede.periode.fom.withDayOfMonth(1).plusMonths(1) // 1-månedsregelen
             } else {
-                // Mer enn tre måneder siden forrige: innleggelsesmåned + 3 måneder
-                nåværende.periode.fom.withDayOfMonth(1).plusMonths(4)
+                kjede.periode.fom.withDayOfMonth(1).plusMonths(4) // 3-månedersregelen
             }
         }
-        result[nåværende] = tidligsteReduksjonsdato
     }
-
     return result
 }

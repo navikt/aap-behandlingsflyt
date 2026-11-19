@@ -36,7 +36,7 @@ class HentSamIdJobbUtfører(
         val behandlingId = input.payload<BehandlingId>()
         val behandling = behandlingRepository.hent(behandlingId)
         val sak = sakRepository.hent(behandling.sakId)
-        val vedtakId = requireNotNull(vedtakRepository.hentId(behandling.id))
+        val vedtakId = requireNotNull(vedtakRepository.hent(behandling.id)?.id)
         val tpRefusjonskravVurdering = tjenestepensjonRefusjonsKravVurderingRepository.hentHvisEksisterer(behandlingId)
 
         if (tpRefusjonskravVurdering != null && tpRefusjonskravVurdering.harKrav) {

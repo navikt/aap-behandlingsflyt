@@ -7,11 +7,15 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoMedVedtakResponse
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaBeregningstidspunktResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaDiagnose
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaForutgaaendeMedlemskapResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaOppholdskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVedtaksperiodeResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVilkar
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
@@ -47,6 +51,13 @@ class ArenaoppslagFake : FakeServer() {
                                 avsluttetDato = null,
                             )
                         )
+                    )
+                )
+            }
+            post("/api/v1/person/maksdato") {
+                call.respond(
+                    MaksdatoMedVedtakResponse(
+                        sak = null
                     )
                 )
             }
@@ -104,6 +115,31 @@ class ArenaoppslagFake : FakeServer() {
                         ),
                     )
                 )
+            }
+            get("/api/migrering/{saksnummerArena}/forutgaaende-medlemskap") {
+                call.respond(
+                    ArenaForutgaaendeMedlemskapResponse(
+                        vedtakId = 1,
+                        vilkar = ArenaVilkar(
+                            id = 5,
+                            kode = "MEDLSKAP5",
+                            status = "J",
+                            begrunnelse = null,
+                        ),
+                    )
+                )
+            }
+            get("/api/migrering/{saksnummerArena}/vedtaksperiode") {
+                call.respond(
+                    ArenaVedtaksperiodeResponse(
+                        vedtakId = 1,
+                        fraDato = LocalDate.now().minusYears(1),
+                        tilDato = LocalDate.now().plusYears(1),
+                    )
+                )
+            }
+            get("/api/migrering/{saksnummerArena}/beregningstidspunkt") {
+                call.respond(ArenaBeregningstidspunktResponse(beregningstidspunkt = LocalDate.now().minusMonths(6)))
             }
             get("/api/migrering/{saksnummerArena}/refusjonskrav") {
                 call.respond(ArenaRefusjonskravResponse(refusjonskrav = null))

@@ -2,25 +2,28 @@ package no.nav.aap.behandlingsflyt.arena
 
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
 import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
-import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskrav as ArenaRefusjonskravKontrakt
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskrav as ArenaRefusjonskravKontrakt
 
 class ArenaMigreringMapperTest {
 
     private val fraArena = ArenaSykdomsvurdering(
         vedtakId = 1,
         begrunnelse = "Bruker oppfyller vilkåret for 11-5",
-        vilkar = listOf(
-            ArenaVilkar(id = 1, kode = "INNTNEDS", status = "J", begrunnelse = null),
-            ArenaVilkar(id = 2, kode = "SYKSKADLYT", status = "J", begrunnelse = null),
-            ArenaVilkar(id = 3, kode = "AAARBEVNE", status = "J", begrunnelse = null),
+        vilkår = listOf(
+            ArenaVilkår(id = 1, kode = "INNTNEDS", status = "J", begrunnelse = null),
+            ArenaVilkår(id = 2, kode = "SYKSKADLYT", status = "J", begrunnelse = null),
+            ArenaVilkår(id = 3, kode = "AAARBEVNE", status = "J", begrunnelse = null),
         ),
         diagnoser = listOf(
             ArenaDiagnose(
@@ -40,6 +43,7 @@ class ArenaMigreringMapperTest {
 
     private val behandlingId = BehandlingId(1)
     private val fom: LocalDate = 1 januar 2024
+    private val virkningstidspunkt: LocalDate = LocalDate.of(2023, 6, 15)
 
     @Test
     fun `oppholdskrav godtar oppfylt og ikke vurdert fra Arena`() {
@@ -53,7 +57,7 @@ class ArenaMigreringMapperTest {
         listOf("N", "U").forEach { status ->
             assertThat(oppholdskrav(status).erOppfyltEllerIkkeVurdert()).isFalse()
         }
-        assertThat(ArenaOppholdskrav(vedtakId = 1, vilkar = null).erOppfyltEllerIkkeVurdert()).isFalse()
+        assertThat(ArenaOppholdskrav(vedtakId = 1, vilkår = null).erOppfyltEllerIkkeVurdert()).isFalse()
     }
 
     @Test
@@ -63,32 +67,93 @@ class ArenaMigreringMapperTest {
     }
 
     @Test
-    fun `mapOppfyltOppholdskravVurdering skiller mellom oppfylt og ikke vurdert`() {
-        val oppfylt = ArenaMigreringMapper.mapOppfyltOppholdskravVurdering(
-            fraArena = oppholdskrav("J"),
+    fun `tilOppfyltOppholdskravVurdering gir samme begrunnelse for oppfylt og ikke vurdert`() {
+        val forventetBegrunnelse = "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet 15.06.2023 i Arena."
+
+        listOf("J", "V").forEach { status ->
+            val vurdering = ArenaMigreringMapper.tilOppfyltOppholdskravVurdering(
+                fraArena = oppholdskrav(status),
+                behandlingId = behandlingId,
+                fom = fom,
+                virkningstidspunkt = virkningstidspunkt,
+            )
+
+            assertThat(vurdering.perioder.single().oppfylt).isTrue()
+            assertThat(vurdering.perioder.single().begrunnelse).isEqualTo(forventetBegrunnelse)
+        }
+    }
+
+    @Test
+    fun `forutgående medlemskap godtar kun oppfylt fra Arena`() {
+        assertThat(forutgåendeMedlemskap("J").erOppfylt()).isTrue()
+    }
+
+    @Test
+    fun `forutgående medlemskap avviser andre statuser, feil kode og manglende vilkår`() {
+        listOf("V", "N", "U").forEach { status ->
+            assertThat(forutgåendeMedlemskap(status).erOppfylt()).isFalse()
+        }
+        assertThat(forutgåendeMedlemskap("J", kode = "ANNET").erOppfylt()).isFalse()
+        assertThat(ArenaForutgåendeMedlemskap(vedtakId = 1, vilkår = null).erOppfylt()).isFalse()
+    }
+
+    @Test
+    fun `tilOppfyltForutgåendeMedlemskapVurdering mapper oppfylt vilkår`() {
+        val vurdering = ArenaMigreringMapper.tilOppfyltForutgåendeMedlemskapVurdering(
+            fraArena = forutgåendeMedlemskap("J"),
             behandlingId = behandlingId,
             fom = fom,
-        )
-        val ikkeVurdert = ArenaMigreringMapper.mapOppfyltOppholdskravVurdering(
-            fraArena = oppholdskrav("V"),
-            behandlingId = behandlingId,
-            fom = fom,
+            virkningstidspunkt = virkningstidspunkt,
         )
 
-        assertThat(oppfylt.perioder.single().oppfylt).isTrue()
-        assertThat(oppfylt.perioder.single().begrunnelse).contains("oppfylt i Arena")
-        assertThat(ikkeVurdert.perioder.single().oppfylt).isTrue()
-        assertThat(ikkeVurdert.perioder.single().begrunnelse).contains("ikke vurdert i Arena")
-        assertThat(oppfylt.perioder.single().begrunnelse).doesNotContain("fritekst fra Arena")
-        assertThat(ikkeVurdert.perioder.single().begrunnelse).doesNotContain("fritekst fra Arena")
+        assertThat(vurdering.harForutgåendeMedlemskap).isTrue()
+        assertThat(vurdering.varMedlemMedNedsattArbeidsevne).isNull()
+        assertThat(vurdering.medlemMedUnntakAvMaksFemAar).isNull()
+        assertThat(vurdering.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
+        assertThat(vurdering.vurdertIBehandling).isEqualTo(behandlingId)
+        assertThat(vurdering.fom).isEqualTo(fom)
+        assertThat(vurdering.tom).isNull()
+        assertThat(vurdering.begrunnelse).isEqualTo(
+            "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet 15.06.2023 i Arena. " +
+                    "Vilkår om forutgående medlemskap er huket av som oppfylt etter § 11-2 første ledd. " +
+                    "Dette er gjort for at saken skal kunne bytte fagsystem og endrer ikke vurderingen gjort i Arena."
+        )
     }
+
+    @Test
+    fun `tilOppfyltForutgåendeMedlemskapVurdering feiler når vilkåret ikke er oppfylt`() {
+        listOf("V", "N").forEach { status ->
+            assertThatThrownBy {
+                ArenaMigreringMapper.tilOppfyltForutgåendeMedlemskapVurdering(
+                    fraArena = forutgåendeMedlemskap(status),
+                    behandlingId = behandlingId,
+                    fom = fom,
+                    virkningstidspunkt = virkningstidspunkt,
+                )
+            }.isInstanceOf(IllegalArgumentException::class.java)
+                .hasMessageContaining("MEDLSKAP5")
+        }
+    }
+
+    private fun forutgåendeMedlemskap(
+        status: String,
+        kode: String = "MEDLSKAP5",
+    ) = ArenaForutgåendeMedlemskap(
+        vedtakId = 1,
+        vilkår = ArenaVilkår(
+            id = 1,
+            kode = kode,
+            status = status,
+            begrunnelse = "fritekst fra Arena",
+        ),
+    )
 
     private fun oppholdskrav(
         status: String,
         kode: String = "AOINORGE3",
     ) = ArenaOppholdskrav(
         vedtakId = 1,
-        vilkar = ArenaVilkar(
+        vilkår = ArenaVilkår(
             id = 1,
             kode = kode,
             status = status,
@@ -98,13 +163,18 @@ class ArenaMigreringMapperTest {
 
     @Test
     fun `ArenaMigreringMapper mapper alle felter korrekt til Sykdomsvurdering fra Arena-respons`() {
-        val vurdering = ArenaMigreringMapper.mapOppfyltOrdinærSykdomsvurdering(
+        val vurdering = ArenaMigreringMapper.tilOppfyltOrdinærSykdomsvurdering(
             fraArena = fraArena,
             behandlingId = behandlingId,
             vurderingenGjelderFra = fom,
+            virkningstidspunkt = virkningstidspunkt,
         )
 
-        assertThat(vurdering.begrunnelse).isEqualTo(fraArena.begrunnelse)
+        assertThat(vurdering.begrunnelse).isEqualTo(
+            "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet 15.06.2023 i Arena. " +
+                    "Teksten under er overført fra vedtaksbegrunnelsen i Arena:\n\n" +
+                    "Bruker oppfyller vilkåret for 11-5"
+        )
         assertThat(vurdering.vurderingenGjelderFra).isEqualTo(fom)
         assertThat(vurdering.vurderingenGjelderTil).isNull()
         assertThat(vurdering.diagnose?.kodeverk).isEqualTo("ICD10")
@@ -123,13 +193,27 @@ class ArenaMigreringMapperTest {
     }
 
     @Test
+    fun `sykdomsvurdering uten begrunnelse fra Arena får kun innledning`() {
+        val vurdering = ArenaMigreringMapper.tilOppfyltOrdinærSykdomsvurdering(
+            fraArena = fraArena.copy(begrunnelse = null),
+            behandlingId = behandlingId,
+            vurderingenGjelderFra = fom,
+            virkningstidspunkt = virkningstidspunkt,
+        )
+
+        assertThat(vurdering.begrunnelse).isEqualTo(
+            "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet 15.06.2023 i Arena."
+        )
+    }
+
+    @Test
     fun `mapSykdomsvurdering feiler med tydelig melding når Arena mangler hoveddiagnose`() {
         val utenHoveddiagnose = fraArena.copy(
             diagnoser = fraArena.diagnoser.filter { it.type == "BI" }
         )
 
         assertThatThrownBy {
-            ArenaMigreringMapper.mapOppfyltOrdinærSykdomsvurdering(utenHoveddiagnose, behandlingId, fom)
+            ArenaMigreringMapper.tilOppfyltOrdinærSykdomsvurdering(utenHoveddiagnose, behandlingId, fom, virkningstidspunkt)
         }
             .isInstanceOf(IllegalArgumentException::class.java)
             .hasMessageContaining("hoveddiagnose")
@@ -147,7 +231,7 @@ class ArenaMigreringMapperTest {
         )
 
         assertThatThrownBy {
-            ArenaMigreringMapper.mapOppfyltOrdinærSykdomsvurdering(medAvvikendeBidiagnose, behandlingId, fom)
+            ArenaMigreringMapper.tilOppfyltOrdinærSykdomsvurdering(medAvvikendeBidiagnose, behandlingId, fom, virkningstidspunkt)
         }
             .isInstanceOf(IllegalArgumentException::class.java)
             .hasMessageContaining("Bidiagnoser har ikke samme kodeverk")
@@ -165,7 +249,7 @@ class ArenaMigreringMapperTest {
         )
 
         assertThatThrownBy {
-            ArenaMigreringMapper.mapOppfyltOrdinærSykdomsvurdering(medAvvikendeBidiagnose, behandlingId, fom)
+            ArenaMigreringMapper.tilOppfyltOrdinærSykdomsvurdering(medAvvikendeBidiagnose, behandlingId, fom, virkningstidspunkt)
         }
             .isInstanceOf(IllegalArgumentException::class.java)
             .hasMessageContaining("Hoveddiagnose har ikke støttet kodeverk i sykdomsvurdering fra Arena, støtter kun ICPC-2 og ICD-10")
@@ -173,12 +257,17 @@ class ArenaMigreringMapperTest {
 
     @Test
     fun `ArenaMigreringMapper mapper alle felter korrekt til Bistandsvurdering fra Arena-respons`() {
-        val vurdering = ArenaMigreringMapper.mapOppfyltBistandsvurdering(
+        val vurdering = ArenaMigreringMapper.tilOppfyltBistandsvurdering(
             behandlingId = behandlingId,
             fom = fom,
+            virkningstidspunkt = virkningstidspunkt,
         )
 
-        assertThat(vurdering.begrunnelse).isEqualTo("Ikke vurdert i Arena, men oppfylles automatisk ved at bruker har ordinær AAP i Arena på migreringstidspunktet")
+        assertThat(vurdering.begrunnelse).isEqualTo(
+            "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet 15.06.2023 i Arena. " +
+                    "I Kelvin er vilkårene huket av som oppfylt på § 11-6 bokstav a og b. " +
+                    "Dette er gjort for at saken skal kunne bytte fagsystem og endrer ikke vurderingen gjort i Arena."
+        )
         assertThat(vurdering.fom).isEqualTo(fom)
         assertThat(vurdering.tom).isNull()
         assertThat(vurdering.erBehovForAktivBehandling).isTrue()
@@ -202,7 +291,7 @@ class ArenaMigreringMapperTest {
             sisteFerdigBehandledeMeldekortTilDato = LocalDate.of(2025, 11, 30),
         )
 
-        val krav = ArenaMigreringMapper.mapMigrertKrav(fraArena, behandlingId)
+        val krav = ArenaMigreringMapper.tilMigrertKrav(fraArena, behandlingId)
 
         assertThat(krav.virkningstidspunktArena).isEqualTo(LocalDate.of(2025, 1, 15))
         assertThat(krav.muligRettFra).isEqualTo(LocalDate.of(2025, 12, 1))
@@ -216,15 +305,15 @@ class ArenaMigreringMapperTest {
 
     @Test
     fun `mapRefusjonskravVurdering gir automatisk vurdering uten krav når Arena ikke har refusjonskrav`() {
-        val vurdering = ArenaMigreringMapper.mapRefusjonskravVurdering(null)
+        val vurdering = ArenaMigreringMapper.tilRefusjonskravVurdering(null)
 
         assertThat(vurdering.harKrav).isFalse
         assertThat(vurdering.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
     }
 
     @Test
-    fun `mapRefusjonskravVurdering gir automatisk vurdering ved annen årsak enn REFKRAVSOS`() {
-        val vurdering = ArenaMigreringMapper.mapRefusjonskravVurdering(
+    fun `tilRefusjonskravVurdering gir automatisk vurdering ved annen årsak enn REFKRAVSOS`() {
+        val vurdering = ArenaMigreringMapper.tilRefusjonskravVurdering(
             ArenaRefusjonskrav("ANNET", LocalDate.of(2025, 1, 1), null)
         )
 
@@ -243,9 +332,9 @@ class ArenaMigreringMapperTest {
     }
 
     @Test
-    fun `mapRefusjonskravVurdering feiler ved refusjonskrav av typen REFKRAVSOS`() {
+    fun `tilRefusjonskravVurdering feiler ved refusjonskrav av typen REFKRAVSOS`() {
         assertThatThrownBy {
-            ArenaMigreringMapper.mapRefusjonskravVurdering(
+            ArenaMigreringMapper.tilRefusjonskravVurdering(
                 ArenaRefusjonskrav("REFKRAVSOS", LocalDate.of(2025, 1, 1), null)
             )
         }.isInstanceOf(IllegalArgumentException::class.java).hasMessageContaining("REFKRAVSOS")
@@ -261,6 +350,55 @@ class ArenaMigreringMapperTest {
             sisteFerdigBehandledeMeldekortTilDato = LocalDate.of(2025, 11, 30),
         )
 
-        assertThat(ArenaMigreringMapper.mapMigrertKrav(fraArena, BehandlingId(1)).resterendeKvoteOrdinær).isEqualTo(0)
+        assertThat(ArenaMigreringMapper.tilMigrertKrav(fraArena, BehandlingId(1)).resterendeKvoteOrdinær).isEqualTo(0)
     }
+
+    @Test
+    fun `tilVedtakslengdeVurdering lager automatisk vurdering med sluttdato fra Arena`() {
+        val vurdering = ArenaMigreringMapper.tilVedtakslengdeVurdering(
+            fraArena = vedtaksperiode(fraDato = 1 januar 2023, tilDato = 1 januar 2025),
+            behandlingId = behandlingId,
+        )
+
+        assertThat(vurdering.sluttdato).isEqualTo(1 januar 2025)
+        assertThat(vurdering.utvidetMed).isEqualTo(ÅrMedHverdager.FØRSTE_ÅR)
+        assertThat(vurdering.årsaker).containsExactly(VedtakslengdeÅrsak.MAKS_ETT_ÅR)
+        assertThat(vurdering.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
+        assertThat(vurdering.vurdertIBehandling).isEqualTo(behandlingId)
+        assertThat(vurdering.vurdertAutomatisk).isTrue()
+    }
+
+    @Test
+    fun `tilVedtakslengdeVurdering feiler uten tilDato`() {
+        assertThatThrownBy {
+            mapVedtakslengde(vedtaksperiode(fraDato = 1 januar 2023, tilDato = null))
+        }.isInstanceOf(IllegalArgumentException::class.java).hasMessageContaining("tilDato")
+    }
+
+    @Test
+    fun `tilBeregningstidspunktVurdering mapper dato, årsak ANNET og begrunnelse`() {
+        val vurdering = ArenaMigreringMapper.tilBeregningstidspunktVurdering(
+            fraArena = ArenaBeregningstidspunkt(beregningstidspunkt = 1 januar 2023),
+            virkningstidspunkt = virkningstidspunkt,
+        )
+
+        assertThat(vurdering.nedsattArbeidsevneEllerStudieevneDato).isEqualTo(1 januar 2023)
+        assertThat(vurdering.årsak).isEqualTo(ÅrsakBeregningstidspunkt.ANNET)
+        assertThat(vurdering.begrunnelse).isEqualTo(
+            "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet 15.06.2023 i Arena. " +
+                    "Forvaltningsnotat finnes i Gosys."
+        )
+        assertThat(vurdering.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
+        assertThat(vurdering.ytterligereNedsattArbeidsevneDato).isNull()
+        assertThat(vurdering.ytterligereNedsattÅrsak).isNull()
+    }
+
+    private fun vedtaksperiode(fraDato: LocalDate?, tilDato: LocalDate?) =
+        ArenaVedtaksperiode(vedtakId = 1, fraDato = fraDato, tilDato = tilDato)
+
+    private fun mapVedtakslengde(vedtaksperiode: ArenaVedtaksperiode) =
+        ArenaMigreringMapper.tilVedtakslengdeVurdering(
+            fraArena = vedtaksperiode,
+            behandlingId = behandlingId,
+        )
 }

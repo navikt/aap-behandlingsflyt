@@ -9,7 +9,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Opp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.HelseinstitusjonVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.OppholdVurdering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.desember
@@ -22,7 +21,6 @@ import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.test.september
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
@@ -37,8 +35,6 @@ import java.util.*
 
 
 class InstitusjonApiTest {
-    private val unleashGatewayMedFeaturePåslått =
-        FakeUnleashBase(mapOf(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true))
 
     @Nested
     @DisplayName("Tester funksjonen byggTidslinjeForInstitusjonsopphold")
@@ -242,7 +238,7 @@ class InstitusjonApiTest {
             )
 
             val resultat =
-                hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList(), unleashGatewayMedFeaturePåslått)
+                hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
 
             // Begge opphold er sammenhengende og slås sammen til ett DTO, som dekker hele kjedens periode
             assertThat(resultat).hasSize(1)
@@ -259,8 +255,7 @@ class InstitusjonApiTest {
             val resultat = hentOppholdSomSkalVurderes(
                 oppholdInfo = Tidslinje(),
                 behovPerioder = Tidslinje(),
-                vedtatteVurderingerDto = emptyList(),
-                unleashGatewayMedFeaturePåslått
+                vedtatteVurderingerDto = emptyList()
             )
             assertThat(resultat).isEmpty()
         }
@@ -275,7 +270,6 @@ class InstitusjonApiTest {
                 oppholdInfo = oppholdInfo,
                 behovPerioder = Tidslinje(),
                 vedtatteVurderingerDto = emptyList(),
-                unleashGatewayMedFeaturePåslått
             )
             assertThat(resultat).isEmpty()
         }
@@ -291,8 +285,7 @@ class InstitusjonApiTest {
             val oppholdInfo = oppholdTidslinje(Periode(oppholdFom, oppholdTom) to sykehusA)
             val behovPerioder = behovTidslinje(Periode(1 mai 2026, 31 august 2026))
 
-            val resultat =
-                hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList(), unleashGatewayMedFeaturePåslått)
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
 
             assertThat(resultat).hasSize(1)
             assertThat(resultat.first().oppholdId).isEqualTo(lagOppholdId(sykehusA.navn, oppholdFom))
@@ -305,8 +298,7 @@ class InstitusjonApiTest {
             val oppholdInfo = oppholdTidslinje(Periode(oppholdFom, oppholdTom) to sykehusA)
             val behovPerioder = behovTidslinje(Periode(oppholdFom, oppholdTom))
 
-            val resultat =
-                hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList(), unleashGatewayMedFeaturePåslått)
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
 
             assertThat(resultat).hasSize(1)
             assertThat(resultat.first().oppholdFra).isEqualTo(oppholdFom)
@@ -321,8 +313,7 @@ class InstitusjonApiTest {
             // Behovperiode starter etter oppholdet slutter
             val behovPerioder = behovTidslinje(Periode(1 august 2026, 31 desember 2026))
 
-            val resultat =
-                hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList(), unleashGatewayMedFeaturePåslått)
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
 
             assertThat(resultat).isEmpty()
         }
@@ -346,8 +337,7 @@ class InstitusjonApiTest {
                 Periode(1 august 2026, 31 oktober 2026)
             )
 
-            val resultat =
-                hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList(), unleashGatewayMedFeaturePåslått)
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
 
             assertThat(resultat).hasSize(2)
             assertThat(resultat.map { it.oppholdId }).containsExactlyInAnyOrder(
@@ -369,8 +359,7 @@ class InstitusjonApiTest {
             // Behovperiode kun for sykehusB
             val behovPerioder = behovTidslinje(Periode(1 september 2026, 30 november 2026))
 
-            val resultat =
-                hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList(), unleashGatewayMedFeaturePåslått)
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
 
             assertThat(resultat).hasSize(1)
             assertThat(resultat.first().oppholdId).isEqualTo(lagOppholdId(sykehusB.navn, oppholdFomB))
@@ -394,7 +383,7 @@ class InstitusjonApiTest {
             val behovPerioder = behovTidslinje(Periode(oppholdFomA, oppholdTomB))
 
             val resultat =
-                hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList(), unleashGatewayMedFeaturePåslått)
+                hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
 
             // A og B er sammenhengende (B starter dagen etter A slutter) og slås derfor sammen til ett opphold
             assertThat(resultat).hasSize(1)
@@ -419,7 +408,7 @@ class InstitusjonApiTest {
             val behovPerioder = behovTidslinje(Periode(1 mars 2026, 30 november 2026))
 
             val resultat =
-                hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList(), unleashGatewayMedFeaturePåslått)
+                hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
 
             // Alle tre er sammenhengende og slås sammen til ett opphold
             assertThat(resultat).hasSize(1)
@@ -447,7 +436,6 @@ class InstitusjonApiTest {
                 oppholdInfo,
                 Tidslinje(),
                 vedtatteVurderinger,
-                unleashGatewayMedFeaturePåslått
             )
 
             assertThat(resultat).hasSize(1)
@@ -471,12 +459,7 @@ class InstitusjonApiTest {
                 vedtattVurdering(sykehusB, oppholdFomB, Periode(1 august 2026, 31 oktober 2026))
             )
 
-            val resultat = hentOppholdSomSkalVurderes(
-                oppholdInfo,
-                behovPerioder,
-                vedtatteVurderinger,
-                unleashGatewayMedFeaturePåslått
-            )
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, vedtatteVurderinger)
 
             assertThat(resultat).hasSize(2)
             assertThat(resultat.map { it.oppholdId }).containsExactlyInAnyOrder(
@@ -502,8 +485,7 @@ class InstitusjonApiTest {
             val resultat = hentOppholdSomSkalVurderes(
                 oppholdInfo,
                 behovPerioder,
-                vedtatteVurderinger,
-                unleashGatewayMedFeaturePåslått
+                vedtatteVurderinger
             )
 
             assertThat(resultat).hasSize(1)
@@ -525,12 +507,7 @@ class InstitusjonApiTest {
                 )
             )
 
-            val resultat = hentOppholdSomSkalVurderes(
-                oppholdInfo,
-                Tidslinje(),
-                vedtatteVurderinger,
-                unleashGatewayMedFeaturePåslått
-            )
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, Tidslinje(), vedtatteVurderinger)
 
             assertThat(resultat).isEmpty()
         }
@@ -557,12 +534,7 @@ class InstitusjonApiTest {
                 vedtattVurdering(sykehusC, oppholdFomC, Periode(1 oktober 2026, 30 november 2026))
             )
 
-            val resultat = hentOppholdSomSkalVurderes(
-                oppholdInfo,
-                behovPerioder,
-                vedtatteVurderinger,
-                unleashGatewayMedFeaturePåslått
-            )
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, vedtatteVurderinger)
 
             // A+B slås sammen til ett opphold, C forblir separat -> to opphold totalt
             assertThat(resultat).hasSize(2)
@@ -604,8 +576,7 @@ class InstitusjonApiTest {
 
                 val behovPerioder = behovTidslinje(Periode(oppholdFom1, oppholdTom2))
 
-                val oppholdDto =
-                    hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList(), unleashGatewayMedFeaturePåslått)
+                val oppholdDto = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
                 assertThat(oppholdDto).hasSize(1)
                 val forventetOppholdId = lagOppholdId(sykehus1.navn, oppholdFom1)
                 assertThat(oppholdDto.first().oppholdId).isEqualTo(forventetOppholdId)
@@ -625,12 +596,8 @@ class InstitusjonApiTest {
                     )
                 )
 
-                val vurderingDto = mapVurderingerToDto(
-                    vurderingerPerOpphold,
-                    oppholdInfo,
-                    vurdertAvService = mockk(relaxed = true),
-                    unleashGatewayMedFeaturePåslått
-                )
+                val vurderingDto =
+                    mapVurderingerToDto(vurderingerPerOpphold, oppholdInfo, vurdertAvService = mockk(relaxed = true))
 
                 assertThat(vurderingDto).hasSize(1)
                 assertThat(vurderingDto.first().oppholdId).isEqualTo(forventetOppholdId)
@@ -656,8 +623,7 @@ class InstitusjonApiTest {
 
                 val behovPerioder = behovTidslinje(Periode(oppholdFom1, oppholdTom3))
 
-                val oppholdDto =
-                    hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList(), unleashGatewayMedFeaturePåslått)
+                val oppholdDto = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
                 assertThat(oppholdDto).hasSize(1)
                 val forventetOppholdId = lagOppholdId(sykehus1.navn, oppholdFom1)
                 assertThat(oppholdDto.first().oppholdId).isEqualTo(forventetOppholdId)
@@ -677,12 +643,8 @@ class InstitusjonApiTest {
                     )
                 )
 
-                val vurderingDto = mapVurderingerToDto(
-                    vurderingerPerOpphold,
-                    oppholdInfo,
-                    vurdertAvService = mockk(relaxed = true),
-                    unleashGatewayMedFeaturePåslått
-                )
+                val vurderingDto =
+                    mapVurderingerToDto(vurderingerPerOpphold, oppholdInfo, vurdertAvService = mockk(relaxed = true))
 
                 assertThat(vurderingDto).hasSize(1)
                 assertThat(vurderingDto.first().oppholdId).isEqualTo(forventetOppholdId)
@@ -712,8 +674,7 @@ class InstitusjonApiTest {
                 Periode(oppholdFomB, oppholdTomB)
             )
 
-            val resultat =
-                hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList(), unleashGatewayMedFeaturePåslått)
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
 
             assertThat(resultat).hasSize(2)
             assertThat(resultat.map { it.oppholdId }).containsExactlyInAnyOrder(
@@ -741,8 +702,7 @@ class InstitusjonApiTest {
                 Periode(oppholdFomC, oppholdTomC)
             )
 
-            val resultat =
-                hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList(), unleashGatewayMedFeaturePåslått)
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
 
             assertThat(resultat).hasSize(3)
             assertThat(resultat.map { it.oppholdId }).containsExactlyInAnyOrder(
@@ -768,8 +728,7 @@ class InstitusjonApiTest {
             )
             val behovPerioder = behovTidslinje(Periode(oppholdFomA, oppholdTomB))
 
-            val resultat =
-                hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList(), unleashGatewayMedFeaturePåslått)
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
 
             assertThat(resultat).hasSize(1)
             assertThat(resultat.first().oppholdFra).isEqualTo(oppholdFomA)
@@ -791,8 +750,7 @@ class InstitusjonApiTest {
                 Periode(oppholdFomB, oppholdTomB)
             )
 
-            val resultat =
-                hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList(), unleashGatewayMedFeaturePåslått)
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
 
             assertThat(resultat).hasSize(2)
             assertThat(resultat.map { it.oppholdId }).containsExactlyInAnyOrder(
@@ -816,8 +774,7 @@ class InstitusjonApiTest {
                 Periode(oppholdFomB, oppholdTomB)
             )
 
-            val resultat =
-                hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList(), unleashGatewayMedFeaturePåslått)
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList())
 
             assertThat(resultat).hasSize(2)
             assertThat(resultat.map { it.oppholdId }).containsExactlyInAnyOrder(
@@ -841,12 +798,7 @@ class InstitusjonApiTest {
                 vedtattVurdering(sykehusB, oppholdFomB, Periode(1 mai 2026, 30 juni 2026))
             )
 
-            val resultat = hentOppholdSomSkalVurderes(
-                oppholdInfo,
-                Tidslinje(),
-                vedtatteVurderinger,
-                unleashGatewayMedFeaturePåslått
-            )
+            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, Tidslinje(), vedtatteVurderinger)
 
             // Kjeden (A+B) skal fortsatt vises som ett opphold med oppholdId basert på A (kjedens første segment),
             // selv om den vedtatte vurderingen opprinnelig pekte til B sin oppholdId
@@ -855,30 +807,146 @@ class InstitusjonApiTest {
         }
 
         @Test
-        fun `feature SammenhengendeInstitusjonsopphold AV - to sammenhengende opphold forblir separate som før`() {
-            val unleashGatewayFeatureAv =
-                FakeUnleashBase(mapOf(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to false))
-
-            val oppholdFomA = 1 januar 2026
-            val oppholdTomA = 30 juni 2026
-            val oppholdFomB = 1 juli 2026 // dagen etter A slutter -> ville vært sammenhengende med toggle PÅ
-            val oppholdTomB = 31 desember 2026
+        fun `mapVurderingerToDto - vurdering utenfor alle kjeder knyttes til nærmeste kjede før`() {
+            val sykehusA = Institusjon(Institusjonstype.HS, Oppholdstype.H, "111000111", "Sykehus A")
+            val sykehusB = Institusjon(Institusjonstype.HS, Oppholdstype.H, "222000222", "Sykehus B")
             val oppholdInfo = oppholdTidslinje(
-                Periode(oppholdFomA, oppholdTomA) to sykehusA,
-                Periode(oppholdFomB, oppholdTomB) to sykehusB
+                Periode(1 januar 2025, 1 mars 2025) to sykehusA,
+                Periode(1 september 2025, 1 november 2025) to sykehusB,
             )
-            val behovPerioder = behovTidslinje(Periode(oppholdFomA, oppholdTomB))
-
-            val resultat = hentOppholdSomSkalVurderes(oppholdInfo, behovPerioder, emptyList(), unleashGatewayFeatureAv)
-
-            // Med toggle AV skal de behandles som separate opphold, ikke slås sammen til én kjede
-            assertThat(resultat).hasSize(2)
-            assertThat(resultat.map { it.oppholdId }).containsExactlyInAnyOrder(
-                lagOppholdId(sykehusA.navn, oppholdFomA),
-                lagOppholdId(sykehusB.navn, oppholdFomB)
+            val vurderingPeriode = Periode(1 april 2026, 1 april 2026)
+            val nyeVurderinger = mapOf(
+                vurderingPeriode to listOf(
+                    lagHelseinstitusjonVurdering(
+                        begrunnelse = "historisk",
+                        periode = vurderingPeriode,
+                        erHistoriskUtenReduksjonsberegning = true,
+                        oppholdId = lagOppholdId(sykehusB.navn, 1 september 2025)
+                    )
+                )
             )
+
+            val resultat = mapVurderingerToDto(
+                nyeVurderinger, oppholdInfo, vurdertAvService = mockk(relaxed = true)
+            )
+
+            assertThat(resultat).hasSize(1)
+            assertThat(resultat.first().oppholdId).isEqualTo(lagOppholdId(sykehusB.navn, 1 september 2025))
+        }
+
+        @Test
+        fun `mapVurderingerToDto - vurdering som ligger etter kjeden uten tidligere kjede gir tomt resultat`() {
+            val sykehusA = Institusjon(Institusjonstype.HS, Oppholdstype.H, "111000111", "Sykehus A")
+            val oppholdInfo = oppholdTidslinje(Periode(1 desember 2025, 1 februar 2026) to sykehusA)
+            val vurderingPeriode = Periode(1 januar 2025, 1 januar 2025)
+            val nyeVurderinger = mapOf(
+                vurderingPeriode to listOf(
+                    lagHelseinstitusjonVurdering(
+                        begrunnelse = "før alle kjeder",
+                        periode = vurderingPeriode,
+                        erHistoriskUtenReduksjonsberegning = true,
+                        oppholdId = lagOppholdId(sykehusA.navn, 1 desember 2025)
+                    )
+                )
+            )
+
+            val resultat = mapVurderingerToDto(nyeVurderinger, oppholdInfo, vurdertAvService = mockk(relaxed = true))
+
+            assertThat(resultat).isEmpty()
         }
     }
+
+    @Test
+    fun `historisk vurdering med innhold foretrekkes over tom UAVKLART-plassholder for samme opphold`() {
+        val sykehusA = Institusjon(Institusjonstype.HS, Oppholdstype.H, "111000111", "Sykehus A")
+        val oppholdFom = 1 desember 2025
+        val oppholdTom = 1 februar 2026
+        val oppholdInfo: Tidslinje<Institusjon> =
+            listOf(Periode(oppholdFom, oppholdTom) to sykehusA).somTidslinje({ it.first }, { it.second })
+
+        val nyeVurderinger = mapOf(
+            Periode(oppholdFom, oppholdTom) to listOf(
+                lagHelseinstitusjonVurdering(
+                    begrunnelse = "historisk",
+                    periode = Periode(1 april 2026, 1 april 2026),
+                    erHistoriskUtenReduksjonsberegning = true,
+                    oppholdId = lagOppholdId(sykehusA.navn, oppholdFom)
+                )
+            )
+        )
+
+        val resultat = mapVurderingerToDto(nyeVurderinger, oppholdInfo, vurdertAvService = mockk(relaxed = true))
+
+        assertThat(resultat).hasSize(1)
+        assertThat(resultat.first().vurderinger?.first()?.erHistoriskUtenReduksjonsberegning).isTrue
+    }
+
+    @Test
+    fun `dedupliserPerOppholdId foretrekker dto med innhold over tom plassholder for samme oppholdId`() {
+        val oppholdId = lagOppholdId("Sykehus A", 1 desember 2025)
+
+        val tomPlassholder = HelseoppholdDto(
+            periode = Periode(1 desember 2025, 1 februar 2026),
+            oppholdId = oppholdId,
+            vurderinger = emptyList(),
+            status = OppholdVurderingDto.UAVKLART
+        )
+        val medInnhold = HelseoppholdDto(
+            periode = Periode(1 april 2026, 1 april 2026),
+            oppholdId = oppholdId,
+            vurderinger = listOf(
+                HelseinstitusjonVurderingDto(
+                    oppholdId = oppholdId,
+                    begrunnelse = "historisk",
+                    faarFriKostOgLosji = true,
+                    periode = Periode(1 april 2026, 1 april 2026),
+                    vurderingerMeta = mockk(relaxed = true),
+                    erHistoriskUtenReduksjonsberegning = true
+                )
+            ),
+            status = OppholdVurderingDto.UAVKLART
+        )
+
+        val resultat = dedupliserPerOppholdId(listOf(tomPlassholder, medInnhold))
+
+        assertThat(resultat).hasSize(1)
+        assertThat(resultat.first().vurderinger).isNotEmpty
+        assertThat(resultat.first().vurderinger?.first()?.erHistoriskUtenReduksjonsberegning).isTrue
+    }
+
+    @Test
+    fun `dedupliserPerOppholdId beholder tom plassholder når ingen dto for oppholdId har innhold`() {
+        val oppholdId = lagOppholdId("Sykehus A", 1 desember 2025)
+        val tomPlassholder = HelseoppholdDto(
+            periode = Periode(1 desember 2025, 1 februar 2026),
+            oppholdId = oppholdId,
+            vurderinger = emptyList(),
+            status = OppholdVurderingDto.UAVKLART
+        )
+
+        val resultat = dedupliserPerOppholdId(listOf(tomPlassholder))
+
+        assertThat(resultat).hasSize(1)
+        assertThat(resultat.first().vurderinger).isEmpty()
+    }
+
+    private fun lagHelseinstitusjonVurdering(
+        begrunnelse: String,
+        periode: Periode,
+        erHistoriskUtenReduksjonsberegning: Boolean,
+        oppholdId: String
+    ): HelseinstitusjonVurdering = HelseinstitusjonVurdering(
+        begrunnelse = begrunnelse,
+        faarFriKostOgLosji = true,
+        forsoergerEktefelle = false,
+        harFasteUtgifter = false,
+        periode = periode,
+        vurdertIBehandling = BehandlingId(1L),
+        vurdertAv = null,
+        vurdertTidspunkt = null,
+        erHistoriskUtenReduksjonsberegning = erHistoriskUtenReduksjonsberegning,
+        oppholdId = oppholdId
+    )
 
     private fun lagSegment(
         fom: LocalDate,
