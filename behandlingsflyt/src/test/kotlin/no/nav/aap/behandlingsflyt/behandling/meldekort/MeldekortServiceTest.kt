@@ -4,6 +4,9 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.ansattinfo.AnsattInfoService
 import no.nav.aap.behandlingsflyt.behandling.journalføring.JournalføringService
+import no.nav.aap.behandlingsflyt.behandling.underveis.Kvoter
+import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.tomUnderveisInput
 import no.nav.aap.meldeplikt.MeldepliktStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
@@ -17,6 +20,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Meldekort
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.MeldekortRepository
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
+import no.nav.aap.behandlingsflyt.help.genererVilkårsresultat
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingMedVedtak
@@ -78,22 +82,50 @@ class MeldekortServiceTest {
     )
 
     @Test
-    fun `henter samme lagrede meldedato fra en oppdelt meldeperiode`() {
+    fun `henter meldedato når sen innsending deler opp underveisperioden`() {
         stubSakOgBehandling()
-        val meldedato = 9 januar 2025
-        stubUnderveisgrunnlag(
-            underveisperiode(Utfall.OPPFYLT, Periode(6 januar 2025, 8 januar 2025), meldeperiode),
-            underveisperiode(
-                Utfall.OPPFYLT, Periode(9 januar 2025, 12 januar 2025), meldeperiode, meldedato
-            ),
-            underveisperiode(
-                Utfall.OPPFYLT, Periode(13 januar 2025, 19 januar 2025), meldeperiode, meldedato
-            )
+        val rettighetsperiode = Periode(6 januar 2025, 2 februar 2025)
+        val meldeperiode = Periode(20 januar 2025, 2 februar 2025)
+        val input = tomUnderveisInput(
+            rettighetsperiode = rettighetsperiode,
+            vilkårsresultat = genererVilkårsresultat(rettighetsperiode),
+            kvoter = Kvoter.create(ordinærkvote = 30, sykepengeerstatningkvote = 0),
+            innsendingsTidspunkt = mapOf(30 januar 2025 to JournalpostId("sen-innsending"))
         )
+        val underveisperioder = UnderveisService.tilUnderveisperioder(UnderveisService.vurderRegler(input))
+        stubUnderveisgrunnlag(*underveisperioder.toTypedArray())
         every { meldekortRepository.hentHvisEksisterer(behandlingId) } returns null
 
-        assertThat(service().hentMeldeperioderMedMeldekort(saksnummer).meldeperioderMedMeldekort.single().meldedato)
-            .isEqualTo(meldedato)
+        assertThat(underveisperioder.filter { it.meldePeriode == meldeperiode }.map { it.periode })
+            .containsExactly(
+                Periode(20 januar 2025, 29 januar 2025),
+                Periode(30 januar 2025, 2 februar 2025)
+            )
+
+        val meldeperioder = service().hentMeldeperioderMedMeldekort(saksnummer).meldeperioderMedMeldekort
+        assertThat(meldeperioder.single { it.meldeperiode == meldeperiode }.meldedato).isEqualTo(30 januar 2025)
+    }
+
+    @Test
+    fun `henter meldedato når underveisperioden slutter før meldeperioden`() {
+        stubSakOgBehandling()
+        val rettighetsperiode = Periode(6 januar 2025, 12 februar 2025)
+        val sisteMeldeperiode = Periode(3 februar 2025, 16 februar 2025)
+        val input = tomUnderveisInput(
+            rettighetsperiode = rettighetsperiode,
+            vilkårsresultat = genererVilkårsresultat(rettighetsperiode),
+            kvoter = Kvoter.create(ordinærkvote = 30, sykepengeerstatningkvote = 0),
+            innsendingsTidspunkt = mapOf(4 februar 2025 to JournalpostId("innsending"))
+        )
+        val underveisperioder = UnderveisService.tilUnderveisperioder(UnderveisService.vurderRegler(input))
+        stubUnderveisgrunnlag(*underveisperioder.toTypedArray())
+        every { meldekortRepository.hentHvisEksisterer(behandlingId) } returns null
+
+        assertThat(underveisperioder.filter { it.meldePeriode == sisteMeldeperiode }.map { it.periode })
+            .containsExactly(Periode(3 februar 2025, 12 februar 2025))
+
+        val meldeperioder = service().hentMeldeperioderMedMeldekort(saksnummer).meldeperioderMedMeldekort
+        assertThat(meldeperioder.single { it.meldeperiode == sisteMeldeperiode }.meldedato).isEqualTo(4 februar 2025)
     }
 
     @Test
