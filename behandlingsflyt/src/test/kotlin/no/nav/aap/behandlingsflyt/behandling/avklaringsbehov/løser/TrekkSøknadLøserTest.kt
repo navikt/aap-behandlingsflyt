@@ -171,6 +171,22 @@ class TrekkSøknadLøserTest {
         assertThat(vurderinger).isEmpty()
     }
 
+    @Test
+    fun `Trekker migreringsbehandling fra Arena uten søknad, uten journalpost`() {
+        val (_, behandling) = opprettBehandling(
+            type = TypeBehandling.Førstegangsbehandling,
+            årsak = ÅrsakTilOpprettelse.MIGRERING_FRA_ARENA,
+            vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MIGRERING_FRA_ARENA)),
+        )
+
+        trekkSøknadLøser.løs(kontekst(behandling), enLøsning())
+
+        val vurderinger = InMemoryTrukketSøknadRepository.hentTrukketSøknadVurderinger(behandling.id)
+        assertThat(vurderinger).hasSize(1)
+        assertThat(vurderinger.single().journalpostId).isNull()
+        assertThat(vurderinger.single().skalTrekkes).isTrue()
+    }
+
     private fun opprettBehandling(
         type: TypeBehandling,
         årsak: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,

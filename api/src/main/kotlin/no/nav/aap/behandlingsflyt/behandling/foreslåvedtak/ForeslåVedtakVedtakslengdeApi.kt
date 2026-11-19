@@ -13,7 +13,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.FORESLÅ_VEDTAK_VEDTAKSLENGDE_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -80,9 +79,15 @@ fun NormalOpenAPIRoute.foreslaaVedtakVedtakslengdeApi(
                                             is GjeldendeStansEllerOpphør -> vurdering.vurdering.årsaker.toList()
                                             is OpphevetStansEllerOpphør -> emptyList()
                                         },
+                                        hjemler = when (vurdering) {
+                                            is GjeldendeStansEllerOpphør -> vurdering.vurdering.årsaker.toList()
+                                                .map { it.hjemmel }.distinct()
+
+                                            is OpphevetStansEllerOpphør -> emptyList()
+                                        },
                                         behandlingReferanse = requireNotNull(referanseOppslag[vurdering.vurdertIBehandling]) {
                                             "Finner ikke ytelsesbehandling i sak med behandlingsid"
-                                        }.referanse
+                                        }.referanse,
                                     )
                                 }
                             )

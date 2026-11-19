@@ -104,6 +104,21 @@ class VurderKlageKontorLøserTest {
     }
 
     @Test
+    fun `løs skal kaste UgyldigForespørselException og ikke lagre når påklaget vedtak ikke er fastsatt`() {
+        every { påklagetBehandlingRepositoryMock.hentPåklagetVedtakstype(any()) } returns null
+
+        val exception = assertThrows<UgyldigForespørselException> {
+            lagLøser().løs(
+                kontekst = lagAvklaringsbehovKontekst(),
+                løsning = lagLøsning(KlageInnstilling.OPPRETTHOLD)
+            )
+        }
+
+        assertThat(exception.message).isEqualTo("Påklaget vedtak er ikke fastsatt")
+        verify(exactly = 0) { klagebehandlingKontorRepositoryMock.lagre(any(), any()) }
+    }
+
+    @Test
     fun `løs skal tillate opprettholdelse av tilbakekreving`() {
         every { påklagetBehandlingRepositoryMock.hentPåklagetVedtakstype(any()) } returns PåklagetVedtakType.TILBAKEKREVING
         every { klagebehandlingKontorRepositoryMock.lagre(any(), any()) } returns Unit

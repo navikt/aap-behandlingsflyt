@@ -48,6 +48,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -56,6 +57,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
+@Tag("db")
 class BackfillEtableringVurderingerTest {
     companion object {
         private lateinit var dataSource: TestDataSource

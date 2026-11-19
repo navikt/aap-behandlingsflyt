@@ -1,13 +1,9 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt
 
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektInformasjon
@@ -20,9 +16,11 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.Beregnin
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurdering
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgRevurdering
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
@@ -44,6 +42,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Year
+import java.time.YearMonth
 
 class InntektInformasjonskravTest {
 
@@ -72,16 +71,31 @@ class InntektInformasjonskravTest {
         )
     )
 
-    private val poppGateway = mockk<InntektRegisterGateway> {
-        every { innhent(any(), any()) } answers {
-            secondArg<Set<Year>>().map { InntektPerÅrFraRegister(it, poppBeløp) }.toSet()
+    private val poppGateway = object : InntektRegisterGateway {
+        var antallKall = 0
+            private set
+
+        override fun innhent(
+            person: Person,
+            år: Set<Year>
+        ): Set<InntektPerÅrFraRegister> {
+            antallKall++
+            return år.map { InntektPerÅrFraRegister(it, poppBeløp) }.toSet()
         }
     }
 
-    private val aInntektGateway = mockk<InntektkomponentenGateway> {
-        every { hentAInntekt(any(), any(), any()) } answers {
-            InntektskomponentData(
-                listOf(ArbeidsInntektMåned(secondArg(), ArbeidsInntektInformasjon(listOf(aInntekt))))
+    private val aInntektGateway = object : InntektkomponentenGateway {
+        var antallKall = 0
+            private set
+
+        override fun hentAInntekt(
+            fnr: String,
+            fom: YearMonth,
+            tom: YearMonth
+        ): InntektskomponentData {
+            antallKall++
+            return InntektskomponentData(
+                listOf(ArbeidsInntektMåned(fom, ArbeidsInntektInformasjon(listOf(aInntekt))))
             )
         }
     }
@@ -139,8 +153,8 @@ class InntektInformasjonskravTest {
 
         assertThat(registerdata.inntekter.map { it.år }).containsExactlyInAnyOrderElementsOf(relevanteÅr)
         assertThat(registerdata.inntektsperioder).isNotEmpty()
-        verify(exactly = 1) { poppGateway.innhent(any(), relevanteÅr) }
-        verify(exactly = 1) { aInntektGateway.hentAInntekt(any(), any(), any()) }
+        assertThat(poppGateway.antallKall).isEqualTo(1)
+        assertThat(aInntektGateway.antallKall).isEqualTo(1)
     }
 
     private fun erRelevant(kontekst: FlytKontekstMedPerioder) =

@@ -40,10 +40,12 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Tag
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 
+@Tag("db")
 class ForutgåendeMedlemskapRepositoryImplTest {
     companion object {
         private lateinit var dataSource: TestDataSource

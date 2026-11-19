@@ -594,7 +594,7 @@ class KravStegTest {
         assertThat(vurderinger).hasSize(1)
         assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(1)
     }
-    
+
     @Test
     fun `søknad før legeerklæring – søknad er krav, legeerklæring ignoreres`() {
         val sak = opprettInMemorySak()

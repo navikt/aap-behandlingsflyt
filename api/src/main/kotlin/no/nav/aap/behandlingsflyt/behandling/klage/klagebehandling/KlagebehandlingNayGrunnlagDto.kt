@@ -12,7 +12,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.Påkla
 data class KlagebehandlingNayGrunnlagDto(
     val vurdering: KlagevurderingNayDto? = null,
     val harTilgangTilÅSaksbehandle: Boolean,
-    val påklagetVedtakType: PåklagetVedtakType,
+    val påklagetVedtakType: PåklagetVedtakType?,
 )
 
 data class KlagevurderingNayDto(
@@ -39,7 +39,7 @@ internal fun KlagevurderingNay.tilDto(ansattInfoService: AnsattInfoService) =
 internal fun KlagebehandlingNayGrunnlag.tilDto(
     harTilgangTilÅSaksbehandle: Boolean,
     ansattInfoService: AnsattInfoService,
-    påklagetVedtakType: PåklagetVedtakType,
+    påklagetVedtakType: PåklagetVedtakType?,
 ) =
     KlagebehandlingNayGrunnlagDto(
         vurdering = vurdering.tilDto(ansattInfoService),

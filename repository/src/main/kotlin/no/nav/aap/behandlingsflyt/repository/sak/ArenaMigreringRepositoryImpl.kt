@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.sak
 
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.ArenaMigrering
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.ArenaMigreringRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -46,6 +48,28 @@ class ArenaMigreringRepositoryImpl(private val connection: DBConnection) : Arena
                     ident = row.getString("ident"),
                     migrertTidspunkt = row.getLocalDateTime("migrert_tid"),
                 )
+            }
+        }
+    }
+
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        // Migreringen gjelder saken, ikke behandlingen
+    }
+
+    /**
+     * Sletter migreringen for saken bare når [behandlingId] er førstegangsbehandlingen. Andre behandlinger,
+     * f.eks. en trukket klage, kaller også `slett`, men da skal koblingen til Arena-saken beholdes.
+     */
+    override fun slett(behandlingId: BehandlingId) {
+        connection.execute(
+            """
+            DELETE FROM ARENA_MIGRERING
+            WHERE sak_id = (SELECT sak_id FROM BEHANDLING WHERE id = ? AND type = ?)
+            """.trimIndent()
+        ) {
+            setParams {
+                setLong(1, behandlingId.toLong())
+                setString(2, TypeBehandling.Førstegangsbehandling.identifikator())
             }
         }
     }

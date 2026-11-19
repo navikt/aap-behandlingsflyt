@@ -1,119 +1,86 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.oppfølgingsbehandling
 
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovValidering
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.KonsekvensAvOppfølging
-import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsBehandlingRepository
 import no.nav.aap.behandlingsflyt.behandling.oppfølgingsbehandling.OppfølgingsoppgaveGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.BehandletOppfølgingsOppgave
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
+import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp
-import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
+import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.DummyBehandlingHendelseServiceFactory
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryFlytJobbRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryOppfølgingsBehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.mars
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.util.*
+import java.time.LocalDateTime
+import java.util.UUID
 
 class AvklarOppfølgingStegTest {
-    private val oppfølgingsBehandlingRepository = mockk<OppfølgingsBehandlingRepository>()
-    private val låsRepository = mockk<TaSkriveLåsRepository>(relaxed = true)
-    private val prosesserBehandling = mockk<ProsesserBehandlingService>(relaxed = true)
-    private val behandlingService = mockk<BehandlingService>()
-    private val mottaDokumentService = mockk<MottaDokumentService>()
-
-    private val avklaringsbehovRepository = mockk<AvklaringsbehovRepository>()
-    private val vilkårsresultatRepository = mockk<VilkårsresultatRepository>()
-    private val behandlingRepository = mockk<BehandlingRepository>()
-    private val avbrytRevurderingService = mockk<AvbrytRevurderingService>()
-    private val trukketSøknadService = mockk<TrukketSøknadService>(relaxed = true)
-
-    private val trukketSøknadRepository = InMemoryTrukketSøknadRepository
-    private val gatewayProvider = createGatewayProvider {
-        register<AlleAvskruddUnleash>()
+    private val sak = opprettInMemorySak()
+    private val behandling = InMemoryBehandlingRepository.opprettBehandling(
+        sakId = sak.id,
+        typeBehandling = TypeBehandling.OppfølgingsBehandling,
+        forrigeBehandlingId = null,
+        vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+            listOf(VurderingsbehovMedPeriode(Vurderingsbehov.OPPFØLGINGSOPPGAVE)),
+            ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
+        )
+    )
+    private val datoForOppfølging = LocalDate.now().plusDays(7)
+    private val gatewayProvider = minimalGatewayProvider {
+        register<DummyBehandlingHendelseServiceFactory>()
     }
 
-    private val avklaringsbehovService = AvklaringsbehovService(
-        avklaringsbehovRepository = avklaringsbehovRepository,
-        behandlingRepository = behandlingRepository,
-        vilkårsresultatRepository = vilkårsresultatRepository,
-        avbrytRevurderingService = avbrytRevurderingService,
-        trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
-        kravRepository = InMemoryKravRepository,
-        sakRepository = InMemorySakRepository,
-        unleashGateway = gatewayProvider.provide(),
-        avklaringsbehovValidering = AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
-    )
-
-    private val behandling = Behandling(
-        id = BehandlingId(1),
-        forrigeBehandlingId = null,
-        referanse = BehandlingReferanse(UUID.randomUUID()),
-        sakId = SakId(1),
-        typeBehandling = TypeBehandling.Førstegangsbehandling,
-        årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
-        status = Status.UTREDES,
-        vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
-        versjon = 0
-    )
-
     @BeforeEach
-    fun setup() {
-        every { behandlingService.finnEllerOpprettOrdinærBehandling(any<SakId>(), any()) } returns behandling
-        every { behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(any()) } returns behandling
-        every { trukketSøknadService.søknadErTrukket(any()) } returns false
-
-        every { mottaDokumentService.hentOppfølgingsBehandlingDokument(any()) } returns BehandletOppfølgingsOppgave(
-            datoForOppfølging = LocalDate.now().plusDays(7),
-            hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet,
-            hvaSkalFølgesOpp = "...",
-            opprettetAv = null,
-            reserverTilBruker = null
+    fun settOppDokument() {
+        InMemoryMottattDokumentRepository.lagre(
+            MottattDokument(
+                referanse = InnsendingReferanse(
+                    InnsendingReferanse.Type.SAKSBEHANDLER_KELVIN_REFERANSE,
+                    UUID.randomUUID().toString()
+                ),
+                sakId = sak.id,
+                behandlingId = behandling.id,
+                mottattTidspunkt = LocalDateTime.now(),
+                type = InnsendingType.OPPFØLGINGSOPPGAVE,
+                kanal = Kanal.DIGITAL,
+                strukturertDokument = StrukturertDokument(
+                    OppfølgingsoppgaveV0(
+                        datoForOppfølging = datoForOppfølging,
+                        hvemSkalFølgeOpp = HvemSkalFølgeOpp.NasjonalEnhet,
+                        hvaSkalFølgesOpp = "...",
+                        opprettetAv = null,
+                        reserverTilBruker = null
+                    )
+                )
+            )
         )
-
-        every { avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id) } returns Avklaringsbehovene(
-            InMemoryAvklaringsbehovRepository,
-            behandling.id
-        )
-
-        every { avbrytRevurderingService.revurderingErAvbrutt(any()) } returns false
     }
 
     @Test
@@ -128,16 +95,13 @@ class AvklarOppfølgingStegTest {
 
         steg.utfør(kontekst)
 
-        verify {
-            prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
-            behandlingService.finnEllerOpprettOrdinærBehandling(
-                behandling.sakId,
-                match {
-                    it.vurderingsbehov.map { it.type } == listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND).type) &&
-                            it.årsak == ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE
-                }
-            )
-        }
+        val ytelsesbehandling = InMemoryBehandlingRepository.hentAlleIkkeAvbrutteYtelsesbehandlinger(sak.id).single()
+        assertThat(ytelsesbehandling.vurderingsbehov().map { it.type })
+            .containsExactly(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)
+        assertThat(ytelsesbehandling.årsakTilOpprettelse).isEqualTo(ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE)
+        val jobb = InMemoryFlytJobbRepository.hentJobberForSak(sak.id.toLong()).single()
+        assertThat(jobb.type()).isEqualTo(ProsesserBehandlingJobbUtfører.type)
+        assertThat(jobb.behandlingIdOrNull()).isEqualTo(ytelsesbehandling.id.toLong())
     }
 
     @Test
@@ -152,16 +116,8 @@ class AvklarOppfølgingStegTest {
 
         steg.utfør(kontekst)
 
-        verify(exactly = 0) {
-            prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
-            behandlingService.finnEllerOpprettOrdinærBehandling(
-                behandling.sakId,
-                VurderingsbehovOgÅrsak(
-                    listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
-                    ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
-                )
-            )
-        }
+        assertThat(InMemoryBehandlingRepository.hentAlleIkkeAvbrutteYtelsesbehandlinger(sak.id)).isEmpty()
+        assertThat(InMemoryFlytJobbRepository.hentJobberForSak(sak.id.toLong())).isEmpty()
     }
 
     @Test
@@ -169,21 +125,13 @@ class AvklarOppfølgingStegTest {
         val (steg, kontekst) = settOppTilstand(null)
 
         steg.utfør(kontekst)
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = behandling.id)
+        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         assertThat(
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY)?.status()
         ).isEqualTo(no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.OPPRETTET)
 
-        verify(exactly = 0) {
-            prosesserBehandling.triggProsesserBehandling(behandling.sakId, behandling.id)
-            behandlingService.finnEllerOpprettOrdinærBehandling(
-                behandling.sakId,
-                VurderingsbehovOgÅrsak(
-                    listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND)),
-                    ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
-                )
-            )
-        }
+        assertThat(InMemoryBehandlingRepository.hentAlleIkkeAvbrutteYtelsesbehandlinger(sak.id)).isEmpty()
+        assertThat(InMemoryFlytJobbRepository.hentJobberForSak(sak.id.toLong())).isEmpty()
     }
 
     @Test
@@ -196,12 +144,12 @@ class AvklarOppfølgingStegTest {
             FantVentebehov(
                 ventebehov = Ventebehov(
                     definisjon = Definisjon.VENT_PÅ_OPPFØLGING_NY,
-                    frist = LocalDate.now().plusDays(7),
-                    grunn = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER,
+                    frist = datoForOppfølging,
+                    grunn = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER
                 )
             )
         )
-        val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId = behandling.id)
+        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
         assertThat(
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_OPPFØLGINGSBEHOV_NAY)?.status()
         ).isEqualTo(no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.OPPRETTET)
@@ -209,20 +157,11 @@ class AvklarOppfølgingStegTest {
 
     private fun settOppTilstand(
         grunnlag: OppfølgingsoppgaveGrunnlag?
-    ): Pair<AvklarOppfølgingSteg, FlytKontekstMedPerioder> {
-        every { oppfølgingsBehandlingRepository.hent(any()) } returns grunnlag
-
-        val steg = AvklarOppfølgingSteg(
-            oppfølgingsBehandlingRepository = oppfølgingsBehandlingRepository,
-            behandlingService = behandlingService,
-            låsRepository = låsRepository,
-            prosesserBehandling = prosesserBehandling,
-            mottaDokumentService = mottaDokumentService,
-            avklaringsbehovService = avklaringsbehovService,
-            avklaringsbehovRepository = avklaringsbehovRepository,
-            trukketSøknadService = trukketSøknadService
-        )
-
+    ): Pair<BehandlingSteg, FlytKontekstMedPerioder> {
+        if (grunnlag != null) {
+            InMemoryOppfølgingsBehandlingRepository.lagre(behandling.id, grunnlag)
+        }
+        val steg = AvklarOppfølgingSteg.konstruer(inMemoryRepositoryProvider, gatewayProvider)
         val kontekst = flytKontekstMedPerioder {
             this.behandling = this@AvklarOppfølgingStegTest.behandling
             this.rettighetsperiode = Periode(13 februar 1989, 13 mars 2025)

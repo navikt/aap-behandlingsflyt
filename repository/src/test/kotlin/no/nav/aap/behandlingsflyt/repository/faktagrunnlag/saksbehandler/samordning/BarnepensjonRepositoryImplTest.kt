@@ -16,10 +16,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.YearMonth
 
+@Tag("db")
 class BarnepensjonRepositoryImplTest {
     companion object {
         private lateinit var dataSource: TestDataSource

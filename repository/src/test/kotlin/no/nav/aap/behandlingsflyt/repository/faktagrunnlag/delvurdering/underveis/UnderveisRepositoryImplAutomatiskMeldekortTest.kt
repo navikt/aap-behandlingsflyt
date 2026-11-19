@@ -23,11 +23,13 @@ import no.nav.aap.komponenter.verdityper.TimerArbeid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+@Tag("db")
 class UnderveisRepositoryImplAutomatiskMeldekortTest {
 
     private lateinit var dataSource: TestDataSource

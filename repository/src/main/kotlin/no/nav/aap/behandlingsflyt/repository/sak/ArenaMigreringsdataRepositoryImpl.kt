@@ -85,4 +85,16 @@ class ArenaMigreringsdataRepositoryImpl(private val connection: DBConnection) : 
             }
         }
     }
+
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+        // Sporing for migreringsbehandlingen, skal ikke følge med til nye behandlinger
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+        connection.execute("DELETE FROM ARENA_MIGRERINGSDATA WHERE BEHANDLING_ID = ?") {
+            setParams {
+                setLong(1, behandlingId.toLong())
+            }
+        }
+    }
 }
