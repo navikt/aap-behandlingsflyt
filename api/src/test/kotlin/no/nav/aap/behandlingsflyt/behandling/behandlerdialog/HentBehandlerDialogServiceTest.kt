@@ -33,7 +33,6 @@ import no.nav.aap.dokumentinnhenting.kontrakt.MeldingStatusDto
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
