@@ -350,7 +350,7 @@ class KravStegTest {
         sisteMeldekortperiode: Periode? = Periode(migreringsdato.minusDays(14), migreringsdato.minusDays(1)),
     ) = KravResponse(
     @Test
-    fun `revurdering med migrert krav skal vurderes manuelt selv om helautomatisk-vurdering er påskrudd`() {
+    fun `saksbehandlers revurdering av migrert krav skal vurderes manuelt selv om helautomatisk-vurdering er påskrudd`() {
         val sak = opprettInMemorySak()
         every { sakService.hent(sak.id) } returns sak
         val migreringsbehandling = opprettFørstegangsbehandling(sak.id)
@@ -360,7 +360,6 @@ class KravStegTest {
 
         val revurdering = opprettRevurdering(sak.id, migreringsbehandling.id)
         InMemoryKravRepository.kopier(migreringsbehandling.id, revurdering.id)
-        leggTilSøknad(revurdering.id, sak.id, LocalDate.of(2026, 10, 1).atStartOfDay())
 
         val avklaringsbehovService = mockk<AvklaringsbehovService>(relaxed = true)
         val vedtakBehøverVurdering = slot<() -> Boolean>()
@@ -386,7 +385,7 @@ class KravStegTest {
         val resultat = stegUtenManuellVurdering.utfør(flytKontekstMedPerioder {
             this.behandling = revurdering
             this.vurderingType = VurderingType.REVURDERING
-            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.VURDER_KRAV)
         })
 
         assertThat(resultat).isEqualTo(Fullført)
@@ -397,6 +396,74 @@ class KravStegTest {
             )
         }
         assertThat(vedtakBehøverVurdering.captured()).isTrue()
+    }
+
+    @Test
+    fun `søknad i revurdering etter migrering blir Tilleggsopplysning når manuell kravvurdering er av`() {
+        verifiserSøknadEtterMigreringBlirTilleggsopplysning(AlleAvskruddUnleash)
+    }
+
+    @Test
+    fun `søknad i revurdering etter migrering blir Tilleggsopplysning når manuell kravvurdering er på`() {
+        verifiserSøknadEtterMigreringBlirTilleggsopplysning(KravManuellVurderingUnleash)
+    }
+
+    private fun verifiserSøknadEtterMigreringBlirTilleggsopplysning(unleash: FakeUnleashBaseWithDefaultDisabled) {
+        val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
+        val migreringsbehandling = opprettFørstegangsbehandling(sak.id)
+        arenaMigreringForSak = arenaMigrering(sak.id)
+        stegMedAutomatiskMigrering().utfør(migreringKontekst(migreringsbehandling))
+        val migrertKrav = InMemoryKravRepository.hent(migreringsbehandling.id).vurderinger.single() as MigrertKrav
+
+        val revurdering = opprettRevurdering(sak.id, migreringsbehandling.id)
+        InMemoryKravRepository.kopier(migreringsbehandling.id, revurdering.id)
+        leggTilSøknad(revurdering.id, sak.id, LocalDate.of(2026, 10, 1).atStartOfDay())
+
+        val avklaringsbehovService = mockk<AvklaringsbehovService>(relaxed = true)
+        val vedtakBehøverVurdering = slot<() -> Boolean>()
+        val erTilstrekkeligVurdert = slot<() -> Boolean>()
+        every {
+            avklaringsbehovService.oppdaterAvklaringsbehov(
+                definisjon = Definisjon.VURDER_KRAV,
+                vedtakBehøverVurdering = capture(vedtakBehøverVurdering),
+                erTilstrekkeligVurdert = capture(erTilstrekkeligVurdert),
+                tilbakestillGrunnlag = any(),
+                kontekst = any(),
+            )
+        } returns Unit
+        val steg = KravSteg(
+            unleashGateway = unleash,
+            kravRepository = InMemoryKravRepository,
+            mottattDokumentRepository = InMemoryMottattDokumentRepository,
+            avklaringsbehovService = avklaringsbehovService,
+            sakRepository = InMemorySakRepository,
+            sakService = sakService,
+            arenaMigreringService = arenaMigreringService,
+        )
+        val kontekst = flytKontekstMedPerioder {
+            this.behandling = revurdering
+            this.vurderingType = VurderingType.REVURDERING
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
+        }
+
+        steg.utfør(kontekst)
+        val etterFørsteKjøring = InMemoryKravRepository.hent(revurdering.id).gjeldendeVurderinger()
+        steg.utfør(kontekst)
+
+        val gjeldende = InMemoryKravRepository.hent(revurdering.id).gjeldendeVurderinger()
+        assertThat(gjeldende).containsExactlyInAnyOrderElementsOf(etterFørsteKjøring)
+        assertThat(gjeldende.filterIsInstance<RelevantKrav>()).isEmpty()
+        assertThat(gjeldende.filterIsInstance<MigrertKrav>()).containsExactly(migrertKrav)
+        val tilleggsopplysning = gjeldende.filterIsInstance<Tilleggsopplysning>().single()
+        assertThat(tilleggsopplysning.vurdertIBehandling).isEqualTo(revurdering.id)
+        assertThat(tilleggsopplysning.erAutomatiskVurdert()).isTrue()
+        if (vedtakBehøverVurdering.isCaptured) {
+            assertThat(vedtakBehøverVurdering.captured()).isFalse()
+        }
+        if (erTilstrekkeligVurdert.isCaptured) {
+            assertThat(erTilstrekkeligVurdert.captured()).isTrue()
+        }
     }
 
     @Test

@@ -38,8 +38,15 @@ data class ArbeidsInntektMåned(
 }
 
 
+/**
+ * Vi tar ikke vare på relevantDato vi har hentet inntekt i forhold til hvis det ikke finnes inntekter
+ * Konsekvensen av dette er at vi alltid vil spørre på nytt etter disse datoene,
+ * selv om ingenting tilsier at det har skjedd endringer i inntekten.
+ * Dette er en følge av databasestrukturen der relevantDato er lagret per inntekt
+ */
 fun Map<LocalDate, List<ArbeidsInntektMåned>>.tilDomene(enhetGrunnlag: List<EnhetGrunnlag>): Set<InntekterForKrav> {
-    return this.map { (dato, inntekter) ->
+    return this.mapNotNull { (dato, inntekter) ->
+        if (inntekter.isEmpty()) return@mapNotNull null
         InntekterForKrav(dato, inntekter.tilDomene(enhetGrunnlag).toSet())
     }.toSet()
 }

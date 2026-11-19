@@ -25,7 +25,7 @@ class VurderKlageNayLøser(
             innstilling = løsning.klagevurderingNay.innstilling,
             påklagetVedtakType = påklagetBehandlingRepository.hentPåklagetVedtakstype(
                 kontekst.kontekst.behandlingId
-            ),
+            ) ?: throw UgyldigForespørselException("Påklaget vedtak er ikke fastsatt"),
         )
 
         klagebehandlingNayRepository.lagre(

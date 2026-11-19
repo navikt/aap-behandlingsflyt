@@ -25,7 +25,7 @@ class VurderKlageKontorLøser(
             innstilling = løsning.klagevurderingKontor.innstilling,
             påklagetVedtakType = påklagetBehandlingRepository.hentPåklagetVedtakstype(
                 kontekst.kontekst.behandlingId
-            ),
+            ) ?: throw UgyldigForespørselException("Påklaget vedtak er ikke fastsatt"),
         )
 
         klagebehandlingKontorRepository.lagre(

@@ -44,14 +44,14 @@ class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : 
             }
         }
 
-    override fun lagre(behandlingId: BehandlingId, delvurderinger: List<LovvalgDelvurderingerGrunnlag>) {
-        require(delvurderinger.isNotEmpty()) { "Må lagre minst én delvurdering" }
-        require(delvurderinger.map { it.relevantDato }.distinct().size == delvurderinger.size) {
+    override fun lagre(behandlingId: BehandlingId, resultat: List<LovvalgDelvurderingerGrunnlag>) {
+        require(resultat.isNotEmpty()) { "Må lagre minst én delvurdering" }
+        require(resultat.map { it.relevantDato }.distinct().size == resultat.size) {
             "Kun én delvurdering per relevant dato"
         }
 
         val eksisterende = hentAlle(behandlingId)
-        if (eksisterende == delvurderinger) return
+        if (eksisterende == resultat) return
 
         if (eksisterende.isNotEmpty()) {
             deaktiverGrunnlag(behandlingId)
@@ -75,7 +75,7 @@ class LovvalgDelvurderingRepositoryImpl(private val connection: DBConnection) : 
                 (vurderinger_id, vurdert_i_behandling, versjon, vurdering, relevant_dato)
             VALUES (?, ?, ?, ?::jsonb, ?)
             """.trimIndent(),
-            delvurderinger
+            resultat
         ) {
             setParams { delvurdering ->
                 setLong(1, vurderingerId)
