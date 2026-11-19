@@ -334,6 +334,11 @@ class KravSteg(
         return !harMigrertKrav(kontekst)
     }
 
+    /**
+     * Gjelder bevisst bare automatisk migrering. Manuelt [MigrertKrav] sendes i praksis bare inn når
+     * saksbehandler revurderer et krav som allerede er migrert automatisk og kontrollert her. Endrer
+     * saksbehandler migreringsdato eller kvote da, er det en aktiv avgjørelse som vi ikke skal hindre.
+     */
     private fun validerAtAlleMeldekortErBehandlet(krav: ArenaKrav) {
         val sisteTilDato = checkNotNull(krav.sisteFerdigBehandledeMeldekortTilDato) {
             "Kan ikke migrere Arena-sak ${krav.arenaSaksnummer}: Arena har ingen ferdig behandlet meldekortperiode. " +
