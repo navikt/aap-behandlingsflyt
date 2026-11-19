@@ -282,14 +282,13 @@ where not exists (
     override fun finnSakerMedBarnetillegg(påDato: LocalDate): List<SakId> {
         // gjeldende_vedtatte_behandliger er definert view i db/flyway
         val sql = """
-select distinct b.sak_id as id
-from tilkjent_ytelse ty
-         join gjeldende_vedtatte_behandlinger b on ty.behandling_id = b.behandling_id
-         join public.tilkjent_periode tp on ty.id = tp.tilkjent_ytelse_id
-where aktiv = true
-  and tp.barnetillegg > 0
-  and upper(tp.periode) > ?::date;
-
+            select distinct gvb.sak_id as id
+            from tilkjent_ytelse ty
+                join gjeldende_vedtatte_behandlinger gvb on ty.behandling_id = gvb.behandling_id
+                join public.tilkjent_periode tp on ty.id = tp.tilkjent_ytelse_id
+            where aktiv = true
+                and tp.barnetillegg > 0
+                and upper(tp.periode) > ?::date;
         """.trimIndent()
 
         return connection.queryList(sql) {
