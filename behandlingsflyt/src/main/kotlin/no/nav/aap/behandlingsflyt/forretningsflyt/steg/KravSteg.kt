@@ -11,9 +11,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravValidering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
@@ -151,7 +151,7 @@ class KravSteg(
                 val søknad = søknaderMottattIBehandling.first()
                 kravRepository.lagre(
                     kontekst.behandlingId, vurderinger = setOf(
-                        RelevantKrav(
+                        RelevantSøknadKrav(
                             referanse = Kravreferanse.ny(),
                             journalpostId = søknad.referanse.asJournalpostId,
                             vurdertAv = SYSTEMBRUKER,
@@ -207,7 +207,7 @@ class KravSteg(
         // Dersom saksbehandler har overstyrt muligRettFra i denne behandlingen, bevarer vi overstyringen
         // (verdien) men lar KravSteg re-vurdere hvilken søknad som er RelevantKrav.
         val overstyringFraDenneBehandlingen = kravGrunnlag
-            ?.gjeldendeRelevanteKrav()
+            ?.gjeldendeSøknadKrav()
             ?.firstOrNull { it.vurdertIBehandling == kontekst.behandlingId }
             ?.overstyrMuligRettFra
 
@@ -215,7 +215,7 @@ class KravSteg(
             kontekst.forrigeBehandlingId?.let { kravRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
 
         val gjeldendeKravFraForrige = KravGrunnlag(vedtatteVurderinger.toSet())
-            .gjeldendeRelevanteKrav()
+            .gjeldendeSøknadKrav()
             .minByOrNull { it.muligRettFra }
 
         // Dersom eldste nye dokument er eldre enn det vedtatte kravets søknadsdato, overtar det som nytt RelevantKrav.
@@ -264,8 +264,8 @@ class KravSteg(
         behandlingId: BehandlingId,
         dokument: MottattDokument,
         overstyrMuligRettFra: OverstyrMuligRettFra? = null,
-    ): RelevantKrav {
-        return RelevantKrav(
+    ): RelevantSøknadKrav {
+        return RelevantSøknadKrav(
             referanse = Kravreferanse.ny(),
             journalpostId = dokument.referanse.asJournalpostId,
             vurdertAv = SYSTEMBRUKER,
@@ -330,7 +330,7 @@ class KravSteg(
     }
 
     private fun ArenaKrav.erLikVurdering(grunnlag: KravGrunnlag?): Boolean {
-        val migrerteKravVurderinger = grunnlag?.vurderinger?.filterIsInstance<MigrertKrav>()
+        val migrerteKravVurderinger = grunnlag?.vurderinger?.filterIsInstance<RelevantMigrertKrav>()
 
         if (migrerteKravVurderinger.isNullOrEmpty()) {
             return false

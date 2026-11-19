@@ -15,7 +15,7 @@ object KravValidering {
     }
 
     fun validerRelevantKrav(
-        vurdering: RelevantKrav,
+        vurdering: RelevantSøknadKrav,
         søknadForVurdering: MottattDokument?
     ) {
         if (søknadForVurdering != null) {
@@ -29,7 +29,7 @@ object KravValidering {
         }
     }
 
-    fun validerMigrertKrav(vurdering: MigrertKrav) {
+    fun validerMigrertKrav(vurdering: RelevantMigrertKrav) {
         if (vurdering.muligRettFra.isAfter(LocalDate.now())) {
             throw UgyldigForespørselException("migreringstidspunkt kan ikke være satt frem i tid.")
         }
@@ -50,6 +50,17 @@ object KravValidering {
         // TODO: Midlertidig fordi vi kun støtter å migrere 1 type kvote enn så lenge
         if(vurdering.rettighetstype != MigrertRettighetstype.ORDINÆR) {
             throw UgyldigForespørselException("Kelvin støtter kun å migrere rettighetstype ORDINÆR.")
+        }
+    }
+
+    fun validerIkkeBådeMigrertKravOgSøknadKrav(gjeldendeRelevanteKrav: Collection<RelevantKrav>) {
+        val harMigrertKrav = gjeldendeRelevanteKrav.any { it is RelevantMigrertKrav }
+        val harSøknadKrav = gjeldendeRelevanteKrav.any { it is RelevantSøknadKrav }
+        if (harMigrertKrav && harSøknadKrav) {
+            throw UgyldigForespørselException(
+                "En behandling kan ikke ha både migrert krav og relevant krav fra søknad. " +
+                        "Søknader i en migrert sak skal vurderes som tilleggsopplysning."
+            )
         }
     }
 }

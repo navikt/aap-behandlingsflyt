@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Virksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
@@ -254,13 +254,13 @@ class LovvalgMedlemskapInformasjonskravTest {
         val kravRepsitory: KravRepository = inMemoryRepositoryProvider.provide()
         val stønadsperiodeRepository: StønadsperiodeRepository = inMemoryRepositoryProvider.provide()
 
-        val test: List<Pair<RelevantKrav, StønadsperiodeVurdering>> =
+        val test: List<Pair<RelevantSøknadKrav, StønadsperiodeVurdering>> =
             kravMap.entries.map { (dato, referanseOgkravType) ->
                 val (referanse, kravType) = referanseOgkravType
                 val ref = referanse ?: Kravreferanse(UUID.randomUUID())
 
                 Pair(
-                    RelevantKrav(
+                    RelevantSøknadKrav(
                         referanse = ref,
                         journalpostId = JournalpostId("123"),
                         vurdertAv = SYSTEMBRUKER,

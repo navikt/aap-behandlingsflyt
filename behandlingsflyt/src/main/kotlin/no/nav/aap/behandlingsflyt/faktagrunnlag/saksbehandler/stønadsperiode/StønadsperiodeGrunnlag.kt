@@ -21,10 +21,9 @@ data class StønadsperiodeGrunnlag(
 ) : VurderingForKravGrunnlag<StønadsperiodeVurdering> {
     override fun tilTidslinje(kravGrunnlag: KravGrunnlag): Tidslinje<StønadsperiodeVurdering> {
         val gjeldendeKravreferanser = kravGrunnlag.gjeldendeRelevanteKrav().map { it.referanse }
-        val gjeldendeMigrertKrav = kravGrunnlag.gjeldendeMigrertKrav()?.referanse
 
         return gjeldendeVurderinger()
-            .filter { stønadsperiodeVurdering -> stønadsperiodeVurdering.referanse in gjeldendeKravreferanser + gjeldendeMigrertKrav }
+            .filter { stønadsperiodeVurdering -> stønadsperiodeVurdering.referanse in gjeldendeKravreferanser }
             .sortedBy { it.startDato }
             .somTidslinje { Periode(it.startDato, Tid.MAKS) }
     }

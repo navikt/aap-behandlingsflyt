@@ -8,6 +8,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdatoRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.kravtidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
@@ -45,14 +47,7 @@ class AvklarStønadsperiodeSteg(
         }
 
         when (kontekst.behandlingType) {
-            TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> {
-                if(kontekst.erMigreringFraArena()) {
-                    vurderMigrertKravAutomatisk(kontekst)
-                } else {
-                    vurderAutomatisk(kontekst)
-                }
-            }
-
+            TypeBehandling.Førstegangsbehandling, TypeBehandling.Revurdering -> vurderAutomatisk(kontekst)
             else -> {}
         }
 
@@ -62,16 +57,22 @@ class AvklarStønadsperiodeSteg(
     private fun vurderAutomatisk(kontekst: FlytKontekstMedPerioder) {
         val gjeldendeRelevanteKrav =
             kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.gjeldendeRelevanteKrav().orEmpty()
+        val gjeldendeSøknadKrav = gjeldendeRelevanteKrav.filterIsInstance<RelevantSøknadKrav>().toSet()
         val vedtattGrunnlag = kontekst.forrigeBehandlingId?.let(stønadsperiodeRepository::hentHvisEksisterer)
         val vedtatteVurderinger = vedtattGrunnlag?.gjeldendeVurderinger().orEmpty().associateBy { it.referanse }
         val arenaMaksdato = hentArenaMaksdato(kontekst)
-        val kantIKantKrav = kravVedOvergangFraArena(gjeldendeRelevanteKrav, arenaMaksdato)
+        val kantIKantKrav = kravVedOvergangFraArena(gjeldendeSøknadKrav, arenaMaksdato)
         if (kantIKantKrav != null) {
-            sjekkAtIngenKravFørKantIKantKrav(kantIKantKrav, gjeldendeRelevanteKrav)
+            sjekkAtIngenKravFørKantIKantKrav(kantIKantKrav, gjeldendeSøknadKrav)
         }
 
         val nyeVurderinger = gjeldendeRelevanteKrav
-            .map { krav -> vurderStønadsperiode(krav, kantIKantKrav, arenaMaksdato, kontekst) }
+            .map { krav ->
+                when (krav) {
+                    is RelevantSøknadKrav -> vurderStønadsperiode(krav, kantIKantKrav, arenaMaksdato, kontekst)
+                    is RelevantMigrertKrav -> migrertStønadsperiode(krav, kontekst)
+                }
+            }
             .filter { trengerNyVurdering(vedtatteVurderinger[it.referanse], it) }
 
         // Svarer på om forrige lagrede vurdering var kant-i-kant. Må hentes før nye vurderinger lagres.
@@ -130,24 +131,23 @@ class AvklarStønadsperiodeSteg(
         return arenaMaksdatoRepository.hentHvisEksisterer(kontekst.behandlingId)?.arenaMaksdato
     }
 
-    private fun vurderMigrertKravAutomatisk(kontekst: FlytKontekstMedPerioder) {
-        kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.gjeldendeMigrertKrav()?.let { migrertKrav ->
-            stønadsperiodeRepository.lagre(kontekst.behandlingId, setOf(StønadsperiodeVurdering(
-                referanse = migrertKrav.referanse,
-                opprettet = Instant.now(),
-                vurdertIBehandling = kontekst.behandlingId,
-                vurdertAv = SYSTEMBRUKER,
-                begrunnelse = "Migrert stønadsperiode fra Arenasak ${migrertKrav.arenaSaksnummer}",
-                harHattOrdinærSiste52Uker = false,
-                harGjenværendeKvote = false,
-                relevantKravType = RelevantKravType.MIGRERT_STØNADSPERIODE,
-                startDato = migrertKrav.muligRettFra
-            )))
-        }
-    }
+    private fun migrertStønadsperiode(
+        krav: RelevantMigrertKrav,
+        kontekst: FlytKontekstMedPerioder,
+    ) = StønadsperiodeVurdering(
+        referanse = krav.referanse,
+        opprettet = Instant.now(),
+        vurdertIBehandling = kontekst.behandlingId,
+        vurdertAv = SYSTEMBRUKER,
+        begrunnelse = "Migrert stønadsperiode fra Arenasak ${krav.arenaSaksnummer}",
+        harHattOrdinærSiste52Uker = false,
+        harGjenværendeKvote = false,
+        relevantKravType = RelevantKravType.MIGRERT_STØNADSPERIODE,
+        startDato = krav.muligRettFra
+    )
 
     private fun vurderStønadsperiode(
-        krav: RelevantKrav,
+        krav: RelevantSøknadKrav,
         kantIKantKrav: RelevantKrav?,
         arenaMaksdato: ArenaMaksdato?,
         kontekst: FlytKontekstMedPerioder,
@@ -188,11 +188,11 @@ class AvklarStønadsperiodeSteg(
      * Returnerer null når ingen krav dekker datoen, for eksempel ved opphold etter Arena-saken.
      */
     private fun kravVedOvergangFraArena(
-        gjeldendeRelevanteKrav: Set<RelevantKrav>,
+        gjeldendeSøknadKrav: Set<RelevantSøknadKrav>,
         arenaMaksdato: ArenaMaksdato?,
     ): RelevantKrav? {
         val dagenEtterMaksdato = arenaMaksdato?.maksdato?.plusDays(1) ?: return null
-        return gjeldendeRelevanteKrav.kravtidslinje()
+        return gjeldendeSøknadKrav.kravtidslinje()
             .segmenter()
             .singleOrNull { it.periode.inneholder(dagenEtterMaksdato) }
             ?.verdi
@@ -205,9 +205,9 @@ class AvklarStønadsperiodeSteg(
      */
     private fun sjekkAtIngenKravFørKantIKantKrav(
         kantIKantKrav: RelevantKrav,
-        gjeldendeRelevanteKrav: Set<RelevantKrav>,
+        gjeldendeSøknadKrav: Set<RelevantSøknadKrav>,
     ) {
-        val harTidligereKrav = gjeldendeRelevanteKrav.any { it.muligRettFra.isBefore(kantIKantKrav.muligRettFra) }
+        val harTidligereKrav = gjeldendeSøknadKrav.any { it.muligRettFra.isBefore(kantIKantKrav.muligRettFra) }
         check(!harTidligereKrav) {
             "Støtter ikke kant i kant med Arena når saken har relevante krav før kravet " +
                     "${kantIKantKrav.referanse.verdi}, som dekker dagen etter maksdato."

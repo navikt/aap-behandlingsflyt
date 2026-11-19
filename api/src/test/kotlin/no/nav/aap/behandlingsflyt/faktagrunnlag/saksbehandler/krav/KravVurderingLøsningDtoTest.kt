@@ -54,7 +54,7 @@ class KravVurderingLøsningDtoTest {
         assertThat(faktisk).isEqualTo(forventet)
 
         val vurdering = faktisk.tilVurdering(BehandlingId(1), Bruker("En ident"), Instant.now())
-        assertThat(vurdering).isInstanceOf(RelevantKrav::class.java)
+        assertThat(vurdering).isInstanceOf(RelevantSøknadKrav::class.java)
     }
 
     @Test

@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.avslag11_27
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -46,7 +46,7 @@ class Avslag11_27GrunnlagTest {
     private fun relevantKrav(
         referanse: Kravreferanse = ref1,
         muligRettFra: LocalDate = 1 januar 2026,
-    ) = RelevantKrav(
+    ) = RelevantSøknadKrav(
         referanse = referanse,
         journalpostId = JournalpostId("jp-${referanse.verdi}"),
         vurdertAv = Bruker("testBruker"),
