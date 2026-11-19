@@ -91,7 +91,7 @@ class MeldingOmVedtakBrevSteg(
             )
         }
 
-        log.info("Skal bestille brev? $brevBehov avbrutt? $behandlingErAvbrutt bestilling om vedtak? $harBestillingOmVedtakBrev er migering? ${kontekst.erMigreringFraArena()}")
+        log.info("Skal bestille brev? avbrutt? $behandlingErAvbrutt bestilling om vedtak? $harBestillingOmVedtakBrev er migering? ${kontekst.erMigreringFraArena()}")
         if (brevBehov != null && !behandlingErAvbrutt && !harBestillingOmVedtakBrev && !kontekst.erMigreringFraArena()) {
             bestillBrev(kontekst, brevBehov)
         }
