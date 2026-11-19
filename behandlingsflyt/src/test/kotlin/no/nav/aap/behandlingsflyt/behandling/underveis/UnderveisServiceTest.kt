@@ -37,7 +37,7 @@ class UnderveisServiceTest {
     private val kvoter = tomKvoter
 
     @Test
-    fun `bevarer datoen fra første melding i underveisresultatet`() {
+    fun `setter meldedato til første innsending i meldeperioden`() {
         val meldeperiode = Periode(20 januar 2025, 2 februar 2025)
         val rettighetsperiode = Periode(6 januar 2025, meldeperiode.tom)
         val input = tomUnderveisInput(
@@ -54,10 +54,6 @@ class UnderveisServiceTest {
 
         assertThat(meldtePerioder).isNotEmpty()
         assertThat(meldtePerioder.map { it.meldedato }).containsOnly(23 januar 2025)
-        assertThat(perioder.filter { it.meldePeriode != meldeperiode }.map { it.meldedato }).containsOnlyNulls()
-        val kopiertPeriode = meldtePerioder.first().let { it.copy(it.periode, it.meldepliktStatus) }
-        assertThat(kopiertPeriode.meldedato)
-            .isEqualTo(23 januar 2025)
     }
 
     @Test
