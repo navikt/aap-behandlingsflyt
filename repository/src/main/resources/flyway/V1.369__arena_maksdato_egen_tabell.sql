@@ -28,9 +28,4 @@ WHERE arena_saksnummer IS NOT NULL;
 SELECT setval(pg_get_serial_sequence('arena_maksdato', 'id'), COALESCE(MAX(id), 0) + 1, false)
 FROM arena_maksdato;
 
-ALTER TABLE arena_maksdato_grunnlag
-    DROP COLUMN arena_saksnummer,
-    DROP COLUMN status,
-    DROP COLUMN maksdato,
-    DROP COLUMN vedtak_til,
-    DROP COLUMN vedtak_id;
+-- De gamle kolonnene beholdes til gamle poder er borte, og fjernes i en senere release.
