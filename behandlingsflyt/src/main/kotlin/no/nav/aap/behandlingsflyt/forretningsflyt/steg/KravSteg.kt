@@ -139,7 +139,7 @@ class KravSteg(
     }
 
     private fun vurderAutomatiskHvisMulig(kontekst: FlytKontekstMedPerioder) {
-        if (!harIkkeMigrertKrav(kontekst)) {
+        if (harMigrertKrav(kontekst)) {
             vurderSøknaderSomTilleggsopplysningTilMigrertKrav(kontekst)
             return
         }
@@ -324,9 +324,13 @@ class KravSteg(
         }
     }
 
-    private fun harIkkeMigrertKrav(kontekst: FlytKontekstMedPerioder): Boolean {
+    private fun harMigrertKrav(kontekst: FlytKontekstMedPerioder): Boolean {
         val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
-        return kravGrunnlag?.gjeldendeMigrertKrav() == null
+        return kravGrunnlag?.gjeldendeMigrertKrav() != null
+    }
+
+    private fun harIkkeMigrertKrav(kontekst: FlytKontekstMedPerioder): Boolean {
+        return harMigrertKrav(kontekst)
     }
 
     private fun ArenaKrav.erLikVurdering(grunnlag: KravGrunnlag?): Boolean {
