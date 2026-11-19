@@ -81,6 +81,12 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
+    fun hentHvisEksisterer(behandlingId: BehandlingId): Behandling? {
+        synchronized(lock) {
+            return memory[behandlingId]
+        }
+    }
+
     override fun hentReferanse(behandlingId: BehandlingId): BehandlingReferanse {
         return hent(behandlingId).referanse
     }

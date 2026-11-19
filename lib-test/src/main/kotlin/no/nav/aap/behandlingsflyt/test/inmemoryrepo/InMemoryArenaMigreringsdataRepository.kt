@@ -26,6 +26,13 @@ object InMemoryArenaMigreringsdataRepository : ArenaMigreringsdataRepository {
         return aktive[behandlingId to steg]
     }
 
+    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+    }
+
+    override fun slett(behandlingId: BehandlingId) {
+        aktive.keys.removeIf { (id, _) -> id == behandlingId }
+    }
+
     fun reset() {
         aktive.clear()
     }
