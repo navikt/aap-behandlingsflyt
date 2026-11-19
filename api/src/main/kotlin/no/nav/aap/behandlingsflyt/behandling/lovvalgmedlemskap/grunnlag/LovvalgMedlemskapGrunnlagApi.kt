@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepo
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.KanBehandlesAutomatiskVurdering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingRepository
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingerGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgMedlemskapVurderingService
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.OppgittUtenlandsopplysningerRepository
@@ -34,6 +35,7 @@ import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.tilgang.BehandlingPathParam
 import no.nav.aap.tilgang.getGrunnlag
+import java.time.LocalDate
 import javax.sql.DataSource
 
 fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
@@ -73,11 +75,12 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
                                 ?.gjeldendeVurderinger()
                                 .orEmpty()
 
-                        val delvurderingerForVurdertIBehandling = mutableMapOf<BehandlingId, KanBehandlesAutomatiskVurdering?>()
-                        fun delvurderingerFor(vurdertIBehandling: BehandlingId) =
-                            delvurderingerForVurdertIBehandling.getOrPut(vurdertIBehandling) {
-                                lovvalgDelvurderingRepository.hentHvisEksisterer(vurdertIBehandling)?.vurdering()
-                            }
+                        val delvurderingerForVurdertIBehandling =
+                            mutableMapOf<BehandlingId, List<LovvalgDelvurderingerGrunnlag>>()
+                        fun delvurderingerFor(vurdertIBehandling: BehandlingId, vurderingFom: LocalDate) =
+                            delvurderingerForVurdertIBehandling
+                                .getOrPut(vurdertIBehandling) { lovvalgDelvurderingRepository.hentAlle(vurdertIBehandling) }
+                                .delvurderingForVurdering(vurderingFom)
 
                         val avklaringsbehov = avklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
                         val behøverVurderinger =
@@ -88,8 +91,9 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
                         // Dersom steget behøver en vurdering, skal det ikke lenger være overstyrt i denne behandlingen
                         val overstyrt = nyeVurderinger?.any { it.overstyrt } ?: false && behøverVurderinger.isEmpty()
                         val delvurderinger = lovvalgDelvurderingRepository
-                            .hentHvisEksisterer(behandling.id)?.vurdering()
-                            ?: utledFallbackDelvurderinger(behandling, repositoryProvider, unleashGateway)
+                            .hentAlle(behandling.id)
+                            .map { it.tilDelvurderingForKrav() }
+                            .ifEmpty { utledFallbackDelvurderinger(behandling, repositoryProvider, unleashGateway) }
                         PeriodisertLovvalgMedlemskapGrunnlagResponse(
                             harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                             overstyrt = overstyrt,
@@ -99,7 +103,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
                             nyeVurderinger = nyeVurderinger?.map {
                                 it.toResponse(
                                     vurdertAvService = vurdertAvService,
-                                    delvurderinger = delvurderingerFor(it.vurdertIBehandling),
+                                    delvurderinger = delvurderingerFor(it.vurdertIBehandling, it.fom),
                                 )
                             } ?: emptyList(),
                             sisteVedtatteVurderinger = gjeldendeVedtatteVurderinger
@@ -111,7 +115,7 @@ fun NormalOpenAPIRoute.lovvalgMedlemskapGrunnlagApi(
                                         vurdertAvService = vurdertAvService,
                                         fom = segment.fom(),
                                         tom = if (segment.tom().isEqual(Tid.MAKS)) null else segment.tom(),
-                                        delvurderinger = delvurderingerFor(verdi.vurdertIBehandling),
+                                        delvurderinger = delvurderingerFor(verdi.vurdertIBehandling, segment.fom()),
                                     )
                                 },
                             ikkeRelevantePerioder = avklaringsbehovMetadataService.perioderSomSkalFremhevesSomIkkeRelevant(
@@ -131,7 +135,7 @@ private fun utledFallbackDelvurderinger(
     behandling: Behandling,
     repositoryProvider: RepositoryProvider,
     unleashGateway: UnleashGateway
-): KanBehandlesAutomatiskVurdering {
+): List<DelvurderingForKravResponse> {
         val sak = repositoryProvider.provide<SakRepository>().hent(behandling.sakId)
         val oppgittUtenlandsopplysningerRepository = repositoryProvider.provide<OppgittUtenlandsopplysningerRepository>()
 
@@ -140,7 +144,7 @@ private fun utledFallbackDelvurderinger(
                 .hentBrukerPersonOpplysningHvisEksisterer(behandling.id)
         if (brukerPersonopplysning == null) {
             // Steget har ikke fått kjørt enda, så ingen vurdering kan gis ut
-            return KanBehandlesAutomatiskVurdering(false, emptyList())
+            return emptyList()
         }
         val medlemskapArbeidInntektGrunnlag =
             repositoryProvider.provide<LovvalgMedlemskapRepository>()
@@ -152,14 +156,15 @@ private fun utledFallbackDelvurderinger(
                     sak.id
                 )
 
-        return LovvalgMedlemskapVurderingService.vurderTilhørighet(
-            MedlemskapLovvalgRegisterGrunnlag.fra(
-                medlemskapArbeidInntektGrunnlag,
-                brukerPersonopplysning,
-                oppgittUtenlandsOppholdGrunnlag,
-                vurderBosattStatusOgNorskStatsborgerskap =
-                    unleashGateway.isEnabled(BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp),
-            ),
-            sak.rettighetsperiode
-        )
+    val vurderTilhørighet = LovvalgMedlemskapVurderingService.vurderTilhørighet(
+        MedlemskapLovvalgRegisterGrunnlag.fra(
+            medlemskapArbeidInntektGrunnlag,
+            brukerPersonopplysning,
+            oppgittUtenlandsOppholdGrunnlag,
+            vurderBosattStatusOgNorskStatsborgerskap =
+                unleashGateway.isEnabled(BehandlingsflytFeature.BosattStatsborgerskapGjennomslipp),
+        ),
+        sak.rettighetsperiode
+    )
+    return listOf(DelvurderingForKravResponse(sak.rettighetsperiode.fom, vurderTilhørighet))
 }
