@@ -330,7 +330,7 @@ class KravSteg(
     }
 
     private fun harIkkeMigrertKrav(kontekst: FlytKontekstMedPerioder): Boolean {
-        return harMigrertKrav(kontekst)
+        return !harMigrertKrav(kontekst)
     }
 
     private fun ArenaKrav.erLikVurdering(grunnlag: KravGrunnlag?): Boolean {
