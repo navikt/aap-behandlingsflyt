@@ -288,6 +288,7 @@ class ArenaMigreringMapperTest {
             søknadsdato = LocalDate.of(2025, 1, 15),
             migreringsdato = LocalDate.of(2025, 12, 1),
             gjenståendeKvoteOrdinær = 150,
+            sisteFerdigBehandledeMeldekortTilDato = LocalDate.of(2025, 11, 30),
         )
 
         val krav = ArenaMigreringMapper.tilMigrertKrav(fraArena, behandlingId)
@@ -346,6 +347,7 @@ class ArenaMigreringMapperTest {
             søknadsdato = LocalDate.of(2025, 1, 15),
             migreringsdato = LocalDate.of(2025, 12, 1),
             gjenståendeKvoteOrdinær = null,
+            sisteFerdigBehandledeMeldekortTilDato = LocalDate.of(2025, 11, 30),
         )
 
         assertThat(ArenaMigreringMapper.tilMigrertKrav(fraArena, BehandlingId(1)).resterendeKvoteOrdinær).isEqualTo(0)

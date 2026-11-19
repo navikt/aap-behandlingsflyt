@@ -18,6 +18,7 @@ data class ArenaKrav(
     val søknadsdato: LocalDate,
     val migreringsdato: LocalDate,
     val gjenståendeKvoteOrdinær: Int?,
+    val sisteFerdigBehandledeMeldekortTilDato: LocalDate?,
 )
 
 data class ArenaSak(
@@ -87,6 +88,7 @@ fun KravResponse.tilDomene(): ArenaKrav {
             "Kan ikke migrere krav for Arena-sak $arenaSaksnummer. Mangler migreringsdato fra Arena."
         },
         gjenståendeKvoteOrdinær = gjenstaaendeKvote.ordinaer,
+        sisteFerdigBehandledeMeldekortTilDato = sisteFerdigBehandledeMeldekortperiode?.tilOgMedDato,
     )
 }
 

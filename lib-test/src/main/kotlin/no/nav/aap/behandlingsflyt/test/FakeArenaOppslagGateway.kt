@@ -15,6 +15,7 @@ import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVedtaksperiodeResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVilkar as ArenaVilkarKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaDiagnose as ArenaDiagnoseKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
+import no.nav.aap.arenaoppslag.kontrakt.modeller.Periode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.ArenaMeldeperiodesyklusInformasjonskrav
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.komponenter.gateway.Factory
@@ -57,14 +58,19 @@ open class FakeArenaOppslagGateway : ArenaOppslagGateway {
 
 
     override fun hentKravDataForSak(arenasaksnummer: String): KravResponse {
+        val migreringsdato = LocalDate.now().with(TemporalAdjusters.previous(DayOfWeek.MONDAY)).minusWeeks(1)
         return KravResponse(
             lopenr = 123456,
             aar = 2016,
             soknadsdato = LocalDate.now().minusYears(1),
-            migreringsdato = LocalDate.now().with(TemporalAdjusters.previous(DayOfWeek.MONDAY)),
+            migreringsdato = migreringsdato,
             gjenstaaendeKvote = GjenstaaendeKvote(
                 ordinaer = 150
-            )
+            ),
+            sisteFerdigBehandledeMeldekortperiode = Periode(
+                migreringsdato.minusWeeks(2),
+                migreringsdato.minusDays(1)
+            ),
         )
     }
 
