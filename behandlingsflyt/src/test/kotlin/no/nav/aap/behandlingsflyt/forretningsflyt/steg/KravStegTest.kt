@@ -343,12 +343,6 @@ class KravStegTest {
             .hasMessageContaining("2026-09-20")
     }
 
-    private fun kravResponse(
-        søknadsdato: LocalDate,
-        migreringsdato: LocalDate,
-        kvote: Int,
-        sisteMeldekortperiode: Periode? = Periode(migreringsdato.minusDays(14), migreringsdato.minusDays(1)),
-    ) = KravResponse(
     @Test
     fun `saksbehandlers revurdering av migrert krav skal vurderes manuelt selv om helautomatisk-vurdering er påskrudd`() {
         val sak = opprettInMemorySak()
@@ -493,7 +487,12 @@ class KravStegTest {
         verify(exactly = 0) { avklaringsbehovService.oppdaterAvklaringsbehov(any(), any(), any(), any(), any()) }
     }
 
-    private fun kravResponse(søknadsdato: LocalDate, migreringsdato: LocalDate, kvote: Int) = KravResponse(
+    private fun kravResponse(
+        søknadsdato: LocalDate,
+        migreringsdato: LocalDate,
+        kvote: Int,
+        sisteMeldekortperiode: Periode? = Periode(migreringsdato.minusDays(14), migreringsdato.minusDays(1)),
+    ) = KravResponse(
         lopenr = 123456,
         aar = 2016,
         soknadsdato = søknadsdato,
