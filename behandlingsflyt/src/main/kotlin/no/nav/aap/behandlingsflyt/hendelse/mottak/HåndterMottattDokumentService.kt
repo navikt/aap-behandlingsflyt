@@ -58,6 +58,7 @@ class HåndterMottattDokumentService(
         mottattTidspunkt: LocalDateTime,
         brevkategori: InnsendingType,
         melding: Melding?,
+        opprettetAv: String? = null,
     ) {
         log.info("Mottok dokument på sak-id $sakId, og referanse $referanse, med brevkategori $brevkategori.")
         if (brevkategori === InnsendingType.SØKNAD) {
@@ -71,7 +72,7 @@ class HåndterMottattDokumentService(
         val sak = sakService.hent(sakId)
         val vurderingsbehov = MottattHendelseUtleder.utledVurderingsbehov(brevkategori, melding)
         val årsakTilOpprettelse = MottattHendelseUtleder.utledÅrsakTilOpprettelse(brevkategori, melding)
-        val opprettetAvIdent = MottattHendelseUtleder.utledOpprettetAv(melding)
+        val opprettetAvIdent = MottattHendelseUtleder.utledOpprettetAv(melding, opprettetAv)
 
         val opprettetBehandling = behandlingService.finnEllerOpprettBehandling(
             sak.saksnummer,
@@ -111,7 +112,8 @@ class HåndterMottattDokumentService(
         behandlingsreferanse: BehandlingReferanse,
         innsendingType: InnsendingType,
         melding: NyÅrsakTilBehandlingV0,
-        referanse: InnsendingReferanse
+        referanse: InnsendingReferanse,
+        opprettetAv: String? = null,
     ) {
         val behandling = behandlingRepository.hent(behandlingsreferanse)
         val årsakTilOpprettelse = MottattHendelseUtleder.utledÅrsakTilOpprettelse(innsendingType, melding)
@@ -121,7 +123,12 @@ class HåndterMottattDokumentService(
                 melding.årsakerTilBehandling.map { VurderingsbehovMedPeriode(it.tilVurderingsbehov()) }
             behandlingService.oppdaterVurderingsbehovOgÅrsak(
                 behandling,
-                VurderingsbehovOgÅrsak(vurderingsbehov, årsakTilOpprettelse, beskrivelse = melding.beskrivelse)
+                VurderingsbehovOgÅrsak(
+                    vurderingsbehov,
+                    årsakTilOpprettelse,
+                    opprettetAv = MottattHendelseUtleder.utledOpprettetAv(melding, opprettetAv),
+                    beskrivelse = melding.beskrivelse
+                )
             )
             mottaDokumentService.markerSomBehandlet(sakId, behandling.id, referanse)
             prosesserBehandling.triggProsesserBehandling(

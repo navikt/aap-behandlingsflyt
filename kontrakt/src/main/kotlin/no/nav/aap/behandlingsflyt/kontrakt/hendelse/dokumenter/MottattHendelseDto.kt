@@ -15,6 +15,7 @@ import java.time.LocalDateTime
  * @param mottattTidspunkt Tidspunktet da dokumentet ble mottatt.
  * @param melding Strukturert melding.
  * @param digitalisertAvPostmottak Om hendelsen ble digitalisert i postmottak, eller om det ble utført i annet system/kanal
+ * @param opprettetAv Nav-ident eller systemidentifikator for den som opprettet innsendingen
  */
 public class Innsending(
     public val saksnummer: Saksnummer,
@@ -23,7 +24,8 @@ public class Innsending(
     public val kanal: Kanal = Kanal.DIGITAL,
     public val mottattTidspunkt: LocalDateTime,
     public val melding: Melding? = null,
-    public val digitalisertAvPostmottak: Boolean? = null
+    public val digitalisertAvPostmottak: Boolean? = null,
+    public val opprettetAv: String? = null
 ) {
     init {
         when (type) {
@@ -165,4 +167,3 @@ public class Innsending(
     defaultImpl = SøknadV0::class,
 )
 public sealed interface Melding
-

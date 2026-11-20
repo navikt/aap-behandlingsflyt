@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.test
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PdlQueryException
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -111,6 +112,7 @@ class TestSakService(
                 kanal = Kanal.DIGITAL,
                 melding = søknad,
                 mottattTidspunkt = søknadsdato?.atStartOfDay() ?: LocalDateTime.now(),
+                opprettetAv = SYSTEMBRUKER.ident,
             )
         )
     }

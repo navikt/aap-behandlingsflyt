@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
@@ -10,6 +12,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.BehandlingSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.FlytSteg
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
 import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingId
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -32,7 +35,8 @@ class OmgjøringSteg private constructor(
     private val klageresultatUtleder: KlageresultatUtleder,
     private val flytJobbRepository: FlytJobbRepository,
     private val trekkKlageService: TrekkKlageService,
-    private val behandlingRepo: BehandlingRepository
+    private val behandlingRepo: BehandlingRepository,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
 ) : BehandlingSteg {
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
         if (trekkKlageService.klageErTrukket(kontekst.behandlingId)) {
@@ -52,7 +56,9 @@ class OmgjøringSteg private constructor(
                         brevkategori = InnsendingType.OMGJØRING_KLAGE_REVURDERING,
                         kanal = Kanal.DIGITAL,
                         melding = konstruerMelding(resultat, kontekst),
-                        mottattTidspunkt = LocalDateTime.now()
+                        mottattTidspunkt = LocalDateTime.now(),
+                        opprettetAv = (avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
+                            .hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK)?.endretAv() ?: SYSTEMBRUKER).ident
                     ).medPrioritet(Prioritet.LAV),
                 )
                 Fullført
@@ -97,6 +103,7 @@ class OmgjøringSteg private constructor(
                 repositoryProvider.provide(),
                 trekkKlageService = TrekkKlageService(repositoryProvider),
                 behandlingRepo = repositoryProvider.provide(),
+                avklaringsbehovRepository = repositoryProvider.provide(),
             )
         }
 

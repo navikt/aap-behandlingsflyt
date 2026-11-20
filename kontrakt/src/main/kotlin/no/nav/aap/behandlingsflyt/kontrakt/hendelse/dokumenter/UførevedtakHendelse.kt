@@ -34,7 +34,8 @@ public data class UførevedtakKafkaMelding(
             type = InnsendingType.UFØRE_VEDTAK_HENDELSE,
             kanal = Kanal.DIGITAL,
             mottattTidspunkt = LocalDateTime.now(),
-            melding = this.tilUføreVedtakV0()
+            melding = this.tilUføreVedtakV0(),
+            opprettetAv = "Kelvin"
         )
     }
 }
@@ -68,4 +69,3 @@ public enum class UførevedtakResultat(public val verdi: String) {
 
     public fun erOpphørEllerEndring(): Boolean = this == OPPH || this == ENDR
 }
-

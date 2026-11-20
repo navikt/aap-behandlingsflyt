@@ -33,7 +33,8 @@ public data class ForeldrepengevedtakKafkaMelding(
             type = InnsendingType.FORELDREPENGE_VEDTAK_HENDELSE,
             kanal = Kanal.DIGITAL,
             mottattTidspunkt = LocalDateTime.now(),
-            melding = this.tilForeldrepengeVedtakV0()
+            melding = this.tilForeldrepengeVedtakV0(),
+            opprettetAv = "Kelvin",
         )
     }
 
@@ -50,4 +51,3 @@ public data class ForeldrepengeVedtakV0(
 public enum class ForeldrepengeVedtakKilde {
     FP_SAK
 }
-
