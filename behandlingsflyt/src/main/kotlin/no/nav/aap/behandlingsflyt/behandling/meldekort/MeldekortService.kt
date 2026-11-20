@@ -93,6 +93,7 @@ class MeldekortService(
                     nyesteMeldekort = meldekortGrunnlag?.nyesteForMeldeperiode(meldeperiode),
                     tidligereMeldekort = meldekortGrunnlag?.tidligereForMeldeperiode(meldeperiode).orEmpty(),
                     mottatteDokumenter = mottatteDokumenter,
+                    meldedato = underveisGrunnlag.meldedatoForMeldeperiode(meldeperiode),
                 )
             }
         }
