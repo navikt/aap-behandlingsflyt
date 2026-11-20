@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.arena
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdatoGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdatoGrunnlagId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdatoRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -18,8 +19,8 @@ class ArenaMaksdatoRepositoryImpl(private val connection: DBConnection) : ArenaM
     }
 
     override fun lagre(behandlingId: BehandlingId, arenaMaksdato: ArenaMaksdato?) {
-        val nyttGrunnlag = ArenaMaksdatoGrunnlag(arenaMaksdato)
-        if (hentHvisEksisterer(behandlingId) == nyttGrunnlag) return
+        val eksisterende = hentHvisEksisterer(behandlingId)
+        if (eksisterende != null && eksisterende.arenaMaksdato == arenaMaksdato) return
 
         connection.execute("UPDATE arena_maksdato_grunnlag SET aktiv = FALSE WHERE aktiv AND behandling_id = ?") {
             setParams {
@@ -55,6 +56,15 @@ class ArenaMaksdatoRepositoryImpl(private val connection: DBConnection) : ArenaM
         setRowMapper(::mapGrunnlag)
     }
 
+    override fun hent(id: ArenaMaksdatoGrunnlagId): ArenaMaksdatoGrunnlag = connection.queryFirst(
+        "SELECT * FROM arena_maksdato_grunnlag WHERE id = ?"
+    ) {
+        setParams {
+            setLong(1, id.id)
+        }
+        setRowMapper(::mapGrunnlag)
+    }
+
     private fun mapGrunnlag(row: Row): ArenaMaksdatoGrunnlag {
         val arenaSaksnummer = row.getStringOrNull("arena_saksnummer")
         val arenaMaksdato = if (arenaSaksnummer == null) {
@@ -68,7 +78,7 @@ class ArenaMaksdatoRepositoryImpl(private val connection: DBConnection) : ArenaM
                 vedtakId = row.getInt("vedtak_id"),
             )
         }
-        return ArenaMaksdatoGrunnlag(arenaMaksdato)
+        return ArenaMaksdatoGrunnlag(ArenaMaksdatoGrunnlagId(row.getLong("id")), arenaMaksdato)
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {

@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.stønadsperiode
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdatoGrunnlagId
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeGrunnlag
@@ -77,7 +78,7 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
                 v.vurdert_tidspunkt                 AS v_vurdert_tidspunkt,
                 v.vurdert_av                        AS v_vurdert_av,
                 v.startdato                         AS v_startdato,
-                v.kant_i_kant_med_arena             AS v_kant_i_kant_med_arena
+                v.kant_i_kant_med_arena_grunnlag_id AS v_kant_i_kant_med_arena_grunnlag_id
             FROM stonadsperiode_vurdering v 
             WHERE v.stonadsperiode_vurderinger_id = ?
         """.trimIndent()
@@ -106,7 +107,8 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
                         opprettet = it.getInstant("v_vurdert_tidspunkt"),
                         vurdertAv = it.getBruker("v_vurdert_av"),
                         startDato = it.getLocalDate("v_startdato"),
-                        erKantIKantMedArena = it.getBoolean("v_kant_i_kant_med_arena"),
+                        kantIKantMedArenaGrunnlag = it.getLongOrNull("v_kant_i_kant_med_arena_grunnlag_id")
+                            ?.let(::ArenaMaksdatoGrunnlagId),
                     )
                 }
             }
@@ -195,8 +197,8 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
 
         val query = """
                 INSERT INTO stonadsperiode_vurdering 
-                (referanse, begrunnelse, har_hatt_ordinar_siste_52_uker, har_gjenvaerende_kvote, relevant_krav_type, avslagsaarsaker, vurdert_i_behandling, vurdert_tidspunkt, stonadsperiode_vurderinger_id, vurdert_av, startdato, kant_i_kant_med_arena) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (referanse, begrunnelse, har_hatt_ordinar_siste_52_uker, har_gjenvaerende_kvote, relevant_krav_type, avslagsaarsaker, vurdert_i_behandling, vurdert_tidspunkt, stonadsperiode_vurderinger_id, vurdert_av, startdato, kant_i_kant_med_arena, kant_i_kant_med_arena_grunnlag_id) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
 
         connection.executeBatch(query, vurderinger) {
@@ -234,6 +236,7 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
                 setBruker(10, vurdering.vurdertAv)
                 setLocalDate(11, vurdering.startDato)
                 setBoolean(12, vurdering.erKantIKantMedArena)
+                setLong(13, vurdering.kantIKantMedArenaGrunnlag?.id)
             }
         }
 

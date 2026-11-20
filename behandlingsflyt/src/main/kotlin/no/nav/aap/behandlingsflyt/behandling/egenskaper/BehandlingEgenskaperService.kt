@@ -1,6 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.egenskaper
 
 import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdatoRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
@@ -13,7 +15,10 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 data class BehandlingEgenskaper(
     val erMigrertFraArena: Boolean,
     val harArenaHistorikk: Boolean,
-    val erKantIKantMedArena: Boolean,
+    /**
+     * Arena-saken behandlingen er kant i kant med, eller null hvis den ikke er kant i kant.
+     */
+    val kantIKantMedArena: ArenaMaksdato?,
 )
 
 /**
@@ -23,18 +28,20 @@ data class BehandlingEgenskaper(
 data class BehandlingEgenskaperGrunnlag(
     val ident: Ident,
     val erMigrertFraArena: Boolean,
-    val erKantIKantMedArena: Boolean,
+    val kantIKantMedArena: ArenaMaksdato?,
 )
 
 class BehandlingEgenskaperGrunnlagService(
     private val kravRepository: KravRepository,
     private val sakRepository: SakRepository,
     private val stønadsperiodeRepository: StønadsperiodeRepository,
+    private val arenaMaksdatoRepository: ArenaMaksdatoRepository,
 ) {
     constructor(repositoryProvider: RepositoryProvider) : this(
         kravRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
         stønadsperiodeRepository = repositoryProvider.provide(),
+        arenaMaksdatoRepository = repositoryProvider.provide(),
     )
 
     fun hentGrunnlag(behandling: Behandling): BehandlingEgenskaperGrunnlag {
@@ -42,19 +49,21 @@ class BehandlingEgenskaperGrunnlagService(
         return BehandlingEgenskaperGrunnlag(
             ident = sakRepository.hent(behandling.sakId).person.aktivIdent(),
             erMigrertFraArena = kravGrunnlag?.gjeldendeMigrertKrav() != null,
-            erKantIKantMedArena = erKantIKantMedArena(behandling, kravGrunnlag?.gjeldendeRelevanteKrav().orEmpty()),
+            kantIKantMedArena = kantIKantMedArena(behandling, kravGrunnlag?.gjeldendeRelevanteKrav().orEmpty()),
         )
     }
 
-    private fun erKantIKantMedArena(
+    private fun kantIKantMedArena(
         behandling: Behandling,
         gjeldendeRelevanteKrav: Collection<RelevantKrav>,
-    ): Boolean {
+    ): ArenaMaksdato? {
         val gjeldendeKravreferanser = gjeldendeRelevanteKrav.map { it.referanse }.toSet()
         return stønadsperiodeRepository.hentHvisEksisterer(behandling.id)
             ?.gjeldendeVurderinger()
             .orEmpty()
-            .any { it.referanse in gjeldendeKravreferanser && it.erKantIKantMedArena }
+            .filter { it.referanse in gjeldendeKravreferanser }
+            .firstNotNullOfOrNull { it.kantIKantMedArenaGrunnlag }
+            ?.let { arenaMaksdatoRepository.hent(it).arenaMaksdato }
     }
 }
 
@@ -69,7 +78,7 @@ class BehandlingEgenskaperService(
         return BehandlingEgenskaper(
             erMigrertFraArena = grunnlag.erMigrertFraArena,
             harArenaHistorikk = arenaOppslagGateway.hentHarHistorikk(grunnlag.ident).harHistorikk,
-            erKantIKantMedArena = grunnlag.erKantIKantMedArena,
+            kantIKantMedArena = grunnlag.kantIKantMedArena,
         )
     }
 }
