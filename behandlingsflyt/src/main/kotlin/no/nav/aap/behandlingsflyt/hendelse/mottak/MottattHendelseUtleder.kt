@@ -116,6 +116,10 @@ object MottattHendelseUtleder {
         }
     }
 
+    /**
+     * Midlertidig funksjon inntil den gamle strukturen er migrert.
+     **/
+    @Deprecated("Denne kan fjernes så snart gammel struktur er migrert")
     fun utledOpprettetAv(melding: Melding?, opprettetAv: String? = null): Bruker? {
         return if (opprettetAv != null) Bruker(opprettetAv)
         else when (melding) {
