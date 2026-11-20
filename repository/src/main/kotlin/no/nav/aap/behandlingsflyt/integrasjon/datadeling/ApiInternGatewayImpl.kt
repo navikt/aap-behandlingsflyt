@@ -128,7 +128,12 @@ class ApiInternGatewayImpl : ApiInternGateway {
         muligMaksdato: LocalDate?,
         barnMedBarnetillegg: List<BarnMedBarnetillegg>,
     ) {
-        log.info("Sender behandling for behandlingId=${behandling.id} med vedtakId=$vedtakId, sak: ${sak.saksnummer}. Beregningsgrunnlag: $beregningsgrunnlag")
+        log.info(
+            "Sender behandling for behandlingId={} med vedtakId={}, sak: {}",
+            behandling.id,
+            vedtakId,
+            sak.saksnummer
+        )
         restClient.post(
             uri = uri.resolve("/api/insert/vedtak"),
             request = PostRequest(

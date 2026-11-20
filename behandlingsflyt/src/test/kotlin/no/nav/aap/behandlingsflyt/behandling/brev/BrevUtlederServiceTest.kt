@@ -36,6 +36,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagebehandlingKontorRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagevurderingKontor
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagebehandlingNayRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagevurderingNay
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingVurdering
@@ -1884,6 +1894,154 @@ class BrevUtlederServiceTest {
         }
     }
 
+    @Nested
+    inner class Klagebrev {
+
+        @Test
+        fun `opprettholdt klage med bare vurdering fra Nav-kontor tar med begrunnelsen`() {
+            val behandling = gittKlageMedVurderinger(
+                begrunnelseNavKontor = "Begrunnelse fra Nav-kontor",
+                begrunnelseNay = null
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertThat(resultat).isEqualTo(
+                KlageOpprettholdelse(
+                    begrunnelseNavKontor = "Begrunnelse fra Nav-kontor",
+                    begrunnelseNay = null
+                )
+            )
+        }
+
+        @Test
+        fun `opprettholdt klage med bare vurdering fra NAY tar med begrunnelsen`() {
+            val behandling = gittKlageMedVurderinger(
+                begrunnelseNavKontor = null,
+                begrunnelseNay = "Begrunnelse fra NAY"
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertThat(resultat).isEqualTo(
+                KlageOpprettholdelse(
+                    begrunnelseNavKontor = null,
+                    begrunnelseNay = "Begrunnelse fra NAY"
+                )
+            )
+        }
+
+        @Test
+        fun `opprettholdt klage tar med begrunnelsene fra begge enheter`() {
+            val behandling = gittKlageMedVurderinger(
+                begrunnelseNavKontor = "Begrunnelse fra Nav-kontor",
+                begrunnelseNay = "Begrunnelse fra NAY"
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertThat(resultat).isEqualTo(
+                KlageOpprettholdelse(
+                    begrunnelseNavKontor = "Begrunnelse fra Nav-kontor",
+                    begrunnelseNay = "Begrunnelse fra NAY"
+                )
+            )
+        }
+
+        @Test
+        fun `delvis omgjort klage tar med begrunnelsene fra begge enheter`() {
+            val behandling = gittKlageMedVurderinger(
+                begrunnelseNavKontor = "Nav-kontoret opprettholder",
+                begrunnelseNay = "NAY omgjør",
+                innstillingNay = KlageInnstilling.OMGJØR
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertThat(resultat).isEqualTo(
+                KlageOpprettholdelse(
+                    begrunnelseNavKontor = "Nav-kontoret opprettholder",
+                    begrunnelseNay = "NAY omgjør"
+                )
+            )
+        }
+
+        private fun gittKlageMedVurderinger(
+            begrunnelseNavKontor: String?,
+            begrunnelseNay: String?,
+            innstillingNay: KlageInnstilling = KlageInnstilling.OPPRETTHOLD
+        ): Behandling {
+            val behandling = gittBehandling(typeBehandling = TypeBehandling.Klage)
+            val vurdertAv = Bruker("Saksbehandler")
+            val opprettet = Instant.now()
+
+            repositoryProvider.provide<FormkravRepository>().lagre(
+                behandling.id,
+                FormkravVurdering(
+                    begrunnelse = "Formkravene er oppfylt",
+                    erBrukerPart = true,
+                    erFristOverholdt = true,
+                    likevelBehandles = null,
+                    erKonkret = true,
+                    erSignert = true,
+                    vurdertAv = vurdertAv,
+                    opprettet = opprettet
+                )
+            )
+            repositoryProvider.provide<BehandlendeEnhetRepository>().lagre(
+                behandling.id,
+                BehandlendeEnhetVurdering(
+                    skalBehandlesAvNay = begrunnelseNay != null,
+                    skalBehandlesAvKontor = begrunnelseNavKontor != null,
+                    vurdertAv = vurdertAv,
+                    opprettet = opprettet
+                )
+            )
+
+            begrunnelseNavKontor?.let {
+                repositoryProvider.provide<KlagebehandlingKontorRepository>().lagre(
+                    behandling.id,
+                    KlagevurderingKontor(
+                        begrunnelse = it,
+                        notat = "Internt notat fra Nav-kontor",
+                        innstilling = KlageInnstilling.OPPRETTHOLD,
+                        vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
+                        vilkårSomOmgjøres = emptyList(),
+                        vurdertAv = vurdertAv,
+                        opprettet = opprettet
+                    )
+                )
+            }
+
+            begrunnelseNay?.let {
+                repositoryProvider.provide<KlagebehandlingNayRepository>().lagre(
+                    behandling.id,
+                    KlagevurderingNay(
+                        begrunnelse = it,
+                        notat = "Internt notat fra NAY",
+                        innstilling = innstillingNay,
+                        vilkårSomOpprettholdes =
+                            if (innstillingNay == KlageInnstilling.OPPRETTHOLD) {
+                                listOf(Hjemmel.FOLKETRYGDLOVEN_11_6)
+                            } else {
+                                emptyList()
+                            },
+                        vilkårSomOmgjøres =
+                            if (innstillingNay == KlageInnstilling.OMGJØR) {
+                                listOf(Hjemmel.FOLKETRYGDLOVEN_11_6)
+                            } else {
+                                emptyList()
+                            },
+                        vurdertAv = vurdertAv,
+                        opprettet = opprettet
+                    )
+                )
+            }
+
+            return behandling
+        }
+    }
+
     private fun arbeidsopptrappingGrunnlag(
         revurdering: Behandling,
         fraDato: LocalDate,
@@ -2207,6 +2365,8 @@ class BrevUtlederServiceTest {
         )
     }
 }
+
+
 
 object BrevUtlederServiceTestUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(BehandlingsflytFeature.OvergangUfoereBrevbygger)
