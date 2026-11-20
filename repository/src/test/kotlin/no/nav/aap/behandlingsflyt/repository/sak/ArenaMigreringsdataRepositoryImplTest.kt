@@ -10,10 +10,12 @@ import no.nav.aap.komponenter.dbtest.TestDataSource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.Instant
 
+@Tag("db")
 class ArenaMigreringsdataRepositoryImplTest {
     companion object {
         private lateinit var dataSource: TestDataSource
@@ -168,6 +170,31 @@ class ArenaMigreringsdataRepositoryImplTest {
         }
 
         assertThat(hentet).isNull()
+    }
+
+    @Test
+    fun `slett fjerner all migreringsdata for behandlingen og er idempotent`() {
+        val behandlingId = opprettBehandling()
+        val annenBehandlingId = opprettBehandling()
+
+        dataSource.transaction {
+            val repo = ArenaMigreringsdataRepositoryImpl(it)
+            repo.lagre(behandlingId, StegType.AVKLAR_SYKDOM, Testdata("Første", emptyList()), Instant.now())
+            repo.lagre(behandlingId, StegType.AVKLAR_SYKDOM, Testdata("Andre", emptyList()), Instant.now())
+            repo.lagre(behandlingId, StegType.REFUSJON_KRAV, null, Instant.now())
+            repo.lagre(annenBehandlingId, StegType.AVKLAR_SYKDOM, Testdata("Annen", emptyList()), Instant.now())
+        }
+
+        dataSource.transaction {
+            val repo = ArenaMigreringsdataRepositoryImpl(it)
+            repo.slett(behandlingId)
+            repo.slett(behandlingId)
+        }
+
+        dataSource.transaction { connection ->
+            assertThat(antallRader(connection, behandlingId)).isEqualTo(0L to 0L)
+            assertThat(antallRader(connection, annenBehandlingId)).isEqualTo(1L to 1L)
+        }
     }
 
     private fun antallRader(connection: DBConnection, behandlingId: BehandlingId): Pair<Long, Long> =

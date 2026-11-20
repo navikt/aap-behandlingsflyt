@@ -63,7 +63,7 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
         }
     }
 
-    override fun hentPåklagetVedtakstype(behandlingId: BehandlingId) : PåklagetVedtakType {
+    override fun hentPåklagetVedtakstype(behandlingId: BehandlingId): PåklagetVedtakType? {
         val query = """
             SELECT
                 PBV.TYPE_VEDTAK AS TYPE_VEDTAK
@@ -75,7 +75,7 @@ class PåklagetBehandlingRepositoryImpl(private val connection: DBConnection) : 
                 PBG.behandling_id = ?
                 AND PBG.AKTIV = TRUE;
         """.trimIndent()
-        return connection.queryFirst(query) {
+        return connection.queryFirstOrNull(query) {
             setParams {
                 setLong(1, behandlingId.toLong())
             }

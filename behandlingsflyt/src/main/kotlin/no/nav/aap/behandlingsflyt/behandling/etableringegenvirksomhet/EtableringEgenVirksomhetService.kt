@@ -106,6 +106,8 @@ class EtableringEgenVirksomhetService(
         behandlingId: BehandlingId,
         vurderinger: List<EtableringEgenVirksomhetVurdering>
     ): VirksomhetEtableringResultat.Ugyldig? {
+        if (vurderinger.isEmpty()) return null
+
         val perioderMedSykdomOgBistand = utledPerioderMedSykdomOgBistand(behandlingId)
         val gjeldendeVurderinger = vurderinger.somFasetidslinje()
         validerSvar(gjeldendeVurderinger.verdier().toList())?.let { return it }

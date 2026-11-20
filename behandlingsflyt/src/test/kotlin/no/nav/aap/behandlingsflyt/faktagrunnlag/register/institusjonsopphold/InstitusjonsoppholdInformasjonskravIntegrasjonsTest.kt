@@ -1,7 +1,9 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold
 
+import ch.qos.logback.classic.Logger
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.read.ListAppender
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskrav
-import no.nav.aap.behandlingsflyt.flyt.InstitusjonFlytTest
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -17,8 +19,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
 @OptIn(FarligMutering::class)
@@ -34,7 +35,7 @@ class InstitusjonsoppholdInformasjonskravIntegrasjonsTest {
         }
     }
 
-    private val gatewayProvider = minimalGatewayProvider(InstitusjonFlytTest.SammenhengendeInstitusjonsoppholdUnleash::class) {
+    private val gatewayProvider = minimalGatewayProvider(AlleAvskruddUnleash::class) {
         register<FakeInstitusjonsoppholdGateway>()
     }
 
@@ -52,22 +53,44 @@ class InstitusjonsoppholdInformasjonskravIntegrasjonsTest {
         institusjonsnavn = institusjonsnavn
     )
 
-    @ParameterizedTest
-    @ValueSource(booleans = [false, true])
-    fun `AS filtreres bort før lagring med og uten sammenhengende opphold`(sammenhengendeOpphold: Boolean) {
+    @Test
+    fun `ugyldig opphold ignoreres uten at datoer eller unntaksdetaljer logges`() {
+        val (sak, _) = opprettInMemorySakOgBehandling(søknadsdato = 1 mars 2026)
+        FakeInstitusjonsoppholdGateway.response = listOf(
+            institusjonsopphold(20 mars 2026, 10 mars 2026, "Syntetisk institusjonsnavn")
+        )
+        val informasjonskrav = InstitusjonsoppholdInformasjonskrav.konstruer(
+            inMemoryRepositoryProvider,
+            gatewayProvider
+        )
+        val logger = LoggerFactory.getLogger(InstitusjonsoppholdInformasjonskrav::class.java) as Logger
+        val appender = ListAppender<ILoggingEvent>().apply { start() }
+        logger.addAppender(appender)
+        try {
+            val registerdata = informasjonskrav.hentData(InstitusjonsoppholdInformasjonskrav.Input(sak))
+
+            assertThat(registerdata.opphold).isEmpty()
+            assertThat(appender.list).hasSize(1)
+            assertThat(appender.list.single().formattedMessage)
+                .contains("Ugyldig periode for institusjonsopphold")
+                .doesNotContain("2026", "startdato", "sluttdato", "Syntetisk institusjonsnavn")
+            assertThat(appender.list.single().throwableProxy).isNull()
+        } finally {
+            logger.detachAppender(appender)
+            appender.stop()
+        }
+    }
+
+    @Test
+    fun `AS filtreres bort før lagring med og uten sammenhengende opphold`() {
         val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = 1 mars 2026)
         FakeInstitusjonsoppholdGateway.response = listOf(
             institusjonsopphold(1 mars 2026, 10 mars 2026, "Aldershjem", Institusjonstype.AS),
             institusjonsopphold(11 mars 2026, 20 mars 2026, "Helseinstitusjon"),
             institusjonsopphold(21 mars 2026, null, "Fengsel", Institusjonstype.FO),
         )
-        val gateways = minimalGatewayProvider(
-            if (sammenhengendeOpphold) InstitusjonFlytTest.SammenhengendeInstitusjonsoppholdUnleash::class
-            else AlleAvskruddUnleash::class
-        ) {
-            register<FakeInstitusjonsoppholdGateway>()
-        }
-        val informasjonskrav = InstitusjonsoppholdInformasjonskrav.konstruer(inMemoryRepositoryProvider, gateways)
+
+        val informasjonskrav = InstitusjonsoppholdInformasjonskrav.konstruer(inMemoryRepositoryProvider, gatewayProvider)
         val kontekst = flytKontekstMedPerioder {
             this.behandling = behandling
             rettighetsperiode = sak.rettighetsperiode

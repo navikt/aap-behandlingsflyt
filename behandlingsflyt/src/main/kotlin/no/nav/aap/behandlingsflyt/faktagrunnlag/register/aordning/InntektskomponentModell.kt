@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntektINorgeGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterForKrav
 import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 import java.time.YearMonth
@@ -36,7 +37,21 @@ data class ArbeidsInntektMåned(
     }
 }
 
-fun List<ArbeidsInntektMåned>.tilDomene(enhetGrunnlag: List<EnhetGrunnlag>): List<InntektINorgeGrunnlag> {
+
+/**
+ * Vi tar ikke vare på relevantDato vi har hentet inntekt i forhold til hvis det ikke finnes inntekter
+ * Konsekvensen av dette er at vi alltid vil spørre på nytt etter disse datoene,
+ * selv om ingenting tilsier at det har skjedd endringer i inntekten.
+ * Dette er en følge av databasestrukturen der relevantDato er lagret per inntekt
+ */
+fun Map<LocalDate, List<ArbeidsInntektMåned>>.tilDomene(enhetGrunnlag: List<EnhetGrunnlag>): Set<InntekterForKrav> {
+    return this.mapNotNull { (dato, inntekter) ->
+        if (inntekter.isEmpty()) return@mapNotNull null
+        InntekterForKrav(dato, inntekter.tilDomene(enhetGrunnlag).toSet())
+    }.toSet()
+}
+
+private fun List<ArbeidsInntektMåned>.tilDomene(enhetGrunnlag: List<EnhetGrunnlag>): List<InntektINorgeGrunnlag> {
     return this.flatMap { it.tilDomene(enhetGrunnlag) }
 }
 

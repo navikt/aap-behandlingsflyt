@@ -8,7 +8,10 @@ import no.nav.aap.behandlingsflyt.arena.ArenaOppholdskrav
 import no.nav.aap.behandlingsflyt.arena.ArenaVedtaksperiode
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.TrekkSøknadLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKravLøsning
+import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadRepository
+import no.nav.aap.behandlingsflyt.behandling.søknad.flate.AarsakTilTrekkSoknadDto
 import no.nav.aap.behandlingsflyt.behandling.oppholdskrav.OppholdskravGrunnlagRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapRepository
@@ -30,6 +33,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MigreringFraArena
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.ArenaMigreringRepository
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -38,6 +42,7 @@ import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.fixedClock
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
+import no.nav.aap.behandlingsflyt.utils.tilNorskFormat
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -108,6 +113,91 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
                 behandling.assertRettighetstype(
                     Periode(startDato, startDato.plusMonths(6)) to RettighetsType.BISTANDSBEHOV
                 )
+            }
+    }
+
+    @Test
+    fun `kan trekke søknad i migreringsbehandling etter at noen steg er løst`() {
+        val (sak, migreringsbehandling) = migrerFraArena()
+        val startDato = sak.rettighetsperiode.fom
+
+        migreringsbehandling
+            .løsAvklaringsBehov(
+                VurderKravLøsning(
+                    kravVurderinger = setOf(
+                        MigrertKravLøsningDto(
+                            begrunnelse = "en begrunnelse",
+                            virkningstidspunktArena = startDato.minusMonths(5),
+                            muligRettFra = startDato,
+                            arenaSaksnummer = "2016-123456",
+                            rettighetstype = MigrertRettighetstype.ORDINÆR,
+                            resterendeKvoteOrdinær = 300,
+                        )
+                    )
+                )
+            )
+            .løsLovvalg(startDato, medlem = true)
+            .løsSykdom(startDato, erOppfylt = true)
+            .medKontekst {
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                    .containsExactly(Definisjon.AVKLAR_BISTANDSBEHOV)
+            }
+            .leggTilVurderingsbehov(Vurderingsbehov.SØKNAD_TRUKKET)
+            .medKontekst {
+                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
+                    .contains(Definisjon.VURDER_TREKK_AV_SØKNAD)
+            }
+            .løsAvklaringsBehov(
+                TrekkSøknadLøsning(
+                    begrunnelse = "trekker søknaden",
+                    aarsak = AarsakTilTrekkSoknadDto.ANNET
+                )
+            )
+            .medKontekst {
+                assertThat(avklaringsbehovSomMåLøses).isEmpty()
+                assertThat(behandling.status()).isEqualTo(AVSLUTTET)
+                assertThat(hentVedtakHvisEksisterer()).isNull()
+                val trukket = repositoryProvider.provide<TrukketSøknadRepository>()
+                    .hentTrukketSøknadVurderinger(behandling.id)
+                assertThat(trukket).hasSize(1)
+                assertThat(trukket.single().journalpostId).isNull()
+            }
+    }
+
+    @Test
+    fun `trekk av søknad i migreringsbehandling sletter migreringsdata og kobling til Arena-saken`() {
+        unleash = MigreringFraArenaMedAutomatiskeVurderingerFlytTestUnleash::class
+
+        val (sak, migreringsbehandling) = migrerFraArena()
+        val startDato = sak.rettighetsperiode.fom
+
+        migreringsbehandling
+            .løsLovvalg(startDato, medlem = true)
+            .medKontekst {
+                assertThat(
+                    repositoryProvider.provide<ArenaMigreringsdataRepository>()
+                        .hentAktivHvisEksisterer(behandling.id, StegType.AVKLAR_SYKDOM)
+                ).isNotNull
+                assertThat(repositoryProvider.provide<ArenaMigreringRepository>().hentForSakHvisEksisterer(sak.id))
+                    .isNotNull
+            }
+            .leggTilVurderingsbehov(Vurderingsbehov.SØKNAD_TRUKKET)
+            .løsAvklaringsBehov(
+                TrekkSøknadLøsning(
+                    begrunnelse = "trekker søknaden",
+                    aarsak = AarsakTilTrekkSoknadDto.ANNET
+                )
+            )
+            .medKontekst {
+                assertThat(behandling.status()).isEqualTo(AVSLUTTET)
+                val migreringsdataRepository = repositoryProvider.provide<ArenaMigreringsdataRepository>()
+                StegType.entries.forEach { steg ->
+                    assertThat(migreringsdataRepository.hentAktivHvisEksisterer(behandling.id, steg))
+                        .describedAs("migreringsdata for $steg")
+                        .isNull()
+                }
+                assertThat(repositoryProvider.provide<ArenaMigreringRepository>().hentForSakHvisEksisterer(sak.id))
+                    .isNull()
             }
     }
 
@@ -450,7 +540,10 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
                 assertThat(vurdering.vurdertAv).isEqualTo(ARENA_MIGRERING_BRUKER)
                 assertThat(vurdering.nedsattArbeidsevneEllerStudieevneDato).isEqualTo(beregningstidspunktFraArena)
                 assertThat(vurdering.årsak).isEqualTo(ÅrsakBeregningstidspunkt.ANNET)
-                assertThat(vurdering.begrunnelse).isEqualTo("Migrert fra Arena")
+                assertThat(vurdering.begrunnelse).isEqualTo(
+                    "Migrert fra Arena, vurderingen gjelder fra virkningstidspunktet " +
+                            "${startDato.minusMonths(5).tilNorskFormat()} i Arena. Forvaltningsnotat finnes i Gosys."
+                )
                 assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
                     .doesNotContain(Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
 

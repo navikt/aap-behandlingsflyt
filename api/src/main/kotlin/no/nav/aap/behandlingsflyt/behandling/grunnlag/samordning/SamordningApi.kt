@@ -60,11 +60,17 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                         samordningUføreRepository.hentHvisEksisterer(behandling.id)?.vurdering
                     val uføregrunnlagMedEndretStatus =
                         UførePeriodeSammenligner(uføreRepository).hentUføreGrunnlagMedEndretStatus(behandling.id)
+                    val vedtattePerioder = behandlingRepository.finnGjeldendeVedtattBehandlingForSak(behandling.sakId)
+                        ?.let { vedtatt ->
+                            val vurdering = samordningUføreRepository.hentHvisEksisterer(vedtatt.behandlingId)?.vurdering
+                            mapSamordningUføreVurdering(vurdering, vedtatt.behandlingId, vurdertAvService)?.vurderingPerioder
+                        }.orEmpty()
 
                     SamordningUføreVurderingGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
                         vurdering = mapSamordningUføreVurdering(samordningUføreVurdering, behandling.id, vurdertAvService),
-                        grunnlag = mapSamordningUføreGrunnlag(uføregrunnlagMedEndretStatus)
+                        grunnlag = mapSamordningUføreGrunnlag(uføregrunnlagMedEndretStatus),
+                        vedtattePerioder = vedtattePerioder,
                     )
                 }
 
@@ -153,6 +159,12 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
 
                     val tp = tjenestePensjonRepository.hentHvisEksisterer(behandling.id)
                     val sykepengerOgFerie = sykepengerOgFerieRepository.hentHvisEksisterer(behandling.id)
+                    val vedtattePerioder = behandlingRepository.finnGjeldendeVedtattBehandlingForSak(behandling.sakId)
+                        ?.let { vedtatt ->
+                            samordningRepository.hentHvisEksisterer(vedtatt.behandlingId)?.let {
+                                mapSamordningVurdering(it, vedtatt.behandlingId, vurdertAvService).vurderinger
+                            }
+                        }.orEmpty()
 
                     SamordningYtelseVurderingGrunnlagDTO(
                         harTilgangTilÅSaksbehandle = kanSaksbehandle(),
@@ -177,6 +189,7 @@ fun NormalOpenAPIRoute.samordningGrunnlag(
                         mottarSykepenger = sykepengerOgFerie?.mottarSykepenger,
                         feriePerioder = sykepengerOgFerie?.feriePerioder.orEmpty(),
                         ferieDager = sykepengerOgFerie?.ferieDager,
+                        vedtattePerioder = vedtattePerioder,
                     )
                 }
 

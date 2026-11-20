@@ -5,7 +5,6 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForForutgåendeMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.tilDomene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.ForutgåendeMedlemskapRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.util.concurrent.ConcurrentHashMap
@@ -29,7 +28,7 @@ object InMemoryForutgåendeMedlemskapRepository : ForutgåendeMedlemskapReposito
                 ansettelsesdetaljer = arbeid.ansettelsesdetaljer.toList()
             )
         }
-        val inntekter = inntektGrunnlag.tilDomene(enhetGrunnlag)
+        val inntekter = inntektGrunnlag.flatMap { it.tilDomene(enhetGrunnlag) }
         grunnlag.compute(behandlingId) { _, eksisterende ->
             ForutgåendeMedlemskapGrunnlag(medlemskap, inntekter, arbeider, eksisterende?.vurderinger.orEmpty())
         }

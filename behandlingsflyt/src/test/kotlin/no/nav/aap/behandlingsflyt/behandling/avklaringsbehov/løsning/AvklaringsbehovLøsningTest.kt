@@ -44,11 +44,13 @@ class AvklaringsbehovLøsningTest {
     }
 
     @Test
-    fun `alle subtyper skal ha unik verdi på annotasjonen`() {
+    fun `subtyper skal ha unik verdi på annotasjonen`() {
         val utledSubtypes = utledSubtypesTilAvklaringsbehovLøsning()
-        val løsningSubtypes = utledSubtypes.map { it.getAnnotation(JsonTypeName::class.java).value }
+        val dupliserteKoder = utledSubtypes
+            .groupBy { it.getAnnotation(JsonTypeName::class.java).value }
+            .filterValues { it.size > 1 }
 
-        assertThat(løsningSubtypes).hasSize(utledSubtypes.size)
+        assertThat(dupliserteKoder.keys).isEmpty()
     }
 
     @Test

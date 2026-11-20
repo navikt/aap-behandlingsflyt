@@ -8,14 +8,33 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.lås.Skrivelås
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 object InMemoryTaSkriveLåsRepository : TaSkriveLåsRepository {
-    private val sakVersjoner = mutableMapOf<SakId, Long>()
-    private val behandlingVersjoner = mutableMapOf<BehandlingId, Long>()
-    private val lock = Any()
+    private val behandlingsversjoner = ConcurrentHashMap<BehandlingId, Long>()
+    private val saksversjoner = ConcurrentHashMap<SakId, Long>()
 
-    override fun lås(sakId: SakId, behandlingId: BehandlingId): Skrivelås = synchronized(lock) {
+    override fun lås(sakId: SakId, behandlingId: BehandlingId): Skrivelås =
         Skrivelås(låsSak(sakId), låsBehandling(behandlingId))
+
+    override fun withLås(sakId: SakId, behandlingId: BehandlingId, block: (Skrivelås) -> Unit) {
+        val skrivelås = lås(sakId, behandlingId)
+        block(skrivelås)
+        verifiserSkrivelås(skrivelås)
+    }
+
+    override fun låsBehandling(behandlingId: BehandlingId): BehandlingSkrivelås {
+        val behandling = InMemoryBehandlingRepository.hent(behandlingId)
+        return BehandlingSkrivelås(
+            behandlingId,
+            behandlingsversjoner.getOrPut(behandlingId) { behandling.versjon }
+        )
+    }
+
+    override fun withLåstBehandling(behandlingId: BehandlingId, block: (BehandlingSkrivelås) -> Unit) {
+        val skrivelås = låsBehandling(behandlingId)
+        block(skrivelås)
+        verifiserSkrivelås(skrivelås)
     }
 
     override fun lås(behandlingUUid: UUID): Skrivelås {
@@ -23,68 +42,33 @@ object InMemoryTaSkriveLåsRepository : TaSkriveLåsRepository {
         return lås(behandling.sakId, behandling.id)
     }
 
-    override fun låsSak(sakId: SakId): SakSkrivelås = synchronized(lock) {
+    override fun låsSak(sakId: SakId): SakSkrivelås {
         InMemorySakRepository.hent(sakId)
-        SakSkrivelås(sakId, sakVersjoner.getOrPut(sakId) { 0L })
-    }
-
-    override fun låsBehandling(behandlingId: BehandlingId): BehandlingSkrivelås = synchronized(lock) {
-        val behandling = InMemoryBehandlingRepository.hent(behandlingId)
-        BehandlingSkrivelås(behandlingId, behandlingVersjoner.getOrPut(behandlingId) { behandling.versjon })
-    }
-
-    override fun withLås(sakId: SakId, behandlingId: BehandlingId, block: (Skrivelås) -> Unit) {
-        synchronized(lock) {
-            val skrivelås = lås(sakId, behandlingId)
-            block(skrivelås)
-            verifiserSkrivelås(skrivelås)
-        }
-    }
-
-    override fun withLåstBehandling(behandlingId: BehandlingId, block: (BehandlingSkrivelås) -> Unit) {
-        synchronized(lock) {
-            val skrivelås = låsBehandling(behandlingId)
-            block(skrivelås)
-            verifiserSkrivelås(skrivelås)
-        }
+        return SakSkrivelås(sakId, saksversjoner.getOrPut(sakId) { 0L })
     }
 
     override fun verifiserSkrivelås(skrivelås: Skrivelås) {
-        synchronized(lock) {
-            require(sakVersjoner[skrivelås.sakSkrivelås.id] == skrivelås.sakSkrivelås.versjon) {
-                "Sakens versjon er endret siden skrivelåsen ble tatt"
-            }
-            require(behandlingVersjoner[skrivelås.behandlingSkrivelås.id] == skrivelås.behandlingSkrivelås.versjon) {
-                "Behandlingens versjon er endret siden skrivelåsen ble tatt"
-            }
-            verifiserSkrivelås(skrivelås.sakSkrivelås)
-            verifiserSkrivelås(skrivelås.behandlingSkrivelås)
-        }
+        verifiserSkrivelås(skrivelås.behandlingSkrivelås)
+        verifiserSkrivelås(skrivelås.sakSkrivelås)
     }
 
     override fun verifiserSkrivelås(skrivelås: SakSkrivelås) {
-        synchronized(lock) {
-            require(sakVersjoner[skrivelås.id] == skrivelås.versjon) {
-                "Sakens versjon er endret siden skrivelåsen ble tatt"
-            }
-            sakVersjoner[skrivelås.id] = skrivelås.versjon + 1
+        check(saksversjoner.replace(skrivelås.id, skrivelås.versjon, skrivelås.versjon + 1)) {
+            "[Utviklerfeil] Ugyldig skrivelås for sak ${skrivelås.id}"
         }
     }
 
     override fun verifiserSkrivelås(skrivelås: BehandlingSkrivelås) {
-        synchronized(lock) {
-            require(behandlingVersjoner[skrivelås.id] == skrivelås.versjon) {
-                "Behandlingens versjon er endret siden skrivelåsen ble tatt"
-            }
-            behandlingVersjoner[skrivelås.id] = skrivelås.versjon + 1
+        check(behandlingsversjoner.replace(skrivelås.id, skrivelås.versjon, skrivelås.versjon + 1)) {
+            "[Utviklerfeil] Ugyldig skrivelås for behandling ${skrivelås.id}"
         }
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
-        // Låser og versjoner tilhører den enkelte saken og behandlingen.
+        // Skrivelåser kopieres ikke mellom behandlinger.
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        // BehandlingRepository eier behandlingens levetid.
+        behandlingsversjoner.remove(behandlingId)
     }
 }

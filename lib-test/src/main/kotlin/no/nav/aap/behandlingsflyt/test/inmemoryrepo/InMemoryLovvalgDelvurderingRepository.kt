@@ -1,37 +1,30 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.KanBehandlesAutomatiskVurdering
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingerGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import java.time.LocalDate
 
 object InMemoryLovvalgDelvurderingRepository : LovvalgDelvurderingRepository {
     private val grunnlag = mutableMapOf<BehandlingId, List<Long>>()
-    private val vurderinger = mutableMapOf<Long, LovvalgDelvurderingerGrunnlag>()
+    private val vurderinger = mutableMapOf<Long, List<LovvalgDelvurderingerGrunnlag>>()
     private var nesteId = 0L
     private val lock = Any()
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): LovvalgDelvurderingerGrunnlag? =
+    override fun hentAlle(behandlingId: BehandlingId): List<LovvalgDelvurderingerGrunnlag> =
         synchronized(lock) {
-            grunnlag[behandlingId]?.lastOrNull()?.let { vurderinger.getValue(it) }
+            grunnlag[behandlingId]?.lastOrNull()?.let { vurderinger.getValue(it) }.orEmpty()
         }
 
-    override fun lagre(
-        behandlingId: BehandlingId,
-        vurdering: KanBehandlesAutomatiskVurdering,
-        relevantDato: LocalDate
-    ) {
+    override fun lagre(behandlingId: BehandlingId, resultat: List<LovvalgDelvurderingerGrunnlag>) {
+        require(resultat.isNotEmpty()) { "Må lagre minst én delvurdering" }
+        require(resultat.map { it.relevantDato }.distinct().size == resultat.size) {
+            "Kun én delvurdering per relevant dato"
+        }
         synchronized(lock) {
-            val eksisterende = hentHvisEksisterer(behandlingId)
-            if (eksisterende?.vurdering() == vurdering && eksisterende.relevantDato == relevantDato) return
+            if (hentAlle(behandlingId).toSet() == resultat.toSet()) return
 
             val id = ++nesteId
-            vurderinger[id] = LovvalgDelvurderingerGrunnlag(
-                kanBehandlesAutomatisk = vurdering.kanBehandlesAutomatisk,
-                tilhørighetVurdering = vurdering.tilhørighetVurdering,
-                relevantDato = relevantDato,
-            )
+            vurderinger[id] = resultat.sortedBy { it.relevantDato }
             grunnlag[behandlingId] = grunnlag[behandlingId].orEmpty() + id
         }
     }

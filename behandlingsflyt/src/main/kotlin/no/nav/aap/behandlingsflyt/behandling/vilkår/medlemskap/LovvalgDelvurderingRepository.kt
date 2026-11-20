@@ -1,11 +1,19 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.etterlevelse.sporing.SporbartResultatRepo
 import no.nav.aap.lookup.repository.Repository
-import java.time.LocalDate
 
-interface LovvalgDelvurderingRepository : Repository {
-    fun hentHvisEksisterer(behandlingId: BehandlingId): LovvalgDelvurderingerGrunnlag?
-    fun lagre(behandlingId: BehandlingId, vurdering: KanBehandlesAutomatiskVurdering, relevantDato: LocalDate)
+interface LovvalgDelvurderingRepository : Repository, SporbartResultatRepo<List<LovvalgDelvurderingerGrunnlag>> {
+
+    fun hentAlle(behandlingId: BehandlingId): List<LovvalgDelvurderingerGrunnlag>
+
+    /** Delvurderingen for den nyeste relevante datoen. */
+    fun hentHvisEksisterer(behandlingId: BehandlingId): LovvalgDelvurderingerGrunnlag? =
+        hentAlle(behandlingId).maxByOrNull { it.relevantDato }
+
+    /** Erstatter hele settet med delvurderinger. Det skrives ikke ny historikk dersom settet er uendret. */
+    override fun lagre(behandlingId: BehandlingId, resultat: List<LovvalgDelvurderingerGrunnlag>)
+
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId)
 }

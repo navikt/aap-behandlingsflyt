@@ -174,14 +174,14 @@ class MeldepliktRegel: UnderveisRegel {
         dataForMeldeperiode: Tidslinje<MeldepliktData>,
         dataForForrigeMeldeperiode: Tidslinje<MeldepliktData>?,
     ): Tidslinje<MeldepliktVurdering> {
-        val potensieltTidligDokument = helligdagsunntakFastsattMeldedag[meldeperiode.fom]?.let { nyTidligereFrist ->
+        val potensieltTidligDokument = aktiveHelligdagsunntakForFastsatteMeldedager[meldeperiode.fom]?.let { nyTidligereFrist ->
             val begrensetForrigePeriode =
                 dataForForrigeMeldeperiode?.begrensetTil(Periode(nyTidligereFrist, LocalDate.MAX)).orEmpty()
 
             begrensetForrigePeriode.segmenter().firstNotNullOfOrNull {
                 val innsending = it.verdi.meldekort
                 when {
-                    innsending != null -> Segment(it.periode, MeldepliktVurdering.MeldtSeg(innsending))
+                    innsending != null -> Segment(it.periode, MeldepliktVurdering.MeldtSeg(innsending, it.periode.fom))
                     else -> null
                 }
             }
@@ -214,7 +214,7 @@ class MeldepliktRegel: UnderveisRegel {
                 it.verdi.overstyringMeldeplikt?.meldepliktOverstyringStatus == MeldepliktOverstyringStatus.HAR_MELDT_SEG ->
                     Segment(it.periode, MeldepliktVurdering.MeldtSegOverstyring)
 
-                innsending != null -> Segment(it.periode, MeldepliktVurdering.MeldtSeg(innsending))
+                innsending != null -> Segment(it.periode, MeldepliktVurdering.MeldtSeg(innsending, it.periode.fom))
                 else -> null
             }
         }

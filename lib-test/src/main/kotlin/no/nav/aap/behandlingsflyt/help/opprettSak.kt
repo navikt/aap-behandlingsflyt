@@ -18,14 +18,25 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryArenaMigreringRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryStønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
 import no.nav.aap.komponenter.dbconnect.DBConnection
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.behandlingsflyt.repository.sak.ArenaMigreringRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.FakeArenaOppslagGateway
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
+import no.nav.aap.verdityper.dokument.JournalpostId
+import java.time.Instant
 import java.time.LocalDate
 
 fun opprettSak(connection: DBConnection, søknadsdato: LocalDate): Sak {
@@ -57,6 +68,7 @@ fun opprettInMemorySakOgBehandling(
     vurderingsbehov: List<Vurderingsbehov> = listOf(Vurderingsbehov.MOTTATT_SØKNAD),
     årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
     ident: Ident = ident(),
+    medKrav: Boolean = true,
 ): Pair<Sak, Behandling> {
     val vurderingsbehovMedPeriode = vurderingsbehov.map { VurderingsbehovMedPeriode(it) }
     val sak = opprettInMemorySak(søknadsdato, ident)
@@ -64,6 +76,9 @@ fun opprettInMemorySakOgBehandling(
         sak.id,
         VurderingsbehovOgÅrsak(vurderingsbehovMedPeriode, årsakTilOpprettelse)
     )
+    if (medKrav) {
+        opprettKravOgStønadsperiode(behandling, søknadsdato)
+    }
     return sak to behandling
 }
 
@@ -72,10 +87,12 @@ fun opprettInMemorySakOgRevurdering(
     vurderingsbehov: List<Vurderingsbehov> = listOf(Vurderingsbehov.MOTTATT_SØKNAD),
     årsakTilOpprettelse: ÅrsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
     ident: Ident = ident(),
+    medKrav: Boolean = true,
 ): Triple<Sak, Behandling, Behandling> {
     val (sak, førstegangsbehandling) = opprettInMemorySakOgBehandling(
         søknadsdato = søknadsdato,
         ident = ident,
+        medKrav = medKrav,
     )
 
     InMemoryBehandlingRepository.leggTilNyttAktivtSteg(
@@ -110,6 +127,47 @@ fun opprettInMemorySakOgRevurdering(
         VurderingsbehovOgÅrsak(vurderingsbehovMedPeriode, årsakTilOpprettelse)
     )
 
+    if (medKrav) {
+        InMemoryKravRepository.kopier(førstegangsbehandling.id, revurdering.id)
+        InMemoryStønadsperiodeRepository.kopier(førstegangsbehandling.id, revurdering.id)
+    }
+    
     check(førstegangsbehandling.id != revurdering.id)
     return Triple(sak, InMemoryBehandlingRepository.hent(førstegangsbehandling.id), revurdering)
+}
+
+private fun opprettKravOgStønadsperiode(behandling: Behandling, søknadsdato: LocalDate) {
+    val referanse = Kravreferanse.ny()
+    InMemoryKravRepository.lagre(
+        behandling.id,
+        setOf(
+            RelevantKrav(
+                referanse = referanse,
+                journalpostId = JournalpostId(søknadsdato.toString()),
+                vurdertAv = SYSTEMBRUKER,
+                begrunnelse = "Automatisk opprettet krav fra søknad",
+                vurdertIBehandling = behandling.id,
+                opprettet = Instant.now(),
+                søknadsdato = Søknadsdato(søknadsdato, SøknadsdatoÅrsak.SøknadMottatt, "Søknad mottatt"),
+                overstyrMuligRettFra = null,
+                muligRettFra = søknadsdato,
+            )
+        )
+    )
+    InMemoryStønadsperiodeRepository.lagre(
+        behandling.id,
+        setOf(
+            StønadsperiodeVurdering(
+                referanse = referanse,
+                opprettet = Instant.now(),
+                vurdertIBehandling = behandling.id,
+                vurdertAv = SYSTEMBRUKER,
+                begrunnelse = "Automatisk opprettet stønadsperiode fra søknadsdato",
+                harHattOrdinærSiste52Uker = false,
+                harGjenværendeKvote = false,
+                relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
+                startDato = søknadsdato,
+            )
+        )
+    )
 }

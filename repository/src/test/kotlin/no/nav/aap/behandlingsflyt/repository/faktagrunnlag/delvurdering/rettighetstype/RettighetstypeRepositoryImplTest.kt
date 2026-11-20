@@ -16,7 +16,9 @@ import no.nav.aap.komponenter.tidslinje.tidslinjeOf
 import no.nav.aap.komponenter.verdityper.Tid
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Tag
 
+@Tag("db")
 class RettighetstypeRepositoryImplTest {
 
     companion object {

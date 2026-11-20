@@ -83,6 +83,12 @@ object InMemoryBehandlingRepository : BehandlingRepository {
 
     internal fun alle(): List<Behandling> = synchronized(lock) { memory.values.toList() }
 
+    fun hentHvisEksisterer(behandlingId: BehandlingId): Behandling? {
+        synchronized(lock) {
+            return memory[behandlingId]
+        }
+    }
+
     override fun hentReferanse(behandlingId: BehandlingId): BehandlingReferanse {
         return hent(behandlingId).referanse
     }
@@ -220,7 +226,10 @@ object InMemoryBehandlingRepository : BehandlingRepository {
     }
 
     override fun finnGjeldendeVedtattBehandlingForSak(sakId: SakId): SakOgBehandling? {
-        TODO("Not yet implemented")
+        return hentAlleMedVedtakFor(sakId, TypeBehandling.ytelseBehandlingstyper())
+            .filter { it.status.erAvsluttet() }
+            .maxByOrNull { it.vedtakstidspunkt }
+            ?.let { SakOgBehandling(sakId, it.id) }
     }
 
     override fun finnBehandlingerSomManglerRedusertDagsats(sakId: SakId): List<BehandlingId> {

@@ -17,10 +17,8 @@ import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.barnetillegg.Barnetil
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.institusjonsopphold.InstitusjonsoppholdRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.behandlingsflyt.test.MockConnection
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -42,12 +40,6 @@ class InstitusjonRegelTest {
         InstitusjonsoppholdRepositoryImpl(mockConnection),
         SakRepositoryImpl(mockConnection),
         BehandlingRepositoryImpl(mockConnection),
-        FakeUnleashBase(
-            mapOf(
-                BehandlingsflytFeature.SammenhengendeInstitusjonsopphold to true,
-                BehandlingsflytFeature.Helseinstitusjon1Manedsregel to false
-            )
-        )
     )
 
     val regel = InstitusjonRegel()

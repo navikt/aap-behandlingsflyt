@@ -1,7 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.institusjonsopphold
 
-import no.nav.aap.barnetillegg.RettTilBarnetillegg
 import no.nav.aap.barnetillegg.BarnetilleggRepository
+import no.nav.aap.barnetillegg.RettTilBarnetillegg
 import no.nav.aap.barnetillegg.tilTidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Helseoppholdvurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.institusjonsopphold.Institusjon
@@ -12,9 +12,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.institusjon.flate.
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
-import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.JoinStyle
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.StandardSammenslåere
@@ -32,14 +29,12 @@ class InstitusjonsoppholdUtlederService(
     private val institusjonsoppholdRepository: InstitusjonsoppholdRepository,
     private val sakRepository: SakRepository,
     private val behandlingRepository: BehandlingRepository,
-    private val unleashGateway: UnleashGateway
 ) {
-    constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
+    constructor(repositoryProvider: RepositoryProvider) : this(
         barnetilleggRepository = repositoryProvider.provide(),
         institusjonsoppholdRepository = repositoryProvider.provide(),
         sakRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide<UnleashGateway>()
     )
 
     fun utled(
@@ -197,20 +192,12 @@ class InstitusjonsoppholdUtlederService(
         helseopphold: List<Segment<Institusjon>>
     ): Tidslinje<HelseOpphold> {
         val alleVurderinger = helsevurderinger?.vurderinger.orEmpty()
-        val enManedsregelEnabled = unleashGateway.isEnabled(BehandlingsflytFeature.Helseinstitusjon1Manedsregel)
 
-        val helseoppholdPerioder =
-            if (unleashGateway.isEnabled(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)) {
-                grupperSammenhengendeOppholdSegmenter(helseopphold).map { it.periode }
-            } else {
-                helseopphold.map { it.periode }
-            }
+        val helseoppholdPerioder = grupperSammenhengendeOppholdSegmenter(helseopphold).map { it.periode }
 
-        val periodiserteVurderinger =
-            if (enManedsregelEnabled) alleVurderinger.filterNot { it.erHistoriskUtenReduksjonsberegning } else alleVurderinger
+        val periodiserteVurderinger = alleVurderinger.filterNot { it.erHistoriskUtenReduksjonsberegning }
 
-        val vurderingTidslinje = periodiserteVurderinger
-            .let { Tidslinje(it.map { v -> Segment(v.periode, v) }) }
+        val vurderingTidslinje = Tidslinje(periodiserteVurderinger.map { v -> Segment(v.periode, v) })
             .map {
                 HelseOpphold(
                     if (it.giReduksjon()) {
@@ -225,7 +212,7 @@ class InstitusjonsoppholdUtlederService(
         // Historiske vurderinger matches eksplisitt til oppholdets faktiske periode via oppholdId,
         // siden vurderingens egen periode kan ligge utenfor oppholdets varighet.
         val historiskeSegmenter = alleVurderinger
-            .filter { enManedsregelEnabled && it.erHistoriskUtenReduksjonsberegning }
+            .filter { it.erHistoriskUtenReduksjonsberegning }
             .mapNotNull { vurdering ->
                 val matchendeOpphold = helseopphold.firstOrNull {
                     lagOppholdId(it.verdi.navn, it.periode.fom) == vurdering.oppholdId
@@ -391,10 +378,6 @@ class InstitusjonsoppholdUtlederService(
      * 2) Det finnes en FORRIGE (tidligere) kjede som selv er kvalifisert, og denne kjeden
      *    starter innen 3 måneder etter at den forrige kjeden sluttet - uavhengig av denne
      *    kjedens egen varighet.
-     *
-     * NB: Kjede-basert logikk (punkt 1 og 2) kjører kun når featuren
-     * SammenhengendeInstitusjonsopphold er PÅ. Når featuren er AV, brukes den
-     * opprinnelige segment-for-segment-logikken (pre-PR).
      */
     private fun harOppholdSomKreverAvklaring(
         oppholdUtenBarnetillegg: Tidslinje<Boolean>,
@@ -402,30 +385,6 @@ class InstitusjonsoppholdUtlederService(
         ignorerVarighetsBegrensning: Boolean? = false
     ): Tidslinje<Boolean> {
         val segmenter = oppholdUtenBarnetillegg.segmenter().sortedBy { it.periode.fom }
-
-        if (!unleashGateway.isEnabled(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)) {
-            return Tidslinje(
-                segmenter.filter { segment ->
-                    val forrigePeriodeTom = segmenter
-                        .filter { it.periode.tom.isBefore(segment.periode.fom) }
-                        .maxOfOrNull { it.periode.tom }
-
-                    val mindreEnnTreMånederFraForrige = forrigePeriodeTom != null &&
-                            segment.periode.fom.isBefore(forrigePeriodeTom.plusMonths(3))
-
-                    if (ignorerVarighetsBegrensning == true) {
-                        true
-                    } else {
-                        mindreEnnTreMånederFraForrige ||
-                                (harOppholdSomVarerMinstFireMånederOgIkkeErForKort(segment) &&
-                                        harOppholdSomVarerMerEnnFireMånederOgErMinstToMånederInnIOppholdet(
-                                            segment,
-                                            oppholdUtenBarnetillegg.minDato()
-                                        ))
-                    }
-                }
-            )
-        }
 
         val kjeder = grupperSammenhengende(
             originaleOppholdSegmenter,
@@ -513,11 +472,7 @@ class InstitusjonsoppholdUtlederService(
         val barnetillegg = barnetilleggRepository.hentHvisEksisterer(behandlingId)?.perioder.orEmpty()
 
         val alleOpphold = grunnlag?.oppholdene?.opphold.orEmpty()
-        val opphold = if (unleashGateway.isEnabled(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)) {
-            finnRelevanteOppholdSegmenter(alleOpphold, rettighetsperiode)
-        } else {
-            alleOpphold.filter { it.periode.overlapper(rettighetsperiode) }
-        }
+        val opphold = finnRelevanteOppholdSegmenter(alleOpphold, rettighetsperiode)
 
         val soningsvurderinger: Soningsvurderinger?
         val helsevurderinger: Helseoppholdvurderinger?

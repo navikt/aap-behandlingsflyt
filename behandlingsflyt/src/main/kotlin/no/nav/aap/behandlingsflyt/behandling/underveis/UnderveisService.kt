@@ -72,7 +72,7 @@ class UnderveisService(
         vilkårsresultatRepository = repositoryProvider.provide(),
         meldekortRepository = repositoryProvider.provide(),
         underveisRepository = repositoryProvider.provide(),
-        institusjonsoppholdUtlederService = InstitusjonsoppholdUtlederService(repositoryProvider,gatewayProvider),
+        institusjonsoppholdUtlederService = InstitusjonsoppholdUtlederService(repositoryProvider),
         arbeidsevneRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
         meldeperiodeRepository = repositoryProvider.provide(),
@@ -134,6 +134,7 @@ class UnderveisService(
                         brukerAvKvoter = it.verdi.varighetVurdering?.brukerAvKvoter.orEmpty(),
                         institusjonsoppholdReduksjon = if (it.verdi.institusjonVurdering?.skalReduseres == true) Prosent.`50_PROSENT` else Prosent.`0_PROSENT`,
                         meldepliktStatus = it.verdi.meldepliktVurdering?.status,
+                        meldedato = it.verdi.meldepliktVurdering?.meldedato,
                         meldepliktGradering = if (it.verdi.meldepliktVurdering?.utfall == Utfall.OPPFYLT)
                             Prosent.`0_PROSENT`
                         else

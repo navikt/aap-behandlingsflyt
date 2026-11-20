@@ -54,7 +54,7 @@ class Behandling(
     }
 
     fun vurderingsbehov(): List<VurderingsbehovMedPeriode> {
-        return vurderingsbehov.toList()
+        return vurderingsbehov
     }
 
     fun status(): Status = status

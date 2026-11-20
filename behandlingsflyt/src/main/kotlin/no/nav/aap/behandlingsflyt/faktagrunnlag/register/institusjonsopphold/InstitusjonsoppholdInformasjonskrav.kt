@@ -20,7 +20,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.type.Periode
@@ -91,20 +90,16 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
                 try {
                     it.periode()
                     true
-                } catch (e: IllegalArgumentException) {
+                } catch (_: IllegalArgumentException) {
                     logger.error(
-                        "Ugyldig periode for institusjonsopphold funnet i sak ${sak.id} og ignoreres (startdato=${it.startdato}, sluttdato=${it.sluttdato}",
-                        e
+                        "Ugyldig periode for institusjonsopphold funnet i sak {} og ignoreres",
+                        sak.id
                     )
                     false
                 }
             }
 
-        return if (unleashGateway.isEnabled(BehandlingsflytFeature.SammenhengendeInstitusjonsopphold)) {
-            finnRelevanteOpphold(gyldigeOpphold, sak.rettighetsperiode)
-        } else {
-            gyldigeOpphold.filter { it.periode().overlapper(sak.rettighetsperiode) }
-        }
+        return finnRelevanteOpphold(gyldigeOpphold, sak.rettighetsperiode)
     }
 
     fun hentHvisEksisterer(behandlingId: BehandlingId): InstitusjonsoppholdGrunnlag? {

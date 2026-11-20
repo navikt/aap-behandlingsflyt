@@ -62,6 +62,11 @@ class VedtakslengdeSteg(
                                         forrigeBehandlingId = kontekst.forrigeBehandlingId,
                                     ) -> true
 
+                            vedtakslengdeService.vedtakslengdeNærmerSegSluttOgRettighetGårLenger(
+                                behandlingId = kontekst.behandlingId,
+                                forrigeBehandlingId = kontekst.forrigeBehandlingId,
+                            ) -> true
+
                             kontekst.vurderingsbehovRelevanteForSteg.isEmpty() -> false
                             else ->
                                 Vurderingsbehov.VEDTAKSLENGDE_MANUELT in kontekst.vurderingsbehovRelevanteForSteg

@@ -63,4 +63,5 @@ dependencies {
     }
     testImplementation(kelvinLibs.mockk)
     testImplementation(kotlin("test"))
+    compileOnly("org.jetbrains:annotations:26.1.0")
 }

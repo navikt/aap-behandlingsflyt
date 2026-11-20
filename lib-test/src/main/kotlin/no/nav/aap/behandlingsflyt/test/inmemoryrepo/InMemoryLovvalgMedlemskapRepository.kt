@@ -1,65 +1,72 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
-import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterForKrav
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterINorgeRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.LovvalgMedlemskapRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import java.time.LocalDate
-import java.util.concurrent.ConcurrentHashMap
 
 object InMemoryLovvalgMedlemskapRepository : LovvalgMedlemskapRepository {
-    private val grunnlag = ConcurrentHashMap<BehandlingId, LovvalgMedlemskapGrunnlag>()
+    private val grunnlag = mutableMapOf<BehandlingId, MutableList<LovvalgMedlemskapGrunnlag>>()
+    private val lock = Any()
 
-    override fun hentHvisEksisterer(behandlingId: BehandlingId): LovvalgMedlemskapGrunnlag? = grunnlag[behandlingId]
+    override fun hentHvisEksisterer(behandlingId: BehandlingId): LovvalgMedlemskapGrunnlag? =
+        synchronized(lock) {
+            grunnlag[behandlingId]?.lastOrNull()
+        }
 
     override fun lagreRegisterGrunnlag(
         behandlingId: BehandlingId,
-        relevantDato: LocalDate,
         registerGrunnlag: LovvalgMedlemskapRegisterGrunnlag,
         medlId: Long?
     ) {
-        val nyttRegister = registerGrunnlag.copy(
-            medlemskapUnntakGrunnlag = medlId?.let(InMemoryMedlemskapUnntakRepository::hent),
-            inntekterINorgeGrunnlag = registerGrunnlag.inntekterINorgeGrunnlag.toList(),
-            arbeiderINorgeGrunnlag = registerGrunnlag.arbeiderINorgeGrunnlag.map {
-                it.copy(ansettelsesdetaljer = it.ansettelsesdetaljer.toList())
-            }
-        )
-        val inntekterForKrav = if (nyttRegister.inntekterINorgeGrunnlag.isEmpty()) {
-            emptySet()
-        } else {
-            setOf(InntekterForKrav(relevantDato, nyttRegister.inntekterINorgeGrunnlag.toSet()))
-        }
-        grunnlag.compute(behandlingId) { _, eksisterende ->
-            LovvalgMedlemskapGrunnlag(
-                nyttRegister,
-                InntekterINorgeRegisterGrunnlag(inntekterForKrav),
-                eksisterende?.vurderinger.orEmpty()
+        synchronized(lock) {
+            val forrige = grunnlag[behandlingId]?.lastOrNull()
+            leggTilVersjon(
+                behandlingId,
+                LovvalgMedlemskapGrunnlag(
+                    registerGrunnlag = registerGrunnlag,
+                    vurderinger = forrige?.vurderinger ?: emptyList()
+                )
             )
         }
     }
 
-    override fun lagreVurderinger(behandlingId: BehandlingId, vurderinger: List<ManuellVurderingForLovvalgMedlemskap>) {
-        val overstyrt = vurderinger.any { it.overstyrt }
-        val nyeVurderinger = vurderinger.map { it.copy(overstyrt = overstyrt) }
-        grunnlag.compute(behandlingId) { _, eksisterende ->
-            eksisterende?.copy(vurderinger = nyeVurderinger) ?: LovvalgMedlemskapGrunnlag(
-                LovvalgMedlemskapRegisterGrunnlag(null, emptyList(), emptyList()),
-                InntekterINorgeRegisterGrunnlag(emptySet()),
-                nyeVurderinger
+    override fun lagreVurderinger(
+        behandlingId: BehandlingId,
+        vurderinger: List<ManuellVurderingForLovvalgMedlemskap>
+    ) {
+        synchronized(lock) {
+            val forrige = grunnlag[behandlingId]?.lastOrNull()
+            leggTilVersjon(
+                behandlingId,
+                LovvalgMedlemskapGrunnlag(
+                    registerGrunnlag = forrige?.registerGrunnlag
+                        ?: LovvalgMedlemskapRegisterGrunnlag(null, InntekterINorgeRegisterGrunnlag(emptySet())),
+                    vurderinger = vurderinger
+                )
             )
         }
     }
 
-    override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
+    override fun kopier(
+        fraBehandling: BehandlingId,
+        tilBehandling: BehandlingId
+    ) {
         require(fraBehandling != tilBehandling)
-        grunnlag[fraBehandling]?.let { grunnlag[tilBehandling] = it }
+        synchronized(lock) {
+            grunnlag[fraBehandling]?.lastOrNull()?.let { leggTilVersjon(tilBehandling, it) }
+        }
     }
 
     override fun slett(behandlingId: BehandlingId) {
-        grunnlag.remove(behandlingId)
+        synchronized(lock) {
+            grunnlag.remove(behandlingId)
+        }
+    }
+
+    private fun leggTilVersjon(behandlingId: BehandlingId, versjon: LovvalgMedlemskapGrunnlag) {
+        grunnlag.getOrPut(behandlingId) { mutableListOf() }.add(versjon)
     }
 }

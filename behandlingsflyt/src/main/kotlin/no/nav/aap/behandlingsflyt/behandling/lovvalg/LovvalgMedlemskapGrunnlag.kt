@@ -19,8 +19,7 @@ import java.time.LocalDate
  */
 data class MedlemskapLovvalgRegisterGrunnlag(
     val medlemskapUnntakGrunnlag: MedlemskapUnntakGrunnlag?,
-    val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
-    val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
+    val inntekterINorgeGrunnlag: InntekterINorgeRegisterGrunnlag?,
     val personopplysning: Personopplysning?,
     val nyeSoknadGrunnlag: UtenlandsOppholdData?,
     val vurderBosattStatusOgNorskStatsborgerskap: Boolean = false,
@@ -33,8 +32,7 @@ data class MedlemskapLovvalgRegisterGrunnlag(
             vurderBosattStatusOgNorskStatsborgerskap: Boolean = false,
         ) = MedlemskapLovvalgRegisterGrunnlag(
             medlemskapUnntakGrunnlag = lovvalgMedlemskapGrunnlag?.registerGrunnlag?.medlemskapUnntakGrunnlag,
-            inntekterINorgeGrunnlag = lovvalgMedlemskapGrunnlag?.registerGrunnlag?.inntekterINorgeGrunnlag.orEmpty(),
-            arbeiderINorgeGrunnlag = lovvalgMedlemskapGrunnlag?.registerGrunnlag?.arbeiderINorgeGrunnlag.orEmpty(),
+            inntekterINorgeGrunnlag = lovvalgMedlemskapGrunnlag?.registerGrunnlag?.inntekterINorgeGrunnlag,
             personopplysning = personopplysning,
             nyeSoknadGrunnlag = nyeSoknadGrunnlag,
             vurderBosattStatusOgNorskStatsborgerskap = vurderBosattStatusOgNorskStatsborgerskap,
@@ -47,7 +45,7 @@ data class MedlemskapLovvalgRegisterGrunnlag(
  */
 data class MedlemskapLovvalgFaktagrunnlag(
     val register: MedlemskapLovvalgRegisterGrunnlag,
-    val delvurdering: LovvalgDelvurderingerGrunnlag?,
+    val delvurderinger: List<LovvalgDelvurderingerGrunnlag>,
     val manuelleVurderinger: List<ManuellVurderingForLovvalgMedlemskap>,
 ) : Faktagrunnlag {
     fun gjeldendeManuelleVurderinger(): Tidslinje<ManuellVurderingForLovvalgMedlemskap> {
@@ -57,7 +55,6 @@ data class MedlemskapLovvalgFaktagrunnlag(
 
 data class LovvalgMedlemskapGrunnlag(
     val registerGrunnlag: LovvalgMedlemskapRegisterGrunnlag,
-    val inntekterINorgeRegisterGrunnlag: InntekterINorgeRegisterGrunnlag,
     val vurderinger: List<ManuellVurderingForLovvalgMedlemskap> = emptyList()
 ) {
     fun gjeldendeVurderinger(): Tidslinje<ManuellVurderingForLovvalgMedlemskap> {
@@ -67,8 +64,7 @@ data class LovvalgMedlemskapGrunnlag(
 
 data class LovvalgMedlemskapRegisterGrunnlag(
     val medlemskapUnntakGrunnlag: MedlemskapUnntakGrunnlag?,
-    val inntekterINorgeGrunnlag: List<InntektINorgeGrunnlag>,
-    val arbeiderINorgeGrunnlag: List<ArbeidINorgeGrunnlag>,
+    val inntekterINorgeGrunnlag: InntekterINorgeRegisterGrunnlag,
 )
 
 data class InntekterINorgeRegisterGrunnlag(

@@ -21,12 +21,14 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
+import org.junit.jupiter.api.Tag
 import java.net.URI
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Instant
 import java.util.UUID
 
+@Tag("db")
 internal class PåklagetBehandlingRepositoryImplTest {
     companion object {
         private val søknadsdato = LocalDate.now()
@@ -140,6 +142,30 @@ internal class PåklagetBehandlingRepositoryImplTest {
 
             assertThat(repository.hentPåklagetVedtakstype(klageBehandling.id))
                 .isEqualTo(PåklagetVedtakType.TILBAKEKREVING)
+        }
+    }
+
+    @Test
+    fun `Returnerer null hvis det ikke finnes grunnlag`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection, søknadsdato)
+            finnEllerOpprettBehandling(connection, sak)
+            val klageBehandling = finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
+            val repository = PåklagetBehandlingRepositoryImpl(connection)
+
+            assertThat(repository.hentHvisEksisterer(klageBehandling.id)).isNull()
+        }
+    }
+
+    @Test
+    fun `Returnerer null for påklaget vedtakstype hvis det ikke finnes grunnlag`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection, søknadsdato)
+            finnEllerOpprettBehandling(connection, sak)
+            val klageBehandling = finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
+            val repository = PåklagetBehandlingRepositoryImpl(connection)
+
+            assertThat(repository.hentPåklagetVedtakstype(klageBehandling.id)).isNull()
         }
     }
 

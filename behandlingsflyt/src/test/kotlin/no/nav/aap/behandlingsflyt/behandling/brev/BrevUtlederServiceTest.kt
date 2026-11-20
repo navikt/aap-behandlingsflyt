@@ -36,6 +36,16 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.KlageInnstilling
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagebehandlingKontorRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagevurderingKontor
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagebehandlingNayRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagevurderingNay
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingVurdering
@@ -48,6 +58,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.Refus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonsKravVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjonskrav.TjenestepensjonRefusjonskravVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
@@ -85,6 +97,8 @@ import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
+import no.nav.aap.student.StudentRepository
+import no.nav.aap.student.StudentVurdering
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
@@ -96,6 +110,7 @@ import org.junit.jupiter.api.util.ReadsSystemProperty
 import org.junit.jupiter.api.util.RestoreSystemProperties
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.time.Instant
@@ -388,9 +403,10 @@ class BrevUtlederServiceTest {
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
 
-            assertIs<VurderesForUføretrygd>(resultat, "forventer brevbehov er av typen 11-18")
-            assertEquals(sisteDagMedYtelse, resultat.sisteDagMedYtelse)
-            assertEquals(kravdatoUføretrygd, resultat.kravdatoUføretrygd)
+            assertIs<VurderesForUføretrygdV2>(resultat, "forventer brevbehov er av typen 11-18 V2")
+            assertEquals(sisteDagMedYtelse, resultat.uføreVurdering.sisteDagMedYtelse)
+            assertEquals(kravdatoUføretrygd, resultat.uføreVurdering.kravdatoUføretrygd)
+            assertNull(resultat.ordinærAAP)
         }
 
         @Test
@@ -1141,7 +1157,7 @@ class BrevUtlederServiceTest {
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
 
             assertIs<Innvilgelse>(resultat, "brevbehov er av type Innvilgelse")
-            assertEquals(resultat.sykdomsvurdering, "Vurdering av sykdom")
+            assertEquals("Vurdering av sykdom", resultat.sykdomsvurdering)
         }
 
         @Test
@@ -1483,7 +1499,7 @@ class BrevUtlederServiceTest {
     }
 
     @Test
-    fun `førstegangsbehandling med kun 11-18 perioder skal gi vurderesforuføretrygdbrev`() {
+    fun `førstegangsbehandling med kun 11-18 perioder skal gi V2 uten ordinær AAP`() {
         val kravdatoUføretrygd = 20 februar 2023
         val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
         val førsteDagMedYtelse = 1 januar 2025
@@ -1517,7 +1533,8 @@ class BrevUtlederServiceTest {
 
         val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
 
-        assertIs<VurderesForUføretrygd>(resultat)
+        assertIs<VurderesForUføretrygdV2>(resultat)
+        assertNull(resultat.ordinærAAP)
     }
 
     @Test
@@ -1625,6 +1642,108 @@ class BrevUtlederServiceTest {
         }
 
         @Test
+        fun `skal velge generelt avslagsbrev når student er vurdert selv om sykdomsvilkåret også gir avslag`() {
+            val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
+            gittUnderveisgrunnlagAvslag(behandling.id)
+            sykdomsvurderingForBrevRepository.lagre(behandling.id, sykdomsvurderingForBrevGrunnlag())
+            repositoryProvider.provide<StudentRepository>().lagre(
+                behandling.id,
+                setOf(
+                    StudentVurdering(
+                        fom = 1 januar 2025,
+                        begrunnelse = "Studentvurdering",
+                        harAvbruttStudie = false,
+                        godkjentStudieAvLånekassen = null,
+                        avbruttPgaSykdomEllerSkade = null,
+                        harBehovForBehandling = null,
+                        avbruttStudieDato = null,
+                        avbruddMerEnn6Måneder = null,
+                        vurdertAv = Bruker("Veileder"),
+                        vurdertIBehandling = behandling.id,
+                    ),
+                ),
+            )
+            val periode = Periode(1 januar 2025, 31 desember 2025)
+            repositoryProvider.provide<VilkårsresultatRepository>().lagre(
+                behandling.id,
+                Vilkårsresultat(
+                    vilkår = listOf(
+                        vilkårAvslag(Vilkårtype.SYKDOMSVILKÅRET, Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE, periode),
+                    ),
+                ),
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<AvslagBrev.Avslag>(resultat)
+            assertEquals(TypeBrev.VEDTAK_AVSLAG, resultat.typeBrev)
+            assertEquals(Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE, resultat.avslagsårsak)
+            assertEquals(setOf(Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE), resultat.avslagsårsaker)
+            assertEquals("Vurdering av sykdom", resultat.sykdomsvurdering)
+        }
+
+        @Test
+        fun `skal velge generelt avslagsbrev når yrkesskade er vurdert`() {
+            val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
+            gittUnderveisgrunnlagAvslag(behandling.id)
+            sykdomsvurderingForBrevRepository.lagre(behandling.id, sykdomsvurderingForBrevGrunnlag())
+            repositoryProvider.provide<SykdomRepository>().lagre(
+                behandling.id,
+                Yrkesskadevurdering(
+                    begrunnelse = "Ingen årsakssammenheng",
+                    relevanteSaker = emptyList(),
+                    erÅrsakssammenheng = false,
+                    andelAvNedsettelsen = Prosent(0),
+                    vurdertAv = Bruker("Veileder"),
+                    vurdertTidspunkt = LocalDateTime.now() // nødvendig pga. in-memory repo som ikke setter default
+                ),
+            )
+            repositoryProvider.provide<VilkårsresultatRepository>().lagre(
+                behandling.id,
+                Vilkårsresultat(
+                    vilkår = listOf(
+                        vilkårAvslag(
+                            Vilkårtype.SYKDOMSVILKÅRET,
+                            Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE,
+                        ),
+                    ),
+                ),
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<AvslagBrev.Avslag>(resultat)
+            assertEquals(TypeBrev.VEDTAK_AVSLAG, resultat.typeBrev)
+            assertEquals(Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE, resultat.avslagsårsak)
+            assertEquals(setOf(Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE), resultat.avslagsårsaker)
+            assertEquals("Vurdering av sykdom", resultat.sykdomsvurdering)
+        }
+
+        @Test
+        fun `skal velge sykdomsvilkårsavslagsbrev når student eller yrkesskade ikke er vurdert`() {
+            val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
+            gittUnderveisgrunnlagAvslag(behandling.id)
+            sykdomsvurderingForBrevRepository.lagre(behandling.id, sykdomsvurderingForBrevGrunnlag())
+            repositoryProvider.provide<VilkårsresultatRepository>().lagre(
+                behandling.id,
+                Vilkårsresultat(
+                    vilkår = listOf(
+                        vilkårAvslag(
+                            Vilkårtype.SYKDOMSVILKÅRET,
+                            Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE,
+                        ),
+                    ),
+                ),
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<AvslagBrev.AvslagSykdomsvilkåret>(resultat)
+            assertEquals(TypeBrev.VEDTAK_AVSLAG_11_5, resultat.typeBrev)
+            assertEquals("Vurdering av sykdom", resultat.sykdomsvurdering)
+        }
+
+        @Test
         fun `skal hente ut sykdomsvurdering ved avslag`() {
             val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
             gittUnderveisgrunnlagAvslag(behandling.id)
@@ -1633,7 +1752,7 @@ class BrevUtlederServiceTest {
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
 
             assertIs<AvslagBrev.Avslag>(resultat, "brevbehov er av type Avslag")
-            assertEquals(resultat.sykdomsvurdering, "Vurdering av sykdom")
+            assertEquals("Vurdering av sykdom", resultat.sykdomsvurdering)
         }
 
         @Test
@@ -1772,6 +1891,154 @@ class BrevUtlederServiceTest {
 
             assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id))
                 .isNotEqualTo(VedtakArbeidsopptrapping11_23SjetteLedd)
+        }
+    }
+
+    @Nested
+    inner class Klagebrev {
+
+        @Test
+        fun `opprettholdt klage med bare vurdering fra Nav-kontor tar med begrunnelsen`() {
+            val behandling = gittKlageMedVurderinger(
+                begrunnelseNavKontor = "Begrunnelse fra Nav-kontor",
+                begrunnelseNay = null
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertThat(resultat).isEqualTo(
+                KlageOpprettholdelse(
+                    begrunnelseNavKontor = "Begrunnelse fra Nav-kontor",
+                    begrunnelseNay = null
+                )
+            )
+        }
+
+        @Test
+        fun `opprettholdt klage med bare vurdering fra NAY tar med begrunnelsen`() {
+            val behandling = gittKlageMedVurderinger(
+                begrunnelseNavKontor = null,
+                begrunnelseNay = "Begrunnelse fra NAY"
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertThat(resultat).isEqualTo(
+                KlageOpprettholdelse(
+                    begrunnelseNavKontor = null,
+                    begrunnelseNay = "Begrunnelse fra NAY"
+                )
+            )
+        }
+
+        @Test
+        fun `opprettholdt klage tar med begrunnelsene fra begge enheter`() {
+            val behandling = gittKlageMedVurderinger(
+                begrunnelseNavKontor = "Begrunnelse fra Nav-kontor",
+                begrunnelseNay = "Begrunnelse fra NAY"
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertThat(resultat).isEqualTo(
+                KlageOpprettholdelse(
+                    begrunnelseNavKontor = "Begrunnelse fra Nav-kontor",
+                    begrunnelseNay = "Begrunnelse fra NAY"
+                )
+            )
+        }
+
+        @Test
+        fun `delvis omgjort klage tar med begrunnelsene fra begge enheter`() {
+            val behandling = gittKlageMedVurderinger(
+                begrunnelseNavKontor = "Nav-kontoret opprettholder",
+                begrunnelseNay = "NAY omgjør",
+                innstillingNay = KlageInnstilling.OMGJØR
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertThat(resultat).isEqualTo(
+                KlageOpprettholdelse(
+                    begrunnelseNavKontor = "Nav-kontoret opprettholder",
+                    begrunnelseNay = "NAY omgjør"
+                )
+            )
+        }
+
+        private fun gittKlageMedVurderinger(
+            begrunnelseNavKontor: String?,
+            begrunnelseNay: String?,
+            innstillingNay: KlageInnstilling = KlageInnstilling.OPPRETTHOLD
+        ): Behandling {
+            val behandling = gittBehandling(typeBehandling = TypeBehandling.Klage)
+            val vurdertAv = Bruker("Saksbehandler")
+            val opprettet = Instant.now()
+
+            repositoryProvider.provide<FormkravRepository>().lagre(
+                behandling.id,
+                FormkravVurdering(
+                    begrunnelse = "Formkravene er oppfylt",
+                    erBrukerPart = true,
+                    erFristOverholdt = true,
+                    likevelBehandles = null,
+                    erKonkret = true,
+                    erSignert = true,
+                    vurdertAv = vurdertAv,
+                    opprettet = opprettet
+                )
+            )
+            repositoryProvider.provide<BehandlendeEnhetRepository>().lagre(
+                behandling.id,
+                BehandlendeEnhetVurdering(
+                    skalBehandlesAvNay = begrunnelseNay != null,
+                    skalBehandlesAvKontor = begrunnelseNavKontor != null,
+                    vurdertAv = vurdertAv,
+                    opprettet = opprettet
+                )
+            )
+
+            begrunnelseNavKontor?.let {
+                repositoryProvider.provide<KlagebehandlingKontorRepository>().lagre(
+                    behandling.id,
+                    KlagevurderingKontor(
+                        begrunnelse = it,
+                        notat = "Internt notat fra Nav-kontor",
+                        innstilling = KlageInnstilling.OPPRETTHOLD,
+                        vilkårSomOpprettholdes = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5),
+                        vilkårSomOmgjøres = emptyList(),
+                        vurdertAv = vurdertAv,
+                        opprettet = opprettet
+                    )
+                )
+            }
+
+            begrunnelseNay?.let {
+                repositoryProvider.provide<KlagebehandlingNayRepository>().lagre(
+                    behandling.id,
+                    KlagevurderingNay(
+                        begrunnelse = it,
+                        notat = "Internt notat fra NAY",
+                        innstilling = innstillingNay,
+                        vilkårSomOpprettholdes =
+                            if (innstillingNay == KlageInnstilling.OPPRETTHOLD) {
+                                listOf(Hjemmel.FOLKETRYGDLOVEN_11_6)
+                            } else {
+                                emptyList()
+                            },
+                        vilkårSomOmgjøres =
+                            if (innstillingNay == KlageInnstilling.OMGJØR) {
+                                listOf(Hjemmel.FOLKETRYGDLOVEN_11_6)
+                            } else {
+                                emptyList()
+                            },
+                        vurdertAv = vurdertAv,
+                        opprettet = opprettet
+                    )
+                )
+            }
+
+            return behandling
         }
     }
 
@@ -2028,6 +2295,22 @@ class BrevUtlederServiceTest {
         )
     }
 
+    private fun vilkårAvslag(
+        type: Vilkårtype,
+        avslagsårsak: Avslagsårsak? = null,
+        periode: Periode = Periode(1 januar 2025, 31 desember 2025)
+    ) = Vilkår(
+        type = type,
+        vilkårsperioder = setOf(
+            Vilkårsperiode(
+                periode = periode,
+                utfall = Utfall.IKKE_OPPFYLT,
+                begrunnelse = "Generisk begrunnelse",
+                avslagsårsak = avslagsårsak,
+            ),
+        ),
+    )
+
     companion object {
         @JvmStatic
         fun revurderingAvslagsbrev(): Stream<Arguments> = Stream.of(
@@ -2082,6 +2365,8 @@ class BrevUtlederServiceTest {
         )
     }
 }
+
+
 
 object BrevUtlederServiceTestUnleash : FakeUnleashBaseWithDefaultDisabled(
     enabledFlags = listOf(BehandlingsflytFeature.OvergangUfoereBrevbygger)

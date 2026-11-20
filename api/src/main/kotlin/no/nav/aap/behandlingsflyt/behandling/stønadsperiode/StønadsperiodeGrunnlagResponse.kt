@@ -9,8 +9,18 @@ import java.time.LocalDate
 
 data class StønadsperiodeGrunnlagResponse(
     val harTilgangTilÅSaksbehandle: Boolean,
+    /**
+     * Nye vurderinger gjort i denne behandlingen
+     */
     val nyeVurderinger: List<StønadsperiodeVurderingResponse>,
-    val vedtatteVurderinger: List<StønadsperiodeVurderingResponse>
+    /**
+     * Gjeldende vurderinger i forrige behandling. Irrelevante krav er filtrert vekk
+     */
+    val vedtatteVurderinger: List<StønadsperiodeVurderingResponse>,
+    /**
+     * Gjeldende vurderinger. Irrelevante krav er filtrert vekk
+     */
+    val gjeldendeVurderinger: List<StønadsperiodeVurderingResponse>
 )
 
 data class StønadsperiodeVurderingResponse(
@@ -36,6 +46,6 @@ fun StønadsperiodeVurdering.tilResponse() = StønadsperiodeVurderingResponse(
     vurdertIBehandling = vurdertIBehandling,
     opprettet = opprettet,
     startDato = startDato
-    
+
 )
     
