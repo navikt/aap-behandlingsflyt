@@ -1,5 +1,8 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
+import ch.qos.logback.classic.Logger
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.read.ListAppender
 import io.mockk.checkUnnecessaryStub
 import io.mockk.clearMocks
 import io.mockk.every
@@ -13,6 +16,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -20,17 +24,70 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 class AvklarSykdomLøserTest {
+
+    @Test
+    fun `valideringsfeil logges uten vurderingssvar eller periode`() {
+        val (sak, behandling) = opprettInMemorySakOgBehandling()
+        val løsning = SykdomsvurderingLøsningDto(
+            begrunnelse = "Syntetisk begrunnelse som ikke skal logges",
+            fom = 10 januar 2025,
+            tom = 31 januar 2025,
+            dokumenterBruktIVurdering = emptyList(),
+            harSkadeSykdomEllerLyte = true,
+            harNedsattArbeidsevne = null,
+            erSkadeSykdomEllerLyteVesentligdel = true,
+            erNedsettelseIArbeidsevneMerEnnHalvparten = true,
+            erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense = null,
+            yrkesskadeBegrunnelse = null
+        )
+        val logger = LoggerFactory.getLogger(AvklarSykdomLøser::class.java) as Logger
+        val appender = ListAppender<ILoggingEvent>().apply { start() }
+        logger.addAppender(appender)
+        try {
+            AvklarSykdomLøser(inMemoryRepositoryProvider, minimalGatewayProvider()).løs(
+                AvklaringsbehovKontekst(
+                    bruker = Bruker("Z00000"),
+                    kontekst = FlytKontekst(
+                        sakId = sak.id,
+                        behandlingId = behandling.id,
+                        forrigeBehandlingId = null,
+                        behandlingType = TypeBehandling.Førstegangsbehandling
+                    )
+                ),
+                AvklarSykdomLøsning(løsningerForPerioder = listOf(løsning))
+            )
+
+            assertThat(appender.list).hasSize(1)
+            assertThat(appender.list.single().formattedMessage)
+                .contains("valideringsfeil=", "MANGLER_NEDSATT_ARBEIDSEVNE")
+                .doesNotContain(
+                    "harSkadeSykdomEllerLyte=",
+                    "harNedsattArbeidsevne=",
+                    "harYrkesskade=",
+                    "periode=",
+                    "2025",
+                    løsning.begrunnelse
+                )
+            assertThat(appender.list.single().throwableProxy).isNull()
+        } finally {
+            logger.detachAppender(appender)
+            appender.stop()
+        }
+    }
 
     private val behandlingMock = mockk<BehandlingRepository>()
     private val sykdomMock = mockk<SykdomRepository>(relaxed = true)
