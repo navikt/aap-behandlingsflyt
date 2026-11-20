@@ -29,7 +29,7 @@ class PeriodisertFastsettArbeidsevneLøsning(
         defaultValue = FASTSETT_ARBEIDSEVNE_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5004`,
     override val løsningerForPerioder: List<PeriodisertFastsettArbeidsevneDto>
-) : PeriodisertAvklaringsbehovLøsning<PeriodisertFastsettArbeidsevneDto>, LøsningMedPeriodiserteVurderinger {
+) : PeriodisertAvklaringsbehovLøsning<PeriodisertFastsettArbeidsevneDto>{
     override fun løs(
         repositoryProvider: RepositoryProvider,
         kontekst: AvklaringsbehovKontekst,
