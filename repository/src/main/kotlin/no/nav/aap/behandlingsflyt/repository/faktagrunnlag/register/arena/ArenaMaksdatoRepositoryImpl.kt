@@ -18,8 +18,8 @@ class ArenaMaksdatoRepositoryImpl(private val connection: DBConnection) : ArenaM
     }
 
     override fun lagre(behandlingId: BehandlingId, arenaMaksdato: ArenaMaksdato?) {
-        val nyttGrunnlag = ArenaMaksdatoGrunnlag(arenaMaksdato)
-        if (hentHvisEksisterer(behandlingId) == nyttGrunnlag) return
+        val eksisterende = hentHvisEksisterer(behandlingId)
+        if (eksisterende != null && eksisterende.arenaMaksdato == arenaMaksdato) return
 
         connection.execute("UPDATE arena_maksdato_grunnlag SET aktiv = FALSE WHERE aktiv AND behandling_id = ?") {
             setParams {
@@ -61,7 +61,7 @@ class ArenaMaksdatoRepositoryImpl(private val connection: DBConnection) : ArenaM
 
     override fun hentHvisEksisterer(behandlingId: BehandlingId): ArenaMaksdatoGrunnlag? = connection.queryFirstOrNull(
         """
-            SELECT m.arena_saksnummer, m.status, m.maksdato, m.vedtak_til, m.vedtak_id
+            SELECT g.arena_maksdato_id, m.arena_saksnummer, m.status, m.maksdato, m.vedtak_til, m.vedtak_id
             FROM arena_maksdato_grunnlag g
                      LEFT JOIN arena_maksdato m ON m.id = g.arena_maksdato_id
             WHERE g.behandling_id = ?
@@ -87,7 +87,7 @@ class ArenaMaksdatoRepositoryImpl(private val connection: DBConnection) : ArenaM
                 vedtakId = row.getInt("vedtak_id"),
             )
         }
-        return ArenaMaksdatoGrunnlag(arenaMaksdato)
+        return ArenaMaksdatoGrunnlag(arenaMaksdato, row.getLongOrNull("arena_maksdato_id"))
     }
 
     override fun kopier(fraBehandling: BehandlingId, tilBehandling: BehandlingId) {
@@ -127,12 +127,16 @@ class ArenaMaksdatoRepositoryImpl(private val connection: DBConnection) : ArenaM
             }
         }
 
-        // Radene kan deles med andre behandlinger via kopier; slett bare de som ingen lenger peker på.
+        // Radene kan deles med andre behandlinger via kopier, og stønadsperiodevurderinger kan peke på dem.
+        // Slett bare de som ingen lenger peker på.
         connection.execute(
             """
                 DELETE FROM arena_maksdato m
                 WHERE m.id = ANY(?::bigint[])
                   AND NOT EXISTS (SELECT 1 FROM arena_maksdato_grunnlag g WHERE g.arena_maksdato_id = m.id)
+                  AND NOT EXISTS (
+                      SELECT 1 FROM stonadsperiode_vurdering v WHERE v.kant_i_kant_arena_maksdato_id = m.id
+                  )
             """.trimIndent()
         ) {
             setParams {

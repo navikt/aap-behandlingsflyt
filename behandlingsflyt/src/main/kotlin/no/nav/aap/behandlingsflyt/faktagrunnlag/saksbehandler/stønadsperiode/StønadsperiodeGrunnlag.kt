@@ -48,8 +48,18 @@ data class StønadsperiodeVurdering(
      * Startdatoen er satt til dagen etter maksdato i tilstøtende Arena-sak.
      */
     val erKantIKantMedArena: Boolean = false,
+    /**
+     * Utfallet av kant-i-kant-vurderingen. Null når Arena ikke er aktuelt: manuell vurdering, migrert sak
+     * og vurderinger lagret før feltet fantes.
+     */
+    val kantIKant: KantIKantMedArena? = null,
 ) : VurderingForKrav {
     init {
+        if (kantIKant != null) {
+            require(erKantIKantMedArena == kantIKant.erKantIKant) {
+                "[Utviklerfeil] erKantIKantMedArena=$erKantIKantMedArena stemmer ikke med utfall ${kantIKant.utfall}"
+            }
+        }
 
         /// harGjenværendeKvote | harHattOrdinærSiste52Uker
         /// true                                | true                                              | GJENINNTREKDEN/GJENOPPTAK
