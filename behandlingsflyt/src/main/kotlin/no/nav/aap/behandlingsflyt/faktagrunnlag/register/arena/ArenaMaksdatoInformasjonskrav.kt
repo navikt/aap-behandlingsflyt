@@ -19,7 +19,10 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-/** Slår opp maksdato fra Arena når §12-steget passeres, maks én gang per kalenderdag per behandling. */
+/**
+ * Slår opp maksdato fra Arena i steget som sender forvaltningsmelding, maks én gang per kalenderdag per behandling.
+ * Brukes til å velge forvaltningsmelding og til å vurdere stønadsperiode for kant i kant-saker.
+ */
 class ArenaMaksdatoInformasjonskrav(
     private val sakRepository: SakRepository,
     private val arenaMaksdatoRepository: ArenaMaksdatoRepository,

@@ -6,9 +6,9 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.erSystembruker
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdatoRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.kravVedOvergangFraArena
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.kravtidslinje
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
@@ -182,21 +182,6 @@ class AvklarStønadsperiodeSteg(
         )
     }
 
-    /**
-     * Finner kravet som er kant i kant med Arena: kravet hvis segment i kravtidslinjen inneholder
-     * dagen etter Arena-maksdato. Kravtidslinjen avgrenser hvert krav ved starten på neste krav.
-     * Returnerer null når ingen krav dekker datoen, for eksempel ved opphold etter Arena-saken.
-     */
-    private fun kravVedOvergangFraArena(
-        gjeldendeRelevanteKrav: Set<RelevantKrav>,
-        arenaMaksdato: ArenaMaksdato?,
-    ): RelevantKrav? {
-        val dagenEtterMaksdato = arenaMaksdato?.maksdato?.plusDays(1) ?: return null
-        return gjeldendeRelevanteKrav.kravtidslinje()
-            .segmenter()
-            .singleOrNull { it.periode.inneholder(dagenEtterMaksdato) }
-            ?.verdi
-    }
 
     /**
      * Midlertidig sperre. Det er ikke avklart hvordan tidligere krav skal håndteres når et senere krav
