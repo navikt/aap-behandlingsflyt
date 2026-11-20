@@ -43,6 +43,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRe
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
 import no.nav.aap.barnetillegg.VurderingAvForeldreAnsvar
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagebehandlingKontorRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagebehandlingNayRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
@@ -104,6 +106,8 @@ class BrevUtlederService(
     private val avbrytAktivitetspliktbehandlingService: AvbrytAktivitetspliktbehandlingService,
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository,
+    private val klageBehandlingNavKontorVurderingForBrevRepository: KlagebehandlingKontorRepository,
+    private val klageBehandlingNAYVurderingForBrevRepository: KlagebehandlingNayRepository,
     private val overgangUføreRepository: OvergangUføreRepository,
     private val vedtakslengdeService: VedtakslengdeService,
     private val unleashGateway: UnleashGateway,
@@ -139,6 +143,8 @@ class BrevUtlederService(
         aktivitetsplikt11_7Repository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
         sykdomsvurderingForBrevRepository = repositoryProvider.provide(),
+        klageBehandlingNavKontorVurderingForBrevRepository = repositoryProvider.provide(),
+        klageBehandlingNAYVurderingForBrevRepository = repositoryProvider.provide(),
         overgangUføreRepository = repositoryProvider.provide(),
         vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide(),
@@ -309,10 +315,15 @@ class BrevUtlederService(
             }
 
             TypeBehandling.Klage -> {
-                val klageresulat = klageresultatUtleder.utledKlagebehandlingResultat(behandlingId)
-                return when (klageresulat) {
+                val klageresultat = klageresultatUtleder.utledKlagebehandlingResultat(behandlingId)
+                return when (klageresultat) {
                     is Avslått -> KlageAvvist
-                    is Opprettholdes, is DelvisOmgjøres -> KlageOpprettholdelse
+                    is Opprettholdes, is DelvisOmgjøres -> KlageOpprettholdelse(
+                        begrunnelseNavKontor = klageBehandlingNavKontorVurderingForBrevRepository
+                            .hentHvisEksisterer(behandlingId)?.vurdering?.begrunnelse,
+                        begrunnelseNay = klageBehandlingNAYVurderingForBrevRepository
+                            .hentHvisEksisterer(behandlingId)?.vurdering?.begrunnelse
+                    )
                     else -> null
                 }
             }

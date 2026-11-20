@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarOver
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStudentLøsningV2
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarVedtakslengdeLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarVedtakslengdePeriodisertLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.ForeslåVedtakVedtakslengdeLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
@@ -1085,7 +1086,7 @@ class AvklarVedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnle
                     .contains(Definisjon.AVKLAR_VEDTAKSLENGDE)
             }
             .løsAvklaringsBehov(
-                AvklarVedtakslengdeLøsning(
+                AvklarVedtakslengdePeriodisertLøsning(
                     løsningerForPerioder = listOf(
                         VedtakslengdeVurderingDto(
                             fom = startDato,
