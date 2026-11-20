@@ -82,6 +82,21 @@ fun opprettInMemorySakOgBehandling(
     return sak to behandling
 }
 
+fun opprettInMemorySakOgKlage(
+    søknadsdato: LocalDate = LocalDate.now(),
+    ident: Ident = ident()
+): Pair<Sak, Behandling> {
+    val (sak, _) = opprettInMemorySakOgBehandling(søknadsdato = søknadsdato, ident = ident)
+    val klage = InMemoryBehandlingService.finnEllerOpprettOrdinærBehandling(
+        sak.id,
+        VurderingsbehovOgÅrsak(
+            vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTATT_KLAGE)),
+            årsak = ÅrsakTilOpprettelse.KLAGE
+        )
+    )
+    return sak to klage
+}
+
 fun opprettInMemorySakOgRevurdering(
     søknadsdato: LocalDate = LocalDate.now(),
     vurderingsbehov: List<Vurderingsbehov> = listOf(Vurderingsbehov.MOTTATT_SØKNAD),
