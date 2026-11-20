@@ -7,6 +7,8 @@ public const val VURDER_BRUDD_11_7_KODE: String = "4101"
 public const val VENTE_PÅ_FRIST_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT: String = "4102"
 public const val VURDER_BRUDD_11_9_KODE: String = "4201"
 public const val AVBRYT_AKTIVITETSPLIKTBEHANDING_KODE: String = "4301"
+public const val VURDER_SØKNAD_UTENLANDSOPPHOLD_KODE: String = "4401"
+public const val BEKREFT_BREV_SENDT_MANUELT_KODE: String = "4402"
 public const val OVERSTYR_IKKE_OPPFYLT_MELDEPLIKT_KODE: String = "5002"
 public const val AVKLAR_SYKDOM_KODE: String = "5003"
 public const val FASTSETT_ARBEIDSEVNE_KODE: String = "5004"
@@ -106,6 +108,16 @@ public enum class AvklaringsbehovKode {
      * [AVBRYT_AKTIVITETSPLIKTBEHANDING_KODE]
      */
     `4301`,
+
+    /**
+     * [VURDER_SØKNAD_UTENLANDSOPPHOLD_KODE]
+     */
+    `4401`,
+
+    /**
+     * [BEKREFT_BREV_SENDT_MANUELT_KODE]
+     */
+    `4402`,
 
     @Deprecated("Erstattet av 5037")
     /**
