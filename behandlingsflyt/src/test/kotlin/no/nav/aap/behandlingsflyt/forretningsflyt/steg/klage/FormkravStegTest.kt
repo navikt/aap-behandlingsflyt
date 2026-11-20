@@ -1,591 +1,201 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg.klage
 
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
-import no.nav.aap.behandlingsflyt.behandling.avbrytrevurdering.AvbrytRevurderingService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovValidering
-import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Brevbestilling
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
+import no.nav.aap.behandlingsflyt.behandling.brev.ForhåndsvarselKlageFormkrav
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingReferanse
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.BrevbestillingService
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.Status
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.behandling.trekkklage.TrekkKlageService
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVarsel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.formkrav.FormkravVurdering
 import no.nav.aap.behandlingsflyt.flyt.steg.FantVentebehov
 import no.nav.aap.behandlingsflyt.flyt.steg.Fullført
+import no.nav.aap.behandlingsflyt.flyt.steg.Ventebehov
+import no.nav.aap.behandlingsflyt.flyt.testutil.FakeBrevbestillingGateway
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgKlage
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
-import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
+import no.nav.aap.behandlingsflyt.test.FakeOppgavestyringGateway
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryVilkårsresultatRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBrevbestillingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryFormkravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status as AvklaringsbehovStatus
 
 @Execution(ExecutionMode.SAME_THREAD)
 class FormkravStegTest {
-    val trekkKlageServiceMock = mockk<TrekkKlageService>()
-    val formkravRepositoryMock = mockk<FormkravRepository>()
-    val behandlingRepositoryMock = mockk<BehandlingRepository>()
-    val brevbestillingServiceMock = mockk<BrevbestillingService>()
-    val avklaringsbehovServiceMock = mockk<AvklaringsbehovService>()
-    val avbrytRevurderingServiceMock = mockk<AvbrytRevurderingService>()
-    val trukketSøknadRepository = InMemoryTrukketSøknadRepository
-    val gatewayProvider = createGatewayProvider {
+    private val klage = opprettInMemorySakOgKlage().second
+    private val gatewayProvider = minimalGatewayProvider {
         register<AlleAvskruddUnleash>()
+        register<FakeOppgavestyringGateway>()
+        register<FakeBrevbestillingGateway>()
     }
-
-    @BeforeEach
-    fun setup() {
-        every { trekkKlageServiceMock.klageErTrukket(any()) } returns false
-        every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns null
-        every { avbrytRevurderingServiceMock.revurderingErAvbrutt(any()) } returns true
-        every {
-            avklaringsbehovServiceMock.oppdaterAvklaringsbehov(
-                definisjon = Definisjon.VURDER_FORMKRAV,
-                vedtakBehøverVurdering = any(),
-                erTilstrekkeligVurdert = any(),
-                tilbakestillGrunnlag = any(),
-                kontekst = any(),
-            )
-        } returns Unit
+    private val brevbestillingService = BrevbestillingService(inMemoryRepositoryProvider, gatewayProvider)
+    private val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(klage.id)
+    private val formkravRepository = InMemoryFormkravRepository
+    private val steg = FormkravSteg.konstruer(inMemoryRepositoryProvider, gatewayProvider)
+    private val kontekst = flytKontekstMedPerioder {
+        behandling = klage
     }
-
-    @Test
-    fun `FormkravSteg-utfører skal gi avklaringsbehov VURDER_FORMKRAV om man ikke har vurdert dette formkravet enda`() {
-        every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns listOf()
-        val kontekst = flytKontekstMedPerioder {
-            behandlingType = TypeBehandling.Klage
-            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
-        }
-
-        InMemoryAvklaringsbehovRepository.opprett(
-            BehandlingId(1),
-            definisjon = Definisjon.VURDER_FORMKRAV,
-            funnetISteg = StegType.FORMKRAV,
-            frist = LocalDate.now().plusDays(1),
-            begrunnelse = "Begrunnelse",
-            endretAv = Bruker("Ident"),
-        )
-
-        val steg = FormkravSteg(
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            formkravRepository = formkravRepositoryMock,
-            behandlingRepository = behandlingRepositoryMock,
-            brevbestillingService = brevbestillingServiceMock,
-            trekkKlageService = trekkKlageServiceMock,
-            avklaringsbehovService = AvklaringsbehovService(
-                avbrytRevurderingService = avbrytRevurderingServiceMock,
-                InMemoryAvklaringsbehovRepository,
-                behandlingRepositoryMock,
-                InMemoryVilkårsresultatRepository,
-                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
-                kravRepository = InMemoryKravRepository, InMemorySakRepository,
-                unleashGateway = gatewayProvider.provide(),
-                AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
-                
-            ),
-            unleashGateway = gatewayProvider.provide()
-        )
-
-        steg.utfør(kontekst)
-
-        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1))
-        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VURDER_FORMKRAV)?.definisjon).isEqualTo(
-            Definisjon.VURDER_FORMKRAV
-        )
-    }
-
-    @Test
-    fun `FormkravSteg-utfører skal gi avklaringsbehov FULLFØRT om man har løst avklaringsbehovet og vurderingen er at man har opprettholdt avklaringsbehovene`() {
-        every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns listOf(
-            Brevbestilling(
-                id = 1L,
-                behandlingId = BehandlingId(1L),
-                typeBrev = TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV,
-                referanse = BrevbestillingReferanse(UUID.randomUUID()),
-                status = Status.FULLFØRT,
-                opprettet = LocalDateTime.now(),
-            )
-        )
-
-        val kontekst = flytKontekstMedPerioder {
-            behandlingType = TypeBehandling.Klage
-            this.behandlingId = BehandlingId(2)
-            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
-        }
-
-        InMemoryAvklaringsbehovRepository.opprett(
-            BehandlingId(2L),
-            definisjon = Definisjon.VURDER_FORMKRAV,
-            funnetISteg = StegType.FORMKRAV,
-            frist = LocalDate.now().plusDays(1),
-            begrunnelse = "Begrunnelse",
-            endretAv = Bruker("Ident"),
-        )
-
-        val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(2L))
-        avklaringsbehov.løsAvklaringsbehov(
-            definisjon = Definisjon.VURDER_FORMKRAV,
-            begrunnelse = "Vurdert ok",
-            endretAv = Bruker("Ident")
-        )
-
-        val steg = FormkravSteg(
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            formkravRepository = formkravRepositoryMock,
-            behandlingRepository = behandlingRepositoryMock,
-            brevbestillingService = brevbestillingServiceMock,
-            trekkKlageService = trekkKlageServiceMock,
-            avklaringsbehovService = AvklaringsbehovService(
-                avbrytRevurderingService = avbrytRevurderingServiceMock,
-                InMemoryAvklaringsbehovRepository,
-                behandlingRepositoryMock,
-                InMemoryVilkårsresultatRepository,
-                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
-                InMemoryKravRepository, InMemorySakRepository,
-                AlleAvskruddUnleash,
-                AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
-            ),
-            unleashGateway = gatewayProvider.provide()
-        )
-
-
-        every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
-            vurdering = FormkravVurdering(
-                begrunnelse = "begrunnelse",
-                erKonkret = true,
-                erBrukerPart = true,
-                erSignert = true,
-                erFristOverholdt = true,
-                likevelBehandles = null,
-                vurdertAv = Bruker("indent"),
-                opprettet = Instant.now(),
-            )
-        )
-
-        val resultat = steg.utfør(kontekst)
-
-        assertThat(resultat).isEqualTo(Fullført)
-    }
-
-    @Test
-    fun `FormkravSteg-utfører skal gi avklaringsbehov FULLFØRT om fristen ikke er overholdt, selv om man ikke har oppfylt formkravene`() {
-        every { behandlingRepositoryMock.hentReferanse(any()) } returns tomBehandling(BehandlingId(1L)).referanse
-        every { formkravRepositoryMock.lagreVarsel(any(), any()) } returns Unit
-
-        val kontekst = flytKontekstMedPerioder {
-            behandlingType = TypeBehandling.Klage
-            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
-        }
-
-        InMemoryAvklaringsbehovRepository.opprett(
-            BehandlingId(1L),
-            definisjon = Definisjon.VURDER_FORMKRAV,
-            funnetISteg = StegType.FORMKRAV,
-            frist = LocalDate.now().plusDays(1),
-            begrunnelse = "Begrunnelse",
-            endretAv = Bruker("Ident"),
-        )
-
-        val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1L))
-        avklaringsbehov.løsAvklaringsbehov(
-            definisjon = Definisjon.VURDER_FORMKRAV,
-            begrunnelse = "Vurdert ok",
-            endretAv = Bruker("Ident")
-        )
-
-        val steg = FormkravSteg(
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            formkravRepository = formkravRepositoryMock,
-            behandlingRepository = behandlingRepositoryMock,
-            brevbestillingService = brevbestillingServiceMock,
-            trekkKlageService = trekkKlageServiceMock,
-            avklaringsbehovService = AvklaringsbehovService(
-                avbrytRevurderingService = avbrytRevurderingServiceMock,
-                InMemoryAvklaringsbehovRepository,
-                behandlingRepositoryMock,
-                InMemoryVilkårsresultatRepository,
-                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
-                InMemoryKravRepository, InMemorySakRepository,
-                AlleAvskruddUnleash,
-                AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
-            ),
-            unleashGateway = gatewayProvider.provide()
-        )
-
-        every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
-            vurdering = FormkravVurdering(
-                begrunnelse = "begrunnelse",
-                erKonkret = true,
-                erBrukerPart = true,
-                erSignert = false,
-                erFristOverholdt = false,
-                likevelBehandles = false,
-                vurdertAv = Bruker("indent"),
-                opprettet = Instant.now(),
-            )
-        )
-
-        every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns emptyList()
-        every { brevbestillingServiceMock.bestill(any(), any(), any(), any()) } returns UUID.randomUUID()
-
-        val resultat = steg.utfør(kontekst)
-
-        assertThat(resultat).isEqualTo(Fullført)
-    }
-
-    @Test
-    fun `FormkravSteg-utfører skal gi avklaringsbehov SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV og bestille brev om man har lagret en vurdering med ikke-oppfylte formkrav`() {
-        every { behandlingRepositoryMock.hentReferanse(any()) } returns tomBehandling(BehandlingId(1L)).referanse
-        every { brevbestillingServiceMock.bestill(any(), any(), any(), any()) } returns UUID.randomUUID()
-        every { formkravRepositoryMock.lagreVarsel(any(), any()) } returns Unit
-
-        val kontekst = flytKontekstMedPerioder {
-            behandlingType = TypeBehandling.Klage
-            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
-        }
-
-        InMemoryAvklaringsbehovRepository.opprett(
-            BehandlingId(1),
-            definisjon = Definisjon.VURDER_FORMKRAV,
-            funnetISteg = StegType.FORMKRAV,
-            frist = LocalDate.now().plusDays(1),
-            begrunnelse = "Begrunnelse",
-            endretAv = Bruker("Ident"),
-        )
-
-        val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1L))
-        avklaringsbehov.løsAvklaringsbehov(
-            definisjon = Definisjon.VURDER_FORMKRAV,
-            begrunnelse = "Vurdert ok",
-            endretAv = Bruker("Ident")
-        )
-
-        val steg = FormkravSteg(
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            formkravRepository = formkravRepositoryMock,
-            behandlingRepository = behandlingRepositoryMock,
-            brevbestillingService = brevbestillingServiceMock,
-            trekkKlageService = trekkKlageServiceMock,
-            avklaringsbehovService = AvklaringsbehovService(
-                avbrytRevurderingService = avbrytRevurderingServiceMock,
-                InMemoryAvklaringsbehovRepository,
-                behandlingRepositoryMock,
-                InMemoryVilkårsresultatRepository,
-                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
-                InMemoryKravRepository, InMemorySakRepository,
-                AlleAvskruddUnleash,
-                AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
-            ),
-            unleashGateway = gatewayProvider.provide()
-        )
-
-        every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
-            vurdering = FormkravVurdering(
-                begrunnelse = "begrunnelse",
-                erKonkret = false,
-                erBrukerPart = false,
-                erSignert = false,
-                erFristOverholdt = true,
-                likevelBehandles = null,
-                vurdertAv = Bruker("indent"),
-                opprettet = Instant.now(),
-            ),
-            varsel = FormkravVarsel(
-                varselId = BrevbestillingReferanse(UUID.randomUUID()),
-                sendtDato = LocalDate.now(),
-                svarfrist = LocalDate.now().plusWeeks(3)
-            )
-        )
-
-        every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns emptyList()
-
-        steg.utfør(kontekst)
-        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1))
-        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)?.definisjon).isEqualTo(
-            Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV
-        )
-
-        verify { brevbestillingServiceMock.bestill(BehandlingId(1L), any(), any(), any()) }
-    }
-
-    @Test
-    fun `FormkravSteg-utfører skal gi avklaringsbehov SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV om det allerede er bestilt brev men brevet er ikke sendt`() {
-        every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns listOf(
-            Brevbestilling(
-                id = 1L,
-                behandlingId = BehandlingId(1L),
-                typeBrev = TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV,
-                referanse = BrevbestillingReferanse(UUID.randomUUID()),
-                status = Status.FORHÅNDSVISNING_KLAR,
-                opprettet = LocalDateTime.now(),
-            )
-        )
-
-        every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
-            vurdering = FormkravVurdering(
-                begrunnelse = "begrunnelse",
-                erKonkret = false,
-                erBrukerPart = true,
-                erSignert = false,
-                erFristOverholdt = true,
-                likevelBehandles = null,
-                vurdertAv = Bruker("indent"),
-                opprettet = Instant.now(),
-            ),
-            varsel = FormkravVarsel(
-                varselId = BrevbestillingReferanse(UUID.randomUUID()),
-                sendtDato = LocalDate.now(),
-                svarfrist = LocalDate.now().plusWeeks(3)
-            )
-        )
-
-        val kontekst = flytKontekstMedPerioder {
-            behandlingType = TypeBehandling.Klage
-            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
-        }
-
-        InMemoryAvklaringsbehovRepository.opprett(
-            BehandlingId(1),
-            definisjon = Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV,
-            funnetISteg = StegType.FORMKRAV,
-            frist = LocalDate.now().plusDays(1),
-            begrunnelse = "Begrunnelse",
-            endretAv = Bruker("Ident"),
-        )
-
-        InMemoryAvklaringsbehovRepository.opprett(
-            BehandlingId(1),
-            definisjon = Definisjon.VURDER_FORMKRAV,
-            funnetISteg = StegType.FORMKRAV,
-            frist = LocalDate.now().plusDays(1),
-            begrunnelse = "Begrunnelse",
-            endretAv = Bruker("Ident"),
-        )
-
-        val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1L))
-        avklaringsbehov.løsAvklaringsbehov(
-            definisjon = Definisjon.VURDER_FORMKRAV,
-            begrunnelse = "Vurdert ok",
-            endretAv = Bruker("Ident")
-        )
-
-        val steg = FormkravSteg(
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            formkravRepository = formkravRepositoryMock,
-            behandlingRepository = behandlingRepositoryMock,
-            brevbestillingService = brevbestillingServiceMock,
-            trekkKlageService = trekkKlageServiceMock,
-            avklaringsbehovService = AvklaringsbehovService(
-                avbrytRevurderingService = avbrytRevurderingServiceMock,
-                InMemoryAvklaringsbehovRepository,
-                behandlingRepositoryMock,
-                InMemoryVilkårsresultatRepository,
-                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
-                InMemoryKravRepository, InMemorySakRepository,
-                AlleAvskruddUnleash,
-                AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
-            ),
-            unleashGateway = gatewayProvider.provide()
-        )
-
-        steg.utfør(kontekst)
-
-        val avklaringsbehovene = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1))
-        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV)?.definisjon).isEqualTo(
-            Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV
-        )
-    }
-
-    @Test
-    fun `FormkravSteg-utfører skal gi ventebehov om brev er sendt og formkravet ikke er oppfyllt`() {
-        val kontekst = flytKontekstMedPerioder {
-            behandlingType = TypeBehandling.Klage
-            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
-        }
-
-        InMemoryAvklaringsbehovRepository.opprett(
-            BehandlingId(1),
-            definisjon = Definisjon.VURDER_FORMKRAV,
-            funnetISteg = StegType.FORMKRAV,
-            frist = LocalDate.now().plusDays(1),
-            begrunnelse = "Begrunnelse",
-            endretAv = Bruker("Ident"),
-        )
-
-        val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1L))
-        avklaringsbehov.løsAvklaringsbehov(
-            definisjon = Definisjon.VURDER_FORMKRAV,
-            begrunnelse = "Vurdert ok",
-            endretAv = Bruker("Ident")
-        )
-
-        val steg = FormkravSteg(
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            formkravRepository = formkravRepositoryMock,
-            behandlingRepository = behandlingRepositoryMock,
-            brevbestillingService = brevbestillingServiceMock,
-            trekkKlageService = trekkKlageServiceMock,
-            avklaringsbehovService = AvklaringsbehovService(
-                avbrytRevurderingService = avbrytRevurderingServiceMock,
-                InMemoryAvklaringsbehovRepository,
-                behandlingRepositoryMock,
-                InMemoryVilkårsresultatRepository,
-                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
-                InMemoryKravRepository, InMemorySakRepository,
-                AlleAvskruddUnleash,
-                AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
-            ),
-            unleashGateway = gatewayProvider.provide()
-        )
-
-        every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
-            vurdering = FormkravVurdering(
-                begrunnelse = "begrunnelse",
-                erKonkret = false,
-                erBrukerPart = false,
-                erSignert = false,
-                erFristOverholdt = true,
-                likevelBehandles = false,
-                vurdertAv = Bruker("indent"),
-                opprettet = Instant.now(),
-            ),
-            varsel = FormkravVarsel(
-                varselId = BrevbestillingReferanse(UUID.randomUUID()),
-                sendtDato = LocalDate.now(),
-                svarfrist = LocalDate.now().plusWeeks(3)
-            )
-        )
-
-        every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns listOf(
-            forhåndsvarselBrevbestilling(
-                1L,
-                1L
-            )
-        )
-
-
-        val resultat = steg.utfør(kontekst)
-
-        assertThat(resultat).isInstanceOf(FantVentebehov::class.java)
-        val avklaringsbehovFormkrav = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1))
-            .hentBehovForDefinisjon(Definisjon.VURDER_FORMKRAV) ?: error("Fant ikke avklaringsbehov for formkrav")
-        assertThat(avklaringsbehovFormkrav.status()).isEqualTo(no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status.OPPRETTET)
-    }
-
-    @Test
-    fun `FormkravSteg-utfører skal gi FULLFØRT om varsel er sendt og formkrav ikke er oppfyllt - men men er over svarfristen på 3 uker`() {
-        val kontekst = flytKontekstMedPerioder {
-            behandlingType = TypeBehandling.Klage
-            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTATT_KLAGE)
-        }
-
-        InMemoryAvklaringsbehovRepository.opprett(
-            BehandlingId(1),
-            definisjon = Definisjon.VURDER_FORMKRAV,
-            funnetISteg = StegType.FORMKRAV,
-            frist = LocalDate.now().plusDays(1),
-            begrunnelse = "Begrunnelse",
-            endretAv = Bruker("Ident"),
-        )
-
-        val avklaringsbehov = InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(BehandlingId(1L))
-        avklaringsbehov.løsAvklaringsbehov(
-            definisjon = Definisjon.VURDER_FORMKRAV,
-            begrunnelse = "Vurdert ok",
-            endretAv = Bruker("Ident")
-        )
-
-        val steg = FormkravSteg(
-            avklaringsbehovRepository = InMemoryAvklaringsbehovRepository,
-            formkravRepository = formkravRepositoryMock,
-            behandlingRepository = behandlingRepositoryMock,
-            brevbestillingService = brevbestillingServiceMock,
-            trekkKlageService = trekkKlageServiceMock,
-            avklaringsbehovService = AvklaringsbehovService(
-                avbrytRevurderingService = avbrytRevurderingServiceMock,
-                InMemoryAvklaringsbehovRepository,
-                behandlingRepositoryMock,
-                InMemoryVilkårsresultatRepository,
-                trukketSøknadService = TrukketSøknadService(trukketSøknadRepository),
-                InMemoryKravRepository, InMemorySakRepository,
-                AlleAvskruddUnleash,
-                AvklaringsbehovValidering(inMemoryRepositoryProvider, gatewayProvider)
-            ),
-            unleashGateway = gatewayProvider.provide()
-        )
-
-        every { formkravRepositoryMock.hentHvisEksisterer(any()) } returns FormkravGrunnlag(
-            vurdering = FormkravVurdering(
-                begrunnelse = "begrunnelse",
-                erKonkret = false,
-                erBrukerPart = false,
-                erSignert = false,
-                erFristOverholdt = true,
-                likevelBehandles = true,
-                vurdertAv = Bruker("indent"),
-                opprettet = Instant.now(),
-            ),
-            varsel = FormkravVarsel(
-                varselId = BrevbestillingReferanse(UUID.randomUUID()),
-                sendtDato = LocalDate.now().minusWeeks(4),
-                svarfrist = LocalDate.now().minusWeeks(3)
-            )
-        )
-
-        every { brevbestillingServiceMock.hentBestillinger(any(), any()) } returns listOf(
-            forhåndsvarselBrevbestilling(
-                1L,
-                1L
-            )
-        )
-
-        val resultat = steg.utfør(kontekst)
-        assertThat(resultat).isEqualTo(Fullført)
-    }
-
-    private fun tomBehandling(behandlingId: BehandlingId) = Behandling(
-        behandlingId,
-        sakId = SakId(1),
-        typeBehandling = TypeBehandling.Førstegangsbehandling,
-        årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
-        forrigeBehandlingId = null,
-        versjon = 1
+    private val vurdering = FormkravVurdering(
+        begrunnelse = "Vurdering av formkrav",
+        erBrukerPart = true,
+        erFristOverholdt = true,
+        likevelBehandles = null,
+        erKonkret = true,
+        erSignert = true,
+        vurdertAv = Bruker("saksbehandler"),
+        opprettet = Instant.now()
     )
 
-    private fun forhåndsvarselBrevbestilling(id: Long, behandlingId: Long) = Brevbestilling(
-        id = id,
-        behandlingId = BehandlingId(behandlingId),
-        typeBrev = TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV,
-        referanse = BrevbestillingReferanse(UUID.randomUUID()),
-        status = Status.FULLFØRT,
-        opprettet = LocalDateTime.now()
-    )
+//    }
+
+    @Test
+    fun `oppretter avklaringsbehov for formkrav når vurderingen mangler`() {
+        steg.utfør(kontekst)
+        steg.utfør(kontekst)
+
+        assertThat(InMemoryAvklaringsbehovRepository.hent(klage.id).map { it.definisjon })
+            .containsExactly(Definisjon.VURDER_FORMKRAV)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VURDER_FORMKRAV)?.status())
+            .isEqualTo(AvklaringsbehovStatus.OPPRETTET)
+        assertThat(InMemoryBrevbestillingRepository.hent(klage.id)).isEmpty()
+    }
+
+    @Test
+    fun `fullfører når formkravene er oppfylt og avklaringsbehovet er løst`() {
+        løsFormkrav(vurdering)
+        bestillForhåndsvarsel(Status.FULLFØRT)
+
+        val resultat = steg.utfør(kontekst)
+
+        assertThat(resultat).isEqualTo(Fullført)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VURDER_FORMKRAV)?.status())
+            .isEqualTo(AvklaringsbehovStatus.AVSLUTTET)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV))
+            .isNull()
+    }
+
+    @Test
+    fun `fullfører uten forhåndsvarsel når klagefristen ikke er overholdt`() {
+        løsFormkrav(vurdering.copy(erSignert = false, erFristOverholdt = false, likevelBehandles = false))
+
+        val resultat = steg.utfør(kontekst)
+
+        assertThat(resultat).isEqualTo(Fullført)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VURDER_FORMKRAV)?.status())
+            .isEqualTo(AvklaringsbehovStatus.AVSLUTTET)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV))
+            .isNull()
+        assertThat(InMemoryBrevbestillingRepository.hent(klage.id)).isEmpty()
+    }
+
+    @Test
+    fun `bestiller ett forhåndsvarsel og oppretter avklaringsbehov når formkravene ikke er oppfylt`() {
+        løsFormkrav(vurdering.copy(erKonkret = false, erBrukerPart = false, erSignert = false))
+
+        steg.utfør(kontekst)
+        steg.utfør(kontekst)
+
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(
+            Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV
+        )
+        assertThat(avklaringsbehov?.status()).isEqualTo(AvklaringsbehovStatus.OPPRETTET)
+        val bestilling = InMemoryBrevbestillingRepository.hent(klage.id).single()
+        assertThat(bestilling.typeBrev).isEqualTo(TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV)
+        assertThat(bestilling.status).isEqualTo(Status.FORHÅNDSVISNING_KLAR)
+        assertThat(formkravRepository.hentHvisEksisterer(klage.id)?.varsel?.varselId)
+            .isEqualTo(bestilling.referanse)
+    }
+
+    @Test
+    fun `beholder avklaringsbehov og gjenbruker forhåndsvarsel som ikke er sendt`() {
+        løsFormkrav(vurdering.copy(erKonkret = false, erSignert = false))
+        val referanse = bestillForhåndsvarsel(Status.FORHÅNDSVISNING_KLAR)
+        formkravRepository.lagreVarsel(klage.id, referanse)
+        steg.utfør(kontekst)
+
+        steg.utfør(kontekst)
+
+        val avklaringsbehov = avklaringsbehovene.hentBehovForDefinisjon(
+            Definisjon.SKRIV_FORHÅNDSVARSEL_KLAGE_FORMKRAV_BREV
+        )
+        assertThat(avklaringsbehov?.status()).isEqualTo(AvklaringsbehovStatus.OPPRETTET)
+        assertThat(InMemoryBrevbestillingRepository.hent(klage.id).map { it.referanse })
+            .containsExactly(referanse)
+    }
+
+    @Test
+    fun `venter på svar og gjenåpner formkrav når forhåndsvarsel er sendt og formkravene ikke er oppfylt`() {
+        løsFormkrav(
+            vurdering.copy(erKonkret = false, erBrukerPart = false, erSignert = false, likevelBehandles = false)
+        )
+        val referanse = bestillForhåndsvarsel(Status.FULLFØRT)
+        val svarfrist = LocalDate.now().plusWeeks(3)
+        formkravRepository.lagreVarsel(klage.id, referanse)
+        formkravRepository.lagreFrist(klage.id, LocalDate.now(), svarfrist)
+
+        val resultat = steg.utfør(kontekst)
+
+        assertThat(resultat).isEqualTo(
+            FantVentebehov(
+                Ventebehov(
+                    definisjon = Definisjon.VENTE_PÅ_FRIST_FORHÅNDSVARSEL_KLAGE_FORMKRAV,
+                    grunn = ÅrsakTilSettPåVent.VENTER_PÅ_SVAR_FRA_BRUKER,
+                    frist = svarfrist
+                )
+            )
+        )
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VURDER_FORMKRAV)?.status())
+            .isEqualTo(AvklaringsbehovStatus.OPPRETTET)
+    }
+
+    @Test
+    fun `fullfører etter svarfristen selv om formkravene ikke er oppfylt`() {
+        løsFormkrav(
+            vurdering.copy(erKonkret = false, erBrukerPart = false, erSignert = false, likevelBehandles = false)
+        )
+        val referanse = bestillForhåndsvarsel(Status.FULLFØRT)
+        val sendtDato = LocalDate.now().minusWeeks(4)
+        formkravRepository.lagreVarsel(klage.id, referanse)
+        formkravRepository.lagreFrist(klage.id, sendtDato, sendtDato.plusWeeks(3))
+
+        val resultat = steg.utfør(kontekst)
+
+        assertThat(resultat).isEqualTo(Fullført)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.VURDER_FORMKRAV)?.status())
+            .isEqualTo(AvklaringsbehovStatus.AVSLUTTET)
+    }
+
+    private fun løsFormkrav(vurdering: FormkravVurdering) {
+        steg.utfør(kontekst)
+        formkravRepository.lagre(klage.id, vurdering)
+        avklaringsbehovene.løsAvklaringsbehov(
+            definisjon = Definisjon.VURDER_FORMKRAV,
+            begrunnelse = vurdering.begrunnelse,
+            endretAv = vurdering.vurdertAv
+        )
+    }
+
+    private fun bestillForhåndsvarsel(status: Status): BrevbestillingReferanse {
+        val referanse = BrevbestillingReferanse(
+            brevbestillingService.bestill(
+                behandlingId = klage.id,
+                brevBehov = ForhåndsvarselKlageFormkrav,
+                unikReferanse = UUID.randomUUID().toString(),
+                ferdigstillAutomatisk = false
+            )
+        )
+        InMemoryBrevbestillingRepository.oppdaterStatus(klage.id, referanse, status)
+        return referanse
+    }
 }
