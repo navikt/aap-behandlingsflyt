@@ -6,7 +6,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
  * Marker interface for repository.
  *
  * PS: Hver gang denne implementeres, må også App.kt oppdateres for at implementasjonene
- * skal lastes i [postgresRepositoryRegistry].
+ * skal lastes i [postgresRepositoryRegistry](https://github.com/navikt/aap-behandlingsflyt/blob/main/repository/src/main/kotlin/no/nav/aap/behandlingsflyt/repository/PostgresRepositoryRegistry.kt).
  */
 interface Repository: no.nav.aap.komponenter.repository.Repository {
     /** Kopier opplysninger og vurderinger fra en behandling inn i en annen.

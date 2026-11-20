@@ -114,7 +114,7 @@ public enum class AvklaringsbehovKode {
     `5001`,
 
     /**
-     * [OVERSTYR_IKKE_OPPFYLT_MELDEPLIKT_KODE]
+     * [OVERSTYR_IKKE_OPPFYKT_MELDEPLIKT_KODE]
      */
     `5002`,
 
@@ -180,13 +180,13 @@ public enum class AvklaringsbehovKode {
     `5014`,
 
     /**
-     * [EFFEKTUER_11_7_KODE]
+     * [EFFEKTUER_11_7_KODE](https://github.com/navikt/aap-behandlingsflyt/blob/main/kontrakt/src/main/kotlin/no/nav/aap/behandlingsflyt/kontrakt/avklaringsbehov/AvklaringsbehovKode.kt#L186)
      */
     @Deprecated("Ikke i bruk")
     `5015`,
 
     /**
-     * [FORHÅNDSVARSEL_AKTIVITETSPLIKT_KODE]
+     * [FORHÅNDSVARSEL_AKTIVITETSPLIKT_KODE](https://github.com/navikt/aap-behandlingsflyt/blob/main/kontrakt/src/main/kotlin/no/nav/aap/behandlingsflyt/kontrakt/avklaringsbehov/AvklaringsbehovKode.kt#L192)
      */
     @Deprecated("Ikke i bruk")
     `5016`,
@@ -197,7 +197,7 @@ public enum class AvklaringsbehovKode {
     `5017`,
 
     /**
-     * [VENTE_PÅ_FIRST_EFFEKTUER_11_7_KODE]
+     * [VENTE_PÅ_FIRST_EFFEKTUER_11_7_KODE](https://github.com/navikt/aap-behandlingsflyt/blob/main/kontrakt/src/main/kotlin/no/nav/aap/behandlingsflyt/kontrakt/avklaringsbehov/AvklaringsbehovKode.kt#L203)
      */
     @Deprecated("Ikke i bruk")
     `5018`,
@@ -283,7 +283,7 @@ public enum class AvklaringsbehovKode {
     `5034`,
 
     /**
-     * [AVKLAR_OPPHOLDSKRAV_KODE]
+     * [AVKLAR_OPPHOLDSKRAV]
      */
     `5035`,
 
@@ -343,7 +343,7 @@ public enum class AvklaringsbehovKode {
     `5053`,
 
     /**
-     * [BEKREFT_VURDERINGER_OPPFØLGING]
+     * [BEKREFT_VURDERINGER_OPPFØLGING_KODE]
      */
     `5054`,
 
@@ -497,11 +497,11 @@ public enum class AvklaringsbehovKode {
      */
     `9004`,
     /**
-     * [VURDER_TILBAKEKREVING]
+     * [VURDER_TILBAKEKREVING](https://github.com/navikt/aap-behandlingsflyt/blob/main/kontrakt/src/main/kotlin/no/nav/aap/behandlingsflyt/kontrakt/avklaringsbehov/AvklaringsbehovKode.kt#L502)
      */
     `9082`,
     /**
-     * [VURDER_TILBAKEKREVING_BESLUTTER]
+     * [VURDER_TILBAKEKREVING_BESLUTTER](https://github.com/navikt/aap-behandlingsflyt/blob/main/kontrakt/src/main/kotlin/no/nav/aap/behandlingsflyt/kontrakt/avklaringsbehov/AvklaringsbehovKode.kt#L506)
      */
     `9083`
 }

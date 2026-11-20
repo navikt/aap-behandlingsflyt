@@ -27,7 +27,7 @@ interface PeriodiserteVurderingerDto<T: VurderingDto> {
      *
      * De fleste implisitte start- og slutt-datoer skal være satt.
      *
-     * Sorter etter [vurdertTidspunkt] og så [fom].
+     * Sorter etter vurderingstidspunkt og så [VurderingDto.fom].
      **/
     val sisteVedtatteVurderinger: List<T>
 
@@ -35,18 +35,18 @@ interface PeriodiserteVurderingerDto<T: VurderingDto> {
      *
      * De fleste implisitte start- og slutt-datoer skal være satt.
      *
-     * Sorter etter [vurdertTidspunkt] og så [fom].
+     * Sorter etter vurderingstidspunkt og så [VurderingDto.fom].
      **/
     val nyeVurderinger: List<T>
 
     /** Perioder hvor nye vurderinger er tillatt.
      *
-     * Periodene er sortert på [fom] og overlapper ikke.
+     * Periodene er sortert på [VurderingDto.fom] og overlapper ikke.
      **/
     val kanVurderes: List<Periode>
 
     /** Perioder som det ikke er relevant å vurdere.
-     * Periodene er sortert på [fom] og overlapper ikke.
+     * Periodene er sortert på [VurderingDto.fom] og overlapper ikke.
      **/
     val ikkeRelevantePerioder: List<Periode>
 
@@ -55,7 +55,7 @@ interface PeriodiserteVurderingerDto<T: VurderingDto> {
      * for disse periodene, så er denne verdien uendret. For behovet for vurderingene er der fortsatt
      * for å fatte vedtaket, men behovet er tilfredsstilt. Jf. OPPRETTET og AVSLUTTET avklaringsbehov.
      *
-     * Periodene er sortert på [fom] og overlapper ikke.
+     * Periodene er sortert på [VurderingDto.fom] og overlapper ikke.
      **/
     val behøverVurderinger: List<Periode>
 }
