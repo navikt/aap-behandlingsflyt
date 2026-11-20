@@ -110,7 +110,6 @@ import org.junit.jupiter.api.util.ReadsSystemProperty
 import org.junit.jupiter.api.util.RestoreSystemProperties
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
-import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.time.Instant
@@ -1909,7 +1908,9 @@ class BrevUtlederServiceTest {
             assertThat(resultat).isEqualTo(
                 KlageOpprettholdelse(
                     begrunnelseNavKontor = "Begrunnelse fra Nav-kontor",
-                    begrunnelseNay = null
+                    begrunnelseNay = null,
+                    påklagetVedtaksdato = LocalDate.now(),
+                    klagedato = LocalDate.now()
                 )
             )
         }
@@ -1926,7 +1927,9 @@ class BrevUtlederServiceTest {
             assertThat(resultat).isEqualTo(
                 KlageOpprettholdelse(
                     begrunnelseNavKontor = null,
-                    begrunnelseNay = "Begrunnelse fra NAY"
+                    begrunnelseNay = "Begrunnelse fra NAY",
+                    påklagetVedtaksdato = LocalDate.now(),
+                    klagedato = LocalDate.now()
                 )
             )
         }
@@ -1935,7 +1938,7 @@ class BrevUtlederServiceTest {
         fun `opprettholdt klage tar med begrunnelsene fra begge enheter`() {
             val behandling = gittKlageMedVurderinger(
                 begrunnelseNavKontor = "Begrunnelse fra Nav-kontor",
-                begrunnelseNay = "Begrunnelse fra NAY"
+                begrunnelseNay = "Begrunnelse fra NAY",
             )
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
@@ -1943,7 +1946,9 @@ class BrevUtlederServiceTest {
             assertThat(resultat).isEqualTo(
                 KlageOpprettholdelse(
                     begrunnelseNavKontor = "Begrunnelse fra Nav-kontor",
-                    begrunnelseNay = "Begrunnelse fra NAY"
+                    begrunnelseNay = "Begrunnelse fra NAY",
+                    påklagetVedtaksdato = LocalDate.now(),
+                    klagedato = LocalDate.now()
                 )
             )
         }
@@ -1961,7 +1966,9 @@ class BrevUtlederServiceTest {
             assertThat(resultat).isEqualTo(
                 KlageOpprettholdelse(
                     begrunnelseNavKontor = "Nav-kontoret opprettholder",
-                    begrunnelseNay = "NAY omgjør"
+                    begrunnelseNay = "NAY omgjør",
+                    påklagetVedtaksdato = LocalDate.now(),
+                    klagedato = LocalDate.now()
                 )
             )
         }
@@ -2266,8 +2273,8 @@ class BrevUtlederServiceTest {
         val førstePeriode = Periode(1 januar 2025, 30 juni 2025)
         val andrePeriode = Periode(1 juli 2025, 30 desember 2025)
         return tidslinjeOf(
-                førstePeriode to tilkjentYtelse(dagsats, førstePeriode.tom),
-                andrePeriode to tilkjentYtelse(dagsats, andrePeriode.tom),
+            førstePeriode to tilkjentYtelse(dagsats, førstePeriode.tom),
+            andrePeriode to tilkjentYtelse(dagsats, andrePeriode.tom),
         )
     }
 
@@ -2365,7 +2372,6 @@ class BrevUtlederServiceTest {
         )
     }
 }
-
 
 
 object BrevUtlederServiceTestUnleash : FakeUnleashBaseWithDefaultDisabled(

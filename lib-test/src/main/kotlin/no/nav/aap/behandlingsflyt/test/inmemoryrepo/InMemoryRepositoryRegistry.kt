@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
+import InMemoryTilbakekrevingRepository
 import no.nav.aap.behandlingsflyt.test.MockConnection
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 
