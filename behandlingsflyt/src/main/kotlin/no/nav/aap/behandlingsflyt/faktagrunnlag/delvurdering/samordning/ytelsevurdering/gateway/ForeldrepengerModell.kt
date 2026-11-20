@@ -13,8 +13,11 @@ data class ForeldrepengerResponse(
 )
 
 /**
- * [Kilde for denne](https://github.com/navikt/fp-abakus/blob/master/kontrakt-vedtak/src/main/java/no/nav/abakus/vedtak/ytelse/Ytelser.java#L3)
- * og [denne](https://github.com/navikt/fp-abakus/blob/master/kontrakt-vedtak/src/main/java/no/nav/abakus/vedtak/ytelse/v1/YtelseV1.java)
+ * Responsmodell for det eksterne v1-API-et i fp-abakus:
+ * `POST /fpabakus/ekstern/api/ytelse/v1/hent-ytelse-vedtak`.
+ *
+ * [Kilde for denne](https://github.com/navikt/fp-abakus/blob/18b0ab803932e5c51071d843d412a94894aa127d/kontrakt-vedtak/src/main/java/no/nav/abakus/vedtak/ytelse/Ytelser.java#L3)
+ * og [denne](https://github.com/navikt/fp-abakus/blob/18b0ab803932e5c51071d843d412a94894aa127d/kontrakt-vedtak/src/main/java/no/nav/abakus/vedtak/ytelse/v1/YtelseV1.java)
  *
  * @param ytelseStatus Mulige verdier: UNDER_BEHANDLING_LØPENDE,AVSLUTTET,UKJENT.
  * @param kildesystem Mulige verdier: FPSAK og K9SAK
@@ -29,8 +32,9 @@ data class Ytelse(
 )
 
 data class Anvist(
-    // Hva betyr denne? hva om det er en aktiv ytelse?
-    // Kan slutt-dato *ikke* være satt?
+    // V1-kontrakten i fp-abakus krever både fom og tom for hver anvisningsperiode.
+    // Perioden gjelder anvisningen, ikke nødvendigvis hele ytelsen. Tom betyr ikke at ytelsen er avsluttet.
+    // Kontrakten beskriver ikke om anvisningen bekrefter at pengene faktisk er utbetalt.
     val periode: Periode,
     val utbetalingsgrad: Utbetalingsgrad,
     val beløp: Number?
@@ -44,7 +48,7 @@ data class Aktør(
     val verdi: String
 )
 
-// Kopiert herfra: https://github.com/navikt/fp-abakus/blob/master/kontrakt-vedtak/src/main/java/no/nav/abakus/vedtak/ytelse/Ytelser.java#L3
+// Kopiert herfra: https://github.com/navikt/fp-abakus/blob/18b0ab803932e5c51071d843d412a94894aa127d/kontrakt-vedtak/src/main/java/no/nav/abakus/vedtak/ytelse/Ytelser.java#L3
 enum class Ytelser {
     /**
      * Folketrygdloven K9 ytelser.
@@ -59,5 +63,7 @@ enum class Ytelser {
      */
     ENGANGSTØNAD,
     FORELDREPENGER,
-    SVANGERSKAPSPENGER
+    SVANGERSKAPSPENGER,
+
+    // FRISINN er utelatt, da det bare var midlertidig under Covid-19 epidemien
 }
