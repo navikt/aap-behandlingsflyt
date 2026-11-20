@@ -24,6 +24,7 @@ enum class BehandlingsflytFeature(
     SynkroniserArenaMeldeperiodesyklus,
     HandtereMaksdatoForKantTilKant,
     MaksdatoSykepenger,
+    ForvaltningsmeldingBrevbygger,
 
     // --- Krav ---
     BackfillKrav,

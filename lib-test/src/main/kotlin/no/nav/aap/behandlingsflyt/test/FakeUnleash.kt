@@ -85,7 +85,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.SynkroniserArenaMeldeperiodesyklus to false,
         BehandlingsflytFeature.HandtereMaksdatoForKantTilKant to true,
         BehandlingsflytFeature.MaksdatoSykepenger to true,
-        
+        BehandlingsflytFeature.ForvaltningsmeldingBrevbygger to true,
+
         // --- Krav ---
         BehandlingsflytFeature.BackfillKrav to true,
         BehandlingsflytFeature.KravSteg to true,
