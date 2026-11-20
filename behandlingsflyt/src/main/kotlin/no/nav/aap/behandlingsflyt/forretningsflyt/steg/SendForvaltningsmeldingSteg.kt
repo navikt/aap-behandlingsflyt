@@ -40,7 +40,9 @@ class SendForvaltningsmeldingSteg(
                         behandlingId = behandlingId,
                         brevBehov = brevBehov,
                         unikReferanse = "${behandling.referanse}-${brevBehov.typeBrev}",
-                        ferdigstillAutomatisk = true
+                        ferdigstillAutomatisk = true,
+                        brukApiV3 = true
+
                     )
                 }
             }
