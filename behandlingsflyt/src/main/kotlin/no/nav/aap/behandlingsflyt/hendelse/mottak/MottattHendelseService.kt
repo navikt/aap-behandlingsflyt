@@ -34,7 +34,7 @@ class MottattHendelseService(
 
     fun registrerMottattHendelse(
         dto: Innsending,
-    ) {
+    ): Boolean {
         val sak = sakRepository.hent(dto.saksnummer)
 
         when (val melding = dto.melding) {
@@ -54,7 +54,7 @@ class MottattHendelseService(
                     dto.referanse, dto.type
                 )
             }
-            return
+            return false
         }
 
         if (kjennerTilDokumentFraFør(dto, sak, mottattDokumentRepository)) {
@@ -73,6 +73,7 @@ class MottattHendelseService(
                 ),
             )
         }
+        return true
     }
 }
 
