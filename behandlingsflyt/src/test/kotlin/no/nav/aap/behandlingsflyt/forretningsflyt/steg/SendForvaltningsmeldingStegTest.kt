@@ -55,6 +55,13 @@ object SendKlagebrevEnabledOgAltAnnetAvskruddUnleash : FakeUnleashBaseWithDefaul
 )
 
 object ForvaltningsmeldingKantIKantPåskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
+    listOf(
+        BehandlingsflytFeature.HandtereMaksdatoForKantTilKant,
+        BehandlingsflytFeature.NykantIkantForvaltningsmelding
+    )
+)
+
+object KunMaksdatoForKantTilKantPåskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
     listOf(BehandlingsflytFeature.HandtereMaksdatoForKantTilKant)
 )
 
@@ -187,6 +194,27 @@ class SendForvaltningsmeldingStegTest {
                 flytkontekstForBehandlingForForvaltningsmelding(behandling, Vurderingsbehov.MOTTATT_SØKNAD)
 
             sendForvaltningsmeldingSteg.utfør(flytkontekst)
+
+            val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
+            assertThat(brevbestillinger.map { it.typeBrev }).containsExactly(TypeBrev.FORVALTNINGSMELDING)
+        }
+
+        @Test
+        fun `sender vanlig forvaltningsmelding når toggle for ny kant i kant-forvaltningsmelding er av`() {
+            val steg = SendForvaltningsmeldingSteg.konstruer(
+                inMemoryRepositoryProvider,
+                createGatewayProvider {
+                    register<FakeBrevbestillingGateway>()
+                    register<FakeOppgavestyringGateway>()
+                    register<KunMaksdatoForKantTilKantPåskruddUnleash>()
+                }
+            )
+            val behandling = opprettSakOgbehandlingForForvaltningsmelding(TypeBehandling.Førstegangsbehandling)
+            lagreKravOgArenaMaksdato(behandling.id, muligRettFra = DAGEN_ETTER_MAKSDATO)
+            val flytkontekst =
+                flytkontekstForBehandlingForForvaltningsmelding(behandling, Vurderingsbehov.MOTTATT_SØKNAD)
+
+            steg.utfør(flytkontekst)
 
             val brevbestillinger = InMemoryBrevbestillingRepository.hent(behandling.id)
             assertThat(brevbestillinger.map { it.typeBrev }).containsExactly(TypeBrev.FORVALTNINGSMELDING)
