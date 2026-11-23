@@ -20,8 +20,12 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 /**
- * Slår opp maksdato fra Arena i steget som sender forvaltningsmelding, maks én gang per kalenderdag per behandling.
- * Brukes til å velge forvaltningsmelding og til å vurdere stønadsperiode for kant i kant-saker.
+ * Slår opp maksdato fra Arena, maks én gang per kalenderdag per behandling. Brukes til å vurdere stønadsperiode
+ * for kant i kant-saker og til å velge forvaltningsmelding.
+ *
+ * Står i kravlisten til både [StegType.SEND_FORVALTNINGSMELDING] og [StegType.AVKLAR_STØNADSPERIODE].
+ * Oppslaget gjøres bare tidlig når [BehandlingsflytFeature.NykantIkantForvaltningsmelding] er på, slik at en feil
+ * i Arena ikke stopper vanlig forvaltningsmelding.
  */
 class ArenaMaksdatoInformasjonskrav(
     private val sakRepository: SakRepository,
@@ -40,6 +44,8 @@ class ArenaMaksdatoInformasjonskrav(
         steg: StegType,
         oppdatert: InformasjonskravOppdatert?,
     ): Boolean = unleashGateway.isEnabled(BehandlingsflytFeature.HandtereMaksdatoForKantTilKant)
+            && (steg != StegType.SEND_FORVALTNINGSMELDING
+                || unleashGateway.isEnabled(BehandlingsflytFeature.NykantIkantForvaltningsmelding))
             // Kun førstegangsbehandling inntil det er gått opp hvordan endringer på maksdato i Arena skal håndteres
             // for Kelvin-vedtak
             && kontekst.behandlingType == TypeBehandling.Førstegangsbehandling
