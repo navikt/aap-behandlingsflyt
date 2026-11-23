@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaVedtakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
@@ -558,10 +559,11 @@ class AvklarStønadsperiodeStegTest {
 
     private fun lagArenaMaksdato(maksdato: LocalDate?) = ArenaMaksdato(
         arenaSaksnummer = "2023-5",
-        status = "AVSLU",
+        vedtakStatus = ArenaVedtakStatus.AVSLUTTET,
         maksdato = maksdato,
         vedtakTil = maksdato,
         vedtakId = 1,
+        harForlengelseEtter11_12 = false,
     )
 
     private fun opprettFørstegangsbehandling(sakId: SakId) =
