@@ -422,7 +422,7 @@ class SendForvaltningsmeldingStegTest {
     }
 
     private companion object {
-        val MAKSDATO: LocalDate = LocalDate.now().minusDays(1)
+        val MAKSDATO: LocalDate = LocalDate.of(2026, 1, 31)
         val DAGEN_ETTER_MAKSDATO: LocalDate = MAKSDATO.plusDays(1)
     }
 }
