@@ -19,16 +19,14 @@ object KravValidering {
 
     fun validerRelevantKrav(
         vurdering: RelevantKrav,
-        søknadForVurdering: MottattDokument?
+        søknadForVurdering: MottattDokument
     ) {
-        if (søknadForVurdering != null) {
-            if (vurdering.søknadsdato.årsak == SøknadsdatoÅrsak.SøknadMottatt && søknadForVurdering.mottattTidspunkt.toLocalDate() != vurdering.søknadsdato.dato) {
-                throw UgyldigForespørselException("Søknadsdato for krav må være lik mottatt dato for den digitaliserte søknaden.")
-            }
+        val søknadMottattDato = søknadForVurdering.mottattTidspunkt.toLocalDate()
+        if (vurdering.søknadsdato.årsak == SøknadsdatoÅrsak.SøknadMottatt && søknadMottattDato != vurdering.søknadsdato.dato) {
+            throw UgyldigForespørselException("Søknadsdato for krav må være lik mottatt dato for den digitaliserte søknaden.")
         }
-        val muligRettFra = vurdering.muligRettFra
-        
-        if (muligRettFra > søknadForVurdering?.mottattTidspunkt?.toLocalDate()) {
+
+        if (vurdering.muligRettFra > søknadMottattDato) {
             throw UgyldigForespørselException("Med rett fra annen dato enn søknadsdato må den nye rettighetsdatoen være tidligere enn søknadsdatoen.")
         }
     }
