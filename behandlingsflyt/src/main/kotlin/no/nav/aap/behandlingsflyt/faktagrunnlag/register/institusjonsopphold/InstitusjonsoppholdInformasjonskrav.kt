@@ -90,10 +90,10 @@ class InstitusjonsoppholdInformasjonskrav private constructor(
                 try {
                     it.periode()
                     true
-                } catch (e: IllegalArgumentException) {
+                } catch (_: IllegalArgumentException) {
                     logger.error(
-                        "Ugyldig periode for institusjonsopphold funnet i sak ${sak.id} og ignoreres (startdato=${it.startdato}, sluttdato=${it.sluttdato}",
-                        e
+                        "Ugyldig periode for institusjonsopphold funnet i sak {} og ignoreres",
+                        sak.id
                     )
                     false
                 }

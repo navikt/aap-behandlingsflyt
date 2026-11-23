@@ -133,6 +133,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
             meldepliktStatus = it.getEnumOrNull("meldeplikt_status"),
             meldepliktGradering = it.getIntOrNull("meldeplikt_gradering")?.let { Prosent(it) },
             backFillStansOpphorEnabled = backfillStansOpphorEnabled,
+            meldedato = it.getLocalDateOrNull("meldedato"),
         )
     }
 
@@ -316,8 +317,8 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
                                            grenseverdi, timer_arbeid, gradering, meldeperiode, trekk_dagsatser,
                                            andel_arbeidsevne, bruker_av_kvoter, institusjonsoppholdreduksjon,
                                            meldeplikt_status, meldekort_mottatt, meldeplikt_gradering,
-                                           andel_arbeid)
-            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?::daterange, ?, ?, ?, ?, ?, ?, ?, ?)
+                                           andel_arbeid, meldedato)
+            VALUES (?, ?::daterange, ?, ?, ?, ?, ?, ?, ?::daterange, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent()
         connection.executeBatch(query, underveisperioder) {
             setParams { periode ->
@@ -338,6 +339,7 @@ class UnderveisRepositoryImpl(private val connection: DBConnection) : UnderveisR
                 setLocalDate(15, periode.arbeidsgradering.opplysningerMottatt)
                 setInt(16, periode.meldepliktGradering?.prosentverdi())
                 setInt(17, periode.arbeidsgradering.andelArbeid.prosentverdi())
+                setLocalDate(18, periode.meldedato)
             }
         }
 

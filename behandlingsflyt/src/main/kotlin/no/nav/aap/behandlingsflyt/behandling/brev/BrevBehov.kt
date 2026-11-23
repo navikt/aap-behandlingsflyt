@@ -3,6 +3,8 @@ package no.nav.aap.behandlingsflyt.behandling.brev
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.barnetillegg.VurderingAvForeldreAnsvar
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagevurderingKontor
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagevurderingNay
 import no.nav.aap.meldeplikt.MeldepliktGrunnlag
 import java.time.LocalDate
 
@@ -87,13 +89,17 @@ sealed class AvslagBrev(typeBrev: TypeBrev) : BrevBehov(typeBrev) {
     ) : AvslagBrev(TypeBrev.VEDTAK_AVSLAG)
 }
 
+data class KlageOpprettholdelse(
+    val begrunnelseNavKontor: String?,
+    val begrunnelseNay: String?
+) : BrevBehov(TypeBrev.KLAGE_OPPRETTHOLDELSE)
+
 object VedtakEndring : BrevBehov(TypeBrev.VEDTAK_ENDRING)
 object BarnetilleggSatsRegulering : BrevBehov(TypeBrev.BARNETILLEGG_SATS_REGULERING)
 object VarselOmBestilling : BrevBehov(TypeBrev.VARSEL_OM_BESTILLING)
 object ForhåndsvarselBruddAktivitetsplikt : BrevBehov(TypeBrev.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT)
 object ForhåndsvarselKlageFormkrav : BrevBehov(TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV)
 object KlageAvvist : BrevBehov(TypeBrev.KLAGE_AVVIST)
-object KlageOpprettholdelse : BrevBehov(TypeBrev.KLAGE_OPPRETTHOLDELSE)
 object KlageTrukket : BrevBehov(TypeBrev.KLAGE_TRUKKET)
 object KlageMottatt : BrevBehov(TypeBrev.KLAGE_MOTTATT)
 object Forvaltningsmelding : BrevBehov(TypeBrev.FORVALTNINGSMELDING)

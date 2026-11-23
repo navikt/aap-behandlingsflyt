@@ -81,6 +81,8 @@ object InMemoryBehandlingRepository : BehandlingRepository {
         }
     }
 
+    internal fun alle(): List<Behandling> = synchronized(lock) { memory.values.toList() }
+
     fun hentHvisEksisterer(behandlingId: BehandlingId): Behandling? {
         synchronized(lock) {
             return memory[behandlingId]

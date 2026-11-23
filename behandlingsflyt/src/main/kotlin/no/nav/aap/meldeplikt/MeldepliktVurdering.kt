@@ -8,6 +8,7 @@ import no.nav.aap.meldeplikt.MeldepliktStatus.MELDT_SEG
 import no.nav.aap.meldeplikt.MeldepliktStatus.UTEN_RETT
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.verdityper.dokument.JournalpostId
+import java.time.LocalDate
 
 enum class MeldepliktStatus {
     FØR_VEDTAK,
@@ -30,6 +31,7 @@ enum class MeldepliktStatus {
 interface MeldepliktVurdering {
     val utfall: Utfall
     val status: MeldepliktStatus
+    val meldedato: LocalDate? get() = null
 
     data object Fritak : MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
@@ -53,6 +55,7 @@ interface MeldepliktVurdering {
 
     data class MeldtSeg(
         val journalpostId: JournalpostId,
+        override val meldedato: LocalDate,
     ) : MeldepliktVurdering {
         override val utfall = Utfall.OPPFYLT
         override val status = MELDT_SEG
