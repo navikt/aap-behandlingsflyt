@@ -1,13 +1,11 @@
 package no.nav.aap.behandlingsflyt.behandling.tilkjentytelse
 
-import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Tid
 import java.time.LocalDate
-
 
 
 val BARNETILLEGGSATS_TIDSLINJE = Tidslinje(
@@ -35,7 +33,7 @@ val BARNETILLEGGSATS_TIDSLINJE = Tidslinje(
     )
 )
 
-val BARNETILLEGGSATS_TIDSLINJE_TEST = Tidslinje(
+val BARNETILLEGGSATS_TIDSLINJE_MED_2027_JUSTERING = Tidslinje(
     listOf(
         Segment(
             periode = Periode(LocalDate.MIN, LocalDate.of(2023, 1, 31)),
@@ -64,5 +62,5 @@ val BARNETILLEGGSATS_TIDSLINJE_TEST = Tidslinje(
     )
 )
 
-fun aktivBarnetilleggsatsTidslinje(): Tidslinje<Beløp> =
-    if (Miljø.erProd()) BARNETILLEGGSATS_TIDSLINJE else BARNETILLEGGSATS_TIDSLINJE_TEST
+fun aktivBarnetilleggsatsTidslinje(inkluder2027Justering: Boolean = false): Tidslinje<Beløp> =
+    if (inkluder2027Justering) BARNETILLEGGSATS_TIDSLINJE_MED_2027_JUSTERING else BARNETILLEGGSATS_TIDSLINJE

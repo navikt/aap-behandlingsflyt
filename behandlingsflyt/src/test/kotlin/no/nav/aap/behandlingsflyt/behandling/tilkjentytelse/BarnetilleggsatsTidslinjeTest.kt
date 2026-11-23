@@ -19,4 +19,15 @@ class BarnetilleggsatsTidslinjeTest {
             current.tom.plusDays(1) == next.fom
         }
     }
+    @Test
+    fun `ny tidslinje er kontinuerlig`() {
+        val perioder = BARNETILLEGGSATS_TIDSLINJE_MED_2027_JUSTERING.segmenter().map(Segment<Beløp>::periode)
+
+        assertThat(perioder.first().fom).isEqualTo(LocalDate.MIN)
+        assertThat(perioder.last().tom).isEqualTo(Tid.MAKS)
+
+        assertThat(perioder.zipWithNext()).allMatch { (current, next) ->
+            current.tom.plusDays(1) == next.fom
+        }
+    }
 }
