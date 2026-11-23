@@ -109,6 +109,8 @@ import no.nav.aap.komponenter.verdityper.TimerArbeid
 import no.nav.aap.verdityper.dokument.Kanal
 import no.nav.aap.student.StudentRepository
 import no.nav.aap.student.StudentVurdering
+import no.nav.aap.verdityper.dokument.JournalpostId
+import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
@@ -1906,8 +1908,8 @@ class BrevUtlederServiceTest {
 
     @Nested
     inner class Klagebrev {
-        private val påklagetVedtaksdato = 1 januar 2024
-        private val klagedato = 1 februar 2024
+        private val påklagetVedtaksdato = 10 januar 2025
+        private val klagedato = 20 januar 2025
 
         @Test
         fun `opprettholdt klage med bare vurdering fra Nav-kontor tar med begrunnelsen`() {
@@ -1999,6 +2001,33 @@ class BrevUtlederServiceTest {
             val behandling = gittBehandling(typeBehandling = TypeBehandling.Klage, sakId = sakId)
             val vurdertAv = Bruker("Saksbehandler")
             val opprettet = Instant.now()
+            val påklagetBehandling = gittBehandling(
+                sakId = behandling.sakId,
+                status = Status.AVSLUTTET,
+                vedtakstidspunkt = påklagetVedtaksdato.atTime(12, 0)
+            )
+
+            repositoryProvider.provide<PåklagetBehandlingRepository>().lagre(
+                behandling.id,
+                PåklagetBehandlingVurdering(
+                    påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
+                    påklagetBehandling = påklagetBehandling.id,
+                    påklagetTilbakekrevingsbehandling = null,
+                    vurdertAv = vurdertAv,
+                    opprettet = opprettet
+                )
+            )
+            repositoryProvider.provide<MottattDokumentRepository>().lagre(
+                MottattDokument(
+                    referanse = InnsendingReferanse(JournalpostId(Random.nextLong().toString())),
+                    sakId = behandling.sakId,
+                    behandlingId = behandling.id,
+                    mottattTidspunkt = klagedato.plusDays(1).atStartOfDay(),
+                    type = InnsendingType.KLAGE,
+                    kanal = Kanal.DIGITAL,
+                    strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = klagedato))
+                )
+            )
 
             repositoryProvider.provide<PåklagetBehandlingRepository>().lagre(
                 behandling.id,

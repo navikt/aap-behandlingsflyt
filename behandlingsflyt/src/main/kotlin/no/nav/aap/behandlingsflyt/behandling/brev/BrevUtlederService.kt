@@ -393,9 +393,7 @@ class BrevUtlederService(
                 val referanse = checkNotNull(vurdering.påklagetTilbakekrevingsbehandling) {
                     "[Utviklerfeil] Mangler referanse til påklaget tilbakekrevingsbehandling"
                 }
-                checkNotNull(tilbakekrevingRepository.hent(referanse).vedtaksdato) {
-                    "[Utviklerfeil] Mangler vedtaksdato for påklaget tilbakekrevingsbehandling"
-                }
+                tilbakekrevingRepository.hent(referanse).vedtaksdato
             }
 
             PåklagetVedtakType.ARENA_VEDTAK -> null
