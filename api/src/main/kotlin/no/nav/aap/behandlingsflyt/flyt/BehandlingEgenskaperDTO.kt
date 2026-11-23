@@ -1,7 +1,27 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
+import java.time.LocalDate
+
 data class BehandlingEgenskaperDTO(
     val erMigrertFraArena: Boolean,
     val harArenaHistorikk: Boolean,
     val erKantIKantMedArena: Boolean,
+    val kantIKantMedArena: KantIKantMedArenaDTO?,
+)
+
+data class KantIKantMedArenaDTO(
+    val arenaSaksnummer: String,
+    val status: String,
+    val maksdato: LocalDate?,
+    val vedtakTil: LocalDate?,
+    val vedtakId: Int,
+)
+
+fun ArenaMaksdato.tilKantIKantMedArenaDTO() = KantIKantMedArenaDTO(
+    arenaSaksnummer = arenaSaksnummer,
+    status = status,
+    maksdato = maksdato,
+    vedtakTil = vedtakTil,
+    vedtakId = vedtakId,
 )
