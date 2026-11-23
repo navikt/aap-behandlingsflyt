@@ -7,7 +7,10 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 
 object KravValidering {
-    fun erKravVurderingTilstrekkeligVurdert(søknaderIBehandling: Set<MottattDokument>, kravVurderinger: Set<KravVurdering>): Boolean {
+    fun erKravVurderingTilstrekkeligVurdert(
+        søknaderIBehandling: Set<MottattDokument>,
+        kravVurderinger: Set<KravVurdering>
+    ): Boolean {
         val erAlleSøknaderIBehandlingVurdert =
             søknaderIBehandling.all { søknad -> kravVurderinger.any { it.forJournalpostId(søknad.referanse.asJournalpostId) } }
 
@@ -23,8 +26,9 @@ object KravValidering {
                 throw UgyldigForespørselException("Søknadsdato for krav må være lik mottatt dato for den digitaliserte søknaden.")
             }
         }
-        val overstyrMuligRettFra = vurdering.overstyrMuligRettFra
-        if (overstyrMuligRettFra != null && overstyrMuligRettFra.dato > vurdering.søknadsdato.dato) {
+        val muligRettFra = vurdering.muligRettFra
+        
+        if (muligRettFra > søknadForVurdering?.mottattTidspunkt?.toLocalDate()) {
             throw UgyldigForespørselException("Med rett fra annen dato enn søknadsdato må den nye rettighetsdatoen være tidligere enn søknadsdatoen.")
         }
     }
@@ -48,7 +52,7 @@ object KravValidering {
         }
 
         // TODO: Midlertidig fordi vi kun støtter å migrere 1 type kvote enn så lenge
-        if(vurdering.rettighetstype != MigrertRettighetstype.ORDINÆR) {
+        if (vurdering.rettighetstype != MigrertRettighetstype.ORDINÆR) {
             throw UgyldigForespørselException("Kelvin støtter kun å migrere rettighetstype ORDINÆR.")
         }
     }
