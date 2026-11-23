@@ -55,10 +55,7 @@ object SendKlagebrevEnabledOgAltAnnetAvskruddUnleash : FakeUnleashBaseWithDefaul
 )
 
 object ForvaltningsmeldingKantIKantPåskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
-    listOf(
-        BehandlingsflytFeature.HandtereMaksdatoForKantTilKant,
-        BehandlingsflytFeature.NykantIkantForvaltningsmelding
-    )
+    listOf(BehandlingsflytFeature.NykantIkantForvaltningsmelding)
 )
 
 object KunMaksdatoForKantTilKantPåskruddUnleash : FakeUnleashBaseWithDefaultDisabled(
