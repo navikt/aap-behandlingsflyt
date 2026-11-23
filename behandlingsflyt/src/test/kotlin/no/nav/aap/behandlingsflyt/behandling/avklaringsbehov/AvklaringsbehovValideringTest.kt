@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
@@ -35,8 +36,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
@@ -90,7 +89,10 @@ class AvklaringsbehovValideringTest {
     @BeforeEach
     fun setup() {
         // TODO: Skriv om fra mocks
-        every { løsningMock.hentLagredeLøstePerioder(any(), any(), any()) } returns Tidslinje<Unit>()
+        every { løsningMock.hentVurderinger(any(), any()) } returns emptyList()
+        every { løsningMock.somVurderinger(any(), any()) } answers {
+            løsningMock.løsningerForPerioder.map { vurdering(it.fom, it.tom, vurdertIBehandling = secondArg()) }
+        }
         every { løsningMock.definisjon() } returns Definisjon.AVKLAR_SYKDOM
     }
 
@@ -280,11 +282,9 @@ class AvklaringsbehovValideringTest {
         assertThat(avklaringsbehov.erÅpent()).isTrue
 
         every { løsningMock.definisjon() } returns Definisjon.AVKLAR_OVERGANG_ARBEID
-        every { løsningMock.hentLagredeLøstePerioder(any(), any(), any()) } returns Tidslinje(
-            initSegmenter = listOf(
-                Segment(periode = Periode(1 januar 2021, 1 februar 2021), verdi = Unit),
-                Segment(periode = Periode(1 mars 2021, Tid.MAKS), verdi = Unit),
-            )
+        every { løsningMock.hentVurderinger(BehandlingId(14), any()) } returns listOf(
+            vurdering(1 januar 2021, 1 februar 2021, vurdertIBehandling = BehandlingId(14)),
+            vurdering(1 mars 2021, null, vurdertIBehandling = BehandlingId(14)),
         )
         every { løsningMock.løsningerForPerioder } returns emptyList()
 
@@ -696,6 +696,17 @@ class AvklaringsbehovValideringTest {
     )
 
     private fun tomLøsning() = AvklarSykdomLøsning(emptyList())
+
+    private data class TestVurdering(
+        override val fom: LocalDate,
+        override val tom: LocalDate?,
+        override val vurdertIBehandling: BehandlingId,
+        override val opprettet: Instant = Instant.now(),
+        override val vurdertAv: Bruker = Bruker("saksbehandler"),
+    ) : PeriodisertVurdering
+
+    private fun vurdering(fom: LocalDate, tom: LocalDate?, vurdertIBehandling: BehandlingId) =
+        TestVurdering(fom, tom, vurdertIBehandling)
 
     private fun nyttKrav(behandlingId: BehandlingId, muligRettFra: LocalDate) = RelevantKrav(
         referanse = Kravreferanse.ny(),
