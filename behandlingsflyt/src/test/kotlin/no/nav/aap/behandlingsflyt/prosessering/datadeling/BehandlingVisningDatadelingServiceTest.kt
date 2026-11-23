@@ -61,7 +61,7 @@ class BehandlingVisningDatadelingServiceTest {
     }
 
     @Test
-    fun `hendelsene bruker nyeste endring fra relevante avklaringsbehov`() {
+    fun `lovvalg bruker nyeste endring fra relevante avklaringsbehov`() {
         val behandling = nyBehandling()
         opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
         opprettAvklaringsbehov(behandling, Definisjon.MANUELL_OVERSTYRING_LOVVALG)
@@ -71,8 +71,8 @@ class BehandlingVisningDatadelingServiceTest {
                 "Løst i test",
                 Bruker("TEST"),
             )
-        opprettAvklaringsbehov(behandling, Definisjon.KVALITETSSIKRING)
-        opprettAvklaringsbehov(behandling, Definisjon.FATTE_VEDTAK)
+        opprettAvklaringsbehov(behandling, Definisjon.KVALITETSSIKRING, avsluttet = true)
+        opprettAvklaringsbehov(behandling, Definisjon.FATTE_VEDTAK, avsluttet = true)
 
         val avklaringsbehov = InMemoryAvklaringsbehovRepository
             .hentAvklaringsbehovene(behandling.id)
@@ -80,21 +80,49 @@ class BehandlingVisningDatadelingServiceTest {
         val forventetLovvalgTidspunkt = avklaringsbehov
             .single { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP }
             .sistEndret()
-        val forventetNavKontorTidspunkt = avklaringsbehov
-            .single { it.definisjon == Definisjon.KVALITETSSIKRING }
-            .sistEndret()
-        val forventetNayTidspunkt = avklaringsbehov
-            .single { it.definisjon == Definisjon.FATTE_VEDTAK }
-            .sistEndret()
 
         assertThat(hendelse<BehandlingHendelse.AlderLovvalgMedlemskap>(behandling).sistEndret)
             .isEqualTo(forventetLovvalgTidspunkt)
+    }
+
+    @Test
+    fun `NavKontor og Nay bruker nyeste avsluttede behov mens FerdigBehandlet bruker vedtaksbehov`() {
+        val behandling = nyBehandling()
+        opprettAvklaringsbehov(behandling, Definisjon.KVALITETSSIKRING, avsluttet = true)
+        opprettAvklaringsbehov(behandling, Definisjon.FATTE_VEDTAK, avsluttet = true)
+        opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_BISTANDSBEHOV, avsluttet = true)
+        opprettAvklaringsbehov(behandling, Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
+
+        val avklaringsbehov = InMemoryAvklaringsbehovRepository
+            .hentAvklaringsbehovene(behandling.id)
+            .alle()
+        val nyesteAvsluttedeTidspunkt = avklaringsbehov
+            .single { it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV }
+            .sistEndret()
+        val vedtaksTidspunkt = avklaringsbehov
+            .single { it.definisjon == Definisjon.FATTE_VEDTAK }
+            .sistEndret()
+
         assertThat(hendelse<BehandlingHendelse.NavKontor>(behandling).sistEndret)
-            .isEqualTo(forventetNavKontorTidspunkt)
+            .isEqualTo(nyesteAvsluttedeTidspunkt)
         assertThat(hendelse<BehandlingHendelse.Nay>(behandling).sistEndret)
-            .isEqualTo(forventetNayTidspunkt)
+            .isEqualTo(nyesteAvsluttedeTidspunkt)
         assertThat(hendelse<BehandlingHendelse.FerdigBehandlet>(behandling).sistEndret)
-            .isEqualTo(forventetNayTidspunkt)
+            .isEqualTo(vedtaksTidspunkt)
+    }
+
+    @Test
+    fun `aktive NavKontor og Nay uten avsluttede behov har ikke sist endret`() {
+        val behandling = nyBehandling()
+        opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_SYKDOM)
+        opprettAvklaringsbehov(behandling, Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
+
+        assertThat(progresjon<BehandlingHendelse.NavKontor>(behandling))
+            .isEqualTo(BehandlingHendelseProgresjon.AKTIV)
+        assertThat(progresjon<BehandlingHendelse.Nay>(behandling))
+            .isEqualTo(BehandlingHendelseProgresjon.AKTIV)
+        assertThat(hendelse<BehandlingHendelse.NavKontor>(behandling).sistEndret).isNull()
+        assertThat(hendelse<BehandlingHendelse.Nay>(behandling).sistEndret).isNull()
     }
 
     @Test
@@ -132,20 +160,91 @@ class BehandlingVisningDatadelingServiceTest {
     }
 
     @Test
-    fun `venting på utenlandske myndigheter gir status kun for alder lovvalg og medlemskap`() {
+    fun `venting på utenlandske myndigheter gir status for aktiv lovvalgsvurdering`() {
         val behandling = nyBehandling()
+        leggTilSteghistorikk(behandling, StegType.VURDER_LOVVALG to StegStatus.AVKLARINGSPUNKT)
         opprettAvklaringsbehov(
             behandling = behandling,
             definisjon = Definisjon.MANUELT_SATT_PÅ_VENT,
             venteårsak = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER_FRA_UTENLANDSKE_MYNDIGHETER,
         )
 
+        assertThat(progresjon<BehandlingHendelse.AlderLovvalgMedlemskap>(behandling))
+            .isEqualTo(BehandlingHendelseProgresjon.AKTIV)
         assertThat(hendelse<BehandlingHendelse.AlderLovvalgMedlemskap>(behandling).status)
             .isEqualTo(
                 BehandlingHendelse.AlderLovvalgMedlemskap.Status
                     .VENTER_PÅ_INFORMASJON_FRA_UTENLANDSKE_MYNDIGHETER
             )
         assertThat(hendelse<BehandlingHendelse.Nay>(behandling).status).isNull()
+    }
+
+    @Test
+    fun `venting på utenlandske myndigheter gir ikke status før lovvalg og Nay er påbegynt`() {
+        val behandling = nyBehandling()
+        opprettAvklaringsbehov(
+            behandling = behandling,
+            definisjon = Definisjon.MANUELT_SATT_PÅ_VENT,
+            venteårsak = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER_FRA_UTENLANDSKE_MYNDIGHETER
+        )
+
+        assertThat(progresjon<BehandlingHendelse.AlderLovvalgMedlemskap>(behandling))
+            .isEqualTo(BehandlingHendelseProgresjon.IKKE_PÅBEGYNT)
+        assertThat(progresjon<BehandlingHendelse.Nay>(behandling))
+            .isEqualTo(BehandlingHendelseProgresjon.IKKE_PÅBEGYNT)
+        assertThat(hendelse<BehandlingHendelse.AlderLovvalgMedlemskap>(behandling).status).isNull()
+        assertThat(hendelse<BehandlingHendelse.Nay>(behandling).status).isNull()
+    }
+
+    @Test
+    fun `venting på utenlandske myndigheter gir ikke status for fullført lovvalgsvurdering`() {
+        val behandling = nyBehandling()
+        leggTilSteghistorikk(
+            behandling,
+            StegType.VURDER_LOVVALG to StegStatus.AVSLUTTER,
+            StegType.VURDER_ALDER to StegStatus.AVSLUTTER
+        )
+        opprettAvklaringsbehov(
+            behandling = behandling,
+            definisjon = Definisjon.MANUELT_SATT_PÅ_VENT,
+            venteårsak = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER_FRA_UTENLANDSKE_MYNDIGHETER
+        )
+
+        assertThat(progresjon<BehandlingHendelse.AlderLovvalgMedlemskap>(behandling))
+            .isEqualTo(BehandlingHendelseProgresjon.FULLFØRT)
+        assertThat(hendelse<BehandlingHendelse.AlderLovvalgMedlemskap>(behandling).status).isNull()
+    }
+
+    @Test
+    fun `venting på utenlandske myndigheter gir ikke status for fullført Nay`() {
+        val behandling = nyBehandling()
+        opprettAvklaringsbehov(behandling, Definisjon.FATTE_VEDTAK, avsluttet = true)
+        opprettAvklaringsbehov(
+            behandling = behandling,
+            definisjon = Definisjon.MANUELT_SATT_PÅ_VENT,
+            venteårsak = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER_FRA_UTENLANDSKE_MYNDIGHETER
+        )
+
+        assertThat(progresjon<BehandlingHendelse.Nay>(behandling))
+            .isEqualTo(BehandlingHendelseProgresjon.FULLFØRT)
+        assertThat(hendelse<BehandlingHendelse.Nay>(behandling).status).isNull()
+    }
+
+    @Test
+    fun `venting på utenlandske myndigheter gir status for aktiv Nay`() {
+        val behandling = nyBehandling()
+        opprettAvklaringsbehov(behandling, Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
+        opprettAvklaringsbehov(
+            behandling = behandling,
+            definisjon = Definisjon.MANUELT_SATT_PÅ_VENT,
+            venteårsak = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER_FRA_UTENLANDSKE_MYNDIGHETER
+        )
+
+        assertThat(progresjon<BehandlingHendelse.Nay>(behandling))
+            .isEqualTo(BehandlingHendelseProgresjon.AKTIV)
+        assertThat(hendelse<BehandlingHendelse.Nay>(behandling).status)
+            .isEqualTo(BehandlingHendelse.Nay.Status.VENTER_PÅ_INFORMASJON_FRA_UTENLANDSKE_MYNDIGHETER)
+        assertThat(hendelse<BehandlingHendelse.AlderLovvalgMedlemskap>(behandling).status).isNull()
     }
 
     @Test
@@ -164,6 +263,9 @@ class BehandlingVisningDatadelingServiceTest {
     @Test
     fun `avsluttet ventepunkt gir ikke status`() {
         val behandling = nyBehandling()
+        leggTilSteghistorikk(behandling, StegType.VURDER_LOVVALG to StegStatus.AVKLARINGSPUNKT)
+        opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_SYKDOM)
+        opprettAvklaringsbehov(behandling, Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
         opprettAvklaringsbehov(
             behandling = behandling,
             definisjon = Definisjon.MANUELT_SATT_PÅ_VENT,
@@ -173,11 +275,15 @@ class BehandlingVisningDatadelingServiceTest {
 
         assertThat(hendelse<BehandlingHendelse.AlderLovvalgMedlemskap>(behandling).status).isNull()
         assertThat(hendelse<BehandlingHendelse.NavKontor>(behandling).status).isNull()
+        assertThat(hendelse<BehandlingHendelse.Nay>(behandling).status).isNull()
     }
 
     @Test
     fun `venteårsak uten mapping gir ikke status`() {
         val behandling = nyBehandling()
+        leggTilSteghistorikk(behandling, StegType.VURDER_LOVVALG to StegStatus.AVKLARINGSPUNKT)
+        opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_SYKDOM)
+        opprettAvklaringsbehov(behandling, Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
         opprettAvklaringsbehov(
             behandling = behandling,
             definisjon = Definisjon.MANUELT_SATT_PÅ_VENT,
@@ -230,12 +336,23 @@ class BehandlingVisningDatadelingServiceTest {
     }
 
     @Test
-    fun `åpent kvalitetssikringsbehov gir aktiv NavKontor-progresjon`() {
+    fun `sykdomsbehov med åpent kvalitetssikringsbehov gir aktiv NavKontor-progresjon`() {
         val behandling = nyBehandling()
+        opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_SYKDOM)
         opprettAvklaringsbehov(behandling, Definisjon.KVALITETSSIKRING)
 
         assertThat(progresjon<BehandlingHendelse.NavKontor>(behandling))
             .isEqualTo(BehandlingHendelseProgresjon.AKTIV)
+    }
+
+    @Test
+    fun `åpent kvalitetssikringsbehov uten sykdomsbehov gir ikke påbegynt NavKontor-progresjon`() {
+        val behandling = nyBehandling()
+        opprettAvklaringsbehov(behandling, Definisjon.KVALITETSSIKRING)
+
+        assertThat(progresjon<BehandlingHendelse.NavKontor>(behandling))
+            .isEqualTo(BehandlingHendelseProgresjon.IKKE_PÅBEGYNT)
+        assertThat(hendelse<BehandlingHendelse.NavKontor>(behandling).sistEndret).isNull()
     }
 
     @Test
@@ -248,12 +365,23 @@ class BehandlingVisningDatadelingServiceTest {
     }
 
     @Test
-    fun `åpent vedtaksbehov gir aktiv Nay-progresjon`() {
+    fun `beregningsbehov med åpent vedtaksbehov gir aktiv Nay-progresjon`() {
         val behandling = nyBehandling()
+        opprettAvklaringsbehov(behandling, Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
         opprettAvklaringsbehov(behandling, Definisjon.FATTE_VEDTAK)
 
         assertThat(progresjon<BehandlingHendelse.Nay>(behandling))
             .isEqualTo(BehandlingHendelseProgresjon.AKTIV)
+    }
+
+    @Test
+    fun `åpent vedtaksbehov uten utløserbehov gir ikke påbegynt Nay-progresjon`() {
+        val behandling = nyBehandling()
+        opprettAvklaringsbehov(behandling, Definisjon.FATTE_VEDTAK)
+
+        assertThat(progresjon<BehandlingHendelse.Nay>(behandling))
+            .isEqualTo(BehandlingHendelseProgresjon.IKKE_PÅBEGYNT)
+        assertThat(hendelse<BehandlingHendelse.Nay>(behandling).sistEndret).isNull()
     }
 
     @Test
@@ -273,6 +401,7 @@ class BehandlingVisningDatadelingServiceTest {
         assertThat(behandling.status()).isEqualTo(BehandlingStatus.OPPRETTET)
         assertThat(progresjon<BehandlingHendelse.FerdigBehandlet>(behandling))
             .isEqualTo(BehandlingHendelseProgresjon.IKKE_PÅBEGYNT)
+        assertThat(hendelse<BehandlingHendelse.FerdigBehandlet>(behandling).sistEndret).isNull()
     }
 
     @Test

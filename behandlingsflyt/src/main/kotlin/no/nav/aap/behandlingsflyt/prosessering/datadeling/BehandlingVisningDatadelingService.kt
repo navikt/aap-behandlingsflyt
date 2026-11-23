@@ -1,10 +1,10 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.BehandlingHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.BehandlingHendelseProgresjon
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.BehandlingHendelseType
@@ -55,18 +55,9 @@ class BehandlingVisningDatadelingService(
         }
         val alleAvklaringsbehov = avklaringsbehovRepository
             .hentAvklaringsbehovene(behandling.id).alle()
-        //TODO: utleder ikke fullført når lovvalg er vurdert automatisk
         val lovvalgMedlemskapAvklaringsbehov = alleAvklaringsbehov.filter {
             it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP || it.definisjon == Definisjon.MANUELL_OVERSTYRING_LOVVALG
         }
-        val aktivtVentepunkt = alleAvklaringsbehov
-            .find { it.erVentepunkt() && !it.erAvsluttet() }
-            ?.let { behov ->
-                when (behov.venteårsak()) {
-                    ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER_FRA_UTENLANDSKE_MYNDIGHETER -> BehandlingHendelse.AlderLovvalgMedlemskap.Status.VENTER_PÅ_INFORMASJON_FRA_UTENLANDSKE_MYNDIGHETER
-                    else -> null
-                }
-            }
         val sistEndret = when {
             lovvalgMedlemskapAvklaringsbehov.isNotEmpty() ->
                 lovvalgMedlemskapAvklaringsbehov.maxOfOrNull { it.sistEndret() }
@@ -76,19 +67,38 @@ class BehandlingVisningDatadelingService(
 
             else -> null
         }
+        val aktivtVentepunkt = alleAvklaringsbehov
+            .find { it.erVentepunkt() && !it.erAvsluttet() }
+            ?.let { behov ->
+                when (behov.venteårsak()) {
+                    ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER_FRA_UTENLANDSKE_MYNDIGHETER -> BehandlingHendelse.AlderLovvalgMedlemskap.Status.VENTER_PÅ_INFORMASJON_FRA_UTENLANDSKE_MYNDIGHETER
+                    else -> null
+                }
+            }
 
         return BehandlingHendelse.AlderLovvalgMedlemskap(
             sistEndret = sistEndret,
             progresjon = progresjon,
-            status = aktivtVentepunkt
+            status = when (progresjon) {
+                BehandlingHendelseProgresjon.AKTIV -> aktivtVentepunkt
+                else -> null
+            }
         )
     }
 
     fun hendelseNavKontor(behandling: Behandling): BehandlingHendelse.NavKontor {
         val alleAvklaringsbehov = avklaringsbehovRepository
             .hentAvklaringsbehovene(behandling.id).alle()
-        val navKontorAvklaringsbehov = alleAvklaringsbehov.filter {
-            it.definisjon == Definisjon.KVALITETSSIKRING || it.definisjon == Definisjon.AVKLAR_SYKDOM
+        val progresjon = when {
+            alleAvklaringsbehov.find { it.definisjon == Definisjon.KVALITETSSIKRING }?.status() == Status.AVSLUTTET &&
+                    alleAvklaringsbehov.filter { it.status() === Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER }.isEmpty() ->
+                BehandlingHendelseProgresjon.FULLFØRT
+
+            alleAvklaringsbehov.find { it.definisjon == Definisjon.AVKLAR_SYKDOM } != null ->
+                BehandlingHendelseProgresjon.AKTIV
+
+            else ->
+                BehandlingHendelseProgresjon.IKKE_PÅBEGYNT
         }
         val aktivtVentepunkt = alleAvklaringsbehov
             .find { it.erVentepunkt() && !it.erAvsluttet() }
@@ -98,24 +108,72 @@ class BehandlingVisningDatadelingService(
                     else -> null
                 }
             }
+        val sistEndret = if (progresjon == BehandlingHendelseProgresjon.IKKE_PÅBEGYNT) {
+            null
+        } else {
+            alleAvklaringsbehov.filter { it.erAvsluttet() }.maxOfOrNull { it.sistEndret() }
+        }
 
         return BehandlingHendelse.NavKontor(
-            sistEndret = navKontorAvklaringsbehov.maxOfOrNull { it.sistEndret() },
-            progresjon = hendelseProgresjon(navKontorAvklaringsbehov),
+            sistEndret = sistEndret,
+            progresjon = progresjon,
             status = aktivtVentepunkt
         )
     }
 
     fun hendelseNay(behandling: Behandling): BehandlingHendelse.Nay {
+        val definisjonsListe = listOf(
+            Definisjon.AVKLAR_STUDENT_V2,
+            Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT,
+            Definisjon.AVKLAR_YRKESSKADE,
+            Definisjon.AVKLAR_SYKEPENGEERSTATNING
+        )
         val alleAvklaringsbehov = avklaringsbehovRepository
             .hentAvklaringsbehovene(behandling.id).alle()
-        val nayAvklaringsbehov = alleAvklaringsbehov.filter {
-            it.definisjon == Definisjon.FATTE_VEDTAK || it.definisjon == Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT
+        val avklaringsbehovSomTriggerUnderBehandling = alleAvklaringsbehov.filter {
+            definisjonsListe.contains(it.definisjon)
+        }
+        val progresjon = when {
+            alleAvklaringsbehov.find { it.definisjon == Definisjon.FATTE_VEDTAK }?.status() == Status.AVSLUTTET &&
+                    alleAvklaringsbehov.filter { it.status() === Status.SENDT_TILBAKE_FRA_BESLUTTER }.isEmpty() ->
+                BehandlingHendelseProgresjon.FULLFØRT
+
+            alleAvklaringsbehov.find { definisjonsListe.contains(it.definisjon) } != null ->
+                BehandlingHendelseProgresjon.AKTIV
+
+            else ->
+                BehandlingHendelseProgresjon.IKKE_PÅBEGYNT
+        }
+        val status = when {
+            avklaringsbehovSomTriggerUnderBehandling.isNotEmpty() && avklaringsbehovSomTriggerUnderBehandling.all { it.status() == Status.OPPRETTET } ->
+                BehandlingHendelse.Nay.Status.VENTER_PÅ_LEDIG_SAKSBEHANDLER
+
+            avklaringsbehovSomTriggerUnderBehandling.find { it.status() == Status.AVSLUTTET } != null ->
+                BehandlingHendelse.Nay.Status.UNDER_BEHANDLING
+
+            else -> null
+        }
+        val aktivtVentepunkt = alleAvklaringsbehov
+            .find { it.erVentepunkt() && !it.erAvsluttet() }
+            ?.let { behov ->
+                when (behov.venteårsak()) {
+                    ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER_FRA_UTENLANDSKE_MYNDIGHETER -> BehandlingHendelse.Nay.Status.VENTER_PÅ_INFORMASJON_FRA_UTENLANDSKE_MYNDIGHETER
+                    else -> null
+                }
+            }
+        val sistEndret = if (progresjon == BehandlingHendelseProgresjon.IKKE_PÅBEGYNT) {
+            null
+        } else {
+            alleAvklaringsbehov.filter { it.erAvsluttet() }.maxOfOrNull { it.sistEndret() }
         }
 
         return BehandlingHendelse.Nay(
-            sistEndret = nayAvklaringsbehov.maxOfOrNull { it.sistEndret() },
-            progresjon = hendelseProgresjon(nayAvklaringsbehov),
+            sistEndret = sistEndret,
+            progresjon = progresjon,
+            status = when (progresjon) {
+                BehandlingHendelseProgresjon.AKTIV -> aktivtVentepunkt ?: status
+                else -> null
+            }
         )
     }
 
@@ -134,7 +192,7 @@ class BehandlingVisningDatadelingService(
                 BehandlingHendelseProgresjon.IKKE_PÅBEGYNT
         }
         return BehandlingHendelse.FerdigBehandlet(
-            sistEndret = ferdigBehandletAvklaringsbehov.maxOfOrNull { it.sistEndret() },
+            sistEndret = ferdigBehandletAvklaringsbehov.filter { it.erAvsluttet() }.maxOfOrNull { it.sistEndret() },
             progresjon = progresjon,
         )
     }
@@ -164,18 +222,5 @@ class BehandlingVisningDatadelingService(
             )
         }
         return null
-    }
-
-    private fun hendelseProgresjon(relevanteAvklaringsBehov: List<Avklaringsbehov>): BehandlingHendelseProgresjon {
-        val avklaringsbehovOpprettetOgAvsluttet =
-            relevanteAvklaringsBehov.size > 0 && relevanteAvklaringsBehov.all { it.status().erAvsluttet() }
-        return if (avklaringsbehovOpprettetOgAvsluttet) {
-            BehandlingHendelseProgresjon.FULLFØRT
-        } else if (relevanteAvklaringsBehov.size > 0) {
-            BehandlingHendelseProgresjon.AKTIV
-        } else {
-            BehandlingHendelseProgresjon.IKKE_PÅBEGYNT
-        }
-
     }
 }
