@@ -110,7 +110,6 @@ import no.nav.aap.verdityper.dokument.Kanal
 import no.nav.aap.student.StudentRepository
 import no.nav.aap.student.StudentVurdering
 import no.nav.aap.verdityper.dokument.JournalpostId
-import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
@@ -1994,10 +1993,6 @@ class BrevUtlederServiceTest {
             innstillingNay: KlageInnstilling = KlageInnstilling.OPPRETTHOLD
         ): Behandling {
             val sakId = SakId(Random.nextLong())
-            val påklagetBehandling = gittBehandling(
-                sakId = sakId,
-                vedtakstidspunkt = påklagetVedtaksdato.atStartOfDay()
-            )
             val behandling = gittBehandling(typeBehandling = TypeBehandling.Klage, sakId = sakId)
             val vurdertAv = Bruker("Saksbehandler")
             val opprettet = Instant.now()
