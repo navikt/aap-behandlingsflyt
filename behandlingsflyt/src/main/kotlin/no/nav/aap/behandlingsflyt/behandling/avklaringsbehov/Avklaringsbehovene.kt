@@ -293,6 +293,7 @@ class Avklaringsbehovene(
         avklaringsbehov: Avklaringsbehov,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?,
+        perioderKanVurderes: Set<Periode>? = null,
         grunn: ÅrsakTilSettPåVent? = null,
         bruker: Bruker = SYSTEMBRUKER,
         gradBehov: GradBehov?
@@ -302,6 +303,7 @@ class Avklaringsbehovene(
             bruker = bruker,
             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
+            perioderKanVurderes = perioderKanVurderes,
             gradBehov = gradBehov
         )
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())

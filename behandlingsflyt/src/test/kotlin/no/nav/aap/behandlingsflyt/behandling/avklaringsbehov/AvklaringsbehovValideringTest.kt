@@ -73,11 +73,15 @@ class AvklaringsbehovValideringTest {
         )
     }
 
-    private val idTeller = AtomicLong(90_000L)
     private val brukteBehandlingIder = mutableListOf<BehandlingId>()
 
     private fun nesteBehandlingId(): BehandlingId =
         BehandlingId(idTeller.incrementAndGet()).also { brukteBehandlingIder.add(it) }
+
+    private companion object {
+        // Delt mellom testinstanser fordi InMemory-repositoriene lever på tvers av testene
+        val idTeller = AtomicLong(90_000L)
+    }
 
     @AfterEach
     fun ryddOpp() {
@@ -675,6 +679,85 @@ class AvklaringsbehovValideringTest {
             Periode(muligRettFra, Tid.MAKS) to {
                 assertFalse(it)
             }
+        )
+    }
+
+    @Test
+    fun `krav må dekkes i perioder som kan vurderes selv om vedtaket ikke behøver vurdering der`() {
+        val exception = assertThrows<UgyldigForespørselException> {
+            validerKravUtenforPerioderVedtaketBehøverVurdering(
+                definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
+                perioderKanVurderes = setOf(Periode(1 januar 2027, Tid.MAKS))
+            )
+        }
+        assertThat(exception.message).contains("01.02.2027")
+    }
+
+    @Test
+    fun `krav sjekkes bare der vedtaket behøver vurdering når perioder som kan vurderes er ukjent`() {
+        assertDoesNotThrow {
+            validerKravUtenforPerioderVedtaketBehøverVurdering(
+                definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
+                perioderKanVurderes = null
+            )
+        }
+    }
+
+    @Test
+    fun `frivillig avklaringsbehov krever ikke kravdekning`() {
+        assertDoesNotThrow {
+            validerKravUtenforPerioderVedtaketBehøverVurdering(
+                definisjon = Definisjon.ARBEIDSOPPTRAPPING,
+                perioderKanVurderes = setOf(Periode(1 januar 2027, Tid.MAKS))
+            )
+        }
+    }
+
+    /**
+     * Vedtaket behøver vurdering i januar 2027. Kravet har mulig rett fra 1. februar 2027, og løsningen starter
+     * 1. januar 2027, så den dekker ikke kravet.
+     */
+    private fun validerKravUtenforPerioderVedtaketBehøverVurdering(
+        definisjon: Definisjon,
+        perioderKanVurderes: Set<Periode>?
+    ) {
+        val behandlingId = nesteBehandlingId()
+        val kontekst = lagFlytKontekst(behandlingId = behandlingId)
+        val krav = nyttKrav(behandlingId, 1 februar 2027)
+        InMemoryKravRepository.lagre(behandlingId, setOf(krav))
+        InMemoryStønadsperiodeRepository.lagre(
+            behandlingId, setOf(
+                stønadsperiodevurering(
+                    krav,
+                    relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
+                    startDato = krav.muligRettFra
+                )
+            )
+        )
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
+        avklaringsbehovene.opprett(
+            definisjon = definisjon,
+            funnetISteg = definisjon.løsesISteg,
+            perioderVedtaketBehøverVurdering = setOf(Periode(1 januar 2027, 31 januar 2027)),
+            perioderSomIkkeErTilstrekkeligVurdert = setOf(Periode(1 januar 2027, 31 januar 2027)),
+            perioderKanVurderes = perioderKanVurderes,
+            gradBehov = null
+        )
+        every { løsningMock.definisjon() } returns definisjon
+        every { løsningMock.løsningerForPerioder } returns listOf(
+            OvergangArbeidVurderingLøsningDto(
+                fom = 1 januar 2027,
+                tom = null,
+                begrunnelse = "begrunnelse",
+                brukerRettPåAAP = false
+            )
+        )
+
+        avklaringsbehovValidering.validerPerioder(
+            Bruker("saksbehandler"),
+            avklaringsbehovene = avklaringsbehovene,
+            kontekst = kontekst,
+            løsning = løsningMock,
         )
     }
 

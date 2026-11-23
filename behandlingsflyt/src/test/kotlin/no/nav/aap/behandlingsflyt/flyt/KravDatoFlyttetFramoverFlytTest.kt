@@ -22,14 +22,12 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 /**
- * Viser gapet mellom [no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovValidering] og
- * [no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService] når kravdatoen flyttes fram på det
- * samme kravet (samme referanse) i en revurdering.
+ * Kravdatoen flyttes fram på det samme kravet (samme referanse) i en revurdering.
  *
  * Førstegangsbehandlingen overstyrer «mulig rett fra» bakover til [opprinneligKravdato]. Revurderingen fjerner
  * overstyringen, så kravdatoen blir søknadsdatoen ([nyKravdato]). Fra ny kravdato er kravreferansen uendret, så
  * perioden «behøver ikke vurdering». Sykdomsvurderingen fra førstegangsbehandlingen starter før ny kravdato, så kravet
- * er likevel ikke dekket. Steget krever dekning, valideringen sjekker det ikke.
+ * er likevel ikke dekket. Både steget og valideringen skal da kreve en vurdering fra ny kravdato.
  */
 class KravDatoFlyttetFramoverFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
 
@@ -47,46 +45,20 @@ class KravDatoFlyttetFramoverFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash
         }
 
         assertThatThrownBy { revurdering.løsSykdom(vurderingGjelderFra = opprinneligKravdato) }
-            .describedAs("Ønsket oppførsel: valideringen skal avvise løsningen, ikke la steget løfte behovet på nytt")
+            .describedAs("Valideringen skal avvise løsningen, ikke la steget løfte behovet på nytt")
             .isInstanceOf(UgyldigForespørselException::class.java)
             .hasMessageContaining("på grunn av krav")
     }
 
     @Test
-    fun `dagens oppførsel - sykdomsløsning som ikke dekker kravet godtas, men behovet blir stående åpent`() {
-        val revurdering = revurderingMedKravdatoFlyttetFram(medSykdomsrevurdering)
-
-        revurdering
-            .medKontekst {
-                val sykdomsbehov = avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)!!
-                val perioderSomBehøverVurdering = sykdomsbehov.perioderVedtaketBehøverVurdering.orEmpty()
-                val perioderSomIkkeErTilstrekkeligVurdert =
-                    sykdomsbehov.perioderSomIkkeErTilstrekkeligVurdert().orEmpty()
-
-                assertThat(perioderSomBehøverVurdering)
-                    .describedAs("Valideringen sjekker bare disse periodene, og de dekker ikke ny kravdato")
-                    .noneMatch { it.inneholder(nyKravdato) }
-                assertThat(perioderSomIkkeErTilstrekkeligVurdert)
-                    .describedAs("Steget krever at kravet fra ny kravdato er dekket")
-                    .anyMatch { it.inneholder(nyKravdato) }
-            }
-            .løsSykdom(vurderingGjelderFra = opprinneligKravdato)
-            .medKontekst {
-                assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
-                    .describedAs("Løsningen ble godtatt, men steget lukker ikke behovet")
-                    .contains(Definisjon.AVKLAR_SYKDOM)
-            }t
-    }
-
-    @Test
-    fun `dagens oppførsel - sykdomsløsning fra ny kravdato lukker behovet`() {
+    fun `sykdomsløsning fra ny kravdato lukker behovet`() {
         val revurdering = revurderingMedKravdatoFlyttetFram(medSykdomsrevurdering)
 
         revurdering
             .løsSykdom(vurderingGjelderFra = nyKravdato)
             .medKontekst {
                 assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
-                    .describedAs("Saksbehandler kommer seg ut av løkka ved å vurdere fra ny kravdato")
+                    .describedAs("Vurdering fra ny kravdato dekker kravet")
                     .doesNotContain(Definisjon.AVKLAR_SYKDOM)
             }
     }

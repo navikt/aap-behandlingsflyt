@@ -383,6 +383,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
             årsakTilRetur = relevanteÅrsaker,
             perioderSomIkkeErTilstrekkeligVurdert = endring.perioderSomIkkeErTilstrekkeligVurdert,
             perioderVedtaketBehøverVurdering = endring.perioderVedtaketBehøverVurdering,
+            perioderKanVurderes = endring.perioderKanVurderes,
             gradBehov = endring.gradBehov
         )
     }

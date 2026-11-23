@@ -76,11 +76,21 @@ class AvklaringsbehovValidering(
                 }.filter { !it.verdi }.perioder().toSet()
 
 
-            val perioderKravManglerLøsning =
-                perioderSomSkalLøses.leftJoin(
-                    nårKravHarLøsning(løsning.definisjon(), gjeldendeTidslinje, kontekst)
-                ) { _, harLøsningForKrav -> harLøsningForKrav != false }
+            /* Steget krever krav dekket i alle perioder vilkåret er relevant, også der vedtaket ikke behøver
+             * ny vurdering (for eksempel når samme krav får senere mulig rett fra).
+             */
+            val perioderKravManglerLøsning = if (løsning.definisjon().erEkteFrivillig()) {
+                emptySet()
+            } else {
+                (behovForDefinisjon.perioderKanVurderes() ?: behovForDefinisjon.perioderVedtaketBehøverVurdering())
+                    .orEmpty()
+                    .somTidslinje({ it }, { Unit })
+                    .komprimer()
+                    .leftJoin(
+                        nårKravHarLøsning(løsning.definisjon(), gjeldendeTidslinje, kontekst)
+                    ) { _, harLøsningForKrav -> harLøsningForKrav != false }
                     .filter { !it.verdi }.perioder().toSet()
+            }
 
 
             if (perioderSomManglerLøsning.isNotEmpty()) {
