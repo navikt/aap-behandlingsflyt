@@ -347,6 +347,10 @@ class Avklaringsbehov(
         return aktivHistorikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderSomIkkeErTilstrekkeligVurdert
     }
 
+    fun perioderKanVurderes(): Set<Periode>? {
+        return aktivHistorikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderKanVurderes
+    }
+
     fun løstAv(): Bruker? =
         aktivHistorikk.lastOrNull { it.status == Status.AVSLUTTET }
             ?.endretAv

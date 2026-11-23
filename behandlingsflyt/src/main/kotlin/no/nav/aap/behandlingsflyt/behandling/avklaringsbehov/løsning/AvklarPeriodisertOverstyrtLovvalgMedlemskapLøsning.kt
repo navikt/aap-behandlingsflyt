@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.MANUELL_OVERSTYRING_LOVVALG
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -27,18 +26,9 @@ class AvklarPeriodisertOverstyrtLovvalgMedlemskapLøsning(
         defaultValue = MANUELL_OVERSTYRING_LOVVALG
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5021`,
     override val løsningerForPerioder: List<PeriodisertManuellVurderingForLovvalgMedlemskapDto>
-) : PeriodisertAvklaringsbehovLøsning<PeriodisertManuellVurderingForLovvalgMedlemskapDto>, LøsningMedPeriodiserteVurderinger {
+) : PeriodisertAvklaringsbehovLøsning<PeriodisertManuellVurderingForLovvalgMedlemskapDto>{
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarPeriodisertOverstyrtLovvalgMedlemskapLøser(repositoryProvider).løs(kontekst, this)
-    }
-
-    override fun hentLagredeLøstePerioder(
-        behandlingId: BehandlingId,
-        repositoryProvider: RepositoryProvider,
-        gatewayProvider: GatewayProvider
-    ): Tidslinje<*> {
-        val repository = repositoryProvider.provide<LovvalgMedlemskapRepository>()
-        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger() ?: Tidslinje<Unit>()
     }
 
     override fun hentVurderinger(

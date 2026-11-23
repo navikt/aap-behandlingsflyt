@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_SYKDOM_KODE
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 
@@ -28,22 +27,13 @@ class AvklarSykdomLøsning(
         required = true,
         defaultValue = AVKLAR_SYKDOM_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5003`
-) : PeriodisertAvklaringsbehovLøsning<SykdomsvurderingLøsningDto>, LøsningMedPeriodiserteVurderinger {
+) : PeriodisertAvklaringsbehovLøsning<SykdomsvurderingLøsningDto>{
     override fun løs(
         repositoryProvider: RepositoryProvider,
         kontekst: AvklaringsbehovKontekst,
         gatewayProvider: GatewayProvider
     ): LøsningsResultat {
         return AvklarSykdomLøser(repositoryProvider, gatewayProvider).løs(kontekst, this)
-    }
-
-    override fun hentLagredeLøstePerioder(
-        behandlingId: BehandlingId,
-        repositoryProvider: RepositoryProvider,
-        gatewayProvider: GatewayProvider
-    ): Tidslinje<*> {
-        val repository = repositoryProvider.provide<SykdomRepository>()
-        return repository.hentHvisEksisterer(behandlingId)?.somSykdomsvurderingstidslinje() ?: Tidslinje<Unit>()
     }
 
     override fun hentVurderinger(

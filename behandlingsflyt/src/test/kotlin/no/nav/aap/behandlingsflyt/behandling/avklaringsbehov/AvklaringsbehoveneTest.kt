@@ -163,6 +163,8 @@ class AvklaringsbehoveneTest {
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderVedtaketBehøverVurdering()
         )
             .isEqualTo(gamlePerioder)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderKanVurderes())
+            .isEqualTo(gamlePerioder)
 
         val nyePerioder = setOf(
             Periode(1 januar 2021, 1 april 2022),
@@ -178,6 +180,8 @@ class AvklaringsbehoveneTest {
         assertThat(
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderSomIkkeErTilstrekkeligVurdert()
         )
+            .isEqualTo(nyePerioder)
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderKanVurderes())
             .isEqualTo(nyePerioder)
 
     }
