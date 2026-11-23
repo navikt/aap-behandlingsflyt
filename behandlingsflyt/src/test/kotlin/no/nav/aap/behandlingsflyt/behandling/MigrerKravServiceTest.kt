@@ -1,7 +1,10 @@
 package no.nav.aap.behandlingsflyt.behandling
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
@@ -27,6 +30,7 @@ import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
+import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
@@ -72,9 +76,9 @@ class MigrerKravServiceTest {
     @Test
     fun `reverser - kravgrunnlag uten overstyrt krav returnerer stille`() {
         val søknadsdato = 15 januar 2024
-        val (sak, behandlingId) = opprettSakOgBehandling(søknadsdato)
+        val (sak, behandlingId, søknadJournalpostId) = opprettSakOgBehandling(søknadsdato)
 
-        val krav = lagNyttKrav(behandlingId, søknadsdato = søknadsdato, overstyrMuligRettFra = null)
+        val krav = lagNyttKrav(behandlingId, søknadJournalpostId, søknadsdato, overstyrMuligRettFra = null)
         InMemoryKravRepository.lagre(behandlingId, setOf(krav))
 
         val vurdering = lagRettighetsperiodeVurdering(
@@ -96,8 +100,8 @@ class MigrerKravServiceTest {
     @Test
     fun `oppdater og reverser - full round-trip setter og nullstiller overstyrMuligRettFra`() {
         val søknadsdato = 15 januar 2024
-        val (sak, behandlingId) = opprettSakOgBehandling(søknadsdato)
-        val krav = lagNyttKrav(behandlingId, søknadsdato = søknadsdato)
+        val (sak, behandlingId, søknadJournalpostId) = opprettSakOgBehandling(søknadsdato)
+        val krav = lagNyttKrav(behandlingId, søknadJournalpostId, søknadsdato)
         InMemoryKravRepository.lagre(behandlingId, setOf(krav))
 
         val overstyrtDato = 1 juni 2023
@@ -131,8 +135,8 @@ class MigrerKravServiceTest {
     @Test
     fun `oppdater to ganger med samme referanse og reverser - ingen duplikater, riktig krav fjernes`() {
         val søknadsdato = 15 januar 2024
-        val (sak, behandlingId) = opprettSakOgBehandling(søknadsdato)
-        val krav = lagNyttKrav(behandlingId, søknadsdato)
+        val (sak, behandlingId, søknadJournalpostId) = opprettSakOgBehandling(søknadsdato)
+        val krav = lagNyttKrav(behandlingId, søknadJournalpostId, søknadsdato)
         InMemoryKravRepository.lagre(behandlingId, setOf(krav))
 
         val oppdaterVurdering = lagRettighetsperiodeVurdering(
@@ -161,11 +165,12 @@ class MigrerKravServiceTest {
     @Test
     fun `reverser isolerer til inneværende behandling, krav fra annen behandling bevares`() {
         val søknadsdato = 15 januar 2024
-        val (sak, behandlingIdA) = opprettSakOgBehandling(søknadsdato)
+        val (sak, behandlingIdA, søknadJournalpostId) = opprettSakOgBehandling(søknadsdato)
         val (_, behandlingIdB) = opprettRevurdering(sak.id)
         
         val vedtattOverstyrtKrav = lagNyttKrav(
             behandlingIdA,
+            søknadJournalpostId,
             søknadsdato = søknadsdato,
             overstyrMuligRettFra = OverstyrMuligRettFra(
                 1 mars 2023,
@@ -211,9 +216,9 @@ class MigrerKravServiceTest {
     @Test
     fun `oppdater og reverser - reversert krav beholder muligRettFra fra overstyrt krav`() {
         val søknadsdato = 15 januar 2024
-        val (sak, behandlingId) = opprettSakOgBehandling(søknadsdato)
+        val (sak, behandlingId, søknadJournalpostId) = opprettSakOgBehandling(søknadsdato)
         val overstyrtDato = 1 juni 2023
-        val krav = lagNyttKrav(behandlingId, søknadsdato = søknadsdato, muligRettFra = søknadsdato)
+        val krav = lagNyttKrav(behandlingId, søknadJournalpostId, søknadsdato, muligRettFra = søknadsdato)
         InMemoryKravRepository.lagre(behandlingId, setOf(krav))
 
         service.oppdaterKravForOverstyrtMuligRett(
@@ -243,7 +248,9 @@ class MigrerKravServiceTest {
 
     // --- Hjelpefunksjoner ---
 
-    private fun opprettSakOgBehandling(søknadsdato: LocalDate = LocalDate.now()): Pair<Sak, BehandlingId> {
+    private fun opprettSakOgBehandling(
+        søknadsdato: LocalDate = LocalDate.now()
+    ): Triple<Sak, BehandlingId, JournalpostId> {
         val sak = opprettInMemorySak(søknadsdato = søknadsdato)
         val behandling = InMemoryBehandlingRepository.opprettBehandling(
             sakId = sak.id,
@@ -254,7 +261,19 @@ class MigrerKravServiceTest {
                 årsak = ÅrsakTilOpprettelse.SØKNAD,
             ),
         )
-        return sak to behandling.id
+        val søknadJournalpostId = JournalpostId("JP-${behandling.id.id}")
+        InMemoryMottattDokumentRepository.lagre(
+            MottattDokument(
+                referanse = InnsendingReferanse(søknadJournalpostId),
+                sakId = sak.id,
+                behandlingId = behandling.id,
+                mottattTidspunkt = søknadsdato.atStartOfDay(),
+                type = InnsendingType.SØKNAD,
+                kanal = Kanal.DIGITAL,
+                strukturertDokument = null,
+            )
+        )
+        return Triple(sak, behandling.id, søknadJournalpostId)
     }
     private fun opprettRevurdering(sakId: SakId): Pair<SakId, BehandlingId> {
         val behandling = InMemoryBehandlingRepository.opprettBehandling(
@@ -271,12 +290,13 @@ class MigrerKravServiceTest {
 
     private fun lagNyttKrav(
         behandlingId: BehandlingId,
+        søknadJournalpostId: JournalpostId,
         søknadsdato: LocalDate,
         muligRettFra: LocalDate = søknadsdato,
         overstyrMuligRettFra: OverstyrMuligRettFra? = null,
     ) = RelevantKrav(
         referanse = Kravreferanse.ny(),
-        journalpostId = JournalpostId("JP-${behandlingId.id}"),
+        journalpostId = søknadJournalpostId,
         vurdertAv = SYSTEMBRUKER,
         begrunnelse = "Test",
         vurdertIBehandling = behandlingId,
