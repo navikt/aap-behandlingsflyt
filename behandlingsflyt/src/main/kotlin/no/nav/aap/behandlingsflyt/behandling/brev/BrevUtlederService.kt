@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
@@ -137,6 +138,7 @@ class BrevUtlederService(
     private val klagedokumentInformasjonUtleder: KlagedokumentInformasjonUtleder,
     private val påklagetBehandlingRepository: PåklagetBehandlingRepository,
     private val tilbakekrevingRepository: TilbakekrevingRepository,
+    private val vedtakService: VedtakService
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -178,6 +180,7 @@ class BrevUtlederService(
         klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(repositoryProvider),
         påklagetBehandlingRepository = repositoryProvider.provide(),
         tilbakekrevingRepository = repositoryProvider.provide(),
+        vedtakService = VedtakService(repositoryProvider, gatewayProvider)
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -383,10 +386,11 @@ class BrevUtlederService(
                 val påklagetBehandlingId = checkNotNull(vurdering.påklagetBehandling) {
                     "[Utviklerfeil] Mangler referanse til påklaget Kelvin-behandling"
                 }
-                val vedtak = checkNotNull(vedtakRepository.hent(påklagetBehandlingId)) {
+                val påklagetBehandling = behandlingRepository.hent(påklagetBehandlingId)
+                val vedtakstidspunkt = checkNotNull(vedtakService.vedtakstidspunkt(påklagetBehandling)) {
                     "[Utviklerfeil] Mangler vedtak for påklaget Kelvin-behandling"
                 }
-                vedtak.vedtakstidspunkt.toLocalDate()
+                vedtakstidspunkt.toLocalDate()
             }
 
             PåklagetVedtakType.TILBAKEKREVING -> {

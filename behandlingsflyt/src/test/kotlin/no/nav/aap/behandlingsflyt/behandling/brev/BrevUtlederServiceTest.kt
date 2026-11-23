@@ -74,14 +74,17 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.Personinfo
@@ -1909,6 +1912,50 @@ class BrevUtlederServiceTest {
     inner class Klagebrev {
         private val påklagetVedtaksdato = 10 januar 2025
         private val klagedato = 20 januar 2025
+
+        @Test
+        fun `klage på avvisningsvedtak henter vedtaksdato fra steghistorikken til påklaget klage`() {
+            val behandling = gittKlageMedVurderinger(
+                begrunnelseNavKontor = "Avvisningen opprettholdes",
+                begrunnelseNay = null
+            )
+            val påklagetKlage = behandlingRepository.opprettBehandling(
+                sakId = behandling.sakId,
+                typeBehandling = TypeBehandling.Klage,
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTATT_KLAGE)),
+                    årsak = ÅrsakTilOpprettelse.KLAGE
+                )
+            )
+            behandlingRepository.leggTilNyttAktivtSteg(
+                påklagetKlage.id,
+                StegTilstand(
+                    stegType = StegType.FATTE_VEDTAK,
+                    stegStatus = StegStatus.AVSLUTTER,
+                    tidspunkt = påklagetVedtaksdato.atTime(12, 0)
+                )
+            )
+            repositoryProvider.provide<PåklagetBehandlingRepository>().lagre(
+                behandling.id,
+                PåklagetBehandlingVurdering(
+                    påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
+                    påklagetBehandling = påklagetKlage.id,
+                    påklagetTilbakekrevingsbehandling = null,
+                    vurdertAv = Bruker("Saksbehandler"),
+                    opprettet = Instant.now()
+                )
+            )
+
+            assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)).isEqualTo(
+                KlageOpprettholdelse(
+                    påklagetVedtaksdato = påklagetVedtaksdato,
+                    klagedato = klagedato,
+                    begrunnelseNavKontor = "Avvisningen opprettholdes",
+                    begrunnelseNay = null
+                )
+            )
+        }
 
         @Test
         fun `opprettholdt klage med bare vurdering fra Nav-kontor tar med begrunnelsen`() {
