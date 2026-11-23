@@ -49,8 +49,10 @@ class MigrerKravService(
             return
         }
 
-        val søknadForKrav = mottattDokumentRepository.hentDokumenterAvType(sakId, InnsendingType.SØKNAD)
-            .find { it.referanse.type == Type.JOURNALPOST && it.referanse.verdi == nyesteKrav.journalpostId.identifikator }
+        val søknadForKrav = checkNotNull(
+            mottattDokumentRepository.hentDokumenterAvType(sakId, InnsendingType.SØKNAD)
+                .find { it.referanse.type == Type.JOURNALPOST && it.referanse.verdi == nyesteKrav.journalpostId.identifikator }
+        ) { "Fant ikke søknad for krav med journalpost ${nyesteKrav.journalpostId}" }
 
         val nyVurdering = RelevantKrav(
             referanse = nyesteKrav.referanse,

@@ -84,7 +84,10 @@ class VurderKravLøser(
             if (vurdering is RelevantKrav) {
                 validerRelevantKrav(
                     vurdering,
-                    søknaderISak.find { it.referanse.asJournalpostId == vurdering.journalpostId })
+                    checkNotNull(søknaderISak.find { it.referanse.asJournalpostId == vurdering.journalpostId }) {
+                        "Fant ikke søknad for krav med journalpost ${vurdering.journalpostId}"
+                    }
+                )
             }
 
             if (vurdering is MigrertKrav) {
