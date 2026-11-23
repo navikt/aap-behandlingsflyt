@@ -21,6 +21,7 @@ data class KravGrunnlagDto(
     val harTilgangTilÅSaksbehandle: Boolean,
     val nyeVurderinger: List<KravVurderingDto>,
     val vedtatteVurderinger: List<KravVurderingDto>,
+    val gjeldendeVurderinger: List<KravVurderingDto>,
     val søknaderUtenKravvurdering: List<SøknadUtenKravDto>,
     val søknader: List<SøknadUtenKravDto>,
 )

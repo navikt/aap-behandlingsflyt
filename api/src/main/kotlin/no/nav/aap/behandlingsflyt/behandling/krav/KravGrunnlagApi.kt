@@ -47,6 +47,7 @@ fun NormalOpenAPIRoute.kravGrunnlagApi(
                 val vedtattKravGrunnlag =
                     behandling.forrigeBehandlingId?.let { kravRepository.hentHvisEksisterer(behandlingId = it) }
 
+                val gjeldendeVurderinger = kravGrunnlag?.gjeldendeVurderinger().orEmpty().map { it.somDto() }                
                 val nyeKrav = kravGrunnlag
                     ?.vurderinger?.filter { it.vurdertIBehandling == behandling.id }.orEmpty()
                     .sortedBy { it.journalpostId?.identifikator }
@@ -74,6 +75,7 @@ fun NormalOpenAPIRoute.kravGrunnlagApi(
                     harTilgangTilÅSaksbehandle = kanSaksbehandle() && (erManuellVurderingPåskrudd || harMigrertKravIGrunnlag || erMigreringsbehandling),
                     nyeVurderinger = nyeVurderinger,
                     vedtatteVurderinger = sisteVedtatte,
+                    gjeldendeVurderinger = gjeldendeVurderinger,
                     søknaderUtenKravvurdering = søknaderUtenKravvurdering,
                     søknader = søknaderISak.map { it.tilSøknadUtenKravDto() }
                 )
