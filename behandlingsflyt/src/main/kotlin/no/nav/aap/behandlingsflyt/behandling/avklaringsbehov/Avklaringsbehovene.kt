@@ -160,6 +160,7 @@ class Avklaringsbehovene(
                 grunn = grunn,
                 perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
                 perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
+                perioderKanVurderes = perioderKanVurderes,
                 endretAv = bruker,
                 gradBehov = gradBehov
             )
