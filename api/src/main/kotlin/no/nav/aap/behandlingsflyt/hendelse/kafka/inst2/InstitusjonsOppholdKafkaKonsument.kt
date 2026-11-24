@@ -1,5 +1,7 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.inst2
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.InstitusjonsOppholdHendelseKafkaMelding
@@ -24,7 +26,7 @@ class InstitusjonsOppholdKafkaKonsument(
     private val dataSource: DataSource,
     private val repositoryRegistry: RepositoryRegistry,
     private val gatewayProvider: GatewayProvider,
-) : KafkaKonsument<String, InstitusjonsOppholdHendelseKafkaMelding>(
+) : KafkaKonsument<String, String>(
     topic = INSTITUSJONSOPPHOLD_EVENT_TOPIC,
     config = config,
     pollTimeout = pollTimeout,
@@ -32,17 +34,37 @@ class InstitusjonsOppholdKafkaKonsument(
     consumerName = "AapBehandlingsflytInstitusjonsOppholdHendelse",
 ) {
 
-    override fun håndter(meldinger: ConsumerRecords<String, InstitusjonsOppholdHendelseKafkaMelding>) {
+    override fun håndter(meldinger: ConsumerRecords<String, String>) {
         meldinger.forEach(::håndter)
     }
 
-    fun håndter(melding: ConsumerRecord<String, InstitusjonsOppholdHendelseKafkaMelding>) {
+
+    fun håndter(melding: ConsumerRecord<String, String>) {
+
+        val mapper = jacksonObjectMapper()
+        val log = LoggerFactory.getLogger(javaClass)
+        val meldingVerdi = melding.value()
+        val json = mapper.readTree(meldingVerdi)
+
+        if (!json.hasNonNull("kilde")) {
+            log.warn(
+                "Ignorerer institusjonsoppholdhendelse uten kilde. Topic={}, partisjon={}, offset={}",
+                melding.topic(),
+                melding.partition(),
+                melding.offset()
+            )
+            return
+        }
+
+        val hendelse = mapper.readValue<InstitusjonsOppholdHendelseKafkaMelding>(meldingVerdi)
         val meldingKey = "${melding.partition()}-${melding.offset()}"
+
         dataSource.transaction { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
-            val institusjonsoppholdService = InstitusjonsOppholdService(repositoryProvider, gatewayProvider)
-            institusjonsoppholdService.håndter(meldingKey, melding.value())
+            val institusjonsoppholdService =
+                InstitusjonsOppholdService(repositoryProvider, gatewayProvider)
+
+            institusjonsoppholdService.håndter(meldingKey, hendelse)
         }
     }
-
 }
