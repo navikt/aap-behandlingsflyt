@@ -264,7 +264,9 @@ public sealed interface BehandlingHendelse {
 
         public enum class Status {
             VENTER_PÅ_LEGEERKLÆRING,
+            @Deprecated("Ikke lenger i bruk")
             PURRET_PÅ_LEGERERKLÆRING,
+            PURRET_PÅ_LEGEERKLÆRING,
             MOTTATT_LEGEERKLÆRING,
         }
     }
