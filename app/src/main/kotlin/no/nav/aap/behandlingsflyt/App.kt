@@ -445,9 +445,7 @@ private fun Application.startKafkakonsumenter(
         )
         startKonsument(
             InstitusjonsOppholdKafkaKonsument(
-                config = KafkaConsumerConfig(
-                    valueDeserializer = JsonDeserializerInstitusjonsOppholdHendelse::class.java,
-                ),
+                config = KafkaConsumerConfig(),
                 dataSource = dataSource,
                 repositoryRegistry = repositoryRegistry,
                 closeTimeout = AppConfig.stansArbeidTimeout,

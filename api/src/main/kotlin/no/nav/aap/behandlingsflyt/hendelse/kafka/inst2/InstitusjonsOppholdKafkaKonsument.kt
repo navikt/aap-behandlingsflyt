@@ -46,6 +46,10 @@ class InstitusjonsOppholdKafkaKonsument(
         val meldingVerdi = melding.value()
         val json = mapper.readTree(meldingVerdi)
 
+        require(json != null && json.isObject) {
+            "Forventet et JSON-objekt for institusjonsoppholdhendelse"
+        }
+
         if (!json.hasNonNull("kilde")) {
             log.warn(
                 "Ignorerer institusjonsoppholdhendelse uten kilde. Topic={}, partisjon={}, offset={}",
