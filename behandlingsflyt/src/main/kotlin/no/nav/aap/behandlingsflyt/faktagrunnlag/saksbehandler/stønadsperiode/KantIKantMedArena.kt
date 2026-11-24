@@ -22,15 +22,18 @@ data class KantIKantMedArena(
 
 /**
  * Verdiene lagres i databasen. Legg til nye, aldri endre eller slett.
+ *
+ * Overgangen fra Arena går fra dagen etter maksdato til og med første hverdag etter maksdato. Maksdato fredag
+ * og krav fra mandag er derfor kant i kant. Helligdager regnes som hverdager.
  */
 enum class KantIKantUtfall(val harArenaSak: Boolean) {
-    /** Kravet dekker dagen etter maksdato i Arena-saken. */
+    /** Kravet er det tidligste som dekker overgangen fra Arena. */
     KANT_I_KANT(harArenaSak = true),
 
-    /** Et annet krav i saken dekker dagen etter maksdato. */
+    /** Et annet krav i saken dekker overgangen fra Arena før dette kravet. */
     ANNET_KRAV_ER_KANT_I_KANT(harArenaSak = true),
 
-    /** Alle krav starter etter dagen etter maksdato. */
+    /** Ingen krav dekker overgangen fra Arena: alle starter etter første hverdag etter maksdato. */
     OPPHOLD_ETTER_MAKSDATO(harArenaSak = true),
 
     /** Arena-saken har ingen maksdato. */
