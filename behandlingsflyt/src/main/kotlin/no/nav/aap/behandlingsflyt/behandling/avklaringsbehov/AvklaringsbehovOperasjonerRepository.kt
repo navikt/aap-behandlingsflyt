@@ -27,7 +27,7 @@ interface AvklaringsbehovOperasjonerRepository : Repository {
         endretAv: Bruker = SYSTEMBRUKER,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
         perioderVedtaketBehøverVurdering: Set<Periode>? = null,
-        perioderKanVurderes: Set<Periode>? = null,
+        perioderVilkåretErRelevant: Set<Periode>? = null,
         gradBehov: GradBehov? = null,
     )
 

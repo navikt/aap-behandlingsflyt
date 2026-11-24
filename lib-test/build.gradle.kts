@@ -28,4 +28,6 @@ dependencies {
 
     implementation(kelvinLibs.bundles.junit)
     compileOnly(kelvinLibs.testcontainers)
+
+    testImplementation(libs.archunit)
 }

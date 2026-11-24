@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap
 
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterINorgeRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgRegisterGrunnlag
@@ -19,7 +20,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class LovvalgMedlemskapVurderingServiceTest {
-    private val service = LovvalgMedlemskapVurderingService()
+    private val service = LovvalgMedlemskapVurderingService
 
     @Test
     fun `automatisk om alle krav er oppfylt`() {
@@ -43,7 +44,7 @@ class LovvalgMedlemskapVurderingServiceTest {
                             )
                         )
                     ),
-                    inntekterINorgeGrunnlag = null,
+                    inntekterINorgeGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet()),
                 ) 
             ),
             personopplysning = Personopplysning(
@@ -90,7 +91,7 @@ class LovvalgMedlemskapVurderingServiceTest {
                             )
                         )
                     ),
-                    inntekterINorgeGrunnlag = null,
+                    inntekterINorgeGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet()),
                     
                 ),
             ),
@@ -139,7 +140,7 @@ class LovvalgMedlemskapVurderingServiceTest {
                             )
                         )
                     ),
-                    inntekterINorgeGrunnlag = null,
+                    inntekterINorgeGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet()),
                     
                 ),
             ),
@@ -264,7 +265,7 @@ class LovvalgMedlemskapVurderingServiceTest {
         lovvalgMedlemskapGrunnlag = LovvalgMedlemskapGrunnlag(
             registerGrunnlag = LovvalgMedlemskapRegisterGrunnlag(
                 medlemskapUnntakGrunnlag = MedlemskapUnntakGrunnlag(emptyList()),
-                inntekterINorgeGrunnlag = null,
+                inntekterINorgeGrunnlag = InntekterINorgeRegisterGrunnlag(emptySet()),
                 
             ),
         ),

@@ -718,7 +718,7 @@ class AvklaringsbehovServiceTest {
             definisjon.løsesISteg,
             perioderSomIkkeErTilstrekkeligVurdert = setOf(periode1),
             perioderVedtaketBehøverVurdering = null,
-            perioderKanVurderes = null,
+            perioderVilkåretErRelevant = null,
             gradBehov = null
         )
 
@@ -777,7 +777,7 @@ class AvklaringsbehovServiceTest {
             definisjon.løsesISteg,
             perioderSomIkkeErTilstrekkeligVurdert = setOf(periode1),
             perioderVedtaketBehøverVurdering = null,
-            perioderKanVurderes = null,
+            perioderVilkåretErRelevant = null,
             gradBehov = null
         )
         avklaringsbehovene.løsAvklaringsbehov(definisjon, begrunnelse = "Løsning", Bruker("veileder"), false)

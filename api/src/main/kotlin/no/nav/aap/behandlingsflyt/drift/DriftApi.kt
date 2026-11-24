@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.TidligereVurde
 import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.TidligereVurderingerReq
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelse2Dto
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseService
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -44,6 +45,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøkna
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -385,6 +387,36 @@ fun NormalOpenAPIRoute.driftApi(
             }
         }
 
+        route("/behandling/{referanse}/vedtakslengde") {
+            authorizedGet<BehandlingReferanse, List<VedtakslengdeVurderingDriftsinfoDto>>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse"),
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                    operasjon = Operasjon.DRIFT_LES
+                )
+            ) { referanse ->
+                val vurderinger = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val vedtakslengdeRepository = repositoryProvider.provide<VedtakslengdeRepository>()
+
+                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(referanse)
+                    val virkningstidspunktService = VirkningstidspunktService(repositoryProvider, gatewayProvider)
+                    val grunnlag = vedtakslengdeRepository.hentHvisEksisterer(behandling.id)
+                    val startdato = virkningstidspunktService.finnVirkningstidspunkt(behandling)
+                        ?: sakRepository.hent(behandling.sakId).rettighetsperiode.fom
+
+                    grunnlag?.gjeldendeVurderinger(startdato)
+                        ?.segmenter()
+                        ?.map { it.tilDriftsinfoDto(behandling.id) } ?: emptyList()
+                }
+
+                krevDtoErUtenFødselsnummer(vurderinger)
+                respond(vurderinger)
+            }
+        }
+
         route("/behandling/{referanse}/yrkesskade") {
             authorizedGet<BehandlingReferanse, YrkesskadeGrunnlagDriftsinfoDto>(
                 AuthorizationParamPathConfig(
@@ -586,6 +618,7 @@ fun NormalOpenAPIRoute.driftApi(
                                             fristSettPåVent = endring.frist,
                                             perioderUgyldigVurdering = endring.perioderSomIkkeErTilstrekkeligVurdert,
                                             perioderKreverVurdering = endring.perioderVedtaketBehøverVurdering,
+                                            perioderVilkåretErRelevant = endring.perioderVilkåretErRelevant,
                                             tidsstempel = endring.tidsstempel,
                                             endretAv = endring.endretAv
                                         )
@@ -803,6 +836,7 @@ private data class ForenkletAvklaringsbehov(
     val gradBehov: GradBehov?,
     val perioderUgyldigVurdering: Set<Periode>?,
     val perioderKreverVurdering: Set<Periode>?,
+    val perioderVilkåretErRelevant: Set<Periode>?,
     val tidsstempel: LocalDateTime = LocalDateTime.now(),
     val endretAv: Bruker,
     val årsakTilSettPåVent: ÅrsakTilSettPåVent?,

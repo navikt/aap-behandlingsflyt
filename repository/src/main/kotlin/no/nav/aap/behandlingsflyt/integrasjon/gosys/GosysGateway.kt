@@ -73,7 +73,7 @@ class GosysGateway : GosysOppgaveGateway {
         val request = PostRequest(oppgaveRequest)
         try {
             client.post(path, request) { _, _ -> }
-            log.info("Opprettet refusjonsoppgave mot Gosys: $oppgaveRequest ")
+            log.info("Opprettet refusjonsoppgave mot Gosys")
         } catch (e: Exception) {
             log.error("Feil mot oppgaveApi under opprettelse av oppgave: ${e.message}", e)
             throw e
@@ -94,4 +94,3 @@ fun finnStandardOppgavefrist(nå: LocalDateTime = now()): LocalDate {
             .atZone(systemDefault()).toLocalDate()
     }
 }
-

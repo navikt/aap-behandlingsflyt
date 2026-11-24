@@ -139,7 +139,7 @@ class KravSteg(
     }
 
     private fun vurderAutomatiskHvisMulig(kontekst: FlytKontekstMedPerioder) {
-        if (!harIkkeMigrertKrav(kontekst)) {
+        if (harMigrertKrav(kontekst)) {
             vurderSøknaderSomTilleggsopplysningTilMigrertKrav(kontekst)
             return
         }
@@ -307,6 +307,7 @@ class KravSteg(
         val kravdataFraArena = arenaMigreringService.hentKravDataForSak(kontekst.sakId)
         val eksisterendeKrav = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
         requireNotNull(kravdataFraArena) { "Kan ikke migrere krav. Klarte ikke finne relatert sak i Arena." }
+        validerAtAlleMeldekortErBehandlet(kravdataFraArena)
 
         if (!kravdataFraArena.erLikVurdering(eksisterendeKrav)) {
             arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, StegType.KRAV, kravdataFraArena)
@@ -324,9 +325,30 @@ class KravSteg(
         }
     }
 
-    private fun harIkkeMigrertKrav(kontekst: FlytKontekstMedPerioder): Boolean {
+    private fun harMigrertKrav(kontekst: FlytKontekstMedPerioder): Boolean {
         val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
-        return kravGrunnlag?.gjeldendeMigrertKrav() == null
+        return kravGrunnlag?.gjeldendeMigrertKrav() != null
+    }
+
+    private fun harIkkeMigrertKrav(kontekst: FlytKontekstMedPerioder): Boolean {
+        return !harMigrertKrav(kontekst)
+    }
+
+    /**
+     * Gjelder bevisst bare automatisk migrering. Manuelt [MigrertKrav] sendes i praksis bare inn når
+     * saksbehandler revurderer et krav som allerede er migrert automatisk og kontrollert her. Endrer
+     * saksbehandler migreringsdato eller kvote da, er det en aktiv avgjørelse som vi ikke skal hindre.
+     */
+    private fun validerAtAlleMeldekortErBehandlet(krav: ArenaKrav) {
+        val sisteTilDato = checkNotNull(krav.sisteFerdigBehandledeMeldekortTilDato) {
+            "Kan ikke migrere Arena-sak ${krav.arenaSaksnummer}: Arena har ingen ferdig behandlet meldekortperiode. " +
+                    "Migrering krever at alle meldekort er levert av bruker og ferdig behandlet."
+        }
+        check(sisteTilDato.plusDays(1) == krav.migreringsdato) {
+            "Kan ikke migrere Arena-sak ${krav.arenaSaksnummer}: Migreringsdato ${krav.migreringsdato} må være dagen " +
+                    "etter siste ferdig behandlede meldekortperiode (til og med $sisteTilDato), " +
+                    "dvs. ${sisteTilDato.plusDays(1)}. Migrering krever at alle meldekort er levert av bruker og ferdig behandlet."
+        }
     }
 
     private fun ArenaKrav.erLikVurdering(grunnlag: KravGrunnlag?): Boolean {

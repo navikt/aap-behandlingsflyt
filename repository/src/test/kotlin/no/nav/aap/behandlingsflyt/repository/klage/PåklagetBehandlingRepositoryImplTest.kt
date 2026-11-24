@@ -146,6 +146,30 @@ internal class PåklagetBehandlingRepositoryImplTest {
     }
 
     @Test
+    fun `Returnerer null hvis det ikke finnes grunnlag`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection, søknadsdato)
+            finnEllerOpprettBehandling(connection, sak)
+            val klageBehandling = finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
+            val repository = PåklagetBehandlingRepositoryImpl(connection)
+
+            assertThat(repository.hentHvisEksisterer(klageBehandling.id)).isNull()
+        }
+    }
+
+    @Test
+    fun `Returnerer null for påklaget vedtakstype hvis det ikke finnes grunnlag`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection, søknadsdato)
+            finnEllerOpprettBehandling(connection, sak)
+            val klageBehandling = finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
+            val repository = PåklagetBehandlingRepositoryImpl(connection)
+
+            assertThat(repository.hentPåklagetVedtakstype(klageBehandling.id)).isNull()
+        }
+    }
+
+    @Test
     fun `Lagrer og henter påklagetbehandling med referanse`() {
         dataSource.transaction { connection ->
             val sak = sak(connection, søknadsdato)

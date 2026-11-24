@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import io.mockk.verify
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
+import no.nav.aap.arenaoppslag.kontrakt.modeller.Periode
 import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
@@ -29,6 +30,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettig
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
@@ -351,6 +353,84 @@ class KravStegTest {
     }
 
     @Test
+    fun `migrering fra Arena - feiler når siste ferdig behandlede meldekortperiode mangler`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        arenaMigreringForSak = arenaMigrering(sak.id)
+        val arenaOppslagGateway = mockk<ArenaOppslagGateway>()
+        every { arenaOppslagGateway.hentKravDataForSak(any()) } returns kravResponse(
+            søknadsdato = LocalDate.of(2025, 1, 6),
+            migreringsdato = LocalDate.of(2026, 9, 28),
+            kvote = 150,
+            sisteMeldekortperiode = null,
+        )
+
+        assertThatThrownBy {
+            stegMedAutomatiskMigrering(arenaOppslagGateway = arenaOppslagGateway).utfør(migreringKontekst(behandling))
+        }
+            .isInstanceOf(IllegalStateException::class.java)
+            .hasMessageContaining("ingen ferdig behandlet meldekortperiode")
+    }
+
+    @Test
+    fun `migrering fra Arena - feiler når migreringsdato ikke er dagen etter siste ferdig behandlede meldekortperiode`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        arenaMigreringForSak = arenaMigrering(sak.id)
+        val arenaOppslagGateway = mockk<ArenaOppslagGateway>()
+        every { arenaOppslagGateway.hentKravDataForSak(any()) } returns kravResponse(
+            søknadsdato = LocalDate.of(2025, 1, 6),
+            migreringsdato = LocalDate.of(2026, 9, 28),
+            kvote = 150,
+            sisteMeldekortperiode = Periode(LocalDate.of(2026, 9, 7), LocalDate.of(2026, 9, 20)),
+        )
+
+        assertThatThrownBy {
+            stegMedAutomatiskMigrering(arenaOppslagGateway = arenaOppslagGateway).utfør(migreringKontekst(behandling))
+        }
+            .isInstanceOf(IllegalStateException::class.java)
+            .hasMessageContaining("2026-09-28")
+            .hasMessageContaining("2026-09-20")
+    }
+
+    @Test
+    fun `revurdering uten migrert krav vurderes helautomatisk når automatisk migrering er påskrudd`() {
+        val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
+        val forrigeBehandling = opprettFørstegangsbehandling(sak.id)
+        val revurdering = opprettRevurdering(sak.id, forrigeBehandling.id)
+        leggTilSøknad(revurdering.id, sak.id, LocalDate.of(2026, 10, 1).atStartOfDay())
+        val avklaringsbehovService = mockk<AvklaringsbehovService>(relaxed = true)
+        val steg = KravSteg(
+            unleashGateway = AlleAvskruddUnleash,
+            kravRepository = InMemoryKravRepository,
+            mottattDokumentRepository = InMemoryMottattDokumentRepository,
+            avklaringsbehovService = avklaringsbehovService,
+            sakRepository = InMemorySakRepository,
+            sakService = sakService,
+            arenaMigreringService = arenaMigreringService,
+        )
+
+        steg.utfør(flytKontekstMedPerioder {
+            this.behandling = revurdering
+            this.vurderingType = VurderingType.REVURDERING
+        })
+
+        assertThat(InMemoryKravRepository.hent(revurdering.id).vurderinger.filterIsInstance<RelevantSøknadKrav>()).hasSize(1)
+        verify(exactly = 0) { avklaringsbehovService.oppdaterAvklaringsbehov(any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `søknad i revurdering etter migrering blir Tilleggsopplysning når manuell kravvurdering er av`() {
+        verifiserSøknadEtterMigreringBlirTilleggsopplysning(AlleAvskruddUnleash)
+    }
+
+    @Test
+    fun `søknad i revurdering etter migrering blir Tilleggsopplysning når manuell kravvurdering er på`() {
+        verifiserSøknadEtterMigreringBlirTilleggsopplysning(KravManuellVurderingUnleash)
+    }
+
+    @Test
     fun `søknad i revurdering etter migrering blir Tilleggsopplysning når manuell kravvurdering er av`() {
         verifiserSøknadEtterMigreringBlirTilleggsopplysning(AlleAvskruddUnleash)
     }
@@ -366,7 +446,7 @@ class KravStegTest {
         val migreringsbehandling = opprettFørstegangsbehandling(sak.id)
         arenaMigreringForSak = arenaMigrering(sak.id)
         stegMedAutomatiskMigrering().utfør(migreringKontekst(migreringsbehandling))
-        val migrertKrav = InMemoryKravRepository.hent(migreringsbehandling.id).vurderinger.single() as RelevantMigrertKrav
+        val migrertKrav = InMemoryKravRepository.hent(migreringsbehandling.id).vurderinger.single() as MigrertKrav
 
         val revurdering = opprettRevurdering(sak.id, migreringsbehandling.id)
         InMemoryKravRepository.kopier(migreringsbehandling.id, revurdering.id)
@@ -405,8 +485,8 @@ class KravStegTest {
 
         val gjeldende = InMemoryKravRepository.hent(revurdering.id).gjeldendeVurderinger()
         assertThat(gjeldende).containsExactlyInAnyOrderElementsOf(etterFørsteKjøring)
-        assertThat(gjeldende.filterIsInstance<RelevantSøknadKrav>()).isEmpty()
-        assertThat(gjeldende.filterIsInstance<RelevantMigrertKrav>()).containsExactly(migrertKrav)
+        assertThat(gjeldende.filterIsInstance<RelevantKrav>()).isEmpty()
+        assertThat(gjeldende.filterIsInstance<MigrertKrav>()).containsExactly(migrertKrav)
         val tilleggsopplysning = gjeldende.filterIsInstance<Tilleggsopplysning>().single()
         assertThat(tilleggsopplysning.vurdertIBehandling).isEqualTo(revurdering.id)
         assertThat(tilleggsopplysning.erAutomatiskVurdert()).isTrue()
@@ -418,39 +498,18 @@ class KravStegTest {
         }
     }
 
-    @Test
-    fun `revurdering uten migrert krav vurderes helautomatisk når automatisk migrering er påskrudd`() {
-        val sak = opprettInMemorySak()
-        every { sakService.hent(sak.id) } returns sak
-        val forrigeBehandling = opprettFørstegangsbehandling(sak.id)
-        val revurdering = opprettRevurdering(sak.id, forrigeBehandling.id)
-        leggTilSøknad(revurdering.id, sak.id, LocalDate.of(2026, 10, 1).atStartOfDay())
-        val avklaringsbehovService = mockk<AvklaringsbehovService>(relaxed = true)
-        val steg = KravSteg(
-            unleashGateway = AlleAvskruddUnleash,
-            kravRepository = InMemoryKravRepository,
-            mottattDokumentRepository = InMemoryMottattDokumentRepository,
-            avklaringsbehovService = avklaringsbehovService,
-            sakRepository = InMemorySakRepository,
-            sakService = sakService,
-            arenaMigreringService = arenaMigreringService,
-        )
-
-        steg.utfør(flytKontekstMedPerioder {
-            this.behandling = revurdering
-            this.vurderingType = VurderingType.REVURDERING
-        })
-
-        assertThat(InMemoryKravRepository.hent(revurdering.id).vurderinger.filterIsInstance<RelevantSøknadKrav>()).hasSize(1)
-        verify(exactly = 0) { avklaringsbehovService.oppdaterAvklaringsbehov(any(), any(), any(), any(), any()) }
-    }
-
-    private fun kravResponse(søknadsdato: LocalDate, migreringsdato: LocalDate, kvote: Int) = KravResponse(
+    private fun kravResponse(
+        søknadsdato: LocalDate,
+        migreringsdato: LocalDate,
+        kvote: Int,
+        sisteMeldekortperiode: Periode? = Periode(migreringsdato.minusDays(14), migreringsdato.minusDays(1)),
+    ) = KravResponse(
         lopenr = 123456,
         aar = 2016,
         soknadsdato = søknadsdato,
         migreringsdato = migreringsdato,
         gjenstaaendeKvote = GjenstaaendeKvote(ordinaer = kvote),
+        sisteFerdigBehandledeMeldekortperiode = sisteMeldekortperiode,
     )
 
     private fun stegMedAutomatiskMigrering(
