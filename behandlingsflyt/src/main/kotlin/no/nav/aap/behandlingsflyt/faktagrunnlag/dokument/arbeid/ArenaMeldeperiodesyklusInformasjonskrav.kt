@@ -43,8 +43,8 @@ class ArenaMeldeperiodesyklusInformasjonskrav(
         val ukenummer: Long,
     ) : Registerdata {
         /** Mandag i startuka. */
-        val startdato: LocalDate
-            get() = LocalDate.parse("$år-W${ukenummer.toString().padStart(2, '0')}-1", DateTimeFormatter.ISO_WEEK_DATE)
+        val startdato: LocalDate =
+            LocalDate.parse("$år-W${ukenummer.toString().padStart(2, '0')}-1", DateTimeFormatter.ISO_WEEK_DATE)
     }
 
     data object IngenSyklus : Registerdata
