@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_LOVVALG_MEDLEM
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import kotlin.collections.orEmpty
@@ -31,15 +30,6 @@ class AvklarPeriodisertLovvalgMedlemskapLøsning(
 ) : PeriodisertAvklaringsbehovLøsning<PeriodisertManuellVurderingForLovvalgMedlemskapDto>{
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarPeriodisertLovvalgMedlemskapLøser(repositoryProvider).løs(kontekst, this)
-    }
-
-    override fun hentLagredeLøstePerioder(
-        behandlingId: BehandlingId,
-        repositoryProvider: RepositoryProvider,
-        gatewayProvider: GatewayProvider
-    ): Tidslinje<*> {
-        val repository = repositoryProvider.provide<LovvalgMedlemskapRepository>()
-        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger() ?: Tidslinje<Unit>()
     }
 
     override fun hentVurderinger(
