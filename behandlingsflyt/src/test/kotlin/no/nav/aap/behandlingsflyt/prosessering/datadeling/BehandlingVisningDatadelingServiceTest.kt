@@ -261,7 +261,7 @@ class BehandlingVisningDatadelingServiceTest {
     }
 
     @Test
-    fun `avsluttet ventepunkt gir ikke status`() {
+    fun `avsluttet ventepunkt gir ikke ventestatus og Nay beholder ordinær status`() {
         val behandling = nyBehandling()
         leggTilSteghistorikk(behandling, StegType.VURDER_LOVVALG to StegStatus.AVKLARINGSPUNKT)
         opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_SYKDOM)
@@ -275,11 +275,12 @@ class BehandlingVisningDatadelingServiceTest {
 
         assertThat(hendelse<BehandlingHendelse.AlderLovvalgMedlemskap>(behandling).status).isNull()
         assertThat(hendelse<BehandlingHendelse.NavKontor>(behandling).status).isNull()
-        assertThat(hendelse<BehandlingHendelse.Nay>(behandling).status).isNull()
+        assertThat(hendelse<BehandlingHendelse.Nay>(behandling).status)
+            .isEqualTo(BehandlingHendelse.Nay.Status.VENTER_PÅ_LEDIG_SAKSBEHANDLER)
     }
 
     @Test
-    fun `venteårsak uten mapping gir ikke status`() {
+    fun `venteårsak uten mapping gir ikke ventestatus og Nay beholder ordinær status`() {
         val behandling = nyBehandling()
         leggTilSteghistorikk(behandling, StegType.VURDER_LOVVALG to StegStatus.AVKLARINGSPUNKT)
         opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_SYKDOM)
@@ -292,7 +293,30 @@ class BehandlingVisningDatadelingServiceTest {
 
         assertThat(hendelse<BehandlingHendelse.AlderLovvalgMedlemskap>(behandling).status).isNull()
         assertThat(hendelse<BehandlingHendelse.NavKontor>(behandling).status).isNull()
-        assertThat(hendelse<BehandlingHendelse.Nay>(behandling).status).isNull()
+        assertThat(hendelse<BehandlingHendelse.Nay>(behandling).status)
+            .isEqualTo(BehandlingHendelse.Nay.Status.VENTER_PÅ_LEDIG_SAKSBEHANDLER)
+    }
+
+    @Test
+    fun `åpent beregningsbehov gir Nay-status venter på ledig saksbehandler uten ventepunkt`() {
+        val behandling = nyBehandling()
+        opprettAvklaringsbehov(behandling, Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
+
+        assertThat(progresjon<BehandlingHendelse.Nay>(behandling))
+            .isEqualTo(BehandlingHendelseProgresjon.AKTIV)
+        assertThat(hendelse<BehandlingHendelse.Nay>(behandling).status)
+            .isEqualTo(BehandlingHendelse.Nay.Status.VENTER_PÅ_LEDIG_SAKSBEHANDLER)
+    }
+
+    @Test
+    fun `avsluttet beregningsbehov gir Nay-status under behandling uten ventepunkt`() {
+        val behandling = nyBehandling()
+        opprettAvklaringsbehov(behandling, Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT, avsluttet = true)
+
+        assertThat(progresjon<BehandlingHendelse.Nay>(behandling))
+            .isEqualTo(BehandlingHendelseProgresjon.AKTIV)
+        assertThat(hendelse<BehandlingHendelse.Nay>(behandling).status)
+            .isEqualTo(BehandlingHendelse.Nay.Status.UNDER_BEHANDLING)
     }
 
     @Test
