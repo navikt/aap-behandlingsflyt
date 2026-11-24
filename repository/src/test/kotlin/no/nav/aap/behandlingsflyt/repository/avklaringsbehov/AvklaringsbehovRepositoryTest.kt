@@ -53,7 +53,7 @@ class AvklaringsbehovRepositoryTest {
                 bruker = SYSTEMBRUKER,
                 perioderVedtaketBehøverVurdering = null,
                 perioderSomIkkeErTilstrekkeligVurdert = null,
-                perioderKanVurderes = null,
+                perioderVilkåretErRelevant = null,
                 gradBehov = null
             )
 
@@ -77,13 +77,13 @@ class AvklaringsbehovRepositoryTest {
                 StegType.AVKLAR_SYKDOM,
                 perioderSomIkkeErTilstrekkeligVurdert = null,
                 perioderVedtaketBehøverVurdering = null,
-                perioderKanVurderes = perioderKanVurderes,
+                perioderVilkåretErRelevant = perioderKanVurderes,
                 gradBehov = null
             )
 
             val avklarSykdom = repository.hentAvklaringsbehovene(behandling.id)
                 .hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)!!
-            assertThat(avklarSykdom.perioderKanVurderes()).isEqualTo(perioderKanVurderes)
+            assertThat(avklarSykdom.perioderVilkåretErRelevant()).isEqualTo(perioderKanVurderes)
         }
     }
 
@@ -101,7 +101,7 @@ class AvklaringsbehovRepositoryTest {
                 bruker = SYSTEMBRUKER,
                 perioderVedtaketBehøverVurdering = null,
                 perioderSomIkkeErTilstrekkeligVurdert = null,
-                perioderKanVurderes = null
+                perioderVilkåretErRelevant = null
             )
 
             val avklaringsbehov = repository.hentAvklaringsbehovene(behandling.id)
@@ -137,7 +137,7 @@ class AvklaringsbehovRepositoryTest {
                 bruker = SYSTEMBRUKER,
                 perioderVedtaketBehøverVurdering = null,
                 perioderSomIkkeErTilstrekkeligVurdert = null,
-                perioderKanVurderes = null
+                perioderVilkåretErRelevant = null
             )
 
             val resultat = repository.hentAlleAvklaringsbehovForSak(listOf(behandling1.id, behandling2.id))

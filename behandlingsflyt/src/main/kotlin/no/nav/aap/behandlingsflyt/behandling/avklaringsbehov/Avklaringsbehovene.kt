@@ -53,7 +53,7 @@ class Avklaringsbehovene(
                     bruker = bruker,
                     perioderVedtaketBehøverVurdering = null,
                     perioderSomIkkeErTilstrekkeligVurdert = null,
-                    perioderKanVurderes = null,
+                    perioderVilkåretErRelevant = null,
                     gradBehov = null
                 )
             }
@@ -69,7 +69,7 @@ class Avklaringsbehovene(
                     bruker = bruker,
                     perioderVedtaketBehøverVurdering = null,
                     perioderSomIkkeErTilstrekkeligVurdert = null,
-                    perioderKanVurderes = null,
+                    perioderVilkåretErRelevant = null,
                     gradBehov = null,
                 )
             }
@@ -84,7 +84,7 @@ class Avklaringsbehovene(
         funnetISteg: StegType,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?,
-        perioderKanVurderes: Set<Periode>?,
+        perioderVilkåretErRelevant: Set<Periode>?,
         frist: LocalDate? = null,
         begrunnelse: String = "",
         grunn: ÅrsakTilSettPåVent? = null,
@@ -103,7 +103,7 @@ class Avklaringsbehovene(
             grunn = grunn,
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
-            perioderKanVurderes = perioderKanVurderes,
+            perioderVilkåretErRelevant = perioderVilkåretErRelevant,
             endretAv = bruker,
             gradBehov = gradBehov
         )
@@ -120,7 +120,7 @@ class Avklaringsbehovene(
         funnetISteg: StegType,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?,
-        perioderKanVurderes: Set<Periode>?,
+        perioderVilkåretErRelevant: Set<Periode>?,
         frist: LocalDate? = null,
         begrunnelse: String = "",
         grunn: ÅrsakTilSettPåVent? = null,
@@ -138,7 +138,7 @@ class Avklaringsbehovene(
                     bruker = bruker,
                     perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
                     perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
-                    perioderKanVurderes = perioderKanVurderes,
+                    perioderVilkåretErRelevant = perioderVilkåretErRelevant,
                     gradBehov = gradBehov
                 )
                 if (avklaringsbehov.erVentepunkt() || avklaringsbehov.erAutomatisk()) {
@@ -160,7 +160,7 @@ class Avklaringsbehovene(
                 grunn = grunn,
                 perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
                 perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
-                perioderKanVurderes = perioderKanVurderes,
+                perioderVilkåretErRelevant = perioderVilkåretErRelevant,
                 endretAv = bruker,
                 gradBehov = gradBehov
             )
@@ -294,7 +294,7 @@ class Avklaringsbehovene(
         avklaringsbehov: Avklaringsbehov,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?,
-        perioderKanVurderes: Set<Periode>? = null,
+        perioderVilkåretErRelevant: Set<Periode>? = null,
         grunn: ÅrsakTilSettPåVent? = null,
         bruker: Bruker = SYSTEMBRUKER,
         gradBehov: GradBehov?
@@ -304,7 +304,7 @@ class Avklaringsbehovene(
             bruker = bruker,
             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
-            perioderKanVurderes = perioderKanVurderes,
+            perioderVilkåretErRelevant = perioderVilkåretErRelevant,
             gradBehov = gradBehov
         )
         repository.endre(avklaringsbehov.id, avklaringsbehov.historikk.last())
@@ -314,14 +314,14 @@ class Avklaringsbehovene(
         definisjon: Definisjon,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?,
-        perioderKanVurderes: Set<Periode>?,
+        perioderVilkåretErRelevant: Set<Periode>?,
         gradBehov: GradBehov?
     ) {
         val avklaringsbehov = alle().single { it.definisjon == definisjon }
         val harEndring = avklaringsbehov.oppdater(
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
-            perioderKanVurderes = perioderKanVurderes,
+            perioderVilkåretErRelevant = perioderVilkåretErRelevant,
             gradBehov = gradBehov
         )
         if (harEndring) {

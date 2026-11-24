@@ -155,7 +155,7 @@ class AvklaringsbehoveneTest {
             avklaringsbehov.funnetISteg,
             perioderSomIkkeErTilstrekkeligVurdert = gamlePerioder,
             perioderVedtaketBehøverVurdering = gamlePerioder,
-            perioderKanVurderes = gamlePerioder
+            perioderVilkåretErRelevant = gamlePerioder
         )
 
         assertThat(avklaringsbehovene.måLøses()).hasSize(1)
@@ -163,7 +163,7 @@ class AvklaringsbehoveneTest {
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderVedtaketBehøverVurdering()
         )
             .isEqualTo(gamlePerioder)
-        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderKanVurderes())
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderVilkåretErRelevant())
             .isEqualTo(gamlePerioder)
 
         val nyePerioder = setOf(
@@ -181,7 +181,7 @@ class AvklaringsbehoveneTest {
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderSomIkkeErTilstrekkeligVurdert()
         )
             .isEqualTo(nyePerioder)
-        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderKanVurderes())
+        assertThat(avklaringsbehovene.hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)?.perioderVilkåretErRelevant())
             .isEqualTo(nyePerioder)
 
     }

@@ -62,7 +62,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
         endretAv: Bruker,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?,
-        perioderKanVurderes: Set<Periode>?,
+        perioderVilkåretErRelevant: Set<Periode>?,
         gradBehov: GradBehov?,
     ) {
         val avklaringsbehovId = finnEllerOpprettAvklaringsbehov(
@@ -81,7 +81,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 frist = frist,
                 perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
                 perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
-                perioderKanVurderes = perioderKanVurderes,
+                perioderVilkåretErRelevant = perioderVilkåretErRelevant,
                 gradBehov = gradBehov,
             )
         )
@@ -176,7 +176,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
                 setEnumName(7, endring.grunn)
                 setPeriodeArray(8, endring.perioderSomIkkeErTilstrekkeligVurdert?.toList())
                 setPeriodeArray(9, endring.perioderVedtaketBehøverVurdering?.toList())
-                setPeriodeArray(10, endring.perioderKanVurderes?.toList())
+                setPeriodeArray(10, endring.perioderVilkåretErRelevant?.toList())
                 setEnumName(11, endring.gradBehov)
             }
         }
@@ -383,7 +383,7 @@ class AvklaringsbehovRepositoryImpl(private val connection: DBConnection) : Avkl
             årsakTilRetur = relevanteÅrsaker,
             perioderSomIkkeErTilstrekkeligVurdert = endring.perioderSomIkkeErTilstrekkeligVurdert,
             perioderVedtaketBehøverVurdering = endring.perioderVedtaketBehøverVurdering,
-            perioderKanVurderes = endring.perioderKanVurderes,
+            perioderVilkåretErRelevant = endring.perioderKanVurderes,
             gradBehov = endring.gradBehov
         )
     }
