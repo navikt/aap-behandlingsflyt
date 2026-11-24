@@ -594,7 +594,7 @@ class BrevUtlederService(
         val nyesteAvklaringsbehov =
             avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
                 .alle()
-                .maxByOrNull { it.historikk.last().tidsstempel }
+                .maxByOrNull { it.id }
 
         return nyesteAvklaringsbehov?.definisjon == Definisjon.KVALITETSSIKRING
     }
