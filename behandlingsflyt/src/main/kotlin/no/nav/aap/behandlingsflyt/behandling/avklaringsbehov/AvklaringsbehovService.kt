@@ -131,6 +131,7 @@ class AvklaringsbehovService(
     private fun oppdaterAvklaringsbehov(
         definisjon: Definisjon,
 
+        behov: () -> Behov,
         /** Skal vedtaket inneholde en menneskelig vurdering av [definisjon]?
          *
          * Det er viktig å svare på det mer generelle spørsmålet *om vedtaket*
@@ -146,7 +147,6 @@ class AvklaringsbehovService(
          * @return Skal returnere `true` hvis behandlingen kommer til å inneholde
          * en menneskelig vurdering av [definisjon].
          */
-        behov: () -> Behov,
         perioderVedtaketBehøverVurdering: () -> Set<Periode>?,
 
         /** Er avklaringsbehovet [definisjon] tilstrekkelig vurdert for å fortsette behandlingen?
@@ -160,6 +160,10 @@ class AvklaringsbehovService(
         perioderSomIkkeErTilstrekkeligVurdert: () -> Set<Periode>?,
         erTilstrekkeligVurdert: () -> Boolean,
 
+        /** Perioder det er relevant å vurdere [definisjon] for, uavhengig av om de allerede er vurdert.
+         * `null` betyr ukjent.
+         */
+        perioderVilkåretErRelevant: () -> Set<Periode>? = { null },
         /** Rydd opp manuelle vurderinger introdusert i denne behandlingen på grunn av løsninger
          * av avklaringsbehovet [definisjon].
          *
@@ -195,7 +199,7 @@ class AvklaringsbehovService(
                     definisjon.løsesISteg,
                     perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
                     perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
-                    perioderKanVurderes = null, // TODO
+                    perioderVilkåretErRelevant = perioderVilkåretErRelevant(),
                     gradBehov = behov.tilGradBehov()
                 )
             } else if (harLøsning && !måLøsesPåNytt) {
@@ -211,7 +215,7 @@ class AvklaringsbehovService(
                             avklaringsbehov.definisjon,
                             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
                             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
-                            perioderKanVurderes = null, // TODO
+                            perioderVilkåretErRelevant = perioderVilkåretErRelevant(),
                             gradBehov = behov.tilGradBehov()
                         )
 
@@ -235,7 +239,7 @@ class AvklaringsbehovService(
                             avklaringsbehov.definisjon,
                             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
                             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
-                            perioderKanVurderes = null, // TODO
+                            perioderVilkåretErRelevant = perioderVilkåretErRelevant(),
                             gradBehov = behov.tilGradBehov()
                         )
 
@@ -248,6 +252,7 @@ class AvklaringsbehovService(
                         avklaringsbehov,
                         perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert(),
                         perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering(),
+                        perioderVilkåretErRelevant = perioderVilkåretErRelevant(),
                         gradBehov = behov.tilGradBehov()
                     )
                 }
@@ -391,6 +396,14 @@ class AvklaringsbehovService(
                 }
             },
             perioderVedtaketBehøverVurdering = { perioderSomBehøverManuellVurderingIDenneBehandlingen },
+            perioderVilkåretErRelevant = {
+                perioderVilkåretErRelevant
+                    .begrensetTil(kontekst.rettighetsperiode)
+                    .komprimer()
+                    .filter { it.verdi }
+                    .perioder()
+                    .toSet()
+            },
             perioderSomIkkeErTilstrekkeligVurdert =
                 {
                     val perioderSomIkkeErTilstrekkeligVurdertEvaluert = perioderSomIkkeErTilstrekkeligVurdert(kontekst)

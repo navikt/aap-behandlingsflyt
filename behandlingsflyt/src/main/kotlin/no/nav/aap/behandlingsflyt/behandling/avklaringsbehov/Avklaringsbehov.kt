@@ -115,7 +115,7 @@ class Avklaringsbehov(
         bruker: Bruker = SYSTEMBRUKER,
         perioderVedtaketBehøverVurdering: Set<Periode>? = null,
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
-        perioderKanVurderes: Set<Periode>? = null,
+        perioderVilkåretErRelevant: Set<Periode>? = null,
         gradBehov: GradBehov? = null
     ) {
         require(historikk.last().status.erAvsluttet()) { "Krever at status er avsluttet for å reåpne. Var: ${historikk.last().status}." }
@@ -131,7 +131,7 @@ class Avklaringsbehov(
             endretAv = bruker,
             perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
             perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
-            perioderKanVurderes = perioderKanVurderes,
+            perioderVilkåretErRelevant = perioderVilkåretErRelevant,
             gradBehov = gradBehov,
         )
     }
@@ -139,7 +139,7 @@ class Avklaringsbehov(
     internal fun oppdater(
         perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>?,
         perioderVedtaketBehøverVurdering: Set<Periode>?,
-        perioderKanVurderes: Set<Periode>?,
+        perioderVilkåretErRelevant: Set<Periode>?,
         gradBehov: GradBehov?,
     ): Boolean {
         val siste = historikk.last()
@@ -148,13 +148,13 @@ class Avklaringsbehov(
         }
         if (perioderSomIkkeErTilstrekkeligVurdert != siste.perioderSomIkkeErTilstrekkeligVurdert
             || perioderVedtaketBehøverVurdering != siste.perioderVedtaketBehøverVurdering
-            || perioderKanVurderes != siste.perioderKanVurderes
+            || perioderVilkåretErRelevant != siste.perioderVilkåretErRelevant
             || gradBehov != siste.gradBehov
         ) {
             historikk += siste.copy(
                 perioderSomIkkeErTilstrekkeligVurdert = perioderSomIkkeErTilstrekkeligVurdert,
                 perioderVedtaketBehøverVurdering = perioderVedtaketBehøverVurdering,
-                perioderKanVurderes = perioderKanVurderes,
+                perioderVilkåretErRelevant = perioderVilkåretErRelevant,
                 gradBehov = gradBehov,
                 tidsstempel = LocalDateTime.now()
             )
@@ -345,6 +345,10 @@ class Avklaringsbehov(
 
     fun perioderSomIkkeErTilstrekkeligVurdert(): Set<Periode>? {
         return aktivHistorikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderSomIkkeErTilstrekkeligVurdert
+    }
+
+    fun perioderVilkåretErRelevant(): Set<Periode>? {
+        return aktivHistorikk.filter { it.status.erÅpent() }.maxOfOrNull { it }?.perioderVilkåretErRelevant
     }
 
     fun løstAv(): Bruker? =

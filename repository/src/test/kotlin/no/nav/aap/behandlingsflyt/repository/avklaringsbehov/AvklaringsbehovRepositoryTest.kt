@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.within
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -51,7 +53,7 @@ class AvklaringsbehovRepositoryTest {
                 bruker = SYSTEMBRUKER,
                 perioderVedtaketBehøverVurdering = null,
                 perioderSomIkkeErTilstrekkeligVurdert = null,
-                perioderKanVurderes = null,
+                perioderVilkåretErRelevant = null,
                 gradBehov = null
             )
 
@@ -60,6 +62,28 @@ class AvklaringsbehovRepositoryTest {
             val endring = avklarSykdom.historikk[0]
             assertThat(endring.tidsstempel)
                 .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES))
+        }
+    }
+
+    @Test
+    fun `leser og skriver perioder som kan vurderes`() {
+        dataSource.transaction { connection ->
+            val sak = sak(connection)
+            val behandling = finnEllerOpprettBehandling(connection, sak)
+            val repository = AvklaringsbehovRepositoryImpl(connection)
+            val perioderKanVurderes = setOf(Periode(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31)))
+            Avklaringsbehovene(repository, behandling.id).opprett(
+                Definisjon.AVKLAR_SYKDOM,
+                StegType.AVKLAR_SYKDOM,
+                perioderSomIkkeErTilstrekkeligVurdert = null,
+                perioderVedtaketBehøverVurdering = null,
+                perioderVilkåretErRelevant = perioderKanVurderes,
+                gradBehov = null
+            )
+
+            val avklarSykdom = repository.hentAvklaringsbehovene(behandling.id)
+                .hentBehovForDefinisjon(Definisjon.AVKLAR_SYKDOM)!!
+            assertThat(avklarSykdom.perioderVilkåretErRelevant()).isEqualTo(perioderKanVurderes)
         }
     }
 
@@ -77,7 +101,7 @@ class AvklaringsbehovRepositoryTest {
                 bruker = SYSTEMBRUKER,
                 perioderVedtaketBehøverVurdering = null,
                 perioderSomIkkeErTilstrekkeligVurdert = null,
-                perioderKanVurderes = null
+                perioderVilkåretErRelevant = null
             )
 
             val avklaringsbehov = repository.hentAvklaringsbehovene(behandling.id)
@@ -113,7 +137,7 @@ class AvklaringsbehovRepositoryTest {
                 bruker = SYSTEMBRUKER,
                 perioderVedtaketBehøverVurdering = null,
                 perioderSomIkkeErTilstrekkeligVurdert = null,
-                perioderKanVurderes = null
+                perioderVilkåretErRelevant = null
             )
 
             val resultat = repository.hentAlleAvklaringsbehovForSak(listOf(behandling1.id, behandling2.id))
