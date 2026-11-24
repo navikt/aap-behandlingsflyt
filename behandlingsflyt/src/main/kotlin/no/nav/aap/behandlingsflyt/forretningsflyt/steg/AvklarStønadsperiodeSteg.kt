@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.nesteHverdag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.erSystembruker
@@ -27,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
+import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -158,17 +160,24 @@ class AvklarStønadsperiodeSteg(
         val kantIKant = vurderKantIKant(krav, kantIKantKrav, arenaMaksdatoGrunnlag)
         val arenaMaksdato = arenaMaksdatoGrunnlag?.arenaMaksdato
         if (kantIKant.erKantIKant && arenaMaksdato?.maksdato != null) {
+            val dagenEtterMaksdato = arenaMaksdato.maksdato.plusDays(1)
+            // Kant i kant skal ikke tilbakedatere kravet: krav fra mandag etter maksdato fredag starter mandag.
+            val kravKomEtterDagenEtterMaksdato = krav.muligRettFra.isAfter(dagenEtterMaksdato)
             return StønadsperiodeVurdering(
                 referanse = krav.referanse,
                 opprettet = Instant.now(),
                 vurdertIBehandling = kontekst.behandlingId,
                 vurdertAv = SYSTEMBRUKER,
-                begrunnelse = "Startdatoen er dagen etter siste dag med rett til AAP i tilstøtende " +
-                        "Arena-sak ${arenaMaksdato.arenaSaksnummer}",
+                begrunnelse = if (kravKomEtterDagenEtterMaksdato) {
+                    "Kravet kom senest første virkedag etter tilstøtende Arena-sak ${arenaMaksdato.arenaSaksnummer}"
+                } else {
+                    "Startdatoen er dagen etter siste dag med rett til AAP i tilstøtende " +
+                            "Arena-sak ${arenaMaksdato.arenaSaksnummer}"
+                },
                 harHattOrdinærSiste52Uker = true,
                 harGjenværendeKvote = false,
                 relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
-                startDato = arenaMaksdato.maksdato.plusDays(1),
+                startDato = if (kravKomEtterDagenEtterMaksdato) krav.muligRettFra else dagenEtterMaksdato,
                 erKantIKantMedArena = kantIKant.erKantIKant,
                 kantIKant = kantIKant,
             )
@@ -208,18 +217,24 @@ class AvklarStønadsperiodeSteg(
     }
 
     /**
-     * Finner kravet som er kant i kant med Arena: kravet hvis segment i kravtidslinjen inneholder
-     * dagen etter Arena-maksdato. Kravtidslinjen avgrenser hvert krav ved starten på neste krav.
-     * Returnerer null når ingen krav dekker datoen, for eksempel ved opphold etter Arena-saken.
+     * Finner kravet som er kant i kant med Arena. Overgangen fra Arena går fra dagen etter maksdato til og med
+     * første hverdag etter maksdato, slik at maksdato fredag og krav fra mandag regnes som kant i kant.
+     * Helligdager regnes som hverdager, som ellers i Kelvin.
+     *
+     * Kravtidslinjen avgrenser hvert krav ved starten på neste krav. Vi velger det tidligste segmentet som
+     * overlapper overgangen, slik at et krav fra lørdag vinner over et krav fra mandag. Returnerer null når
+     * ingen krav overlapper overgangen, for eksempel ved opphold etter Arena-saken.
      */
     private fun kravVedOvergangFraArena(
         gjeldendeRelevanteKrav: Set<RelevantKrav>,
         arenaMaksdato: ArenaMaksdato?,
     ): RelevantKrav? {
-        val dagenEtterMaksdato = arenaMaksdato?.maksdato?.plusDays(1) ?: return null
+        val maksdato = arenaMaksdato?.maksdato ?: return null
+        val overgangFraArena = Periode(maksdato.plusDays(1), maksdato.nesteHverdag())
         return gjeldendeRelevanteKrav.kravtidslinje()
             .segmenter()
-            .singleOrNull { it.periode.inneholder(dagenEtterMaksdato) }
+            .filter { it.periode.overlapper(overgangFraArena) }
+            .minByOrNull { it.periode.fom }
             ?.verdi
     }
 
@@ -235,7 +250,7 @@ class AvklarStønadsperiodeSteg(
         val harTidligereKrav = gjeldendeRelevanteKrav.any { it.muligRettFra.isBefore(kantIKantKrav.muligRettFra) }
         check(!harTidligereKrav) {
             "Støtter ikke kant i kant med Arena når saken har relevante krav før kravet " +
-                    "${kantIKantKrav.referanse.verdi}, som dekker dagen etter maksdato."
+                    "${kantIKantKrav.referanse.verdi}, som dekker overgangen fra Arena."
         }
     }
 
