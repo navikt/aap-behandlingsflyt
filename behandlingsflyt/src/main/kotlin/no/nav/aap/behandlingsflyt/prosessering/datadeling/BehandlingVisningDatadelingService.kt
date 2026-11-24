@@ -148,7 +148,7 @@ class BehandlingVisningDatadelingService(
             avklaringsbehovSomTriggerUnderBehandling.isNotEmpty() && avklaringsbehovSomTriggerUnderBehandling.all { it.status() == Status.OPPRETTET } ->
                 BehandlingHendelse.Nay.Status.VENTER_PÅ_LEDIG_SAKSBEHANDLER
 
-            avklaringsbehovSomTriggerUnderBehandling.find { it.status() == Status.AVSLUTTET } != null ->
+            avklaringsbehovSomTriggerUnderBehandling.any { it.harLøsning() } ->
                 BehandlingHendelse.Nay.Status.UNDER_BEHANDLING
 
             else -> null
