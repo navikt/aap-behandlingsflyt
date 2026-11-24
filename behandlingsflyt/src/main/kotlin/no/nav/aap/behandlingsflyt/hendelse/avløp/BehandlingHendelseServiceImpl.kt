@@ -106,8 +106,7 @@ class BehandlingHendelseServiceImpl(
             hendelsesTidspunkt = LocalDateTime.now(),
             versjon = ApplikasjonsVersjon.versjon,
             gjenståendeSykedager = hentGjenståendeSykedager(behandling, faktiskBehandlingstype),
-            navIdenterSomIkkeKanBeslutte = avklaringsbehovene.brukereSomIkkeKanBeslutte()
-                .filter { it.erNavIdent() }
+            saksbehandlereSomIkkeKanBeslutte = avklaringsbehovene.brukereSomIkkeKanBeslutte()
                 .map { it.ident }
         ).copy(behandlingType = faktiskBehandlingstype)
 

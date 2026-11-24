@@ -25,7 +25,7 @@ class BehandlingHendelseServiceImplTest {
         createGatewayProvider { register<AlleAvskruddUnleash>() })
 
     @Test
-    fun `sender unike NAV-identer fra totrinnsregelen i oppgavehendelsen`() {
+    fun `sender unike saksbehandlere fra totrinnsregelen i oppgavehendelsen`() {
         val sak = opprettInMemorySak(søknadsdato = 1 januar 2025)
         val behandling = InMemoryBehandlingService.finnEllerOpprettOrdinærBehandling(
             sak.id,
@@ -36,7 +36,6 @@ class BehandlingHendelseServiceImplTest {
             avklaringsbehovene.leggTil(Definisjon.AVKLAR_SYKDOM, StegType.AVKLAR_SYKDOM, null, null, null)
             avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "Vurdert", Bruker(ident))
         }
-        avklaringsbehovene.avslutt(Definisjon.AVKLAR_SYKDOM, "Automatisk avsluttet")
         avklaringsbehovene.leggTil(Definisjon.KVALITETSSIKRING, StegType.KVALITETSSIKRING, null, null, null)
         avklaringsbehovene.løsAvklaringsbehov(Definisjon.KVALITETSSIKRING, "Vurdert", Bruker("Z000001"))
 
@@ -45,7 +44,7 @@ class BehandlingHendelseServiceImplTest {
         val hendelse = InMemoryFlytJobbRepository.hentJobberForBehandling(behandling.id.toLong())
             .single { it.type() == VarsleOppgaveOmHendelseJobbUtFører.type }
             .payload<BehandlingFlytStoppetHendelse>()
-        assertThat(hendelse.navIdenterSomIkkeKanBeslutte).containsExactlyInAnyOrder("Z123456", "Z654321")
+        assertThat(hendelse.saksbehandlereSomIkkeKanBeslutte).containsExactlyInAnyOrder("Z123456", "Z654321")
     }
 
     @Test
