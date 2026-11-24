@@ -617,6 +617,7 @@ fun NormalOpenAPIRoute.driftApi(
                                             fristSettPåVent = endring.frist,
                                             perioderUgyldigVurdering = endring.perioderSomIkkeErTilstrekkeligVurdert,
                                             perioderKreverVurdering = endring.perioderVedtaketBehøverVurdering,
+                                            perioderVilkåretErRelevant = endring.perioderVilkåretErRelevant,
                                             tidsstempel = endring.tidsstempel,
                                             endretAv = endring.endretAv
                                         )
@@ -834,6 +835,7 @@ private data class ForenkletAvklaringsbehov(
     val gradBehov: GradBehov?,
     val perioderUgyldigVurdering: Set<Periode>?,
     val perioderKreverVurdering: Set<Periode>?,
+    val perioderVilkåretErRelevant: Set<Periode>?,
     val tidsstempel: LocalDateTime = LocalDateTime.now(),
     val endretAv: Bruker,
     val årsakTilSettPåVent: ÅrsakTilSettPåVent?,
