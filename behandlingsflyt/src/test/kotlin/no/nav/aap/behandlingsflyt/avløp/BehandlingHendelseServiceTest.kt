@@ -53,6 +53,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.random.Random
@@ -115,18 +117,26 @@ class BehandlingHendelseServiceTest {
         assertThat(hendelse.referanse.referanse).isEqualTo(behandling.referanse.referanse)
     }
 
-    @Test
-    fun `sender gjenstående sykedager til oppgave for førstegangsbehandling`() {
+    @ParameterizedTest
+    @EnumSource(
+        GjenståendeSykedagerGrunnlag::class,
+        names = ["VEDTAK_I_NY_LØSNING", "SISTE_UTBETALING_I_INFOTRYGD", "MAKSDATO_I_INFOTRYGD"]
+    )
+    fun `sender gjenstående sykedager og maksdato til oppgave for førstegangsbehandling`(
+        grunnlag: GjenståendeSykedagerGrunnlag
+    ) {
         val (behandlingHendelseService, behandling) = settOppFlyt()
         InMemoryGjenståendeSykedagerRepository.lagre(
             behandling.id,
-            GjenståendeSykedager(GjenståendeSykedagerGrunnlag.VEDTAK_I_NY_LØSNING, 42, 1 januar 2026)
+            GjenståendeSykedager(grunnlag, 42, 1 januar 2026)
         )
 
         behandlingHendelseService.stoppet(behandling, avklaringsbehoveneMedÉttÅpent())
 
         assertThat(oppgaveHendelse().gjenståendeSykedager).isEqualTo(
-            GjenståendeSykedagerDto(GjenståendeSykedagerGrunnlagDto.VEDTAK_I_NY_LØSNING, 42, 1 januar 2026, 2 mars 2026)
+            GjenståendeSykedagerDto(
+                GjenståendeSykedagerGrunnlagDto.valueOf(grunnlag.name), 42, 1 januar 2026, 2 mars 2026
+            )
         )
     }
 
