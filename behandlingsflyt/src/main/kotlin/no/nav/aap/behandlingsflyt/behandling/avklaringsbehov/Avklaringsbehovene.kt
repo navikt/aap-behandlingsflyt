@@ -374,6 +374,10 @@ class Avklaringsbehovene(
     }
 
     fun avklaringsbehovSomKreverToTrinn() =  alle().filter { it.erTotrinn() && it.aktivHistorikk.any { it.status.erAvsluttet() } }
+
+    fun brukereSomIkkeKanBeslutte(): Set<Bruker> {
+        return alle().filter { it.erTotrinn() }.flatMap { it.brukere() }.toSet()
+    }
     
     fun harAvklaringsbehovSomKreverToTrinn(): Boolean {
         return avklaringsbehovSomKreverToTrinn().isNotEmpty()
