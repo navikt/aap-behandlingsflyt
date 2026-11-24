@@ -51,6 +51,7 @@ object FakeServers : AutoCloseable {
     private val statistikk = StatistikkFake()
     private val dokumentinnhenting = DokumentinnhentingFake { fakePersoner }
     private val brev = BrevFake()
+    private val kabal = KabalFake()
 
     // Stateless fakes
     private val texas = TexasFake()
@@ -59,7 +60,6 @@ object FakeServers : AutoCloseable {
     private val gosys = GosysFake()
     private val tilgang = TilgangFake()
     private val unleash = UnleashFake()
-    private val kabal = KabalFake()
     private val aareg = AaregFake()
     private val ereg = EregFake()
     private val datadeling = DatadelingFake()
@@ -98,6 +98,8 @@ object FakeServers : AutoCloseable {
     // Forwarded state
     internal val statistikkHendelser: MutableList<StoppetBehandling> get() = statistikk.hendelser
     internal val legeerklæringStatuser: MutableList<Pair<BehandlingsflytToDokumentInnhentingBestillingDto, DialogmeldingStatusTilBehandslingsflytDto>> get() = dokumentinnhenting.statuser
+
+    fun hentOversendteKabalHjemler(kildeReferanse: String): List<String>? = kabal.oversendteHjemler[kildeReferanse]
 
     fun start(testPersonService: TestPersonService = FakePersoner) {
         if (!started.compareAndSet(false, true)) {
