@@ -24,7 +24,7 @@ data class PeriodisertLovvalgMedlemskapGrunnlagResponse(
     override val behøverVurderinger: List<Periode>,
     val overstyrt: Boolean = false,
     val delvurderinger: List<DelvurderingForKravResponse>
-): PeriodiserteVurderingerDto<PeriodisertManuellVurderingForLovvalgMedlemskapResponse>
+) : PeriodiserteVurderingerDto<PeriodisertManuellVurderingForLovvalgMedlemskapResponse>
 
 data class DelvurderingForKravResponse(
     val relevantDato: LocalDate,
@@ -53,7 +53,7 @@ data class PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
     val medlemskap: MedlemskapResponse?,
     val overstyrt: Boolean = false,
     val delvurderinger: KanBehandlesAutomatiskVurdering? = null,
-): VurderingDto
+) : VurderingDto
 
 data class LovvalgResponse(
     val begrunnelse: String,
@@ -75,7 +75,7 @@ fun ManuellVurderingForLovvalgMedlemskap.toResponse(
         fom = fom,
         tom = tom,
         vurderingerMeta = vurdertAvService.byggVurderingerMeta(
-            definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
+            definisjon = if (overstyrt) Definisjon.MANUELL_OVERSTYRING_LOVVALG else Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             behandlingId = vurdertIBehandling,
             vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, vurdertDato.toLocalDate()),
         ),
