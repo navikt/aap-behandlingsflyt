@@ -155,17 +155,24 @@ class AvklarStønadsperiodeSteg(
         kontekst: FlytKontekstMedPerioder,
     ): StønadsperiodeVurdering {
         if (arenaMaksdato?.maksdato != null && krav.referanse == kantIKantKrav?.referanse) {
+            val dagenEtterMaksdato = arenaMaksdato.maksdato.plusDays(1)
+            // Kant i kant skal ikke tilbakedatere kravet: krav fra mandag etter maksdato fredag starter mandag.
+            val kravKomEtterDagenEtterMaksdato = krav.muligRettFra.isAfter(dagenEtterMaksdato)
             return StønadsperiodeVurdering(
                 referanse = krav.referanse,
                 opprettet = Instant.now(),
                 vurdertIBehandling = kontekst.behandlingId,
                 vurdertAv = SYSTEMBRUKER,
-                begrunnelse = "Kravet er kant i kant med tilstøtende Arena-sak ${arenaMaksdato.arenaSaksnummer}",
+                begrunnelse = if (kravKomEtterDagenEtterMaksdato) {
+                    "Kravet kom senest første virkedag etter tilstøtende Arena-sak ${arenaMaksdato.arenaSaksnummer}"
+                } else {
+                    "Startdatoen er dagen etter siste dag med rett til AAP i tilstøtende " +
+                            "Arena-sak ${arenaMaksdato.arenaSaksnummer}"
+                },
                 harHattOrdinærSiste52Uker = true,
                 harGjenværendeKvote = false,
                 relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
-                // Kant i kant skal ikke tilbakedatere kravet: krav fra mandag etter maksdato fredag starter mandag.
-                startDato = maxOf(arenaMaksdato.maksdato.plusDays(1), krav.muligRettFra),
+                startDato = if (kravKomEtterDagenEtterMaksdato) krav.muligRettFra else dagenEtterMaksdato,
                 erKantIKantMedArena = true,
             )
         }

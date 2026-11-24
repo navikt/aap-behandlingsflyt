@@ -202,7 +202,7 @@ class AvklarStønadsperiodeStegTest {
         assertThat(vurdering.relevantKravType).isEqualTo(RelevantKravType.NY_STØNADSPERIODE)
         assertThat(vurdering.harGjenværendeKvote).isFalse()
         assertThat(vurdering.begrunnelse)
-            .isEqualTo("Kravet er kant i kant med tilstøtende Arena-sak 2023-5")
+            .isEqualTo("Startdatoen er dagen etter siste dag med rett til AAP i tilstøtende Arena-sak 2023-5")
     }
 
     @Test
@@ -536,7 +536,10 @@ class AvklarStønadsperiodeStegTest {
 
         utførMedKravOgMaksdato(behandling.id, setOf(krav), MAKSDATO_FREDAG)
 
-        assertKantIKant(hentVurdering(behandling.id, krav), 5 august 2024)
+        val vurdering = hentVurdering(behandling.id, krav)
+        assertKantIKant(vurdering, 5 august 2024)
+        assertThat(vurdering.begrunnelse)
+            .isEqualTo("Kravet kom senest første virkedag etter tilstøtende Arena-sak 2023-5")
     }
 
     @Test
