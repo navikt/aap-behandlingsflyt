@@ -40,7 +40,7 @@ fun ManuellVurderingForForutgåendeMedlemskap.toResponse(
         fom = fom,
         tom = tom,
         vurderingerMeta = vurdertAvService.byggVurderingerMeta(
-            definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
+            definisjoner = listOf(Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP, Definisjon.MANUELL_OVERSTYRING_MEDLEMSKAP),
             behandlingId = vurdertIBehandling,
             vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, vurdertTidspunkt.toLocalDate()),
         ),

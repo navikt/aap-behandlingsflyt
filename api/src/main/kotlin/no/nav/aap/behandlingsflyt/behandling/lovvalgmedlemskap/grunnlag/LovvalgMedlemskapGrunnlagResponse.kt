@@ -75,7 +75,7 @@ fun ManuellVurderingForLovvalgMedlemskap.toResponse(
         fom = fom,
         tom = tom,
         vurderingerMeta = vurdertAvService.byggVurderingerMeta(
-            definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
+            definisjoner = listOf(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, Definisjon.MANUELL_OVERSTYRING_LOVVALG),
             behandlingId = vurdertIBehandling,
             vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, vurdertDato.toLocalDate()),
         ),
