@@ -430,23 +430,13 @@ class KravStegTest {
         verifiserSøknadEtterMigreringBlirTilleggsopplysning(KravManuellVurderingUnleash)
     }
 
-    @Test
-    fun `søknad i revurdering etter migrering blir Tilleggsopplysning når manuell kravvurdering er av`() {
-        verifiserSøknadEtterMigreringBlirTilleggsopplysning(AlleAvskruddUnleash)
-    }
-
-    @Test
-    fun `søknad i revurdering etter migrering blir Tilleggsopplysning når manuell kravvurdering er på`() {
-        verifiserSøknadEtterMigreringBlirTilleggsopplysning(KravManuellVurderingUnleash)
-    }
-
     private fun verifiserSøknadEtterMigreringBlirTilleggsopplysning(unleash: FakeUnleashBaseWithDefaultDisabled) {
         val sak = opprettInMemorySak()
         every { sakService.hent(sak.id) } returns sak
         val migreringsbehandling = opprettFørstegangsbehandling(sak.id)
         arenaMigreringForSak = arenaMigrering(sak.id)
         stegMedAutomatiskMigrering().utfør(migreringKontekst(migreringsbehandling))
-        val migrertKrav = InMemoryKravRepository.hent(migreringsbehandling.id).vurderinger.single() as MigrertKrav
+        val migrertKrav = InMemoryKravRepository.hent(migreringsbehandling.id).vurderinger.single() as RelevantMigrertKrav
 
         val revurdering = opprettRevurdering(sak.id, migreringsbehandling.id)
         InMemoryKravRepository.kopier(migreringsbehandling.id, revurdering.id)
@@ -485,8 +475,8 @@ class KravStegTest {
 
         val gjeldende = InMemoryKravRepository.hent(revurdering.id).gjeldendeVurderinger()
         assertThat(gjeldende).containsExactlyInAnyOrderElementsOf(etterFørsteKjøring)
-        assertThat(gjeldende.filterIsInstance<RelevantKrav>()).isEmpty()
-        assertThat(gjeldende.filterIsInstance<MigrertKrav>()).containsExactly(migrertKrav)
+        assertThat(gjeldende.filterIsInstance<RelevantSøknadKrav>()).isEmpty()
+        assertThat(gjeldende.filterIsInstance<RelevantKrav>()).containsExactly(migrertKrav)
         val tilleggsopplysning = gjeldende.filterIsInstance<Tilleggsopplysning>().single()
         assertThat(tilleggsopplysning.vurdertIBehandling).isEqualTo(revurdering.id)
         assertThat(tilleggsopplysning.erAutomatiskVurdert()).isTrue()

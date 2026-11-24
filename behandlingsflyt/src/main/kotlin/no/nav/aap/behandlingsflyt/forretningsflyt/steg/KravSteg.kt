@@ -335,7 +335,7 @@ class KravSteg(
     }
 
     /**
-     * Gjelder bevisst bare automatisk migrering. Manuelt [MigrertKrav] sendes i praksis bare inn når
+     * Gjelder bevisst bare automatisk migrering. Manuelt [RelevantMigrertKrav] sendes i praksis bare inn når
      * saksbehandler revurderer et krav som allerede er migrert automatisk og kontrollert her. Endrer
      * saksbehandler migreringsdato eller kvote da, er det en aktiv avgjørelse som vi ikke skal hindre.
      */

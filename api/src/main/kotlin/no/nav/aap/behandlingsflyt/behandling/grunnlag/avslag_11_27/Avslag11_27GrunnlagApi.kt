@@ -3,11 +3,11 @@ package no.nav.aap.behandlingsflyt.behandling.grunnlag.avslag_11_27
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Grunnlag
 import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Repository
 import no.nav.aap.behandlingsflyt.behandling.avslag11_27.Avslag11_27Vurdering
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
@@ -42,7 +42,7 @@ fun NormalOpenAPIRoute.avslag11_27GrunnlagApi(
                 val behandling = behandlingRepository.hent(BehandlingReferanse(req.referanse))
                 val kravGrunnlag = kravRepository.hentHvisEksisterer(behandling.id)
 
-                val kravMedDatoListe = kravGrunnlag?.gjeldendeSøknadKrav().orEmpty().toList()
+                val kravMedDatoListe = kravGrunnlag?.let(Avslag11_27Grunnlag::kravSomSkalVurderes).orEmpty()
 
                 val kravListeDto = Avslag11_27KravDto.avslag11_27TilDto(kravMedDatoListe)
 
