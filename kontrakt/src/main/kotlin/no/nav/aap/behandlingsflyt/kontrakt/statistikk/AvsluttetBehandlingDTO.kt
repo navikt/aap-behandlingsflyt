@@ -240,8 +240,13 @@ public data class BeregningsgrunnlagDTO(
     val ytterligereNedsattArbeidsevneDato: LocalDate?,
 ) {
     init {
-        require(grunnlag11_19dto != null || grunnlagYrkesskade != null || grunnlagUføre != null)
+        require(
+            listOfNotNull(grunnlag11_19dto, grunnlagYrkesskade, grunnlagUføre).size == 1
+        ) {
+            "Nøyaktig ett beregningsgrunnlag må være satt."
+        }
     }
+
 }
 
 public data class Grunnlag11_19DTO(

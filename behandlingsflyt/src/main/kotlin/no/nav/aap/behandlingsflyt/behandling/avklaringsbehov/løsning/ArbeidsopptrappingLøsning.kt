@@ -31,7 +31,7 @@ class ArbeidsopptrappingLøsning(
         required = true,
         defaultValue = ARBEIDSOPPTRAPPING_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5057`
-) : PeriodisertAvklaringsbehovLøsning<ArbeidsopptrappingLøsningDto>, LøsningMedPeriodiserteVurderinger {
+) : PeriodisertAvklaringsbehovLøsning<ArbeidsopptrappingLøsningDto> {
     override fun løs(
         repositoryProvider: RepositoryProvider,
         kontekst: AvklaringsbehovKontekst,
@@ -44,9 +44,9 @@ class ArbeidsopptrappingLøsning(
         behandlingId: BehandlingId,
         repositoryProvider: RepositoryProvider,
         gatewayProvider: GatewayProvider
-    ): Tidslinje<*> {
+    ): Tidslinje<out PeriodisertVurdering> {
         val repository = repositoryProvider.provide<ArbeidsopptrappingRepository>()
-        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger() ?: Tidslinje<Unit>()
+        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger() ?: Tidslinje()
     }
 
     override fun hentVurderinger(
