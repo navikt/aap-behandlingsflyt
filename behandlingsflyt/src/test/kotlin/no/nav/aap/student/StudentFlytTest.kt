@@ -18,11 +18,13 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.november
 import no.nav.aap.behandlingsflyt.test.oktober
+import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
@@ -30,7 +32,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class StudentFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
-    
+
     @Test
     fun `innvilge som student`() {
         val fom = 24 november 2025
@@ -130,12 +132,30 @@ class StudentFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
             søknad = TestSøknader.SØKNAD_STUDENT
         )
 
+        val aldersvilkåretOppfyltTom = dataSource.transaction { connection ->
+            VilkårsresultatRepositoryImpl(connection).hent(behandling.id)
+                .finnVilkår(Vilkårtype.ALDERSVILKÅRET).vilkårsperioder().filter { it.erOppfylt() }
+                .maxBy { it.periode.tom }.periode.tom
+        }
+
+        val forventetRelevantPeriode = setOf(
+            Periode(fom, aldersvilkåretOppfyltTom)
+        )
+
         behandling
             .løsSykdomSomPotensieltOppfyltStudent(fom)
             .løsRefusjonskrav()
             .løsSykdomsvurderingBrev()
             .bekreftVurderinger()
             .kvalitetssikre()
+            .medKontekst {
+                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
+                    .contains(Definisjon.AVKLAR_STUDENT_V2)
+                val studentBehov = avklaringsbehovSomMåLøses.first { it.definisjon == Definisjon.AVKLAR_STUDENT_V2 }
+                assertThat(studentBehov.perioderVilkåretErRelevant()).isEqualTo(forventetRelevantPeriode)
+                assertThat(studentBehov.perioderVedtaketBehøverVurdering()).isEqualTo(forventetRelevantPeriode)
+
+            }
             .løsAvklaringsBehov(
                 AvklarStudentLøsningV2(
                     løsningerForPerioder = listOf(
@@ -160,6 +180,22 @@ class StudentFlytTest : AbstraktFlytOrkestratorTest(LokalUnleash::class) {
             .fattVedtak()
 
         sak.opprettManuellRevurdering(listOf(Vurderingsbehov.REVURDER_STUDENT))
+            .medKontekst {
+                assertThat(avklaringsbehovSomMåLøses).extracting<Definisjon> { it.definisjon }
+                    .contains(Definisjon.AVKLAR_STUDENT_V2).describedAs {
+                        "Avklaringsbehovet for student blir løftet ved revudering på student"
+                    }
+                val studentBehov = avklaringsbehovSomMåLøses.first { it.definisjon == Definisjon.AVKLAR_STUDENT_V2 }
+                assertThat(studentBehov.perioderVilkåretErRelevant()).isEqualTo(forventetRelevantPeriode)
+                    .describedAs {
+                        "Perioder vilkåret er relevant har ikke endret seg fra førstegangsbehandlingen"
+                    }
+                assertThat(studentBehov.perioderVedtaketBehøverVurdering()).isEqualTo(emptySet<Periode>())
+                    .describedAs {
+                        "Det finnes ingen påkrevde perioder for vedtaket"
+                    }
+
+            }
             .løsAvklaringsBehov(
                 AvklarStudentLøsningV2(løsningerForPerioder = emptyList())
             )
