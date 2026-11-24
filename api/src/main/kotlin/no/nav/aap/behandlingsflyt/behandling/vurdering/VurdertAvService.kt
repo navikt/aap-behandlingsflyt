@@ -61,16 +61,6 @@ class VurdertAvService(
         besluttetAv = besluttetAv(definisjon, behandlingId),
     )
 
-    fun byggVurderingerMeta(
-        definisjoner: List<Definisjon>,
-        behandlingId: BehandlingId,
-        vurdertAv: VurdertAvResponse?,
-    ) = VurderingerMetaResponse(
-        vurdertAv = vurdertAv,
-        kvalitetssikretAv = definisjoner.firstNotNullOfOrNull { kvalitetssikretAv(it, behandlingId) },
-        besluttetAv = definisjoner.firstNotNullOfOrNull { besluttetAv(it, behandlingId) },
-    )
-
     fun medNavnOgEnhet(ident: Bruker, dato: LocalDate): VurdertAvResponse {
         val ansattNavnOgEnhet = ansattInfoService.hentAnsattNavnOgEnhet(ident)
         return VurdertAvResponse(
