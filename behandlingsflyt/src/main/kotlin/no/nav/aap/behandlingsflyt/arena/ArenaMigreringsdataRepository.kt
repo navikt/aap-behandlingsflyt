@@ -2,11 +2,13 @@ package no.nav.aap.behandlingsflyt.arena
 
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.komponenter.repository.Repository
+import no.nav.aap.lookup.repository.Repository
 import java.time.Instant
 
 /**
  * Logg over data hentet fra Arena ved migrering. Inneholder helseopplysninger og skal aldri logges.
+ *
+ * Dataene er sporing for migreringsbehandlingen og kopieres ikke til nye behandlinger.
  */
 interface ArenaMigreringsdataRepository : Repository {
     /**

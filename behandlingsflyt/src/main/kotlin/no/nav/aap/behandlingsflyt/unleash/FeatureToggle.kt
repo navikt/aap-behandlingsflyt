@@ -23,8 +23,8 @@ enum class BehandlingsflytFeature(
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
     SynkroniserArenaMeldeperiodesyklus,
     HandtereMaksdatoForKantTilKant,
-    DynamiskFrivilligSykestipend,
     MaksdatoSykepenger,
+    ForvaltningsmeldingBrevbygger,
 
     // --- Krav ---
     BackfillKrav,

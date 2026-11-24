@@ -65,7 +65,7 @@ internal class GjenopptakRepositoryImplTest {
                 frist = LocalDate.now().minusDays(1),
                 perioderVedtaketBehøverVurdering = null,
                 perioderSomIkkeErTilstrekkeligVurdert = null,
-                perioderKanVurderes = null
+                perioderVilkåretErRelevant = null
             )
         }
 

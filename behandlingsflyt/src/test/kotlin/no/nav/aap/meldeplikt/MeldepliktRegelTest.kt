@@ -78,7 +78,7 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 26 mai 2025,
                 tom = 8 juni 2025,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1"), 26 mai 2025),
             ),
             Forventer(
                 fom = 9 juni 2025,
@@ -125,17 +125,17 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 20 januar 2020,
                 tom = 2 februar 2020,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1"), 20 januar 2020),
             ),
             Forventer(
                 fom = 3 februar 2020,
                 tom = 16 februar 2020,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("2")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("2"), 3 februar 2020),
             ),
             Forventer(
                 fom = 17 februar 2020,
                 tom = 1 mars 2020,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3"), 17 februar 2020),
             ),
         )
     }
@@ -177,22 +177,22 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 8 desember 2025,
                 tom = 21 desember 2025,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("2")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("2"), 8 desember 2025),
             ),
             Forventer(
                 fom = 22 desember 2025,
                 tom = 4 januar 2026,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3")), // MeldepliktVurdering.IkkeMeldtSeg //
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3"), 17 desember 2025),
             ),
             Forventer(
                 fom = 5 januar 2026,
                 tom = 18 januar 2026,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("4")), //MeldepliktVurdering.MeldtSeg(JournalpostId("4")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("4"), 5 januar 2026),
             ),
             Forventer(
                 fom = 19 januar 2026,
                 tom = 19 januar 2026,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("5")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("5"), 19 januar 2026),
             ),
         )
     }
@@ -241,22 +241,22 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 17 desember 2025,
                 tom = 21 desember 2025,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3"), 17 desember 2025),
             ),
             Forventer(
                 fom = 22 desember 2025,
                 tom = 4 januar 2026,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3"), 17 desember 2025),
             ),
             Forventer(
                 fom = 5 januar 2026,
                 tom = 18 januar 2026,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("5")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("5"), 5 januar 2026),
             ),
             Forventer(
                 fom = 19 januar 2026,
                 tom = 19 januar 2026,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("6")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("6"), 19 januar 2026),
             ),
         )
     }
@@ -299,22 +299,22 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 1 desember 2025,
                 tom = 7 desember 2025,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("2")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("2"), 1 desember 2025),
             ),
             Forventer(
                 fom = 15 desember 2025,
                 tom = 28 desember 2025,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("3"), dag desember 2025),
             ),
             Forventer(
                 fom = 29 desember 2025,
                 tom = 11 januar 2026,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("4")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("4"), 29 desember 2025),
             ),
             Forventer(
                 fom = 12 januar 2026,
                 tom = 19 januar 2026,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("5")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("5"), 12 januar 2026),
             ),
         )
     }
@@ -392,7 +392,7 @@ class MeldepliktRegelTest {
             ),
             Forventer(
                 fom = 2 februar 2020, tom = 2 februar 2020,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1"), 2 februar 2020),
             ),
             Forventer(
                 fom = 3 februar 2020, tom = 16 februar 2020,
@@ -404,7 +404,7 @@ class MeldepliktRegelTest {
             ),
             Forventer(
                 fom = 2 mars 2020, tom = 15 mars 2020,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("2")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("2"), 6 mars 2020),
             ),
             Forventer(
                 fom = 16 mars 2020, tom = 29 mars 2020,
@@ -695,7 +695,7 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = rettighetsperiode.fom.plusDays(14),
                 tom = rettighetsperiode.fom.plusDays(27),
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1"), 11 mai 2020),
             ),
             Forventer(
                 fom = rettighetsperiode.fom.plusDays(28),
@@ -739,7 +739,7 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = rettighetsperiode.fom.plusDays(14),
                 tom = rettighetsperiode.fom.plusDays(27),
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1"), 11 mai 2020),
             ),
             Forventer(
                 fom = rettighetsperiode.fom.plusDays(28),
@@ -787,7 +787,7 @@ class MeldepliktRegelTest {
             ),
             Forventer(
                 fom = 28 januar 2020, tom = 2 februar 2020,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1"), 28 januar 2020),
             ),
             Forventer(
                 fom = 3 februar 2020, tom = 16 februar 2020,
@@ -834,7 +834,7 @@ class MeldepliktRegelTest {
             ),
             Forventer(
                 fom = 30 januar 2020, tom = 2 februar 2020,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1"), 30 januar 2020),
             ),
             Forventer(
                 fom = 3 februar 2020, tom = 16 februar 2020,
@@ -900,7 +900,7 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 18 mai 2020,
                 tom = 31 mai 2020,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1"), 19 mai 2020),
             )
         )
     }
@@ -1003,7 +1003,7 @@ class MeldepliktRegelTest {
             Forventer(
                 fom = 18 mai 2020,
                 tom = 20 mai 2020,
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1"))
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1"), 22 mai 2020)
             ),
         )
     }
@@ -1328,7 +1328,7 @@ Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su      Mo Tu We Th Fr Sa Su
             Forventer(
                 fom = LocalDate.of(2026, 5, 18),
                 tom = LocalDate.of(2026, 5, 31),
-                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1")),
+                vurdering = MeldepliktVurdering.MeldtSeg(JournalpostId("1"), LocalDate.of(2026, 5, 26)),
             )
         )
     }

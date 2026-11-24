@@ -28,7 +28,7 @@ class AvklarSykdomLøsning(
         required = true,
         defaultValue = AVKLAR_SYKDOM_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5003`
-) : PeriodisertAvklaringsbehovLøsning<SykdomsvurderingLøsningDto>, LøsningMedPeriodiserteVurderinger {
+) : PeriodisertAvklaringsbehovLøsning<SykdomsvurderingLøsningDto>{
     override fun løs(
         repositoryProvider: RepositoryProvider,
         kontekst: AvklaringsbehovKontekst,

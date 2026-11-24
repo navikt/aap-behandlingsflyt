@@ -17,8 +17,11 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.meldeplikt.MeldeperiodeRepository
 import org.slf4j.LoggerFactory
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+import java.time.temporal.TemporalAdjusters
 
 /** Hent meldeperiode fra Arena for å synkronisere. Hvis brukeren går rett fra en
  * AAP-sak i Arena til en ny AAP-sak i Kelvin, ønsker vi at medlemmet fortsetter med
@@ -38,7 +41,11 @@ class ArenaMeldeperiodesyklusInformasjonskrav(
         val år: Int,
         /** Ukenummer i henhold til ISO-8601. */
         val ukenummer: Long,
-    ) : Registerdata
+    ) : Registerdata {
+        /** Mandag i startuka. */
+        val startdato: LocalDate =
+            LocalDate.parse("$år-W${ukenummer.toString().padStart(2, '0')}-1", DateTimeFormatter.ISO_WEEK_DATE)
+    }
 
     data object IngenSyklus : Registerdata
 
@@ -75,9 +82,13 @@ class ArenaMeldeperiodesyklusInformasjonskrav(
                 return Informasjonskrav.Endret.IKKE_ENDRET
             }
             is HarSyklus -> {
-                val (år, isoUke) = registerdata
-                val fastsattDag = LocalDate.parse("$år-W${isoUke.toString().padStart(2, '0')}-1", DateTimeFormatter.ISO_WEEK_DATE)
-                meldeperiodeRepository.lagreFastsattDag(kontekst.behandlingId, fastsattDag)
+                val startdato = registerdata.startdato
+                val referansedato = kontekst.rettighetsperiode.fom
+                if (!skalSynkronisere(startdato, referansedato)) {
+                    log.info("Ignorerer meldeperiodesyklus fra Arena for sak ${kontekst.sakId}: startuke $startdato er mer enn $MAKS_UKER_SIDEN_STARTUKE uker før $referansedato",)
+                    return Informasjonskrav.Endret.IKKE_ENDRET
+                }
+                meldeperiodeRepository.lagreFastsattDag(kontekst.behandlingId, startdato)
                 return Informasjonskrav.Endret.ENDRET
             }
         }
@@ -85,6 +96,16 @@ class ArenaMeldeperiodesyklusInformasjonskrav(
 
     companion object : Informasjonskravkonstruktør {
         override val navn = InformasjonskravNavn.ARENA_MELDEKORTSYKLUS
+
+        internal const val MAKS_UKER_SIDEN_STARTUKE = 6L
+
+        /** Syklusen fra Arena brukes bare hvis startuka er høyst [MAKS_UKER_SIDEN_STARTUKE] uker før uka til
+         * [referansedato]. En startuke etter referanseuka gir fortsatt riktig partall/oddetall og godtas. */
+        internal fun skalSynkronisere(startuke: LocalDate, referansedato: LocalDate): Boolean {
+            val startukeMandag = startuke.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+            val referanseMandag = referansedato.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+            return ChronoUnit.WEEKS.between(startukeMandag, referanseMandag) <= MAKS_UKER_SIDEN_STARTUKE
+        }
 
         override fun konstruer(
             repositoryProvider: RepositoryProvider,

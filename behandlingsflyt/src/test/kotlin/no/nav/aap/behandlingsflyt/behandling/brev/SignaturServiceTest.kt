@@ -544,7 +544,7 @@ class SignaturServiceTest {
             funnetISteg = definisjon.løsesISteg,
             perioderSomIkkeErTilstrekkeligVurdert = null,
             perioderVedtaketBehøverVurdering = null,
-            perioderKanVurderes = null,
+            perioderVilkåretErRelevant = null,
             begrunnelse = "...",
             bruker = bruker
         )

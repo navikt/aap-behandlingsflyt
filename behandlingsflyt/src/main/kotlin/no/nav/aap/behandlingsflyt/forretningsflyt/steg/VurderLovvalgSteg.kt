@@ -6,9 +6,10 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgRegisterGr
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.MedlemskapLovvalgFaktagrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.BeregnLovvalgDelvurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingRepository
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingerSporingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingerGrunnlag
-import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgMedlemskapVurderingService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.kanVurderesAutomatiskTidslinje
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.Medlemskapvilkåret
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
@@ -28,12 +29,14 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.etterlevelse.sporing.SporingService
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
@@ -51,6 +54,8 @@ class VurderLovvalgSteg private constructor(
     private val lovvalgDelvurderingRepository: LovvalgDelvurderingRepository,
     private val stønadsperiodeRepository: StønadsperiodeRepository,
     private val kravRepository: KravRepository,
+    private val behandlingRepository: BehandlingRepository,
+    private val sporingService: SporingService,
     private val unleashGateway: UnleashGateway
 ) : BehandlingSteg, AvklaringsbehovMetadataUtleder {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -63,6 +68,8 @@ class VurderLovvalgSteg private constructor(
         lovvalgDelvurderingRepository = repositoryProvider.provide(),
         stønadsperiodeRepository = repositoryProvider.provide(),
         kravRepository = repositoryProvider.provide(),
+        behandlingRepository = repositoryProvider.provide(),
+        sporingService = SporingService(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide()
     )
 
@@ -134,48 +141,34 @@ class VurderLovvalgSteg private constructor(
     }
 
     /**
-     * Beregner tilhørighetsvurdering for relevante datoer som mangler og for den nyeste relevante datoen.
-     * Eksisterende vurderinger for datoer som fortsatt er relevante beholdes.
+     * Utleder og lagrer delvurderinger for de relevante datoene med sporing, se [BeregnLovvalgDelvurderinger]
+     * for reglene om gjenbruk og ny beregning.
      */
     private fun oppdaterDelvurderinger(
         kontekst: FlytKontekstMedPerioder,
         registerGrunnlag: Lazy<MedlemskapLovvalgRegisterGrunnlag>
     ) {
         val relevanteDatoer = utledRelevanteDatoer(kontekst).sorted()
-        val nyesteDato = relevanteDatoer.last()
-        val forrigeBehandlingsVurderinger = kontekst.forrigeBehandlingId
-            ?.let { lovvalgDelvurderingRepository.hentAlle(it) }
-            .orEmpty()
-            .associateBy { it.relevantDato }
-        val eksisterende = lovvalgDelvurderingRepository.hentAlle(kontekst.behandlingId)
-            .associateBy { it.relevantDato }
 
-        val delvurderinger = relevanteDatoer.map { dato ->
-            val fraForrigeBehandling = forrigeBehandlingsVurderinger[dato]
-            if (fraForrigeBehandling != null && dato != nyesteDato) {
-                return@map fraForrigeBehandling
-            }
-            val eksisterendeForDato = eksisterende[dato]
+        // Sporbar kode skal ikke lese fra repositories, så alt den trenger hentes her og sendes inn som grunnlag
+        val grunnlag = LovvalgDelvurderingerSporingGrunnlag(
+            behandlingId = kontekst.behandlingId,
+            relevanteDatoer = relevanteDatoer,
+            forrigeBehandlingsVurderinger = kontekst.forrigeBehandlingId
+                ?.let { lovvalgDelvurderingRepository.hentAlle(it) }
+                .orEmpty(),
+            eksisterendeVurderinger = lovvalgDelvurderingRepository.hentAlle(kontekst.behandlingId),
+            register = registerGrunnlag.value,
+            rettighetsperiodeTom = kontekst.rettighetsperiode.tom,
+        )
 
-            val vurdering = LovvalgMedlemskapVurderingService().vurderTilhørighet(
-                registerGrunnlag.value,
-                Periode(dato, maxOf(dato, kontekst.rettighetsperiode.tom)),
-                kontekst.vurderingType
-            )
-
-            if (eksisterendeForDato?.vurdering() == vurdering) {
-                eksisterendeForDato
-            } else {
-                LovvalgDelvurderingerGrunnlag(
-                    kanBehandlesAutomatisk = vurdering.kanBehandlesAutomatisk,
-                    tilhørighetVurdering = vurdering.tilhørighetVurdering,
-                    relevantDato = dato,
-                    vurdertIBehandling = kontekst.behandlingId,
-                )
-            }
-        }
-
-        lovvalgDelvurderingRepository.lagre(kontekst.behandlingId, delvurderinger)
+        // Sporingen lagrer også resultatet via lovvalgDelvurderingRepository
+        sporingService.kjørMedSporing(
+            behandling = behandlingRepository.hent(kontekst.behandlingId),
+            sporbar = BeregnLovvalgDelvurderinger,
+            sporbartResultatRepo = lovvalgDelvurderingRepository,
+            grunnlag = grunnlag,
+        )
     }
 
     /**

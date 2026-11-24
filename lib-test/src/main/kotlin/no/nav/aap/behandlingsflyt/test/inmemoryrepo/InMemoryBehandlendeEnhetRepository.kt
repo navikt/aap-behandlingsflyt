@@ -6,15 +6,19 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.Behandlen
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 
 object InMemoryBehandlendeEnhetRepository : BehandlendeEnhetRepository {
+    private val grunnlag = mutableMapOf<BehandlingId, BehandlendeEnhetGrunnlag>()
+
     override fun hentHvisEksisterer(behandlingId: BehandlingId): BehandlendeEnhetGrunnlag? {
-        TODO("Not yet implemented")
+        return grunnlag[behandlingId]
     }
 
     override fun lagre(
         behandlingId: BehandlingId,
         behandlendeEnhetVurdering: BehandlendeEnhetVurdering
     ) {
-        TODO("Not yet implemented")
+        grunnlag[behandlingId] = BehandlendeEnhetGrunnlag(
+            vurdering = behandlendeEnhetVurdering
+        )
     }
 
     override fun kopier(

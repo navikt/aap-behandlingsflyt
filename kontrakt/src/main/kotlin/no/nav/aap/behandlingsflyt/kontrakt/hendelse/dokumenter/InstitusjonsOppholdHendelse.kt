@@ -17,7 +17,7 @@ public data class InstitusjonsOppholdHendelseKafkaMelding(
     var oppholdId: Long,
     var norskident: String,
     var type: InstitusjonsoppholdsType,
-    var kilde: InstitusjonsoppholdKilde,
+    var kilde: InstitusjonsoppholdKilde?,
     var institusjonsOpphold: Inst2KafkaDto?
 )
 {
