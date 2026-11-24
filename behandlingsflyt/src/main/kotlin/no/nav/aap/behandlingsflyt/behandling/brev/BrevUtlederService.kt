@@ -1,8 +1,12 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
+import no.nav.aap.barnetillegg.BarnRepository
+import no.nav.aap.barnetillegg.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelse
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelse.ANTALL_ÅRLIGE_ARBEIDSDAGER
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
@@ -32,24 +36,21 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagebehandlingKontorRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagebehandlingNayRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Avslått
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.DelvisOmgjøres
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.KlageresultatUtleder
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.resultat.Opprettholdes
-import no.nav.aap.barnetillegg.BarnRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
-import no.nav.aap.barnetillegg.VurderingAvForeldreAnsvar
-import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagebehandlingKontorRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagebehandlingNayRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
@@ -60,6 +61,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -93,7 +95,6 @@ import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.meldeplikt.MeldepliktGrunnlag
 import no.nav.aap.meldeplikt.MeldepliktRepository
-import no.nav.aap.student.StudentRepository
 import org.slf4j.LoggerFactory
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -125,7 +126,7 @@ class BrevUtlederService(
     private val barnepensjonRepository: BarnepensjonRepository,
     private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
     private val sykdomRepository: SykdomRepository,
-    private val studentRepository: StudentRepository,
+    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val barnRepository: BarnRepository,
     private val meldepliktRepository: MeldepliktRepository,
@@ -166,7 +167,7 @@ class BrevUtlederService(
         barnepensjonRepository = repositoryProvider.provide(),
         samordningAndreStatligeYtelserRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
-        studentRepository = repositoryProvider.provide(),
+        avklaringsbehovRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
         barnRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
@@ -556,20 +557,13 @@ class BrevUtlederService(
     }
 
     private fun brevBehovAvslag(behandling: Behandling): AvslagBrev {
-        val sykdomGrunnlag by lazy { sykdomRepository.hentHvisEksisterer(behandling.id) }
-        val studentGrunnlag by lazy { studentRepository.hentHvisEksisterer(behandling.id) }
-
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
-        val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandling.id)
         val vedtaksdato = checkNotNull(vedtakRepository.hent(behandling.id)?.vedtakstidspunkt) {
             "Mangler vedtakstidspunkt for behandling ${behandling.id}"
         }.toLocalDate()
         val alleAvslagsårsaker = hentAvslagsårsaker(behandling.id, vedtaksdato)
         val avslagsårsak = prioriterAvslagsårsakAvslagsBrevType(alleAvslagsårsaker)
-        val yrkesSkadeISøknadIkkeIRegister =
-            yrkesskader != null &&
-                    yrkesskader.oppgittYrkesskadeISøknad == true &&
-                    !yrkesskader.yrkesskader.harYrkesskade()
+
         log.info(
             "Brevvalg avslagsårsak: alleAvslagsårsaker={}, prioritertAvslagsårsak={}",
             alleAvslagsårsaker,
@@ -583,15 +577,10 @@ class BrevUtlederService(
                 Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
             )
 
-            val yrkesskadeVurdert = sykdomGrunnlag?.yrkesskadevurdering?.vurdertTidspunkt
-                ?.let { it >= behandling.opprettetTidspunkt }
-                ?: false
-            val studentVurdert = studentGrunnlag?.vurderinger?.any { it.vurdertIBehandling == behandling.id } ?: false
-
-            if (erAvslag11_5 && !yrkesskadeVurdert && !studentVurdert) {
+            if (erAvslag11_5 && sisteAvklaringsbehovErKvalitetssikring(behandling.id)) {
                 return AvslagBrev.AvslagSykdomsvilkåret(
                     sykdomsvurdering = sykdomsvurdering,
-                    yrkesSkadeISøknadIkkeIRegister = yrkesSkadeISøknadIkkeIRegister
+                    yrkesSkadeISøknadIkkeIRegister = hentYrkesskadeISøknadIkkeIRegister(behandling.id)
                 )
             }
         }
@@ -601,8 +590,22 @@ class BrevUtlederService(
         )
     }
 
-    private fun brevBehovDødsfall(behandling: Behandling): VedtakEndringDødsfall {
+    private fun sisteAvklaringsbehovErKvalitetssikring(behandlingId: BehandlingId): Boolean {
+        val nyesteAvklaringsbehov =
+            avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
+                .alle()
+                .maxByOrNull { it.historikk.last().tidsstempel }
 
+        return nyesteAvklaringsbehov?.definisjon == Definisjon.KVALITETSSIKRING
+    }
+
+    private fun hentYrkesskadeISøknadIkkeIRegister(behandlingId: BehandlingId): Boolean {
+        val yrkesskader = yrkesskadeRepository.hentHvisEksisterer(behandlingId)
+
+        return yrkesskader?.oppgittYrkesskadeISøknad == true && !yrkesskader.yrkesskader.harYrkesskade()
+    }
+
+    private fun brevBehovDødsfall(behandling: Behandling): VedtakEndringDødsfall {
         val behandling = behandlingRepository.hent(behandling.id)
         val ident = sakRepository.hent(behandling.sakId).person.aktivIdent()
 

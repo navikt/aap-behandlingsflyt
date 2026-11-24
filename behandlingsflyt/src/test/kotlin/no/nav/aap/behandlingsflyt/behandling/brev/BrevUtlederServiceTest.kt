@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.behandling.brev
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.GraderingGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.MINSTE_ÅRLIG_YTELSE_TIDSLINJE
@@ -69,6 +70,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -124,6 +126,7 @@ import org.junit.jupiter.api.util.ReadsSystemProperty
 import org.junit.jupiter.api.util.RestoreSystemProperties
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.time.Instant
@@ -1644,6 +1647,7 @@ class BrevUtlederServiceTest {
                     ),
                 ),
             )
+            løsAvklaringsbehov(revurdering, Definisjon.AVKLAR_SYKDOM, Definisjon.KVALITETSSIKRING)
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(revurdering.id)
 
@@ -1656,7 +1660,7 @@ class BrevUtlederServiceTest {
         }
 
         @Test
-        fun `skal velge generelt avslagsbrev når student er vurdert selv om sykdomsvilkåret også gir avslag`() {
+        fun `skal velge generelt avslagsbrev når student er vurdert etter kvalitetssikring`() {
             val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
             gittUnderveisgrunnlagAvslag(behandling.id)
             sykdomsvurderingForBrevRepository.lagre(behandling.id, sykdomsvurderingForBrevGrunnlag())
@@ -1686,6 +1690,13 @@ class BrevUtlederServiceTest {
                     ),
                 ),
             )
+            løsAvklaringsbehov(
+                behandling,
+                Definisjon.AVKLAR_SYKDOM,
+                Definisjon.KVALITETSSIKRING,
+                Definisjon.AVKLAR_STUDENT_V2,
+                Definisjon.FORESLÅ_VEDTAK
+            )
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
 
@@ -1697,7 +1708,7 @@ class BrevUtlederServiceTest {
         }
 
         @Test
-        fun `skal velge generelt avslagsbrev når yrkesskade er vurdert`() {
+        fun `skal velge generelt avslagsbrev når yrkesskade er vurdert etter kvalitetssikring`() {
             val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
             gittUnderveisgrunnlagAvslag(behandling.id)
             sykdomsvurderingForBrevRepository.lagre(behandling.id, sykdomsvurderingForBrevGrunnlag())
@@ -1723,6 +1734,13 @@ class BrevUtlederServiceTest {
                     ),
                 ),
             )
+            løsAvklaringsbehov(
+                behandling,
+                Definisjon.AVKLAR_SYKDOM,
+                Definisjon.KVALITETSSIKRING,
+                Definisjon.AVKLAR_YRKESSKADE,
+                Definisjon.FORESLÅ_VEDTAK
+            )
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
 
@@ -1734,7 +1752,7 @@ class BrevUtlederServiceTest {
         }
 
         @Test
-        fun `skal velge sykdomsvilkårsavslagsbrev når student eller yrkesskade ikke er vurdert`() {
+        fun `skal velge sykdomsvilkårsavslagsbrev når kvalitetssikring er siste avklaringsbehov`() {
             val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
             gittUnderveisgrunnlagAvslag(behandling.id)
             sykdomsvurderingForBrevRepository.lagre(behandling.id, sykdomsvurderingForBrevGrunnlag())
@@ -1749,12 +1767,75 @@ class BrevUtlederServiceTest {
                     ),
                 ),
             )
+            løsAvklaringsbehov(
+                behandling,
+                Definisjon.AVKLAR_SYKDOM,
+                Definisjon.SKRIV_SYKDOMSVURDERING_BREV,
+                Definisjon.KVALITETSSIKRING
+            )
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
 
             assertIs<AvslagBrev.AvslagSykdomsvilkåret>(resultat)
             assertEquals(TypeBrev.VEDTAK_AVSLAG_11_5, resultat.typeBrev)
             assertEquals("Vurdering av sykdom", resultat.sykdomsvurdering)
+        }
+
+        @ParameterizedTest
+        @EnumSource(
+            value = Definisjon::class,
+            names = ["AVKLAR_SAMORDNING_GRADERING", "AVKLAR_SAMORDNING_UFØRE", "SAMORDNING_ANDRE_STATLIGE_YTELSER"]
+        )
+        fun `skal velge generelt avslagsbrev når samordning er vurdert etter kvalitetssikring`(
+            samordningsbehov: Definisjon
+        ) {
+            val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
+            gittUnderveisgrunnlagAvslag(behandling.id)
+            sykdomsvurderingForBrevRepository.lagre(behandling.id, sykdomsvurderingForBrevGrunnlag())
+            repositoryProvider.provide<VilkårsresultatRepository>().lagre(
+                behandling.id,
+                Vilkårsresultat(
+                    vilkår = listOf(
+                        vilkårAvslag(Vilkårtype.SYKDOMSVILKÅRET, Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE),
+                        vilkårAvslag(Vilkårtype.SAMORDNING, Avslagsårsak.ANNEN_FULL_YTELSE)
+                    )
+                )
+            )
+            løsAvklaringsbehov(
+                behandling,
+                Definisjon.AVKLAR_SYKDOM,
+                Definisjon.KVALITETSSIKRING,
+                samordningsbehov,
+                Definisjon.FORESLÅ_VEDTAK
+            )
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<AvslagBrev.Avslag>(resultat)
+            assertEquals(
+                setOf(Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE, Avslagsårsak.ANNEN_FULL_YTELSE),
+                resultat.avslagsårsaker
+            )
+        }
+
+        @Test
+        fun `skal velge generelt avslagsbrev når kvalitetssikring mangler selv om sykdomsvilkåret gir avslag`() {
+            val behandling = gittBehandling(TypeBehandling.Førstegangsbehandling)
+            gittUnderveisgrunnlagAvslag(behandling.id)
+            sykdomsvurderingForBrevRepository.lagre(behandling.id, sykdomsvurderingForBrevGrunnlag())
+            repositoryProvider.provide<VilkårsresultatRepository>().lagre(
+                behandling.id,
+                Vilkårsresultat(
+                    vilkår = listOf(
+                        vilkårAvslag(Vilkårtype.SYKDOMSVILKÅRET, Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE)
+                    )
+                )
+            )
+            løsAvklaringsbehov(behandling, Definisjon.AVKLAR_SYKDOM)
+
+            val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
+
+            assertIs<AvslagBrev.Avslag>(resultat)
         }
 
         @Test
@@ -1778,6 +1859,23 @@ class BrevUtlederServiceTest {
 
             assertIs<AvslagBrev.Avslag>(resultat, "brevbehov er av type Avslag")
             assertEquals(null, resultat.sykdomsvurdering)
+        }
+
+        private fun løsAvklaringsbehov(behandling: Behandling, vararg definisjoner: Definisjon) {
+            val avklaringsbehovene = repositoryProvider.provide<AvklaringsbehovRepository>()
+                .hentAvklaringsbehovene(behandling.id)
+
+            definisjoner.forEach { definisjon ->
+                avklaringsbehovene.opprett(
+                    definisjon = definisjon,
+                    funnetISteg = definisjon.løsesISteg,
+                    perioderSomIkkeErTilstrekkeligVurdert = null,
+                    perioderVedtaketBehøverVurdering = null,
+                    perioderKanVurderes = null,
+                    gradBehov = null
+                )
+                avklaringsbehovene.løsAvklaringsbehov(definisjon, "Vurdert", Bruker("Z123456"))
+            }
         }
     }
 
