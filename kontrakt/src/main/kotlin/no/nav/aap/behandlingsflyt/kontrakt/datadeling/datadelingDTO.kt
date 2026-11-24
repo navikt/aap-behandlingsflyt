@@ -278,6 +278,8 @@ public sealed interface BehandlingHendelse {
 
         public enum class Status {
             VENTER_PÅ_INFORMASJON_FRA_UTENLANDSKE_MYNDIGHETER,
+            @Deprecated("Ikke lenger i bruk")
+            MOTTATT_INFORMASJON_FRA_UTENLANDSKE_MYNDIGHETER,
             VENTER_PÅ_LEDIG_SAKSBEHANDLER,
             UNDER_BEHANDLING,
         }
