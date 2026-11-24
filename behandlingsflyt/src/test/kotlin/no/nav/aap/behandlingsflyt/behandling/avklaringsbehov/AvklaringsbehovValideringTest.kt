@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarSykdomLøsning
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
@@ -35,8 +36,6 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
-import no.nav.aap.komponenter.tidslinje.Segment
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Tid
@@ -74,11 +73,15 @@ class AvklaringsbehovValideringTest {
         )
     }
 
-    private val idTeller = AtomicLong(90_000L)
     private val brukteBehandlingIder = mutableListOf<BehandlingId>()
 
     private fun nesteBehandlingId(): BehandlingId =
         BehandlingId(idTeller.incrementAndGet()).also { brukteBehandlingIder.add(it) }
+
+    private companion object {
+        // Delt mellom testinstanser fordi InMemory-repositoriene lever på tvers av testene
+        val idTeller = AtomicLong(90_000L)
+    }
 
     @AfterEach
     fun ryddOpp() {
@@ -90,7 +93,10 @@ class AvklaringsbehovValideringTest {
     @BeforeEach
     fun setup() {
         // TODO: Skriv om fra mocks
-        every { løsningMock.hentLagredeLøstePerioder(any(), any(), any()) } returns Tidslinje<Unit>()
+        every { løsningMock.hentVurderinger(any(), any()) } returns emptyList()
+        every { løsningMock.somVurderinger(any(), any()) } answers {
+            løsningMock.løsningerForPerioder.map { vurdering(it.fom, it.tom, vurdertIBehandling = secondArg()) }
+        }
         every { løsningMock.definisjon() } returns Definisjon.AVKLAR_SYKDOM
     }
 
@@ -280,11 +286,9 @@ class AvklaringsbehovValideringTest {
         assertThat(avklaringsbehov.erÅpent()).isTrue
 
         every { løsningMock.definisjon() } returns Definisjon.AVKLAR_OVERGANG_ARBEID
-        every { løsningMock.hentLagredeLøstePerioder(any(), any(), any()) } returns Tidslinje(
-            initSegmenter = listOf(
-                Segment(periode = Periode(1 januar 2021, 1 februar 2021), verdi = Unit),
-                Segment(periode = Periode(1 mars 2021, Tid.MAKS), verdi = Unit),
-            )
+        every { løsningMock.hentVurderinger(BehandlingId(14), any()) } returns listOf(
+            vurdering(1 januar 2021, 1 februar 2021, vurdertIBehandling = BehandlingId(14)),
+            vurdering(1 mars 2021, null, vurdertIBehandling = BehandlingId(14)),
         )
         every { løsningMock.løsningerForPerioder } returns emptyList()
 
@@ -678,6 +682,85 @@ class AvklaringsbehovValideringTest {
         )
     }
 
+    @Test
+    fun `krav må dekkes i perioder som kan vurderes selv om vedtaket ikke behøver vurdering der`() {
+        val exception = assertThrows<UgyldigForespørselException> {
+            validerKravUtenforPerioderVedtaketBehøverVurdering(
+                definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
+                perioderVilkåretErRelevant = setOf(Periode(1 januar 2027, Tid.MAKS))
+            )
+        }
+        assertThat(exception.message).contains("01.02.2027")
+    }
+
+    @Test
+    fun `krav sjekkes bare der vedtaket behøver vurdering når perioder som kan vurderes er ukjent`() {
+        assertDoesNotThrow {
+            validerKravUtenforPerioderVedtaketBehøverVurdering(
+                definisjon = Definisjon.AVKLAR_OVERGANG_ARBEID,
+                perioderVilkåretErRelevant = null
+            )
+        }
+    }
+
+    @Test
+    fun `frivillig avklaringsbehov krever ikke kravdekning`() {
+        assertDoesNotThrow {
+            validerKravUtenforPerioderVedtaketBehøverVurdering(
+                definisjon = Definisjon.ARBEIDSOPPTRAPPING,
+                perioderVilkåretErRelevant = setOf(Periode(1 januar 2027, Tid.MAKS))
+            )
+        }
+    }
+
+    /**
+     * Vedtaket behøver vurdering i januar 2027. Kravet har mulig rett fra 1. februar 2027, og løsningen starter
+     * 1. januar 2027, så den dekker ikke kravet.
+     */
+    private fun validerKravUtenforPerioderVedtaketBehøverVurdering(
+        definisjon: Definisjon,
+        perioderVilkåretErRelevant: Set<Periode>?
+    ) {
+        val behandlingId = nesteBehandlingId()
+        val kontekst = lagFlytKontekst(behandlingId = behandlingId)
+        val krav = nyttKrav(behandlingId, 1 februar 2027)
+        InMemoryKravRepository.lagre(behandlingId, setOf(krav))
+        InMemoryStønadsperiodeRepository.lagre(
+            behandlingId, setOf(
+                stønadsperiodevurering(
+                    krav,
+                    relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
+                    startDato = krav.muligRettFra
+                )
+            )
+        )
+        val avklaringsbehovene = Avklaringsbehovene(avklaringsbehovRepository, behandlingId)
+        avklaringsbehovene.opprett(
+            definisjon = definisjon,
+            funnetISteg = definisjon.løsesISteg,
+            perioderVedtaketBehøverVurdering = setOf(Periode(1 januar 2027, 31 januar 2027)),
+            perioderSomIkkeErTilstrekkeligVurdert = setOf(Periode(1 januar 2027, 31 januar 2027)),
+            perioderVilkåretErRelevant = perioderVilkåretErRelevant,
+            gradBehov = null
+        )
+        every { løsningMock.definisjon() } returns definisjon
+        every { løsningMock.løsningerForPerioder } returns listOf(
+            OvergangArbeidVurderingLøsningDto(
+                fom = 1 januar 2027,
+                tom = null,
+                begrunnelse = "begrunnelse",
+                brukerRettPåAAP = false
+            )
+        )
+
+        avklaringsbehovValidering.validerPerioder(
+            Bruker("saksbehandler"),
+            avklaringsbehovene = avklaringsbehovene,
+            kontekst = kontekst,
+            løsning = løsningMock,
+        )
+    }
+
     private fun løsning(fom: LocalDate) = AvklarSykdomLøsning(
         løsningerForPerioder = listOf(
             SykdomsvurderingLøsningDto(
@@ -696,6 +779,17 @@ class AvklaringsbehovValideringTest {
     )
 
     private fun tomLøsning() = AvklarSykdomLøsning(emptyList())
+
+    private data class TestVurdering(
+        override val fom: LocalDate,
+        override val tom: LocalDate?,
+        override val vurdertIBehandling: BehandlingId,
+        override val opprettet: Instant = Instant.now(),
+        override val vurdertAv: Bruker = Bruker("saksbehandler"),
+    ) : PeriodisertVurdering
+
+    private fun vurdering(fom: LocalDate, tom: LocalDate?, vurdertIBehandling: BehandlingId) =
+        TestVurdering(fom, tom, vurdertIBehandling)
 
     private fun nyttKrav(behandlingId: BehandlingId, muligRettFra: LocalDate) = RelevantKrav(
         referanse = Kravreferanse.ny(),

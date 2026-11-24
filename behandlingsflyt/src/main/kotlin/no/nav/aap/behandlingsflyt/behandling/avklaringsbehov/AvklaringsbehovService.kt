@@ -312,23 +312,6 @@ class AvklaringsbehovService(
         return vurderingsbehovErNyere
     }
 
-    /**
-     * Disse avklaringsbehovene er ikke rene frivillige avklaringsbehov, men er noen
-     * ganger frivillige og andre ganger påkrevd.  Kan derfor ikke bruke den nye koden
-     * for å håndtere frivillige avklaringsbehov for disse.
-     */
-    private val ikkeEkteFrivillig = listOf(
-        Definisjon.AVKLAR_VEDTAKSLENGDE,
-        Definisjon.ETABLERING_EGEN_VIRKSOMHET,
-        Definisjon.AVKLAR_SAMORDNING_GRADERING,
-        Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
-        Definisjon.AVKLAR_SAMORDNING_UFØRE,
-        Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER,
-        Definisjon.SAMORDNING_ARBEIDSGIVER,
-        Definisjon.SAMORDNING_BARNEPENSJON,
-        Definisjon.SAMORDNING_REFUSJONS_KRAV,
-    )
-
     private fun oppdaterAvklaringsbehovForPeriodisertYtelsesvilkår(
         definisjon: Definisjon,
         tvingerAvklaringsbehov: Set<Vurderingsbehov>,
@@ -371,7 +354,7 @@ class AvklaringsbehovService(
                               * rett etter at saksbehandler sendte inn løsningen sin, fordi Kelvin ikke ser noen grunn
                               * til at behovet skal være åpent.
                              */
-                            definisjon.erFrivillig() && definisjon !in ikkeEkteFrivillig -> {
+                            definisjon.erEkteFrivillig() -> {
                                 val gjeldendeVurderinger = requireNotNull(gjeldendeVurderinger()) {
                                     "For at AvklaringsbehovService skal kunne håndtere frivillig avklaringsbehov $definisjon, må gjeldendeVurderinger sendes med."
                                 }
@@ -417,7 +400,7 @@ class AvklaringsbehovService(
                             Tidslinje.map3(
                                 nårVurderingErRelevant(kontekst),
                                 nårVurderingErGyldigTidslinje,
-                                if (definisjon.erFrivillig() && definisjon !in ikkeEkteFrivillig) Tidslinje.empty() else avklaringsbehovValidering.nårKravHarLøsning(
+                                if (definisjon.erEkteFrivillig()) Tidslinje.empty() else avklaringsbehovValidering.nårKravHarLøsning(
                                     definisjon,
                                     gjeldendeVurderinger(),
                                     kontekst.tilFlytKontekst()
@@ -642,3 +625,23 @@ class AvklaringsbehovService(
             .firstOrNull()
     }
 }
+
+/**
+ * Disse avklaringsbehovene er ikke rene frivillige avklaringsbehov, men er noen
+ * ganger frivillige og andre ganger påkrevd.  Kan derfor ikke bruke den nye koden
+ * for å håndtere frivillige avklaringsbehov for disse.
+ */
+private val ikkeEkteFrivillig = listOf(
+    Definisjon.AVKLAR_VEDTAKSLENGDE,
+    Definisjon.ETABLERING_EGEN_VIRKSOMHET,
+    Definisjon.AVKLAR_SAMORDNING_GRADERING,
+    Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
+    Definisjon.AVKLAR_SAMORDNING_UFØRE,
+    Definisjon.SAMORDNING_ANDRE_STATLIGE_YTELSER,
+    Definisjon.SAMORDNING_ARBEIDSGIVER,
+    Definisjon.SAMORDNING_BARNEPENSJON,
+    Definisjon.SAMORDNING_REFUSJONS_KRAV,
+)
+
+/** Frivillig avklaringsbehov som ikke er påkrevd i noen tilfeller. Slike behov krever ikke kravdekning. */
+internal fun Definisjon.erEkteFrivillig(): Boolean = erFrivillig() && this !in ikkeEkteFrivillig
