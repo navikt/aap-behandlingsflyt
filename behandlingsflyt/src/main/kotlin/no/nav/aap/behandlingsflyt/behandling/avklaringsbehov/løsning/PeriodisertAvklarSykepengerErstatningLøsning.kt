@@ -30,7 +30,7 @@ class PeriodisertAvklarSykepengerErstatningLøsning(
         defaultValue = VURDER_SYKEPENGEERSTATNING_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5007`,
     override val løsningerForPerioder: List<PeriodisertSykepengerVurderingDto>,
-): PeriodisertAvklaringsbehovLøsning<PeriodisertSykepengerVurderingDto>, LøsningMedPeriodiserteVurderinger {
+): PeriodisertAvklaringsbehovLøsning<PeriodisertSykepengerVurderingDto>{
     override fun løs(
         repositoryProvider: RepositoryProvider,
         kontekst: AvklaringsbehovKontekst,

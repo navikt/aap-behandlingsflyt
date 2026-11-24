@@ -29,7 +29,7 @@ class AvklarBistandsbehovLøsning(
         required = true,
         defaultValue = AVKLAR_BISTANDSBEHOV_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5006`
-) : PeriodisertAvklaringsbehovLøsning<BistandLøsningDto>, LøsningMedPeriodiserteVurderinger {
+) : PeriodisertAvklaringsbehovLøsning<BistandLøsningDto>{
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarBistandLøser(repositoryProvider).løs(kontekst, this)
     }
@@ -38,9 +38,9 @@ class AvklarBistandsbehovLøsning(
         behandlingId: BehandlingId,
         repositoryProvider: RepositoryProvider,
         gatewayProvider: GatewayProvider
-    ): Tidslinje<*> {
+    ): Tidslinje<out PeriodisertVurdering> {
         val repository = repositoryProvider.provide<BistandRepository>()
-        return repository.hentHvisEksisterer(behandlingId)?.somBistandsvurderingstidslinje() ?: Tidslinje<Unit>()
+        return repository.hentHvisEksisterer(behandlingId)?.somBistandsvurderingstidslinje() ?: Tidslinje()
     }
 
     override fun hentVurderinger(

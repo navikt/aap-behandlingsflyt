@@ -33,16 +33,12 @@ sealed interface PeriodisertAvklaringsbehovLøsning<LøsningPeriode : LøsningFo
         repositoryProvider: RepositoryProvider,
         gatewayProvider: GatewayProvider
     ): Tidslinje<*>
-}
 
-// TODO: Skal bakes inn i PeriodisertAvklaringsbehovLøsning når alle har implementert dette interfacet
-interface LøsningMedPeriodiserteVurderinger {
     fun hentVurderinger(
         behandlingId: BehandlingId,
         repositoryProvider: RepositoryProvider
     ): List<PeriodisertVurdering>
-
-
+    
     fun somVurderinger(bruker: Bruker, behandlingId: BehandlingId): List<PeriodisertVurdering>
 }
 
