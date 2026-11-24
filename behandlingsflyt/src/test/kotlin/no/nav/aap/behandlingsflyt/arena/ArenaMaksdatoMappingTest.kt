@@ -1,7 +1,8 @@
 package no.nav.aap.behandlingsflyt.arena
 
-import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoMedVedtakResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoSamordningResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaVedtakStatus
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -9,24 +10,17 @@ import java.time.LocalDate
 
 class ArenaMaksdatoMappingTest {
     @Test
-    fun `bruker unntaksmaksdato foran ordinær maksdato`() {
+    fun `mapper løpende vedtak med maksdato`() {
         val response = response(
             """
                 {
-                  "sak": {
-                    "sakId": 1,
+                  "sisteAktuelleVedtak": {
+                    "vedtakId": 1,
                     "saknummer": "123-456",
-                    "sakStatus": "AKTIV",
-                    "sakRegistrert": "2024-01-01",
-                    "sisteVedtak": {
-                      "vedtakId": 1,
-                      "aktfaseKode": "AKTIV",
-                      "vedtaktypeKode": "O",
-                      "vedtakstatuskode": "IVERK",
-                      "maxdatoUnntak": "2025-06-01",
-                      "maxdatoOrdinaer": "2025-01-01",
-                      "til": "2024-12-31"
-                    }
+                    "maksdato": "2025-06-01",
+                    "status": "LØPENDE",
+                    "harForlengelseEtter11_12": false,
+                    "vedtakTil": "2024-12-31"
                   }
                 }
             """.trimIndent()
@@ -35,45 +29,63 @@ class ArenaMaksdatoMappingTest {
         assertThat(response.tilDomene()).isEqualTo(
             ArenaMaksdato(
                 arenaSaksnummer = "123-456",
-                status = "AKTIV",
+                vedtakStatus = ArenaVedtakStatus.LØPENDE,
                 maksdato = LocalDate.of(2025, 6, 1),
                 vedtakTil = LocalDate.of(2024, 12, 31),
                 vedtakId = 1,
+                harForlengelseEtter11_12 = false,
             )
         )
     }
 
     @Test
-    fun `bruker ordinær maksdato når unntaksmaksdato mangler`() {
+    fun `stanset vedtak gir ingen maksdato`() {
         val response = response(
             """
                 {
-                  "sak": {
-                    "sakId": 1,
+                  "sisteAktuelleVedtak": {
+                    "vedtakId": 1,
                     "saknummer": "123-456",
-                    "sakStatus": "AKTIV",
-                    "sakRegistrert": "2024-01-01",
-                    "sisteVedtak": {
-                      "vedtakId": 1,
-                      "aktfaseKode": "AKTIV",
-                      "vedtaktypeKode": "O",
-                      "vedtakstatuskode": "IVERK",
-                      "maxdatoUnntak": null,
-                      "maxdatoOrdinaer": "2025-01-01",
-                      "til": "2024-12-31"
-                    }
+                    "maksdato": null,
+                    "status": "STANSET",
+                    "harForlengelseEtter11_12": false
                   }
                 }
             """.trimIndent()
         )
 
-        assertThat(response.tilDomene()?.maksdato).isEqualTo(LocalDate.of(2025, 1, 1))
+        val arenaMaksdato = response.tilDomene()
+        assertThat(arenaMaksdato?.vedtakStatus).isEqualTo(ArenaVedtakStatus.STANSET)
+        assertThat(arenaMaksdato?.maksdato).isNull()
     }
 
     @Test
-    fun `mangler sak gir null`() {
-        assertThat(response("{\"sak\":null}").tilDomene()).isNull()
+    fun `mapper forlengelse etter 11-12 og manglende vedtakTil gir null`() {
+        val response = response(
+            """
+                {
+                  "sisteAktuelleVedtak": {
+                    "vedtakId": 1,
+                    "saknummer": "123-456",
+                    "maksdato": "2025-06-01",
+                    "status": "AVSLUTTET",
+                    "harForlengelseEtter11_12": true
+                  }
+                }
+            """.trimIndent()
+        )
+
+        val arenaMaksdato = response.tilDomene()
+        assertThat(arenaMaksdato?.vedtakStatus).isEqualTo(ArenaVedtakStatus.AVSLUTTET)
+        assertThat(arenaMaksdato?.harForlengelseEtter11_12).isTrue()
+        assertThat(arenaMaksdato?.vedtakTil).isNull()
     }
 
-    private fun response(json: String) = DefaultJsonMapper.fromJson<MaksdatoMedVedtakResponse>(json)
+    @Test
+    fun `mangler vedtak gir null`() {
+        assertThat(response("{\"sisteAktuelleVedtak\":null}").tilDomene()).isNull()
+        assertThat(MaksdatoSamordningResponse.INGEN.tilDomene()).isNull()
+    }
+
+    private fun response(json: String) = DefaultJsonMapper.fromJson<MaksdatoSamordningResponse>(json)
 }
