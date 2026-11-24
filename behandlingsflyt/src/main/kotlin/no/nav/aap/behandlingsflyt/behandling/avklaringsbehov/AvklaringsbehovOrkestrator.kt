@@ -92,7 +92,7 @@ class AvklaringsbehovOrkestrator(
             bruker = hendelse.bruker,
             perioderVedtaketBehøverVurdering = null,
             perioderSomIkkeErTilstrekkeligVurdert = null,
-            perioderKanVurderes = null,
+            perioderVilkåretErRelevant = null,
             gradBehov = null
         )
 

@@ -1,6 +1,5 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.LøsningMedPeriodiserteVurderinger
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.PeriodisertAvklaringsbehovLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.vilkårstyper
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.PeriodisertVurdering
@@ -57,25 +56,23 @@ class AvklaringsbehovValidering(
         kontekst: FlytKontekst,
         løsning: PeriodisertAvklaringsbehovLøsning<*>
     ) {
-        if (løsning is LøsningMedPeriodiserteVurderinger) {
-            val vedtatteVurderinger = kontekst.forrigeBehandlingId?.let {
-                løsning.hentVurderinger(
-                    kontekst.forrigeBehandlingId,
-                    repositoryProvider
-                )
-            }.orEmpty()
-            val nye = løsning.somVurderinger(bruker, kontekst.behandlingId) + vedtatteVurderinger
-            val kravMedUgyldigLøsning =
-                nårKravHarLøsning(løsning.definisjon(), nye.gjeldendeVurderinger(), kontekst)
-                    .segmenter()
-                    .filter { !it.verdi }
-            if (kravMedUgyldigLøsning.isNotEmpty()) {
-                throw UgyldigForespørselException(
-                    "Mangler vurderinger på eller etter dato ${
-                        kravMedUgyldigLøsning.joinToString(",") { it.periode.fom.tilNorskFormat() }
-                    } på grunn av krav"
-                )
-            }
+        val vedtatteVurderinger = kontekst.forrigeBehandlingId?.let {
+            løsning.hentVurderinger(
+                kontekst.forrigeBehandlingId,
+                repositoryProvider
+            )
+        }.orEmpty()
+        val nye = løsning.somVurderinger(bruker, kontekst.behandlingId) + vedtatteVurderinger
+        val kravMedUgyldigLøsning =
+            nårKravHarLøsning(løsning.definisjon(), nye.gjeldendeVurderinger(), kontekst)
+                .segmenter()
+                .filter { !it.verdi }
+        if (kravMedUgyldigLøsning.isNotEmpty()) {
+            throw UgyldigForespørselException(
+                "Mangler vurderinger på eller etter dato ${
+                    kravMedUgyldigLøsning.joinToString(",") { it.periode.fom.tilNorskFormat() }
+                } på grunn av krav"
+            )
         }
     }
 

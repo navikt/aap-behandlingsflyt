@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.støna
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaVedtakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.KantIKantMedArena
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.KantIKantUtfall
@@ -225,7 +226,7 @@ class StønadsperiodeRepositoryImplTest {
         val behandlingId = opprettBehandlingId()
         val arenaMaksdatoId = dataSource.transaction { connection ->
             ArenaMaksdatoRepositoryImpl(connection).lagre(
-                behandlingId, ArenaMaksdato("123", "AVSLU", LocalDate.of(2026, 12, 31), null, 42)
+                behandlingId, ArenaMaksdato("123", ArenaVedtakStatus.AVSLUTTET, LocalDate.of(2026, 12, 31), null, 42, false)
             )
             ArenaMaksdatoRepositoryImpl(connection).hentHvisEksisterer(behandlingId)!!.arenaMaksdatoId!!
         }

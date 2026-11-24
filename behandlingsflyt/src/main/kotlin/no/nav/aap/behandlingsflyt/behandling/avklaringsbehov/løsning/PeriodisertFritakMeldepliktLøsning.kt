@@ -29,7 +29,7 @@ class PeriodisertFritakMeldepliktLøsning(
         defaultValue = FRITAK_MELDEPLIKT_KODE
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5005`,
     override val løsningerForPerioder: List<PeriodisertFritaksvurderingDto>
-) : PeriodisertAvklaringsbehovLøsning<PeriodisertFritaksvurderingDto>, LøsningMedPeriodiserteVurderinger {
+) : PeriodisertAvklaringsbehovLøsning<PeriodisertFritaksvurderingDto>{
 
     override fun løs(
         repositoryProvider: RepositoryProvider,

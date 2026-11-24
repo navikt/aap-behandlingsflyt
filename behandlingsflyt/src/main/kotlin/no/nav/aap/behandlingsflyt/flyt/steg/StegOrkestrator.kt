@@ -213,7 +213,7 @@ class StegOrkestrator(
                     grunn = it.grunn,
                     perioderVedtaketBehøverVurdering = null,
                     perioderSomIkkeErTilstrekkeligVurdert = null,
-                    perioderKanVurderes = null,
+                    perioderVilkåretErRelevant = null,
                     gradBehov = null
                 )
             }
