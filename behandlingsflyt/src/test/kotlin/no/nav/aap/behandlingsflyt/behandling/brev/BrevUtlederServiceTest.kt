@@ -1871,7 +1871,7 @@ class BrevUtlederServiceTest {
                     funnetISteg = definisjon.løsesISteg,
                     perioderSomIkkeErTilstrekkeligVurdert = null,
                     perioderVedtaketBehøverVurdering = null,
-                    perioderKanVurderes = null,
+                    perioderVilkåretErRelevant = null,
                     gradBehov = null
                 )
                 avklaringsbehovene.løsAvklaringsbehov(definisjon, "Vurdert", Bruker("Z123456"))
