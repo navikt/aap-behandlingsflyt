@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.ARBEIDSOPPTRAPPING_KO
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
 import kotlin.collections.orEmpty
@@ -38,15 +37,6 @@ class ArbeidsopptrappingLøsning(
         gatewayProvider: GatewayProvider
     ): LøsningsResultat {
         return ArbeidsopptrappingLøser(repositoryProvider).løs(kontekst, this)
-    }
-
-    override fun hentLagredeLøstePerioder(
-        behandlingId: BehandlingId,
-        repositoryProvider: RepositoryProvider,
-        gatewayProvider: GatewayProvider
-    ): Tidslinje<out PeriodisertVurdering> {
-        val repository = repositoryProvider.provide<ArbeidsopptrappingRepository>()
-        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger() ?: Tidslinje()
     }
 
     override fun hentVurderinger(

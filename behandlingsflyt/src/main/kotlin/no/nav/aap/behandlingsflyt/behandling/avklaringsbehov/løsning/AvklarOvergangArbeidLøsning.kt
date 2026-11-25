@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AVKLAR_OVERGANG_ARBEI
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.AvklaringsbehovKode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.orEmpty
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
@@ -38,15 +37,6 @@ class AvklarOvergangArbeidLøsning(
         gatewayProvider: GatewayProvider
     ): LøsningsResultat {
         return AvklarOvergangArbeidLøser(repositoryProvider).løs(kontekst, this)
-    }
-
-    override fun hentLagredeLøstePerioder(
-        behandlingId: BehandlingId,
-        repositoryProvider: RepositoryProvider,
-        gatewayProvider: GatewayProvider
-    ): Tidslinje<*> {
-        val repository = repositoryProvider.provide<OvergangArbeidRepository>()
-        return repository.hentHvisEksisterer(behandlingId)?.gjeldendeVurderinger().orEmpty()
     }
 
     override fun hentVurderinger(
