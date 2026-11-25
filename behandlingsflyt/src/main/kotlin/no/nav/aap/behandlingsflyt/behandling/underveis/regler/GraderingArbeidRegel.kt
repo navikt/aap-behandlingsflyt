@@ -136,7 +136,8 @@ class GraderingArbeidRegel : UnderveisRegel {
             input.meldepliktGrunnlag.tilTidslinje()
         ) { meldeperiode, fritaksvurdering ->
             val harPassertMeldeperiodeITid = meldeperiode?.let { dagensDato >= meldeperiode.tom.plusDays(1) } ?: false
-            if (fritaksvurdering?.harFritak == true && harPassertMeldeperiodeITid) {
+            if (fritaksvurdering?.harFritak == true && meldeperiode != null &&
+                (harPassertMeldeperiodeITid || harHelligdagsunntakIMeldeperiode(meldeperiode))) {
                 OpplysningerOmArbeid(
                     timerArbeid = TimerArbeid(BigDecimal.ZERO),
                     opplysningerFørstMottatt = aktiveHelligdagsunntakForFritaksutbetalingDatoer[meldeperiode.tom.plusDays(3)]
@@ -147,6 +148,16 @@ class GraderingArbeidRegel : UnderveisRegel {
             }
         }
 
+    private fun harHelligdagsunntakIMeldeperiode(meldeperiode: Periode?): Boolean {
+        if (meldeperiode == null) return false
+
+        val førsteDatoEtterMeldeperiode = meldeperiode.tom.plusDays(1)
+        val utbetalingsdatoVedFritak = meldeperiode.tom.plusDays(3)
+        val unntakForUtbetalingsdatoVedFritak = aktiveHelligdagsunntakForFritaksutbetalingDatoer[utbetalingsdatoVedFritak]
+
+        if (unntakForUtbetalingsdatoVedFritak == null) return false
+        return unntakForUtbetalingsdatoVedFritak < førsteDatoEtterMeldeperiode
+    }
 
     private fun opplysningerFraMeldekort(input: UnderveisInput): Tidslinje<OpplysningerOmArbeid> {
         var tidslinje = Tidslinje<OpplysningerOmArbeid>()
