@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ut
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsvurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.help.assertTidslinje
@@ -315,7 +315,7 @@ class SamordningAnnenFullYtelseVilkårTest {
 
     private fun kravGrunnlag(periode: Periode = rettighetsperiode) = KravGrunnlag(
         vurderinger = setOf(
-            RelevantKrav(
+            RelevantSøknadKrav(
                 referanse = ref1,
                 journalpostId = JournalpostId("jp"),
                 vurdertAv = Bruker("testBruker"),

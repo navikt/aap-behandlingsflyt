@@ -6,9 +6,9 @@ import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaVedtakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.juli
 import no.nav.aap.behandlingsflyt.test.mai
+import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.test.september
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryArenaMaksdatoRepository
@@ -186,6 +187,58 @@ class AvklarStønadsperiodeStegTest {
 
         val vurderinger = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandling.id)?.vurderinger
         assertThat(vurderinger).isNullOrEmpty()
+    }
+
+    @Test
+    fun `revurdering av migrert sak uten vedtatt stønadsperiode - migrert krav får migrert stønadsperiode`() {
+        val sak = opprettInMemorySak()
+        val migreringsbehandling = opprettFørstegangsbehandling(sak.id)
+        val behandling = opprettRevurdering(sak.id, migreringsbehandling.id)
+        val migrertKrav = lagMigrertKrav(migreringsbehandling.id, 2 mars 2020)
+        InMemoryKravRepository.lagre(behandling.id, setOf(migrertKrav))
+
+        steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
+
+        val vurdering = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandling.id)!!.vurderinger.single()
+        assertThat(vurdering.referanse).isEqualTo(migrertKrav.referanse)
+        assertThat(vurdering.relevantKravType).isEqualTo(RelevantKravType.MIGRERT_STØNADSPERIODE)
+        assertThat(vurdering.startDato).isEqualTo(migrertKrav.muligRettFra)
+    }
+
+    @Test
+    fun `revurdering av migrert sak - beholder vedtatt migrert stønadsperiode`() {
+        val sak = opprettInMemorySak()
+        val migreringsbehandling = opprettFørstegangsbehandling(sak.id)
+        val migrertKrav = lagMigrertKrav(migreringsbehandling.id, 2 mars 2020)
+        InMemoryKravRepository.lagre(migreringsbehandling.id, setOf(migrertKrav))
+        steg.utfør(flytKontekstMedPerioder {
+            this.behandling = migreringsbehandling
+            this.vurderingType = VurderingType.MIGERING_FRA_ARENA
+        })
+        val vedtattVurdering =
+            InMemoryStønadsperiodeRepository.hentHvisEksisterer(migreringsbehandling.id)!!.vurderinger.single()
+
+        val revurdering = opprettRevurdering(sak.id, migreringsbehandling.id)
+        InMemoryKravRepository.lagre(revurdering.id, setOf(migrertKrav))
+        steg.utfør(flytKontekstMedPerioder { this.behandling = revurdering })
+
+        assertThat(InMemoryStønadsperiodeRepository.hentHvisEksisterer(revurdering.id)!!.vurderinger)
+            .containsExactly(vedtattVurdering)
+    }
+
+    @Test
+    fun `migrert krav som dekker dagen etter Arena-maksdato - blir ikke kant i kant`() {
+        val behandling = opprettFørstegangsbehandling(opprettInMemorySak().id)
+        val migrertKrav = lagMigrertKrav(behandling.id, 1 juni 2024)
+        InMemoryKravRepository.lagre(behandling.id, setOf(migrertKrav))
+        InMemoryArenaMaksdatoRepository.lagre(behandling.id, lagArenaMaksdato(MAKSDATO))
+
+        steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
+
+        val vurdering = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandling.id)!!.vurderinger.single()
+        assertThat(vurdering.relevantKravType).isEqualTo(RelevantKravType.MIGRERT_STØNADSPERIODE)
+        assertThat(vurdering.startDato).isEqualTo(migrertKrav.muligRettFra)
+        assertThat(vurdering.erKantIKantMedArena).isFalse()
     }
 
     // Kant i kant med Arena. Maksdato er 1. august 2024, så overgangen fra Arena er 2. august 2024.
@@ -584,13 +637,13 @@ class AvklarStønadsperiodeStegTest {
         assertThat(sakService.hent(sak.id).rettighetsperiode).isEqualTo(Periode(5 august 2024, Tid.MAKS))
     }
 
-    private fun utførMedKravOgMaksdato(behandlingId: BehandlingId, krav: Set<RelevantKrav>, maksdato: LocalDate?) {
+    private fun utførMedKravOgMaksdato(behandlingId: BehandlingId, krav: Set<RelevantSøknadKrav>, maksdato: LocalDate?) {
         InMemoryKravRepository.lagre(behandlingId, krav)
         InMemoryArenaMaksdatoRepository.lagre(behandlingId, lagArenaMaksdato(maksdato))
         steg.utfør(flytKontekstMedPerioder { this.behandling = InMemoryBehandlingRepository.hent(behandlingId) })
     }
 
-    private fun hentVurdering(behandlingId: BehandlingId, krav: RelevantKrav): StønadsperiodeVurdering =
+    private fun hentVurdering(behandlingId: BehandlingId, krav: RelevantSøknadKrav): StønadsperiodeVurdering =
         InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandlingId)!!
             .gjeldendeVurderinger()
             .single { it.referanse == krav.referanse }
@@ -607,7 +660,7 @@ class AvklarStønadsperiodeStegTest {
         assertThat(vurdering.erKantIKantMedArena).isFalse()
     }
 
-    private fun assertStopperPåTidligereKrav(behandlingId: BehandlingId, kravVedOvergang: RelevantKrav) {
+    private fun assertStopperPåTidligereKrav(behandlingId: BehandlingId, kravVedOvergang: RelevantSøknadKrav) {
         assertThatThrownBy {
             steg.utfør(flytKontekstMedPerioder { this.behandling = InMemoryBehandlingRepository.hent(behandlingId) })
         }
@@ -649,7 +702,7 @@ class AvklarStønadsperiodeStegTest {
     private fun lagRelevantKrav(
         behandlingId: BehandlingId,
         mottattDato: LocalDate,
-    ) = RelevantKrav(
+    ) = RelevantSøknadKrav(
         referanse = Kravreferanse.ny(),
         journalpostId = JournalpostId(mottattDato.toString()),
         vurdertAv = SYSTEMBRUKER,
@@ -664,7 +717,7 @@ class AvklarStønadsperiodeStegTest {
     private fun lagMigrertKrav(
         behandlingId: BehandlingId,
         muligRettFra: LocalDate,
-    ) = MigrertKrav(
+    ) = RelevantMigrertKrav(
         referanse = Kravreferanse.ny(),
         vurdertAv = SYSTEMBRUKER,
         begrunnelse = "Migrert fra Arena",

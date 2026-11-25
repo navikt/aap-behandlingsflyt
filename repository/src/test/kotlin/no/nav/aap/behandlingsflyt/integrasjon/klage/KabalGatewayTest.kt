@@ -9,8 +9,10 @@ import no.nav.aap.behandlingsflyt.help.person
 import no.nav.aap.behandlingsflyt.integrasjon.kabal.KabalGateway
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
+import no.nav.aap.behandlingsflyt.test.FakeServers
 import no.nav.aap.behandlingsflyt.test.Fakes
 import no.nav.aap.komponenter.verdityper.Bruker
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.Instant
@@ -19,6 +21,32 @@ import java.util.*
 
 @Fakes
 class KabalGatewayTest {
+
+    @Test
+    fun `oversender alle opprettholdte hjemler med riktige Kabal-koder`() {
+        val behandlingsreferanse = BehandlingReferanse(UUID.randomUUID())
+
+        KabalGateway().oversendTilAndreinstans(
+            klagenGjelder = person(),
+            behandlingsreferanse = behandlingsreferanse,
+            saksbehandlersEnhet = "0301",
+            kravDato = LocalDate.now(),
+            saksnummer = Saksnummer("1"),
+            klageresultat = Opprettholdes(
+                vilkårSomSkalOpprettholdes = listOf(
+                    Hjemmel.FOLKETRYGDLOVEN_11_5,
+                    Hjemmel.FOLKETRYGDLOVEN_22_7,
+                    Hjemmel.FOLKETRYGDLOVEN_22_8,
+                    Hjemmel.FOLKETRYGDLOVEN_22_14_FJERDE_LEDD
+                )
+            ),
+            kommentar = "Opprettholder klagen",
+            fullmektig = null
+        )
+
+        assertThat(FakeServers.hentOversendteKabalHjemler(behandlingsreferanse.referanse.toString()))
+            .containsExactly("FTRL_11_5", "FTRL_22_7", "FTRL_22_8", "FTRL_22_14")
+    }
 
     @Test
     fun kanOversendeTilKabal() {

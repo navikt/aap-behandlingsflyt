@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepositor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
@@ -109,7 +109,7 @@ class BackfillKravService(
             )
         }
 
-        val gjeldendeFørsteKrav = forrigeKrav?.gjeldendeRelevanteKrav()?.minByOrNull { it.muligRettFra }
+        val gjeldendeFørsteKrav = forrigeKrav?.gjeldendeSøknadKrav()?.minByOrNull { it.muligRettFra }
         val harForrigeRelevantKrav = gjeldendeFørsteKrav != null
 
         if (forrigeKrav?.kravtidslinje().orEmpty().segmenter().toList().size > 1) {
@@ -132,7 +132,7 @@ class BackfillKravService(
             val erFørsteOgSkalOvertaSomKrav =
                 index == 0 && (!harForrigeRelevantKrav || nyttDokumentSomSkalOvertaForEksisterendeKrav?.referanse == dokument.referanse)
             when {
-                erFørsteOgSkalOvertaSomKrav -> RelevantKrav(
+                erFørsteOgSkalOvertaSomKrav -> RelevantSøknadKrav(
                     referanse = Kravreferanse.ny(),
                     journalpostId = dokument.referanse.asJournalpostId,
                     vurdertAv = SYSTEMBRUKER,
@@ -181,7 +181,7 @@ class BackfillKravService(
     /**
      * Dersom det finnes en ny rettighetsperiodevurdering med overstyring, oppdateres relevante krav:
      * - [OverstyrMuligRettFra] settes med dato og årsak
-     * - [RelevantKrav.muligRettFra] settes til det tidligste av mottattdato og overstyrt dato
+     * - [RelevantSøknadKrav.muligRettFra] settes til det tidligste av mottattdato og overstyrt dato
      */
     private fun håndterRettighetsperiodevurdering(
         behandlingId: BehandlingId,
@@ -195,9 +195,9 @@ class BackfillKravService(
         if (forrigeVurdering?.copy(vurdertDato = vurdering.vurdertDato) == vurdering) return grunnlag
 
         val (nyeRelevanteKrav, nyeIkkeRelevanteKrav) = grunnlag.vurderinger.filter { it.vurdertIBehandling == behandlingId }
-            .partition { it is RelevantKrav }
+            .partition { it is RelevantSøknadKrav }
         val nyeRelevanteKravOppdatertMedRettighetsperiodeVurdering =
-            nyeRelevanteKrav.filterIsInstance<RelevantKrav>().map { krav: RelevantKrav ->
+            nyeRelevanteKrav.filterIsInstance<RelevantSøknadKrav>().map { krav: RelevantSøknadKrav ->
                 krav.medRettighetsperiodeOverstyring(vurdering, behandlingId)
             }.toSet()
 
@@ -205,18 +205,18 @@ class BackfillKravService(
 
         // Vi ønsker kun å overskrive vedtatte relevante krav dersom de er gjeldende
         val gjeldendeVedtatteRelevanteKravOppdatertMedRettighetsperiodeVurdering =
-            grunnlag.gjeldendeRelevanteKrav().filter { it.vurdertIBehandling != behandlingId }
-                .map { krav: RelevantKrav ->
+            grunnlag.gjeldendeSøknadKrav().filter { it.vurdertIBehandling != behandlingId }
+                .map { krav: RelevantSøknadKrav ->
                     krav.medRettighetsperiodeOverstyring(vurdering, behandlingId)
                 }.toSet()
 
         return grunnlag.copy(vurderinger = vedtatte + nyeRelevanteKravOppdatertMedRettighetsperiodeVurdering + nyeIkkeRelevanteKrav + gjeldendeVedtatteRelevanteKravOppdatertMedRettighetsperiodeVurdering)
     }
 
-    private fun RelevantKrav.medRettighetsperiodeOverstyring(
+    private fun RelevantSøknadKrav.medRettighetsperiodeOverstyring(
         vurdering: RettighetsperiodeVurdering,
         behandlingId: BehandlingId,
-    ): RelevantKrav {
+    ): RelevantSøknadKrav {
         return when {
             // "Revertere" rettighetsperiodvurderingen / "Nei"
             (!vurdering.harRettUtoverSøknadsdato.harOverstyrt() || vurdering.startDato == null) -> copy(
@@ -270,7 +270,7 @@ class BackfillKravService(
             return
         }
 
-        val gjeldendeKrav = grunnlag.gjeldendeRelevanteKrav()
+        val gjeldendeKrav = grunnlag.gjeldendeRelevanteKravInkludertMigrerteKrav()
         if (gjeldendeKrav.isEmpty()) throw IllegalStateException("Forventet ett relevant krav for nyeste behandling på sak ${sak.id}")
 
         val gjeldendeMuligRettFra: LocalDate = gjeldendeKrav.minOf { it.muligRettFra }
@@ -294,7 +294,7 @@ class BackfillKravService(
         grunnlag: KravGrunnlag,
         forrigeBehandlingId: BehandlingId?,
     ) {
-        val gjeldendeRelevanteKrav = grunnlag.gjeldendeRelevanteKrav()
+        val gjeldendeRelevanteKrav = grunnlag.gjeldendeSøknadKrav()
         if (gjeldendeRelevanteKrav.isEmpty()) return
 
         val referanser = gjeldendeRelevanteKrav.map { it.referanse }

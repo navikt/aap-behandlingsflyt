@@ -8,7 +8,7 @@ import no.nav.aap.etterlevelse.sporing.Sporing
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
@@ -267,7 +267,7 @@ class VurderLovvalgStegDelvurderingerTest {
     private fun stønadsperioder(behandling: Behandling, vararg perioder: Pair<LocalDate, RelevantKravType>) {
         val kravOgStønadsperioder = perioder.map { (startDato, type) ->
             val referanse = Kravreferanse.ny()
-            val krav = RelevantKrav(
+            val krav = RelevantSøknadKrav(
                 referanse = referanse,
                 journalpostId = JournalpostId(startDato.toString()),
                 vurdertAv = SYSTEMBRUKER,

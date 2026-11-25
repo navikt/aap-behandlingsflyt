@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.Periodiser
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
@@ -347,7 +347,7 @@ class AvklaringsbehovValideringTest {
     }
 
     private fun stønadsperiodevurering(
-        nyttKrav: RelevantKrav,
+        nyttKrav: RelevantSøknadKrav,
         vurdertIBehandling: BehandlingId? = null,
         relevantKravType: RelevantKravType,
         startDato: LocalDate = nyttKrav.muligRettFra,
@@ -697,7 +697,7 @@ class AvklaringsbehovValideringTest {
 
     private fun tomLøsning() = AvklarSykdomLøsning(emptyList())
 
-    private fun nyttKrav(behandlingId: BehandlingId, muligRettFra: LocalDate) = RelevantKrav(
+    private fun nyttKrav(behandlingId: BehandlingId, muligRettFra: LocalDate) = RelevantSøknadKrav(
         referanse = Kravreferanse.ny(),
         journalpostId = JournalpostId("JP-001"),
         vurdertAv = Bruker("Z123456"),

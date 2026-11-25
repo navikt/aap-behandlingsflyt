@@ -242,8 +242,8 @@ class ArenaMaksdatoRepositoryImplTest {
         dataSource.transaction { connection ->
             val arenaMaksdatoId = connection.executeReturnKey(
                 """
-                    INSERT INTO arena_maksdato (arena_saksnummer, status, maksdato, vedtak_til, vedtak_id)
-                    VALUES ('123', 'AKTIV', '2026-12-31', '2026-06-30', 42)
+                    INSERT INTO arena_maksdato (arena_saksnummer, maksdato, vedtak_til, vedtak_id)
+                    VALUES ('123', '2026-12-31', '2026-06-30', 42)
                 """.trimIndent()
             )
             connection.execute(

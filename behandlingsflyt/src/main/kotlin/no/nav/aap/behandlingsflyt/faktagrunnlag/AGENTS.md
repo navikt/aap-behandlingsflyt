@@ -16,5 +16,10 @@ Gjelder: `behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/faktagrunnl
 - Dokumentkrav må markere dokumenter som behandlet (`markerSomBehandlet`); ellers inntas de på nytt hver kjøring.
 - Grunnlagsmodeller: `data class`, proveniens-felt (`vurdertIBehandling`, `opprettet`, `Bruker`). Repository-grensesnitt
   (`XxxRepository : Repository` fra `no.nav.aap.lookup.repository`) ligger her; implementasjonen i `repository/`.
+- `RelevantKrav` er et sealed interface med `RelevantSøknadKrav` og `RelevantMigrertKrav`. Bruk
+  `gjeldendeRelevanteKravInkludertMigrerteKrav()`/`kravtidslinje()` (begge typene) som standard. Bruk `gjeldendeSøknadKrav()` eller
+  `gjeldendeMigrertKrav()` bare når du trenger felt som finnes på én type, og bruk `when` over subtypene, ikke `is`
+  med stille `else`. En behandling har aldri både migrert krav og søknadskrav samtidig (valideres i `VurderKravLøser`).
+  På sikt skal vi støtte flere krav, og man må da passe på at man kan få et krav som skal ta over for det migrerte kravet.
 - Test: `XxxInformasjonskravTest` med par `IKKE_ENDRET` på identiske data / `ENDRET` på ett endret felt, og
   `erRelevant` per VurderingType. Mal: `YrkesskadeInformasjonskravTest`.

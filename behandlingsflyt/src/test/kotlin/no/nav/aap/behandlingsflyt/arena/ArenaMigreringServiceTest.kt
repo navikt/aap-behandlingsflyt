@@ -4,7 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -102,7 +102,7 @@ class ArenaMigreringServiceTest {
         InMemoryKravRepository.lagre(
             behandlingId,
             setOf(
-                MigrertKrav(
+                RelevantMigrertKrav(
                     referanse = Kravreferanse.ny(),
                     vurdertAv = ARENA_MIGRERING_BRUKER,
                     begrunnelse = "Migrert fra Arena",
