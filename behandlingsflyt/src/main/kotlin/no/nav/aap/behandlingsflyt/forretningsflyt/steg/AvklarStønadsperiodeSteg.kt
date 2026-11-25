@@ -178,7 +178,6 @@ class AvklarStønadsperiodeSteg(
                 harGjenværendeKvote = false,
                 relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
                 startDato = if (kravKomEtterDagenEtterMaksdato) krav.muligRettFra else dagenEtterMaksdato,
-                erKantIKantMedArena = kantIKant.erKantIKant,
                 kantIKant = kantIKant,
             )
         }
@@ -194,7 +193,6 @@ class AvklarStønadsperiodeSteg(
             harGjenværendeKvote = false,
             relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
             startDato = krav.muligRettFra, // Dum heuristikk på at stønadsperiode start = kravdato start
-            erKantIKantMedArena = kantIKant.erKantIKant,
             kantIKant = kantIKant,
         )
     }

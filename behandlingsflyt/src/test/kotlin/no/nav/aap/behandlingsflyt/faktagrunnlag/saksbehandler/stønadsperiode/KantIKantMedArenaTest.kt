@@ -3,8 +3,10 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import java.time.Instant
@@ -33,27 +35,27 @@ class KantIKantMedArenaTest {
 
     @ParameterizedTest
     @EnumSource(KantIKantUtfall::class)
-    fun `erKantIKantMedArena må stemme med utfallet`(utfall: KantIKantUtfall) {
+    fun `erKantIKantMedArena følger utfallet`(utfall: KantIKantUtfall) {
         val kantIKant = KantIKantMedArena(utfall, arenaMaksdatoId = if (utfall.harArenaSak) 1 else null)
-        val erKantIKant = utfall == KantIKantUtfall.KANT_I_KANT
 
-        assertThatCode { vurdering(erKantIKantMedArena = erKantIKant, kantIKant = kantIKant) }
-            .doesNotThrowAnyException()
-        assertThatThrownBy { vurdering(erKantIKantMedArena = !erKantIKant, kantIKant = kantIKant) }
-            .isInstanceOf(IllegalArgumentException::class.java)
+        assertThat(vurdering(kantIKant).erKantIKantMedArena).isEqualTo(utfall == KantIKantUtfall.KANT_I_KANT)
     }
 
-    private fun vurdering(erKantIKantMedArena: Boolean, kantIKant: KantIKantMedArena) = StønadsperiodeVurdering(
+    @Test
+    fun `vurdering uten utfall er ikke kant i kant med Arena`() {
+        assertThat(vurdering(kantIKant = null).erKantIKantMedArena).isFalse()
+    }
+
+    private fun vurdering(kantIKant: KantIKantMedArena?) = StønadsperiodeVurdering(
         referanse = Kravreferanse.ny(),
         opprettet = Instant.now(),
         vurdertIBehandling = BehandlingId(1),
         vurdertAv = SYSTEMBRUKER,
         begrunnelse = "Test",
-        harHattOrdinærSiste52Uker = erKantIKantMedArena,
+        harHattOrdinærSiste52Uker = false,
         harGjenværendeKvote = false,
         relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
         startDato = LocalDate.of(2024, 8, 2),
-        erKantIKantMedArena = erKantIKantMedArena,
         kantIKant = kantIKant,
     )
 }
