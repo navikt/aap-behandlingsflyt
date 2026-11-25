@@ -8,7 +8,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
@@ -225,7 +224,7 @@ class Avslag11_27FlytTest : AbstraktFlytOrkestratorTest(Avslag11_27FlytTestUnlea
                     postgresRepositoryRegistry.provider(connection)
                         .provide<KravRepository>()
                         .hentHvisEksisterer(behandling.id)
-                        ?.gjeldendeRelevanteKrav()
+                        ?.gjeldendeRelevanteKravInkludertMigrerteKrav()
                         .orEmpty()
                 }
                 assertThat(kravreferanser)

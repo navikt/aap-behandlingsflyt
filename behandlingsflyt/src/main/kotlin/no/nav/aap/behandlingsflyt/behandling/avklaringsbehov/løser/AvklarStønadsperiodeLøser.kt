@@ -33,7 +33,7 @@ class AvklarStønadsperiodeLøser(
         val alleVurderinger = nyeVurderinger + iverksatteVurderinger
 
         val relevanteKrav =
-            kravRepository.hentHvisEksisterer(kontekst.behandlingId())?.gjeldendeRelevanteKrav().orEmpty()
+            kravRepository.hentHvisEksisterer(kontekst.behandlingId())?.gjeldendeRelevanteKravInkludertMigrerteKrav().orEmpty()
 
         StønadsperiodeValidering.evaluerTilstrekkeligVurdert(relevanteKrav, alleVurderinger).let {
             if (it is IkkeTilstrekkeligVurdert) {

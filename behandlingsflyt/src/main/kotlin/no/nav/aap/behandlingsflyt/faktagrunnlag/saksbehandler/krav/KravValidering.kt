@@ -15,7 +15,7 @@ object KravValidering {
     }
 
     fun validerRelevantKrav(
-        vurdering: RelevantKrav,
+        vurdering: RelevantSøknadKrav,
         søknadForVurdering: MottattDokument?
     ) {
         if (søknadForVurdering != null) {
@@ -29,7 +29,7 @@ object KravValidering {
         }
     }
 
-    fun validerMigrertKrav(vurdering: MigrertKrav) {
+    fun validerMigrertKrav(vurdering: RelevantMigrertKrav) {
         if (vurdering.muligRettFra.isAfter(LocalDate.now())) {
             throw UgyldigForespørselException("migreringstidspunkt kan ikke være satt frem i tid.")
         }
@@ -50,6 +50,25 @@ object KravValidering {
         // TODO: Midlertidig fordi vi kun støtter å migrere 1 type kvote enn så lenge
         if(vurdering.rettighetstype != MigrertRettighetstype.ORDINÆR) {
             throw UgyldigForespørselException("Kelvin støtter kun å migrere rettighetstype ORDINÆR.")
+        }
+    }
+
+    /**
+     * Vi kan ikke ha både et søknadskrav og et migrert krav som er gjeldende samtidig. Her må det nok gjøres noen
+     * endringer på sikt når vi skal støtte flere krav, men noe validering gir nok fortsatt mening å ha. Fordi
+     * normal-situasjonen vil da være at et krav overtar/erstatter det migrerte kravet. Eksempelvis fordi man har
+     * gått 3 år på AAP og har søkt på nytt. Basert på 11-12 vurderingen kan man da ende med et nytt krav.
+     *
+     * Det er derfor viktig at vi passer på å oppdatere valideringen her for å støtte disse overgangene.
+     */
+    fun validerIkkeBådeMigrertKravOgSøknadKrav(gjeldendeRelevanteKrav: Collection<RelevantKrav>) {
+        val harMigrertKrav = gjeldendeRelevanteKrav.any { it is RelevantMigrertKrav }
+        val harSøknadKrav = gjeldendeRelevanteKrav.any { it is RelevantSøknadKrav }
+        if (harMigrertKrav && harSøknadKrav) {
+            throw UgyldigForespørselException(
+                "En behandling kan ikke ha både migrert krav og relevant krav fra søknad. " +
+                        "Søknader i en migrert sak skal vurderes som tilleggsopplysning."
+            )
         }
     }
 }

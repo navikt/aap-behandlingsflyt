@@ -726,7 +726,7 @@ open class AbstraktFlytOrkestratorTest(
             postgresRepositoryRegistry.provider(connection)
                 .provide<KravRepository>()
                 .hentHvisEksisterer(this.id)
-                ?.gjeldendeRelevanteKrav()
+                ?.gjeldendeRelevanteKravInkludertMigrerteKrav()
                 .orEmpty()
                 .map { it.referanse }
         }

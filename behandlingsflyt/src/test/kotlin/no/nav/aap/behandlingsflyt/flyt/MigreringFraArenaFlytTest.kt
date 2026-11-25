@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Forutgående
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKravLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.test.FakeArenaOppslagGateway
@@ -334,7 +334,7 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
                 assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).doesNotContain(Definisjon.VURDER_KRAV)
 
                 val kravRepository: KravRepository = repositoryProvider.provide()
-                val krav = kravRepository.hentHvisEksisterer(behandling.id)!!.vurderinger.single() as MigrertKrav
+                val krav = kravRepository.hentHvisEksisterer(behandling.id)!!.vurderinger.single() as RelevantMigrertKrav
                 assertThat(krav.muligRettFra).isEqualTo(fraArena.migreringsdato)
                 assertThat(krav.virkningstidspunktArena).isEqualTo(fraArena.soknadsdato)
                 assertThat(krav.arenaSaksnummer).isEqualTo("${fraArena.aar}-${fraArena.lopenr}")
