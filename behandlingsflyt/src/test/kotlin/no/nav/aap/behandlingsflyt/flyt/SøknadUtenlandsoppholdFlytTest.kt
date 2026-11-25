@@ -12,7 +12,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepositor
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
+import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -60,6 +62,19 @@ class SøknadUtenlandsoppholdFlytTest : AbstraktFlytOrkestratorSnapshotTest(Alle
 
         assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Utenlandsopphold)
         assertThat(behandling.aktivtSteg()).isEqualTo(StegType.VURDER_SØKNAD_UTENLANDSOPPHOLD)
+    }
+
+    @Test
+    fun `manuell opprettelse avvises mens en behandling er åpen`() {
+        val åpen = sak.sendInnSøknadUtenlandsopphold()
+
+        assertThatThrownBy {
+            sak.sendInnSøknadUtenlandsopphold(
+                referanse = InnsendingReferanse(InnsendingReferanse.Type.MANUELL_OPPRETTELSE, UUID.randomUUID().toString())
+            )
+        }.isInstanceOf(UgyldigForespørselException::class.java)
+
+        assertThat(hentUtenlandsoppholdbehandlinger().map { it.id }).containsExactly(åpen.id)
     }
 
     @Test
