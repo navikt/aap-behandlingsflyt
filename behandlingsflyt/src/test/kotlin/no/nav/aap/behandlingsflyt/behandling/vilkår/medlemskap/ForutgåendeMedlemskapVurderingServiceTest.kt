@@ -11,6 +11,7 @@ import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipsregister
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Skipstype
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.Yrke
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsOppholdData
+import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsopphold.UtenlandsPeriode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Unntak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.FolkeregisterStatus
@@ -33,14 +34,14 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     @Test
     fun `automatisk om inntekt er oppfylt`() {
         val grunnlag = lagGrunnlag(false, true, false)
-        val resultat = ForutgåendeMedlemskapVurderingService.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val resultat = vurderOgSammenlign(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         assertThat(resultat.kanBehandlesAutomatisk).isTrue
     }
 
     @Test
     fun `stopp om inntekt har hull siste 5 år`() {
         val grunnlag = lagGrunnlag(false, false, true)
-        val resultat = ForutgåendeMedlemskapVurderingService.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val resultat = vurderOgSammenlign(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         assertThat(resultat.kanBehandlesAutomatisk).isFalse
     }
 
@@ -50,7 +51,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
         val rettighetsperiode = Periode(rettighetsFom, rettighetsFom.plusYears(1))
         val grunnlag = lagGrunnlagMedAkkumulerteEnMånedsgap(rettighetsFom, antallGapMåneder = 11)
 
-        val resultat = ForutgåendeMedlemskapVurderingService.vurderTilhørighet(grunnlag, rettighetsperiode)
+        val resultat = vurderOgSammenlign(grunnlag, rettighetsperiode)
 
         assertThat(resultat.kanBehandlesAutomatisk).isFalse
     }
@@ -58,14 +59,14 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     @Test
     fun `automatisk om medl er oppfylt`() {
         val grunnlag = lagGrunnlag(true, false, true)
-        val resultat = ForutgåendeMedlemskapVurderingService.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val resultat = vurderOgSammenlign(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         assertThat(resultat.kanBehandlesAutomatisk).isTrue
     }
 
     @Test
     fun `Bruker har statsborgerskap utenfor EØS og norsk statsborgerskap`() {
         val grunnlag = lagGrunnlagSomFerskUtenforEØSStatsborger(true, true, true)
-        val resultat = ForutgåendeMedlemskapVurderingService.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val resultat = vurderOgSammenlign(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         val vurdering = resultat.tilhørighetVurdering
             .single { it.opplysning == "Har statsborgerskap utenfor EØS i perioden" }
         assertThat(vurdering.resultat).isFalse
@@ -79,7 +80,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
             inntektHarHull = true,
             harNorskStatsborgerskap = false
         )
-        val resultat = ForutgåendeMedlemskapVurderingService.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val resultat = vurderOgSammenlign(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         val vurdering = resultat.tilhørighetVurdering
             .single { it.opplysning == "Har statsborgerskap utenfor EØS i perioden" }
         assertThat(vurdering.resultat).isTrue
@@ -94,7 +95,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
             harNorskStatsborgerskap = true,
             norskStatsborgerskapUtgåttFørPerioden = true
         )
-        val resultat = ForutgåendeMedlemskapVurderingService.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val resultat = vurderOgSammenlign(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         val vurdering = resultat.tilhørighetVurdering
             .single { it.opplysning == "Har statsborgerskap utenfor EØS i perioden" }
         assertThat(vurdering.resultat).isTrue
@@ -103,7 +104,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     @Test
     fun `Bruker har gammelt statsborgerskap utenfor EØS`() {
         val grunnlag = lagGrunnlagSomMedSteingammeltUtenforEØSStatsborgerskap(true, true, true)
-        val resultat = ForutgåendeMedlemskapVurderingService.vurderTilhørighet(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
+        val resultat = vurderOgSammenlign(grunnlag, Periode(LocalDate.now(), LocalDate.now().plusYears(1)))
         val vurdering = resultat.tilhørighetVurdering
             .single { it.opplysning == "Har statsborgerskap utenfor EØS i perioden" }
         assertThat(vurdering.resultat).isFalse
@@ -114,7 +115,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
         val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
         val grunnlag = lagGrunnlag(godkjentPgaUnntakIMedl = false, godkjentPgaInntekt = false, inntektHarHull = true)
 
-        val vurdering = ForutgåendeMedlemskapVurderingService.vurderTilhørighet(grunnlag, rettighetsperiode)
+        val vurdering = vurderOgSammenlign(grunnlag, rettighetsperiode)
             .tilhørighetVurdering
             .single { it.opplysning == "Arbeids- og inntektshistorikk i Norge siste 5 år" }
         val tidslinje = vurdering.visuellTidslinje
@@ -137,7 +138,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
         val månedMedFlereInntekter = LocalDate.now().minusYears(3)
         val grunnlag = lagGrunnlagMedFlereInntekterSammeMåned()
 
-        val vurdering = ForutgåendeMedlemskapVurderingService.vurderTilhørighet(grunnlag, rettighetsperiode)
+        val vurdering = vurderOgSammenlign(grunnlag, rettighetsperiode)
             .tilhørighetVurdering
             .single { it.opplysning == "Arbeids- og inntektshistorikk i Norge siste 5 år" }
         val tidslinje = vurdering.visuellTidslinje
@@ -152,8 +153,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     fun `NIS-turistskip inkluderer arbeidsforhold som startet før relevant periode og fortsatt pågår`() {
         val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
 
-        val vurdering = ForutgåendeMedlemskapVurderingService
-            .vurderTilhørighet(
+        val vurdering = vurderOgSammenlign(
                 lagGrunnlagMedNisTuristskip(startdato = LocalDate.now().minusYears(7), sluttdato = null),
                 rettighetsperiode
             )
@@ -176,7 +176,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     fun `stopp behandling når arbeidstaker har jobbet på NIS-turistskip i perioden`() {
         val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
 
-        val resultat = ForutgåendeMedlemskapVurderingService.vurderTilhørighet(lagGrunnlagMedNisTuristskip(), rettighetsperiode)
+        val resultat = vurderOgSammenlign(lagGrunnlagMedNisTuristskip(), rettighetsperiode)
 
         assertThat(resultat.kanBehandlesAutomatisk).isFalse
     }
@@ -185,7 +185,7 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     fun `maritimt arbeidsforhold trigges ikke når skipstype er ANNET selv om register er NIS`() {
         val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
 
-        val vurdering = ForutgåendeMedlemskapVurderingService.vurderTilhørighet(
+        val vurdering = vurderOgSammenlign(
             lagGrunnlagMedMaritimtArbeid(skipsregister = Skipsregister.NIS, skipstype = Skipstype.ANNET),
             rettighetsperiode
         ).tilhørighetVurdering.single { it.opplysning == "Har hatt arbeidsforhold på NIS-registrert turistskip" }
@@ -197,12 +197,51 @@ class ForutgåendeMedlemskapVurderingServiceTest {
     fun `maritimt arbeidsforhold trigges ikke når skipstype er TURIST men register er NOR`() {
         val rettighetsperiode = Periode(LocalDate.now(), LocalDate.now().plusYears(1))
 
-        val vurdering = ForutgåendeMedlemskapVurderingService.vurderTilhørighet(
+        val vurdering = vurderOgSammenlign(
             lagGrunnlagMedMaritimtArbeid(skipsregister = Skipsregister.NOR, skipstype = Skipstype.TURIST),
             rettighetsperiode
         ).tilhørighetVurdering.single { it.opplysning == "Har hatt arbeidsforhold på NIS-registrert turistskip" }
 
         assertThat(vurdering.resultat).isFalse
+    }
+
+    @Test
+    fun `opphold etter start på rettighetsperioden teller ikke med i vurdering per relevant dato`() {
+        val rettighetsFom = LocalDate.of(2025, 1, 1)
+        val rettighetsperiode = Periode(rettighetsFom, rettighetsFom.plusYears(1))
+        val oppholdEtterStart = UtenlandsPeriode(
+            land = "SWE",
+            tilDato = rettighetsFom.plusMonths(6),
+            fraDato = rettighetsFom.plusMonths(3),
+            iArbeid = false,
+            utenlandsId = null
+        )
+        val grunnlag = lagGrunnlag(false, true, false).copy(
+            nyeSoknadGrunnlag = UtenlandsOppholdData(true, true, false, false, listOf(oppholdEtterStart))
+        )
+
+        val hele = ForutgåendeMedlemskapVurderingService.vurderTilhørighet(grunnlag, rettighetsperiode)
+        val perRelevantDato =
+            ForutgåendeMedlemskapVurderingService.vurderTilhørighetForRelevantDato(grunnlag, rettighetsFom)
+
+        assertThat(opphold(hele)).hasSize(1)
+        assertThat(opphold(perRelevantDato)).isEmpty()
+    }
+
+    private fun opphold(vurdering: KanBehandlesAutomatiskVurdering) = vurdering.tilhørighetVurdering
+        .single { it.opplysning == "Opphold i utlandet siste 5 år" }.oppgittUtenlandsOppholdGrunnlag
+
+    /** Kjører både hele vurderingen og vurderingen per relevant dato, og krever lik vurdering fra begge. */
+    private fun vurderOgSammenlign(
+        grunnlag: ForutgåendeMedlemskapFaktaGrunnlag,
+        rettighetsperiode: Periode
+    ): KanBehandlesAutomatiskVurdering {
+        val hele = ForutgåendeMedlemskapVurderingService.vurderTilhørighet(grunnlag, rettighetsperiode)
+        val perRelevantDato =
+            ForutgåendeMedlemskapVurderingService.vurderTilhørighetForRelevantDato(grunnlag, rettighetsperiode.fom)
+
+        assertThat(perRelevantDato).isEqualTo(hele)
+        return hele
     }
 
     private fun lagGrunnlag(
