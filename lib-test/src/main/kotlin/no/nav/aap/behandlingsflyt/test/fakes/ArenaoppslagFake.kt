@@ -7,7 +7,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
-import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoMedVedtakResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoSamordningResponse
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaBeregningstidspunktResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaDiagnose
@@ -54,12 +54,8 @@ class ArenaoppslagFake : FakeServer() {
                     )
                 )
             }
-            post("/api/v1/person/maksdato") {
-                call.respond(
-                    MaksdatoMedVedtakResponse(
-                        sak = null
-                    )
-                )
+            post("/api/v1/samordning/person/maksdato") {
+                call.respond(MaksdatoSamordningResponse.INGEN)
             }
             get("/api/migrering/{saksnummerArena}/sykdom") {
                 call.respond(

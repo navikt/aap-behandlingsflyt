@@ -31,7 +31,7 @@ class AvklarOvergangArbeidLøsning(
         required = true,
         defaultValue = AVKLAR_OVERGANG_ARBEID
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5032`
-) : PeriodisertAvklaringsbehovLøsning<OvergangArbeidVurderingLøsningDto>, LøsningMedPeriodiserteVurderinger {
+) : PeriodisertAvklaringsbehovLøsning<OvergangArbeidVurderingLøsningDto>{
     override fun løs(
         repositoryProvider: RepositoryProvider,
         kontekst: AvklaringsbehovKontekst,

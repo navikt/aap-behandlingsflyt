@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryFlytJobbRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.inmemoryservice.InMemoryBehandlingService
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -22,6 +23,29 @@ class BehandlingHendelseServiceImplTest {
     val behandlingHendelseSerice = BehandlingHendelseServiceImpl(
         inMemoryRepositoryProvider,
         createGatewayProvider { register<AlleAvskruddUnleash>() })
+
+    @Test
+    fun `sender unike saksbehandlere fra totrinnsregelen i oppgavehendelsen`() {
+        val sak = opprettInMemorySak(søknadsdato = 1 januar 2025)
+        val behandling = InMemoryBehandlingService.finnEllerOpprettOrdinærBehandling(
+            sak.id,
+            VurderingsbehovOgÅrsak(listOf(), ÅrsakTilOpprettelse.SØKNAD)
+        )
+        val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, behandling.id)
+        listOf("Z654321", "Z123456", "Z654321").forEach { ident ->
+            avklaringsbehovene.leggTil(Definisjon.AVKLAR_SYKDOM, StegType.AVKLAR_SYKDOM, null, null, null)
+            avklaringsbehovene.løsAvklaringsbehov(Definisjon.AVKLAR_SYKDOM, "Vurdert", Bruker(ident))
+        }
+        avklaringsbehovene.leggTil(Definisjon.KVALITETSSIKRING, StegType.KVALITETSSIKRING, null, null, null)
+        avklaringsbehovene.løsAvklaringsbehov(Definisjon.KVALITETSSIKRING, "Vurdert", Bruker("Z000001"))
+
+        behandlingHendelseSerice.stoppet(behandling, avklaringsbehovene)
+
+        val hendelse = InMemoryFlytJobbRepository.hentJobberForBehandling(behandling.id.toLong())
+            .single { it.type() == VarsleOppgaveOmHendelseJobbUtFører.type }
+            .payload<BehandlingFlytStoppetHendelse>()
+        assertThat(hendelse.saksbehandlereSomIkkeKanBeslutte).containsExactlyInAnyOrder("Z123456", "Z654321")
+    }
 
     @Test
     fun `Avklaringsbehov sorteres i rekkefølgen de kan løses i`() {
