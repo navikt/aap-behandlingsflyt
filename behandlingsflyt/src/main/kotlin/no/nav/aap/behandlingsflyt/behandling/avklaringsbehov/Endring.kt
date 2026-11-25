@@ -27,9 +27,11 @@ data class Endring(
      */
     val perioderSomIkkeErTilstrekkeligVurdert: Set<Periode>? = null,
     /**
-     * Perioder som det er mulig å vurdere
+     * Perioder som det er mulig å vurdere.
+     * Dette er periodene vilkåret kan påvirke utfallet av saken,
+     * men som ikke nødvendigvis må vurderes i dette vedtaket
      */
-    val perioderKanVurderes: Set<Periode>? = null,
+    val perioderVilkåretErRelevant: Set<Periode>? = null,
     val gradBehov: GradBehov? = null
 ) : Comparable<Endring> {
 
@@ -38,5 +40,5 @@ data class Endring(
     }
 
     val frivilligePerioder: List<Periode>?
-        get() = perioderKanVurderes?.subtract(perioderVedtaketBehøverVurdering ?: emptySet())?.sorted()
+        get() = perioderVilkåretErRelevant?.subtract(perioderVedtaketBehøverVurdering ?: emptySet())?.sorted()
 }

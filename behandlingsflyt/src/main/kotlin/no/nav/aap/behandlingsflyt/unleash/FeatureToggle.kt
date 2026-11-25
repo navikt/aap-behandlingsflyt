@@ -25,6 +25,7 @@ enum class BehandlingsflytFeature(
     HandtereMaksdatoForKantTilKant,
     NykantIkantForvaltningsmelding,
     MaksdatoSykepenger,
+    ForvaltningsmeldingBrevbygger,
 
     // --- Krav ---
     BackfillKrav,

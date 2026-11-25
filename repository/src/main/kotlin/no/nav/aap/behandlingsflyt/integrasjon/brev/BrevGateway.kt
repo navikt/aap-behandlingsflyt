@@ -529,14 +529,14 @@ class BrevGateway : BrevbestillingGateway {
             is VedtakEndringDødsfall ->
                 setOf(Faktagrunnlag.Dødsfall(brevBehov.dødsdato, brevBehov.navn))
 
-            is KlageOpprettholdelse -> buildSet {
-                brevBehov.begrunnelseNavKontor?.let {
-                    add(Faktagrunnlag.NavKontorKlagevurdering(it))
-                }
-                brevBehov.begrunnelseNay?.let {
-                    add(Faktagrunnlag.NayKlagevurdering(it))
-                }
-            }
+            is KlageOpprettholdelse -> setOf(
+                Faktagrunnlag.Klage(
+                    påklagetVedtaksdato = brevBehov.påklagetVedtaksdato,
+                    klagedato = brevBehov.klagedato,
+                    nayVurdering = brevBehov.begrunnelseNay,
+                    navKontorVurdering = brevBehov.begrunnelseNavKontor
+                )
+            )
 
             else -> emptySet()
         }

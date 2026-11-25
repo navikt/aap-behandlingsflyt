@@ -86,7 +86,8 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.HandtereMaksdatoForKantTilKant to true,
         BehandlingsflytFeature.NykantIkantForvaltningsmelding to true,
         BehandlingsflytFeature.MaksdatoSykepenger to true,
-        
+        BehandlingsflytFeature.ForvaltningsmeldingBrevbygger to true,
+
         // --- Krav ---
         BehandlingsflytFeature.BackfillKrav to true,
         BehandlingsflytFeature.KravSteg to true,

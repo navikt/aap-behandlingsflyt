@@ -327,7 +327,7 @@ class BehandlingVisningDatadelingServiceTest {
             funnetISteg = definisjon.løsesISteg,
             perioderSomIkkeErTilstrekkeligVurdert = null,
             perioderVedtaketBehøverVurdering = null,
-            perioderKanVurderes = null,
+            perioderVilkåretErRelevant = null,
             begrunnelse = "Opprettet i test",
             bruker = Bruker("TEST"),
             grunn = venteårsak,
