@@ -87,7 +87,6 @@ class AvklarStønadsperiodeSteg(
             .any { it.erKantIKantMedArena }
 
     /**
-     * TODO: Midlertidig til stønadsperioden er fasit i hele flyten. Rydder ikke vilkårsresultatet.
      *
      * Setter fom i rettighetsperioden lik tidligste startdato i stønadsperioden når saken er kant i kant,
      * eller når forrige vurdering i behandlingen var kant i kant (tilbakestilling). Saker som verken er
