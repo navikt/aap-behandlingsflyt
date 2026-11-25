@@ -94,7 +94,7 @@ fun NormalOpenAPIRoute.medlemskapTilhørighetsvurderingApi(
                                 sak.id
                             )
 
-                    ForutgåendeMedlemskapVurderingService().vurderTilhørighet(
+                    ForutgåendeMedlemskapVurderingService.vurderTilhørighet(
                         ForutgåendeMedlemskapFaktaGrunnlag(
                             medlemskapArbeidInntektGrunnlag, personopplysningGrunnlag, oppgittUtenlandsOppholdGrunnlag
                         ),
