@@ -16,6 +16,7 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Tag
@@ -94,12 +95,16 @@ class BehandlingServiceTest {
     }
 
     @Test
-    fun `hver søknad om opphold i utlandet gir en egen behandling uavhengig av ytelsesbehandlingen`() {
+    fun `søknad om opphold i utlandet gir egen behandlingskjede uavhengig av ytelsesbehandlingen`() {
         dataSource.transaction { connection ->
             val behandlingService =
                 BehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
             val behandlingRepository = BehandlingRepositoryImpl(connection)
             val sak = opprettSak(connection, 1 januar 2020)
+            val utenlandsopphold = VurderingsbehovOgÅrsak(
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_UTENLANDSOPPHOLD)),
+                ÅrsakTilOpprettelse.SØKNAD_UTENLANDSOPPHOLD,
+            )
 
             val førstegangsbehandling = behandlingService.finnEllerOpprettBehandling(
                 sak.id,
@@ -109,22 +114,16 @@ class BehandlingServiceTest {
                 )
             ).åpenBehandling!!
 
-            val utvalg = List(2) {
-                behandlingService.finnEllerOpprettBehandling(
-                    sak.id,
-                    VurderingsbehovOgÅrsak(
-                        listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_UTENLANDSOPPHOLD)),
-                        ÅrsakTilOpprettelse.SØKNAD_UTENLANDSOPPHOLD,
-                    )
-                ).åpenBehandling!!
-            }
+            val første = behandlingService.finnEllerOpprettBehandling(sak.id, utenlandsopphold).åpenBehandling!!
+            assertThat(første.typeBehandling()).isEqualTo(TypeBehandling.Utenlandsopphold)
+            assertThat(første.forrigeBehandlingId).isNull()
+            assertThatThrownBy { behandlingService.finnEllerOpprettBehandling(sak.id, utenlandsopphold) }
+                .isInstanceOf(IllegalStateException::class.java)
 
-            assertThat(utvalg.map { it.id }).doesNotHaveDuplicates().doesNotContain(førstegangsbehandling.id)
-            assertThat(utvalg).allSatisfy {
-                assertThat(it.typeBehandling()).isEqualTo(TypeBehandling.Utenlandsopphold)
-                assertThat(it.forrigeBehandlingId).isNull()
-            }
-            assertThat(behandlingRepository.hentAlleFor(sak.id)).hasSize(3)
+            behandlingRepository.oppdaterBehandlingStatus(første.id, Status.AVSLUTTET)
+            val andre = behandlingService.finnEllerOpprettBehandling(sak.id, utenlandsopphold).åpenBehandling!!
+
+            assertThat(andre.forrigeBehandlingId).isEqualTo(første.id)
             assertThat(behandlingRepository.hent(førstegangsbehandling.id).vurderingsbehov().map { it.type })
                 .doesNotContain(Vurderingsbehov.SØKNAD_UTENLANDSOPPHOLD)
         }

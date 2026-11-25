@@ -12,6 +12,8 @@ import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvbrytAktivitetspliktbehandlingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvbrytRevurderingRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryFlytJobbRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
@@ -31,5 +33,7 @@ val InMemoryBehandlingService = BehandlingService(
     avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(
         InMemoryAvbrytAktivitetspliktbehandlingRepository
     ),
-    unleashGateway = AlleAvskruddUnleash
+    unleashGateway = AlleAvskruddUnleash,
+    mottattDokumentRepository = InMemoryMottattDokumentRepository,
+    flytJobbRepository = InMemoryFlytJobbRepository,
 )

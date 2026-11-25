@@ -69,6 +69,11 @@ class HåndterMottattDokumentService(
                 )
             )
         }
+        if (melding is SøknadUtenlandsopphold && behandlingService.finnÅpenUtenlandsoppholdBehandling(sakId) != null) {
+            log.info("Det finnes allerede en åpen behandling for søknad om opphold i utlandet på sak $sakId. Søknaden med referanse $referanse settes i kø.")
+            return
+        }
+
         val sak = sakService.hent(sakId)
         val vurderingsbehov = MottattHendelseUtleder.utledVurderingsbehov(brevkategori, melding)
         val årsakTilOpprettelse = MottattHendelseUtleder.utledÅrsakTilOpprettelse(brevkategori, melding)
@@ -154,7 +159,8 @@ class HåndterMottattDokumentService(
 
     /**
      * Knytter klage, oppfølgingsbehandling og søknad om opphold i utlandet direkte til behandlingen den opprettet, ikke via informasjonskrav.
-     * Dette fordi det være flere åpne behandlinger av disse typene.
+     * Dette fordi det kan være flere åpne behandlinger av de to første typene. Søknad om opphold i utlandet behandles én om gangen,
+     * og søknader i kø står som ubehandlet til de får sin egen behandling.
      * ManuellVurdering og NyÅrsakTilBehandling er knyttet eksplisitt til behandling og er ikke et informasjonskrav i flyten
      */
     private fun skalMarkereDokumentSomBehandlet(melding: Melding?): Boolean =

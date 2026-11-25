@@ -49,6 +49,7 @@ class SøknadUtenlandsoppholdFlytTest : AbstraktFlytOrkestratorSnapshotTest(Alle
             .medKontekst { assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET) }
 
         assertThat(hentBehandling(førstegangsbehandling.referanse).status()).isEqualTo(Status.AVSLUTTET)
+        assertThat(hentUtenlandsoppholdbehandlinger()).hasSize(1)
     }
 
     @Test
@@ -62,19 +63,33 @@ class SøknadUtenlandsoppholdFlytTest : AbstraktFlytOrkestratorSnapshotTest(Alle
     }
 
     @Test
-    fun `hver søknad gir en ny behandling og samme journalpost behandles ikke to ganger`() {
-        val referanse = InnsendingReferanse(journalpostId())
+    fun `søknad som kommer inn mens en behandling er åpen settes i kø og behandles når den åpne er ferdig`() {
+        val førsteReferanse = InnsendingReferanse(journalpostId())
+        val første = sak.sendInnSøknadUtenlandsopphold(referanse = førsteReferanse)
 
-        val første = sak.sendInnSøknadUtenlandsopphold(referanse = referanse)
-        sak.sendInnSøknadUtenlandsopphold(referanse = referanse)
-        val andre = sak.sendInnSøknadUtenlandsopphold()
+        sak.sendInnSøknadUtenlandsopphold()
+        sak.sendInnSøknadUtenlandsopphold(referanse = førsteReferanse)
+        assertThat(hentUtenlandsoppholdbehandlinger().map { it.id }).containsExactly(første.id)
 
-        assertThat(andre.id).isNotEqualTo(første.id)
-        val utenlandsoppholdbehandlinger = dataSource.transaction { connection ->
-            postgresRepositoryRegistry.provider(connection)
-                .provide<BehandlingRepository>()
-                .hentAlleFor(sak.id, listOf(TypeBehandling.Utenlandsopphold))
-        }
-        assertThat(utenlandsoppholdbehandlinger).hasSize(2)
+        første.løsAvklaringsBehov(VurderSøknadUtenlandsoppholdLøsning())
+            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+
+        val behandlinger = hentUtenlandsoppholdbehandlinger()
+        assertThat(behandlinger).hasSize(2)
+        val andre = behandlinger.single { it.id != første.id }
+        assertThat(andre.forrigeBehandlingId).isEqualTo(første.id)
+        assertThat(andre.status()).isEqualTo(Status.UTREDES)
+        assertThat(andre.aktivtSteg()).isEqualTo(StegType.VURDER_SØKNAD_UTENLANDSOPPHOLD)
+
+        andre.løsAvklaringsBehov(VurderSøknadUtenlandsoppholdLøsning())
+            .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
+            .medKontekst { assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET) }
+        assertThat(hentUtenlandsoppholdbehandlinger()).hasSize(2)
+    }
+
+    private fun hentUtenlandsoppholdbehandlinger() = dataSource.transaction { connection ->
+        postgresRepositoryRegistry.provider(connection)
+            .provide<BehandlingRepository>()
+            .hentAlleFor(sak.id, listOf(TypeBehandling.Utenlandsopphold))
     }
 }

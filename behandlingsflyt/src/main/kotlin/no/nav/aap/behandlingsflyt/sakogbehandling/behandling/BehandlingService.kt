@@ -6,11 +6,14 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.UnderveisService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopierer
 import no.nav.aap.behandlingsflyt.faktagrunnlag.GrunnlagKopiererImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService.Companion.prioritertType
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService.Companion.vurderingsbehovTilType
+import no.nav.aap.behandlingsflyt.prosessering.HåndterUbehandletDokumentJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.VurderingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
@@ -21,6 +24,8 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.motor.FlytJobbRepository
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 class BehandlingService(
@@ -31,6 +36,8 @@ class BehandlingService(
     private val underveisService: UnderveisService,
     private val avbrytAktivitetspliktbehandlingService: AvbrytAktivitetspliktbehandlingService,
     private val unleashGateway: UnleashGateway,
+    private val mottattDokumentRepository: MottattDokumentRepository,
+    private val flytJobbRepository: FlytJobbRepository,
 ) {
     constructor(
         repositoryProvider: RepositoryProvider,
@@ -43,7 +50,11 @@ class BehandlingService(
         underveisService = UnderveisService(repositoryProvider, gatewayProvider),
         avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
         unleashGateway = gatewayProvider.provide(),
+        mottattDokumentRepository = repositoryProvider.provide(),
+        flytJobbRepository = repositoryProvider.provide(),
     )
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId: SakId): Behandling? {
         return alleYtelsesbehandlinger(sakId).lastOrNull()
@@ -345,20 +356,33 @@ class BehandlingService(
         )
     }
 
+    fun finnÅpenUtenlandsoppholdBehandling(sakId: SakId): Behandling? =
+        behandlingRepository.hentAlleFor(sakId, listOf(TypeBehandling.Utenlandsopphold))
+            .singleOrNull { it.status().erÅpen() }
+
     /**
-     * Hver mottatte søknad gir en ny behandling, og det kan være flere åpne på samme sak. Behandlingen er uavhengig av
-     * ytelsesbehandlingene, og grunnlaget kopieres ikke fra eller til andre behandlinger.
+     * Behandlingene for søknad om opphold i utlandet utgjør en egen kjede, uavhengig av ytelsesbehandlingene.
+     * Det kan kun være én åpen om gangen. Søknader som kommer inn mens en behandling er åpen, settes i kø av mottak.
+     * Ny behandling peker på forrige i kjeden, og grunnlaget kopieres slik at tidligere vurderinger følger med.
      */
     private fun opprettUtenlandsoppholdBehandling(
         sakId: SakId,
         vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
     ): Behandling {
+        val tidligereBehandlinger = behandlingRepository.hentAlleFor(sakId, listOf(TypeBehandling.Utenlandsopphold))
+        check(tidligereBehandlinger.none { it.status().erÅpen() }) {
+            "Det finnes allerede en åpen behandling for søknad om opphold i utlandet på sak $sakId"
+        }
+        val forrige = tidligereBehandlinger.maxByOrNull { it.opprettetTidspunkt }?.id
+
         return behandlingRepository.opprettBehandling(
             sakId = sakId,
             typeBehandling = TypeBehandling.Utenlandsopphold,
-            forrigeBehandlingId = null,
+            forrigeBehandlingId = forrige,
             vurderingsbehovOgÅrsak = vurderingsbehovOgÅrsak
-        )
+        ).also { behandling ->
+            forrige?.let { grunnlagKopierer.overfør(it, behandling.id) }
+        }
     }
 
     private fun opprettSvarFraKlageenhetBehandling(
@@ -469,6 +493,21 @@ class BehandlingService(
             behandlingId = behandlingId,
             status = Status.AVSLUTTET
         )
+
+        val behandling = behandlingRepository.hent(behandlingId)
+        if (behandling.typeBehandling() == TypeBehandling.Utenlandsopphold) {
+            startNesteSøknadUtenlandsoppholdIKø(behandling.sakId)
+        }
+    }
+
+    private fun startNesteSøknadUtenlandsoppholdIKø(sakId: SakId) {
+        val nesteSøknad = mottattDokumentRepository
+            .hentUbehandledeDokumenterAvType(sakId, InnsendingType.SØKNAD_UTENLANDSOPPHOLD)
+            .minByOrNull { it.mottattTidspunkt }
+            ?: return
+
+        log.info("Starter behandling av neste søknad om opphold i utlandet i kø for sak $sakId")
+        flytJobbRepository.leggTil(HåndterUbehandletDokumentJobbUtfører.nyJobb(sakId, nesteSøknad.referanse))
     }
 
     private fun validerAtSisteStegstatusErAvsluttet(behandlingId: BehandlingId) {
