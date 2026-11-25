@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadUtenlandsopphold
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingNySøknadJobbUtfører
@@ -152,11 +153,11 @@ class HåndterMottattDokumentService(
     }
 
     /**
-     * Knytter klage og oppfølgingsbehandling direkte til behandlingen den opprettet, ikke via informasjonskrav.
+     * Knytter klage, oppfølgingsbehandling og søknad om opphold i utlandet direkte til behandlingen den opprettet, ikke via informasjonskrav.
      * Dette fordi det være flere åpne behandlinger av disse typene.
      * ManuellVurdering og NyÅrsakTilBehandling er knyttet eksplisitt til behandling og er ikke et informasjonskrav i flyten
      */
     private fun skalMarkereDokumentSomBehandlet(melding: Melding?): Boolean =
-        melding is KabalHendelse || melding is Oppfølgingsoppgave || melding is ManuellRevurdering || melding is NyÅrsakTilBehandling || melding is TilbakekrevingHendelse
+        melding is KabalHendelse || melding is Oppfølgingsoppgave || melding is SøknadUtenlandsopphold || melding is ManuellRevurdering || melding is NyÅrsakTilBehandling || melding is TilbakekrevingHendelse
 
 }

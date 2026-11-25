@@ -47,6 +47,7 @@ val inMemoryRepositoryRegistry = RepositoryRegistry().apply {
     register<InMemoryTaSkriveLåsRepository>()
     register<InMemoryUnderveisRepository>()
     register<InMemoryAktivitetsplikt11_9Repository>()
+    register<InMemorySøknadUtenlandsoppholdRepository>()
     register<InMemoryVilkårsresultatRepository>()
     register<InMemoryVedtakRepository>()
     register<InMemoryOvergangUføreRepository>()

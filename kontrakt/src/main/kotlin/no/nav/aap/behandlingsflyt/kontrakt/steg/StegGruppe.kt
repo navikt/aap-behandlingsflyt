@@ -50,6 +50,9 @@ public enum class StegGruppe(public val skalVises: Boolean, public val obligator
     AKTIVITETSPLIKT_11_9(true, true),
     AVBRYT_AKTIVITETSPLIKTBEHANDLING(true, false),
     
+    // Søknad om å beholde AAP under opphold i utlandet
+    SØKNAD_UTENLANDSOPPHOLD(true, true),
+
     // Deprekert
     STUDENT(false, false), // TODO: Slett?
     

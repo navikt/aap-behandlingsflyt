@@ -631,6 +631,18 @@ public enum class Definisjon(
         løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
         kreverToTrinn = true
     ),
+    VURDER_SØKNAD_UTENLANDSOPPHOLD(
+        kode = AvklaringsbehovKode.`4401`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.VURDER_SØKNAD_UTENLANDSOPPHOLD,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+    ),
+    BEKREFT_BREV_SENDT_MANUELT(
+        kode = AvklaringsbehovKode.`4402`,
+        type = BehovType.MANUELT_PÅKREVD,
+        løsesISteg = StegType.BEKREFT_BREV_SENDT,
+        løsesAv = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING),
+    ),
     SKRIV_FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT_BREV(
         kode = AvklaringsbehovKode.`5052`,
         løsesISteg = StegType.VURDER_AKTIVITETSPLIKT_11_7,

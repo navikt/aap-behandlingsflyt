@@ -193,6 +193,8 @@ class BehandlingService(
 
         val mottokMigreringFraArena = vurderingsbehov.any { it.type == Vurderingsbehov.MIGRERING_FRA_ARENA }
 
+        val mottokSøknadUtenlandsopphold = vurderingsbehov.any { it.type == Vurderingsbehov.SØKNAD_UTENLANDSOPPHOLD }
+
         return when {
             mottokKlage -> Ordinær(opprettKlagebehandling(sisteYtelsesbehandling, vurderingsbehovOgÅrsak))
             mottokKabalHendelse -> Ordinær(
@@ -208,6 +210,8 @@ class BehandlingService(
                     vurderingsbehovOgÅrsak
                 )
             )
+
+            mottokSøknadUtenlandsopphold -> Ordinær(opprettUtenlandsoppholdBehandling(sakId, vurderingsbehovOgÅrsak))
 
             mottokMigreringFraArena -> Ordinær(opprettMigreringFraArenaBehandling(sakId, vurderingsbehovOgÅrsak))
 
@@ -336,6 +340,22 @@ class BehandlingService(
         return behandlingRepository.opprettBehandling(
             sisteYtelsesbehandling.sakId,
             typeBehandling = TypeBehandling.OppfølgingsBehandling,
+            forrigeBehandlingId = null,
+            vurderingsbehovOgÅrsak = vurderingsbehovOgÅrsak
+        )
+    }
+
+    /**
+     * Hver mottatte søknad gir en ny behandling, og det kan være flere åpne på samme sak. Behandlingen er uavhengig av
+     * ytelsesbehandlingene, og grunnlaget kopieres ikke fra eller til andre behandlinger.
+     */
+    private fun opprettUtenlandsoppholdBehandling(
+        sakId: SakId,
+        vurderingsbehovOgÅrsak: VurderingsbehovOgÅrsak
+    ): Behandling {
+        return behandlingRepository.opprettBehandling(
+            sakId = sakId,
+            typeBehandling = TypeBehandling.Utenlandsopphold,
             forrigeBehandlingId = null,
             vurderingsbehovOgÅrsak = vurderingsbehovOgÅrsak
         )
