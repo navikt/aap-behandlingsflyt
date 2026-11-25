@@ -8,6 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse.Type
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -48,8 +49,10 @@ class MigrerKravService(
             return
         }
 
-        val søknadForKrav = mottattDokumentRepository.hentDokumenterAvType(sakId, InnsendingType.SØKNAD)
-            .find { it.referanse == nyesteKrav.journalpostId }
+        val søknadForKrav = checkNotNull(
+            mottattDokumentRepository.hentDokumenterAvType(sakId, InnsendingType.SØKNAD)
+                .find { it.referanse.type == Type.JOURNALPOST && it.referanse.verdi == nyesteKrav.journalpostId.identifikator }
+        ) { "Fant ikke søknad for krav med journalpost ${nyesteKrav.journalpostId}" }
 
         val nyVurdering = RelevantKrav(
             referanse = nyesteKrav.referanse,
