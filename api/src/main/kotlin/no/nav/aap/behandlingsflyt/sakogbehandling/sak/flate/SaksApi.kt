@@ -126,7 +126,7 @@ fun NormalOpenAPIRoute.saksApi(
                     val sakId = repositoryProvider.provide<SakRepository>().hent(Saksnummer(req.saksnummer)).id
 
                     val behandling = BehandlingService(repositoryProvider, gatewayProvider)
-                        .opprettManuellUtenlandsoppholdBehandling(sakId, body.mottattDato)
+                        .opprettManuellUtenlandsoppholdBehandling(sakId, body.beskrivelse)
 
                     ProsesserBehandlingService(repositoryProvider, gatewayProvider).triggProsesserBehandling(behandling)
 

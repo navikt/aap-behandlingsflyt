@@ -26,7 +26,6 @@ import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 class BehandlingService(
@@ -365,7 +364,10 @@ class BehandlingService(
      * Manuell opprettelse fra saksbehandler. Avvises hvis det allerede finnes en åpen behandling,
      * i motsetning til søknader fra journalpost som settes i kø.
      */
-    fun opprettManuellUtenlandsoppholdBehandling(sakId: SakId, mottattDato: LocalDate): Behandling {
+    fun opprettManuellUtenlandsoppholdBehandling(sakId: SakId, beskrivelse: String): Behandling {
+        if (beskrivelse.isBlank()) {
+            throw UgyldigForespørselException("Beskrivelse av hvorfor behandlingen opprettes må fylles ut.")
+        }
         if (finnÅpenUtenlandsoppholdBehandling(sakId) != null) {
             throw UgyldigForespørselException(
                 "Kan ikke opprette behandling for søknad om opphold i utlandet mens en annen er åpen. Fullfør den åpne behandlingen først."
@@ -376,7 +378,7 @@ class BehandlingService(
             VurderingsbehovOgÅrsak(
                 vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_UTENLANDSOPPHOLD)),
                 årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
-                opprettet = mottattDato.atStartOfDay(),
+                beskrivelse = beskrivelse,
             )
         )
     }

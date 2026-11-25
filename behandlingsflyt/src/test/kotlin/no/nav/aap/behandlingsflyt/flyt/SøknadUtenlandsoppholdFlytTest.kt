@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -18,7 +19,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
 
 class SøknadUtenlandsoppholdFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
 
@@ -64,6 +64,12 @@ class SøknadUtenlandsoppholdFlytTest : AbstraktFlytOrkestratorSnapshotTest(Alle
             assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Utenlandsopphold)
             assertThat(this.behandling.aktivtSteg()).isEqualTo(StegType.VURDER_SØKNAD_UTENLANDSOPPHOLD)
         }
+        val vurderingsbehovOgÅrsak = dataSource.transaction { connection ->
+            postgresRepositoryRegistry.provider(connection).provide<BehandlingRepository>()
+                .hentVurderingsbehovOgÅrsaker(behandling.id).single()
+        }
+        assertThat(vurderingsbehovOgÅrsak.årsak).isEqualTo(ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE)
+        assertThat(vurderingsbehovOgÅrsak.beskrivelse).isEqualTo("Bruker har ringt inn")
     }
 
     @Test
@@ -103,7 +109,7 @@ class SøknadUtenlandsoppholdFlytTest : AbstraktFlytOrkestratorSnapshotTest(Alle
 
     private fun opprettManuellUtenlandsoppholdBehandling() = dataSource.transaction { connection ->
         BehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
-            .opprettManuellUtenlandsoppholdBehandling(sak.id, LocalDate.now())
+            .opprettManuellUtenlandsoppholdBehandling(sak.id, beskrivelse = "Bruker har ringt inn")
     }
 
     private fun hentUtenlandsoppholdbehandlinger() = dataSource.transaction { connection ->
