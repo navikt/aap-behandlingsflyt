@@ -133,7 +133,9 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
         val nyeInntekter = inntektGrunnlag.flatMap { it.tilDomene(enhetGrunnlag) }
 
         return medlemskapUnntakGrunnlag == nyttMedlemskapUnntak
+                && arbeiderINorgeGrunnlag.size == nyeArbeidsforhold.size
                 && arbeiderINorgeGrunnlag.toSet() == nyeArbeidsforhold.toSet()
+                && inntekterINorgeGrunnlag.size == nyeInntekter.size
                 && inntekterINorgeGrunnlag.toSet() == nyeInntekter.toSet()
     }
 
