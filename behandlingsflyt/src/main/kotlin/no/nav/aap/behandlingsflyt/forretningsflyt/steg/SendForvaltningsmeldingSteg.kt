@@ -85,10 +85,10 @@ class SendForvaltningsmeldingSteg(
     }
 
     /**
-     * Søknaden er kant i kant når et gjeldende krav dekker dagen etter maksdato i Arena. Gjelder bare
-     * førstegangsbehandling: i en revurdering er Arena-maksdatoen kopiert fra forrige behandling, og
-     * overgangen fra Arena hører til den første søknaden.
-     */
+    * Søknaden er kant i kant når et gjeldende krav overlapper overgangen fra Arena, se [kravVedOvergangFraArena].
+    * Gjelder bare førstegangsbehandling: i en revurdering er Arena-maksdatoen kopiert fra forrige behandling, og
+    * overgangen fra Arena hører til den første søknaden.
+    */
     private fun erKantIKantMedArena(kontekst: FlytKontekstMedPerioder): Boolean {
         if (kontekst.forrigeBehandlingId != null) return false
         if (!unleashGateway.isEnabled(BehandlingsflytFeature.NykantIkantForvaltningsmelding)) return false

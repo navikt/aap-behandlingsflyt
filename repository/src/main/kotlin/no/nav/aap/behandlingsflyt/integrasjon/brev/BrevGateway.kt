@@ -390,7 +390,7 @@ class BrevGateway : BrevbestillingGateway {
         TypeBrev.FORVALTNINGSMELDING -> Brevtype.FORVALTNINGSMELDING
         // TODO: Bytt til egen Brevtype når den finnes i aap-brev sin kontrakt. Inntil da får kant i kant-saker
         //  samme brev som før, så ingen sak blir stående om toggelen er på.
-        TypeBrev.FORVALTNINGSMELDING_KANT_I_KANT -> Brevtype.FORVALTNINGSMELDING
+        TypeBrev.FORVALTNINGSMELDING_KANT_I_KANT -> Brevtype.FORVALTNINGSMELDING_KANT_I_KANT
         TypeBrev.VEDTAK_11_17 -> Brevtype.VEDTAK_11_17
         TypeBrev.VEDTAK_11_18 -> Brevtype.VEDTAK_11_18
         TypeBrev.VEDTAK_11_7 -> Brevtype.VEDTAK_11_7
