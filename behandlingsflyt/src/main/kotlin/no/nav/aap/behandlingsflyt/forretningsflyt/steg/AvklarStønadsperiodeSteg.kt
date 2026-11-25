@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.nesteHverdag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.erSystembruker
@@ -25,7 +24,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
@@ -189,28 +187,6 @@ class AvklarStønadsperiodeSteg(
             relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
             startDato = krav.muligRettFra // Dum heuristikk på at stønadsperiode start = kravdato start
         )
-    }
-
-    /**
-     * Finner kravet som er kant i kant med Arena. Overgangen fra Arena går fra dagen etter maksdato til og med
-     * første hverdag etter maksdato, slik at maksdato fredag og krav fra mandag regnes som kant i kant.
-     * Helligdager regnes som hverdager, som ellers i Kelvin.
-     *
-     * Kravtidslinjen avgrenser hvert krav ved starten på neste krav. Vi velger det tidligste segmentet som
-     * overlapper overgangen, slik at et krav fra lørdag vinner over et krav fra mandag. Returnerer null når
-     * ingen krav overlapper overgangen, for eksempel ved opphold etter Arena-saken.
-     */
-    private fun kravVedOvergangFraArena(
-        gjeldendeRelevanteKrav: Set<RelevantKrav>,
-        arenaMaksdato: ArenaMaksdato?,
-    ): RelevantKrav? {
-        val maksdato = arenaMaksdato?.maksdato ?: return null
-        val overgangFraArena = Periode(maksdato.plusDays(1), maksdato.nesteHverdag())
-        return gjeldendeRelevanteKrav.kravtidslinje()
-            .segmenter()
-            .filter { it.periode.overlapper(overgangFraArena) }
-            .minByOrNull { it.periode.fom }
-            ?.verdi
     }
 
     /**

@@ -1,9 +1,11 @@
 package no.nav.aap.behandlingsflyt.forretningsflyt.steg
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.nesteHverdag
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaVedtakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
@@ -173,7 +175,7 @@ class SendForvaltningsmeldingStegTest {
         @Test
         fun `sender vanlig forvaltningsmelding når det er opphold mellom Arena-saken og kravet`() {
             val behandling = opprettSakOgbehandlingForForvaltningsmelding(TypeBehandling.Førstegangsbehandling)
-            lagreKravOgArenaMaksdato(behandling.id, muligRettFra = DAGEN_ETTER_MAKSDATO.plusDays(1))
+            lagreKravOgArenaMaksdato(behandling.id, muligRettFra = MAKSDATO.nesteHverdag().plusDays(1))
             val flytkontekst =
                 flytkontekstForBehandlingForForvaltningsmelding(behandling, Vurderingsbehov.MOTTATT_SØKNAD)
 
@@ -275,10 +277,11 @@ class SendForvaltningsmeldingStegTest {
                 behandlingId,
                 ArenaMaksdato(
                     arenaSaksnummer = "2023-5",
-                    status = "AVSLU",
+                    vedtakStatus = ArenaVedtakStatus.AVSLUTTET,
                     maksdato = MAKSDATO,
                     vedtakTil = MAKSDATO,
                     vedtakId = 1,
+                    harForlengelseEtter11_12 = false,
                 )
             )
         }
