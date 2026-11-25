@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaVedtakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.flyt.BehandlingFlyt
@@ -260,7 +260,7 @@ class SendForvaltningsmeldingStegTest {
             InMemoryKravRepository.lagre(
                 behandlingId,
                 setOf(
-                    RelevantKrav(
+                    RelevantSøknadKrav(
                         referanse = Kravreferanse.ny(),
                         journalpostId = JournalpostId("123"),
                         vurdertAv = SYSTEMBRUKER,
