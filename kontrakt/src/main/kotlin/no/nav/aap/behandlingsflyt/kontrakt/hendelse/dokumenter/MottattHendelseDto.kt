@@ -152,6 +152,12 @@ public class Innsending(
                 requireNotNull(melding) { "Melding for korriger søknadsdato kan ikke være null" }
                 require(melding is KorrigerSøknadsdato)
             }
+
+            InnsendingType.SØKNAD_UTENLANDSOPPHOLD -> {
+                require(referanse.type == InnsendingReferanse.Type.JOURNALPOST)
+                requireNotNull(melding) { "Melding for søknad om opphold i utlandet kan ikke være null" }
+                require(melding is SøknadUtenlandsopphold)
+            }
         }
     }
 }

@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Klage
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.OppfølgingsBehandling
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Revurdering
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.SvarFraAndreinstans
+import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Utenlandsopphold
 import no.nav.aap.behandlingsflyt.forretningsflyt.behandlingstyper.Tilbakekreving
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 
@@ -23,4 +24,5 @@ fun TypeBehandling.flyt(): BehandlingFlyt = when (this) {
     TypeBehandling.OppfølgingsBehandling -> OppfølgingsBehandling.flyt()
     TypeBehandling.Aktivitetsplikt -> Aktivitetsplikt.flyt()
     TypeBehandling.Aktivitetsplikt11_9 -> Aktivitetsplikt11_9.flyt()
+    TypeBehandling.Utenlandsopphold -> Utenlandsopphold.flyt()
 }
