@@ -6,6 +6,7 @@ import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status as BehandlingStatus
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.BehandlingHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.datadeling.BehandlingHendelseNavn
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.BehandlingHendelseProgresjon
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -49,80 +50,165 @@ class BehandlingVisningDatadelingServiceTest {
     }
 
     @Test
-    fun `hendelsene har riktig sist endret i starttilstanden`() {
+    fun `lovvalg er aktiv mens lovvalgsvurderingen pågår`() {
         val behandling = nyBehandling()
+        leggTilSteghistorikk(behandling, StegType.VURDER_LOVVALG to StegStatus.AVKLARINGSPUNKT)
 
-        assertThat(hendelse<BehandlingHendelse.SøknadMottatt>(behandling).sistEndret)
-            .isEqualTo(behandling.opprettetTidspunkt)
-        assertThat(hendelse<BehandlingHendelse.AlderLovvalgMedlemskap>(behandling).sistEndret).isNull()
-        assertThat(hendelse<BehandlingHendelse.NavKontor>(behandling).sistEndret).isNull()
-        assertThat(hendelse<BehandlingHendelse.Nay>(behandling).sistEndret).isNull()
-        assertThat(hendelse<BehandlingHendelse.FerdigBehandlet>(behandling).sistEndret).isNull()
+        assertThat(alleProgresjoner(behandling)).containsExactly(
+            BehandlingHendelseProgresjon.FULLFØRT,
+            BehandlingHendelseProgresjon.AKTIV,
+            BehandlingHendelseProgresjon.IKKE_PÅBEGYNT,
+            BehandlingHendelseProgresjon.IKKE_PÅBEGYNT,
+            BehandlingHendelseProgresjon.IKKE_PÅBEGYNT,
+        )
     }
 
     @Test
-    fun `lovvalg bruker nyeste endring fra relevante avklaringsbehov`() {
+    fun `NavKontor er aktiv etter fullført lovvalgsvurdering`() {
         val behandling = nyBehandling()
-        opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP)
-        opprettAvklaringsbehov(behandling, Definisjon.MANUELL_OVERSTYRING_LOVVALG)
-        InMemoryAvklaringsbehovRepository.hentAvklaringsbehovene(behandling.id)
-            .løsAvklaringsbehov(
-                Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
-                "Løst i test",
-                Bruker("TEST"),
-            )
-        opprettAvklaringsbehov(behandling, Definisjon.KVALITETSSIKRING, avsluttet = true)
-        opprettAvklaringsbehov(behandling, Definisjon.FATTE_VEDTAK, avsluttet = true)
+        leggTilSteghistorikk(
+            behandling,
+            StegType.VURDER_LOVVALG to StegStatus.AVSLUTTER,
+            StegType.VURDER_ALDER to StegStatus.AVSLUTTER,
+        )
+        opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_SYKDOM)
 
-        val avklaringsbehov = InMemoryAvklaringsbehovRepository
-            .hentAvklaringsbehovene(behandling.id)
-            .alle()
-        val forventetLovvalgTidspunkt = avklaringsbehov
-            .single { it.definisjon == Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP }
-            .sistEndret()
-
-        assertThat(hendelse<BehandlingHendelse.AlderLovvalgMedlemskap>(behandling).sistEndret)
-            .isEqualTo(forventetLovvalgTidspunkt)
+        assertThat(alleProgresjoner(behandling)).containsExactly(
+            BehandlingHendelseProgresjon.FULLFØRT,
+            BehandlingHendelseProgresjon.FULLFØRT,
+            BehandlingHendelseProgresjon.AKTIV,
+            BehandlingHendelseProgresjon.IKKE_PÅBEGYNT,
+            BehandlingHendelseProgresjon.IKKE_PÅBEGYNT,
+        )
     }
 
     @Test
-    fun `NavKontor og Nay bruker nyeste avsluttede behov mens FerdigBehandlet bruker vedtaksbehov`() {
+    fun `Nay er aktiv og NavKontor fullført når begge er påbegynt`() {
         val behandling = nyBehandling()
-        opprettAvklaringsbehov(behandling, Definisjon.KVALITETSSIKRING, avsluttet = true)
-        opprettAvklaringsbehov(behandling, Definisjon.FATTE_VEDTAK, avsluttet = true)
-        opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_BISTANDSBEHOV, avsluttet = true)
-        opprettAvklaringsbehov(behandling, Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
-
-        val avklaringsbehov = InMemoryAvklaringsbehovRepository
-            .hentAvklaringsbehovene(behandling.id)
-            .alle()
-        val nyesteAvsluttedeTidspunkt = avklaringsbehov
-            .single { it.definisjon == Definisjon.AVKLAR_BISTANDSBEHOV }
-            .sistEndret()
-        val vedtaksTidspunkt = avklaringsbehov
-            .single { it.definisjon == Definisjon.FATTE_VEDTAK }
-            .sistEndret()
-
-        assertThat(hendelse<BehandlingHendelse.NavKontor>(behandling).sistEndret)
-            .isEqualTo(nyesteAvsluttedeTidspunkt)
-        assertThat(hendelse<BehandlingHendelse.Nay>(behandling).sistEndret)
-            .isEqualTo(nyesteAvsluttedeTidspunkt)
-        assertThat(hendelse<BehandlingHendelse.FerdigBehandlet>(behandling).sistEndret)
-            .isEqualTo(vedtaksTidspunkt)
-    }
-
-    @Test
-    fun `aktive NavKontor og Nay uten avsluttede behov har ikke sist endret`() {
-        val behandling = nyBehandling()
+        leggTilSteghistorikk(
+            behandling,
+            StegType.VURDER_LOVVALG to StegStatus.AVSLUTTER,
+            StegType.VURDER_ALDER to StegStatus.AVSLUTTER,
+        )
         opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_SYKDOM)
         opprettAvklaringsbehov(behandling, Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
 
-        assertThat(progresjon<BehandlingHendelse.NavKontor>(behandling))
-            .isEqualTo(BehandlingHendelseProgresjon.AKTIV)
-        assertThat(progresjon<BehandlingHendelse.Nay>(behandling))
-            .isEqualTo(BehandlingHendelseProgresjon.AKTIV)
-        assertThat(hendelse<BehandlingHendelse.NavKontor>(behandling).sistEndret).isNull()
-        assertThat(hendelse<BehandlingHendelse.Nay>(behandling).sistEndret).isNull()
+        assertThat(alleProgresjoner(behandling)).containsExactly(
+            BehandlingHendelseProgresjon.FULLFØRT,
+            BehandlingHendelseProgresjon.FULLFØRT,
+            BehandlingHendelseProgresjon.FULLFØRT,
+            BehandlingHendelseProgresjon.AKTIV,
+            BehandlingHendelseProgresjon.IKKE_PÅBEGYNT,
+        )
+    }
+
+    @Test
+    fun `bare Nay er aktiv når lovvalg, NavKontor og Nay er påbegynt`() {
+        val behandling = nyBehandling()
+        leggTilSteghistorikk(behandling, StegType.VURDER_LOVVALG to StegStatus.AVKLARINGSPUNKT)
+        opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_SYKDOM)
+        opprettAvklaringsbehov(behandling, Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
+
+        assertThat(alleProgresjoner(behandling)).containsExactly(
+            BehandlingHendelseProgresjon.FULLFØRT,
+            BehandlingHendelseProgresjon.FULLFØRT,
+            BehandlingHendelseProgresjon.FULLFØRT,
+            BehandlingHendelseProgresjon.AKTIV,
+            BehandlingHendelseProgresjon.IKKE_PÅBEGYNT,
+        )
+    }
+
+    @Test
+    fun `alle hendelser er fullført når behandlingen er avsluttet`() {
+        val behandling = nyBehandling()
+        leggTilSteghistorikk(
+            behandling,
+            StegType.VURDER_LOVVALG to StegStatus.AVSLUTTER,
+            StegType.VURDER_ALDER to StegStatus.AVSLUTTER,
+        )
+        opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_SYKDOM, avsluttet = true)
+        opprettAvklaringsbehov(behandling, Definisjon.KVALITETSSIKRING, avsluttet = true)
+        opprettAvklaringsbehov(behandling, Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT, avsluttet = true)
+        opprettAvklaringsbehov(behandling, Definisjon.FATTE_VEDTAK, avsluttet = true)
+        oppdaterBehandlingStatus(behandling, BehandlingStatus.AVSLUTTET)
+
+        assertThat(alleProgresjoner(behandling)).containsExactly(
+            BehandlingHendelseProgresjon.FULLFØRT,
+            BehandlingHendelseProgresjon.FULLFØRT,
+            BehandlingHendelseProgresjon.FULLFØRT,
+            BehandlingHendelseProgresjon.FULLFØRT,
+            BehandlingHendelseProgresjon.FULLFØRT,
+        )
+    }
+
+    @Test
+    fun `NavKontor vinner over aktiv lovvalgsvurdering når Nay ikke er påbegynt`() {
+        val behandling = nyBehandling()
+        leggTilSteghistorikk(behandling, StegType.VURDER_LOVVALG to StegStatus.AVKLARINGSPUNKT)
+        opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_SYKDOM)
+
+        assertThat(alleProgresjoner(behandling)).containsExactly(
+            BehandlingHendelseProgresjon.FULLFØRT,
+            BehandlingHendelseProgresjon.FULLFØRT,
+            BehandlingHendelseProgresjon.AKTIV,
+            BehandlingHendelseProgresjon.IKKE_PÅBEGYNT,
+            BehandlingHendelseProgresjon.IKKE_PÅBEGYNT,
+        )
+    }
+
+    @Test
+    fun `ikke påbegynt Nay returneres ikke når alt annet er fullført`() {
+        val behandling = nyBehandling()
+        leggTilSteghistorikk(
+            behandling,
+            StegType.VURDER_LOVVALG to StegStatus.AVSLUTTER,
+            StegType.VURDER_ALDER to StegStatus.AVSLUTTER,
+        )
+        opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_SYKDOM, avsluttet = true)
+        opprettAvklaringsbehov(behandling, Definisjon.KVALITETSSIKRING, avsluttet = true)
+        oppdaterBehandlingStatus(behandling, BehandlingStatus.AVSLUTTET)
+
+        val hendelser = service.utledBehandlingVisningHendelser(behandling)
+
+        assertThat(hendelser.map { it.navn }).containsExactly(
+            BehandlingHendelseNavn.SØKNAD_MOTTATT,
+            BehandlingHendelseNavn.ALDER_LOVVALG_MEDLEMSKAP,
+            BehandlingHendelseNavn.NAV_KONTOR,
+            BehandlingHendelseNavn.FERDIG_BEHANDLET,
+        )
+        assertThat(hendelser.map { it.progresjon }).containsOnly(BehandlingHendelseProgresjon.FULLFØRT)
+    }
+
+    @Test
+    fun `flere ikke påbegynte hendelser mellom fullførte hendelser returneres ikke`() {
+        val behandling = nyBehandling()
+        opprettAvklaringsbehov(behandling, Definisjon.FATTE_VEDTAK, avsluttet = true)
+
+        val hendelser = service.utledBehandlingVisningHendelser(behandling)
+
+        assertThat(hendelser.map { it.navn }).containsExactly(
+            BehandlingHendelseNavn.SØKNAD_MOTTATT,
+            BehandlingHendelseNavn.NAY,
+            BehandlingHendelseNavn.FERDIG_BEHANDLET,
+        )
+    }
+
+    @Test
+    fun `ikke påbegynt hendelse mellom fullført og aktiv hendelse returneres ikke`() {
+        val behandling = nyBehandling()
+        leggTilSteghistorikk(
+            behandling,
+            StegType.VURDER_LOVVALG to StegStatus.AVSLUTTER,
+            StegType.VURDER_ALDER to StegStatus.AVSLUTTER,
+        )
+        opprettAvklaringsbehov(behandling, Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
+
+        assertThat(service.utledBehandlingVisningHendelser(behandling).map { it.navn }).containsExactly(
+            BehandlingHendelseNavn.SØKNAD_MOTTATT,
+            BehandlingHendelseNavn.ALDER_LOVVALG_MEDLEMSKAP,
+            BehandlingHendelseNavn.NAY,
+            BehandlingHendelseNavn.FERDIG_BEHANDLET,
+        )
     }
 
     @Test
@@ -244,18 +330,56 @@ class BehandlingVisningDatadelingServiceTest {
             .isEqualTo(BehandlingHendelseProgresjon.AKTIV)
         assertThat(hendelse<BehandlingHendelse.Nay>(behandling).status)
             .isEqualTo(BehandlingHendelse.Nay.Status.VENTER_PÅ_INFORMASJON_FRA_UTENLANDSKE_MYNDIGHETER)
-        assertThat(hendelse<BehandlingHendelse.AlderLovvalgMedlemskap>(behandling).status).isNull()
     }
 
     @Test
-    fun `venting på medisinske opplysninger gir status for NavKontor`() {
+    fun `lovvalg mister utenlandsventestatus når NavKontor er aktiv`() {
         val behandling = nyBehandling()
+        leggTilSteghistorikk(behandling, StegType.VURDER_LOVVALG to StegStatus.AVKLARINGSPUNKT)
+        opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_SYKDOM)
+        opprettAvklaringsbehov(
+            behandling = behandling,
+            definisjon = Definisjon.MANUELT_SATT_PÅ_VENT,
+            venteårsak = ÅrsakTilSettPåVent.VENTER_PÅ_OPPLYSNINGER_FRA_UTENLANDSKE_MYNDIGHETER
+        )
+
+        assertThat(progresjon<BehandlingHendelse.AlderLovvalgMedlemskap>(behandling))
+            .isEqualTo(BehandlingHendelseProgresjon.FULLFØRT)
+        assertThat(hendelse<BehandlingHendelse.AlderLovvalgMedlemskap>(behandling).status).isNull()
+        assertThat(progresjon<BehandlingHendelse.NavKontor>(behandling))
+            .isEqualTo(BehandlingHendelseProgresjon.AKTIV)
+    }
+
+    @Test
+    fun `NavKontor mister legeerklæringsstatus når Nay er aktiv`() {
+        val behandling = nyBehandling()
+        opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_SYKDOM)
+        opprettAvklaringsbehov(behandling, Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
+        opprettAvklaringsbehov(
+            behandling = behandling,
+            definisjon = Definisjon.MANUELT_SATT_PÅ_VENT,
+            venteårsak = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER
+        )
+
+        assertThat(progresjon<BehandlingHendelse.NavKontor>(behandling))
+            .isEqualTo(BehandlingHendelseProgresjon.FULLFØRT)
+        assertThat(hendelse<BehandlingHendelse.NavKontor>(behandling).status).isNull()
+        assertThat(progresjon<BehandlingHendelse.Nay>(behandling))
+            .isEqualTo(BehandlingHendelseProgresjon.AKTIV)
+    }
+
+    @Test
+    fun `venting på medisinske opplysninger gir status for aktiv NavKontor`() {
+        val behandling = nyBehandling()
+        opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_SYKDOM)
         opprettAvklaringsbehov(
             behandling = behandling,
             definisjon = Definisjon.MANUELT_SATT_PÅ_VENT,
             venteårsak = ÅrsakTilSettPåVent.VENTER_PÅ_MEDISINSKE_OPPLYSNINGER,
         )
 
+        assertThat(progresjon<BehandlingHendelse.NavKontor>(behandling))
+            .isEqualTo(BehandlingHendelseProgresjon.AKTIV)
         assertThat(hendelse<BehandlingHendelse.NavKontor>(behandling).status)
             .isEqualTo(BehandlingHendelse.NavKontor.Status.VENTER_PÅ_LEGEERKLÆRING)
     }
@@ -496,6 +620,9 @@ class BehandlingVisningDatadelingServiceTest {
         InMemoryBehandlingRepository.oppdaterBehandlingStatus(behandling.id, status)
         assertThat(behandling.status()).isEqualTo(status)
     }
+
+    private fun alleProgresjoner(behandling: Behandling) =
+        service.utledBehandlingVisningHendelser(behandling).map { it.progresjon }
 
     private inline fun <reified T : BehandlingHendelse> progresjon(behandling: Behandling) =
         hendelse<T>(behandling).progresjon

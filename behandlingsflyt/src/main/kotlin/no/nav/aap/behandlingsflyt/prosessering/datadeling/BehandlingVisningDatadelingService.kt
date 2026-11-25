@@ -198,13 +198,14 @@ class BehandlingVisningDatadelingService(
     }
 
     fun utledBehandlingVisningHendelser(behandling: Behandling): List<BehandlingHendelse> {
-        return listOf(
+        val hendelser = listOf(
             hendelseSøknadMottatt(behandling),
             hendelseAlderLovvalgMedlemskap(behandling),
             hendelseNavKontor(behandling),
             hendelseNay(behandling),
-            hendelseFerdigBehandlet(behandling),
+            hendelseFerdigBehandlet(behandling)
         )
+        return fjernForbigåtteHendelser(avstemHendelser(hendelser))
     }
 
     fun utledBehandlingVisning(behandling: Behandling): BehandlingVisningDto? {
@@ -222,5 +223,40 @@ class BehandlingVisningDatadelingService(
             )
         }
         return null
+    }
+
+    private fun avstemHendelser(hendelser: List<BehandlingHendelse>): List<BehandlingHendelse> {
+        val ferdigBehandlet = hendelser.any {
+            it is BehandlingHendelse.FerdigBehandlet && it.progresjon == BehandlingHendelseProgresjon.FULLFØRT
+        }
+        val aktivIndeks = if (ferdigBehandlet) {
+            -1
+        } else {
+            hendelser.indexOfLast { it.progresjon == BehandlingHendelseProgresjon.AKTIV }
+        }
+        return hendelser.mapIndexed { indeks, hendelse ->
+            if (indeks == aktivIndeks) hendelse else hendelse.somInaktiv()
+        }
+    }
+
+    private fun fjernForbigåtteHendelser(hendelser: List<BehandlingHendelse>): List<BehandlingHendelse> {
+        val sistePåbegynt = hendelser.indexOfLast { it.progresjon != BehandlingHendelseProgresjon.IKKE_PÅBEGYNT }
+        return hendelser.filterIndexed { indeks, hendelse ->
+            hendelse.progresjon != BehandlingHendelseProgresjon.IKKE_PÅBEGYNT || indeks > sistePåbegynt
+        }
+    }
+
+    private fun BehandlingHendelse.somInaktiv(): BehandlingHendelse {
+        val nyProgresjon = when (progresjon) {
+            BehandlingHendelseProgresjon.AKTIV -> BehandlingHendelseProgresjon.FULLFØRT
+            else -> progresjon
+        }
+        return when (this) {
+            is BehandlingHendelse.SøknadMottatt -> copy(progresjon = nyProgresjon)
+            is BehandlingHendelse.AlderLovvalgMedlemskap -> copy(progresjon = nyProgresjon, status = null)
+            is BehandlingHendelse.NavKontor -> copy(progresjon = nyProgresjon, status = null)
+            is BehandlingHendelse.Nay -> copy(progresjon = nyProgresjon, status = null)
+            is BehandlingHendelse.FerdigBehandlet -> copy(progresjon = nyProgresjon)
+        }
     }
 }
