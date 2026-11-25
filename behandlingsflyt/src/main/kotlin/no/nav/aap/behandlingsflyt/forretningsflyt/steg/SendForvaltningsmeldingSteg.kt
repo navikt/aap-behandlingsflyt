@@ -95,9 +95,9 @@ class SendForvaltningsmeldingSteg(
 
         val arenaMaksdato = arenaMaksdatoRepository.hentHvisEksisterer(kontekst.behandlingId)?.arenaMaksdato
             ?: return false
-        val gjeldendeRelevanteKrav =
-            kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.gjeldendeRelevanteKrav().orEmpty()
-        return kravVedOvergangFraArena(gjeldendeRelevanteKrav, arenaMaksdato) != null
+        val gjeldendeSøknadKrav =
+            kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.gjeldendeSøknadKrav().orEmpty()
+        return kravVedOvergangFraArena(gjeldendeSøknadKrav, arenaMaksdato) != null
     }
 
     private fun harAlleredeBestiltForvaltningsmeldingForBehandling(behandling: Behandling): Boolean {

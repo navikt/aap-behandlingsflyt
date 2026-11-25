@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.nesteHverdag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.kravtidslinje
 import no.nav.aap.komponenter.type.Periode
 
@@ -15,12 +16,12 @@ import no.nav.aap.komponenter.type.Periode
  * ingen krav overlapper overgangen, for eksempel ved opphold etter Arena-saken.
  */
 fun kravVedOvergangFraArena(
-    gjeldendeRelevanteKrav: Set<RelevantKrav>,
+    gjeldendeSøknadKrav: Set<RelevantSøknadKrav>,
     arenaMaksdato: ArenaMaksdato?,
 ): RelevantKrav? {
     val maksdato = arenaMaksdato?.maksdato ?: return null
     val overgangFraArena = Periode(maksdato.plusDays(1), maksdato.nesteHverdag())
-    return gjeldendeRelevanteKrav.kravtidslinje()
+    return gjeldendeSøknadKrav.kravtidslinje()
         .segmenter()
         .filter { it.periode.overlapper(overgangFraArena) }
         .minByOrNull { it.periode.fom }
