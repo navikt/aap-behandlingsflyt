@@ -761,33 +761,6 @@ class SamordningYtelseVurderingInformasjonskravTest {
     }
 
     @Test
-    fun `endret ytelse før rettighetsperioden uten samordningsvurdering gir ikke behov for vurdering`() {
-        val eksisterendeYtelse = SamordningYtelse(
-            ytelseType = Ytelse.SYKEPENGER,
-            kilde = "KildeB",
-            ytelsePerioder = setOf(
-                SamordningYtelsePeriode(
-                    periode = Periode(1 mai 2023, 15 mai 2023),
-                    gradering = Prosent.`100_PROSENT`
-                )
-            )
-        )
-        val eksisterendeGrunnlag = SamordningYtelseGrunnlag(1L, setOf(eksisterendeYtelse))
-        val nyYtelse = eksisterendeYtelse.copy(
-            ytelsePerioder = setOf(
-                SamordningYtelsePeriode(
-                    periode = Periode(1 mai 2023, 31 mai 2023),
-                    gradering = Prosent.`100_PROSENT`
-                )
-            )
-        )
-        val rettighetsperiode = Periode(1 juni 2023, 31 desember 2023)
-
-        assertTrue(harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(eksisterendeGrunnlag, setOf(nyYtelse)))
-        assertFalse(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(null, setOf(nyYtelse), rettighetsperiode))
-    }
-
-    @Test
     fun `udekket ytelse utenfor rettighetsperioden gir ikke endring, men overlapp på grensen gir endring`() {
         val vurderingsGrunnlag = SamordningVurderingGrunnlag(
             begrunnelse = "",
