@@ -5,7 +5,12 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKrav
 import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KlageKravLøsningDto
+import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TilleggsopplysningKravLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKravLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
@@ -14,6 +19,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMulig
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -38,6 +44,7 @@ import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.random.Random
@@ -374,6 +381,104 @@ class VurderKravLøserTest {
 
         val lagretVurdering = InMemoryKravRepository.hentHvisEksisterer(behandlingId)!!.vurderinger.single() as MigrertKrav
         assertThat(lagretVurdering.resterendeKvoteOrdinær).isEqualTo(maksKvote)
+    }
+
+    @Test
+    fun `skal godta endring av krav uten søknad når søknaden allerede er vurdert automatisk`() {
+        val sakId = SakId(Random.nextLong())
+        val behandlingId = BehandlingId(Random.nextLong())
+        InMemoryMottattDokumentRepository.lagre(
+            mottattDokument(behandlingId, sakId, journalpostId = "1112223", mottattTidspunkt = (15 januar 2026).atStartOfDay())
+        )
+        val automatiskVurdert = RelevantKrav(
+            referanse = Kravreferanse.ny(),
+            journalpostId = JournalpostId("1112223"),
+            vurdertAv = SYSTEMBRUKER,
+            begrunnelse = "Automatisk vurdert",
+            vurdertIBehandling = behandlingId,
+            opprettet = Instant.now().minusSeconds(60),
+            søknadsdato = Søknadsdato(15 januar 2026, SøknadsdatoÅrsak.SøknadMottatt, begrunnelse = "Automatisk vurdert"),
+            overstyrMuligRettFra = null,
+            muligRettFra = 15 januar 2026,
+        )
+        InMemoryKravRepository.lagre(behandlingId, setOf(automatiskVurdert))
+
+        løser.løs(
+            kontekst(sakId, behandlingId),
+            VurderKravLøsning(
+                kravVurderinger = setOf(
+                    TilleggsopplysningKravLøsningDto(
+                        journalpostId = JournalpostId("9998887"),
+                        begrunnelse = "Tilleggsopplysning",
+                    )
+                )
+            )
+        )
+
+        val lagret = InMemoryKravRepository.hentHvisEksisterer(behandlingId)!!.gjeldendeVurderinger()
+        assertThat(lagret).hasSize(2)
+        assertThat(lagret.single { it.referanse == automatiskVurdert.referanse }.vurdertAv).isEqualTo(SYSTEMBRUKER)
+        assertThat(lagret.single { it is Tilleggsopplysning }.vurdertAv).isEqualTo(Bruker("Z123456"))
+    }
+
+    @Test
+    fun `skal feile hvis søknad i behandlingen ikke er vurdert verken i innsendingen eller fra før`() {
+        val sakId = SakId(Random.nextLong())
+        val behandlingId = BehandlingId(Random.nextLong())
+        InMemoryMottattDokumentRepository.lagre(
+            mottattDokument(behandlingId, sakId, journalpostId = "1112223", mottattTidspunkt = (15 januar 2026).atStartOfDay())
+        )
+
+        assertThrows<UgyldigForespørselException> {
+            løser.løs(
+                kontekst(sakId, behandlingId),
+                VurderKravLøsning(
+                    kravVurderinger = setOf(
+                        TilleggsopplysningKravLøsningDto(
+                            journalpostId = JournalpostId("9998887"),
+                            begrunnelse = "Tilleggsopplysning",
+                        )
+                    )
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `skal godta endring av migrert krav fra forrige behandling med samme referanse`() {
+        val sak = opprettInMemorySak()
+        val forrigeBehandlingId = BehandlingId(Random.nextLong())
+        val behandlingId = BehandlingId(Random.nextLong())
+        val migrertKrav = MigrertKrav(
+            referanse = Kravreferanse.ny(),
+            vurdertAv = ARENA_MIGRERING_BRUKER,
+            begrunnelse = "Migrert fra Arena",
+            vurdertIBehandling = forrigeBehandlingId,
+            opprettet = Instant.now().minusSeconds(60),
+            virkningstidspunktArena = 1 januar 2024,
+            muligRettFra = 8 januar 2024,
+            arenaSaksnummer = "ARENA-4711",
+            rettighetstype = MigrertRettighetstype.ORDINÆR,
+            resterendeKvoteOrdinær = 5,
+        )
+        InMemoryKravRepository.lagre(forrigeBehandlingId, setOf(migrertKrav))
+
+        løser.løs(
+            AvklaringsbehovKontekst(
+                Bruker("Z123456"),
+                FlytKontekst(sak.id, behandlingId, forrigeBehandlingId, TypeBehandling.Revurdering)
+            ),
+            VurderKravLøsning(
+                kravVurderinger = setOf(
+                    migrertKravLøsningDto(resterendeKvoteOrdinaer = 4).copy(referanse = migrertKrav.referanse.verdi)
+                )
+            )
+        )
+
+        val gjeldende = InMemoryKravRepository.hentHvisEksisterer(behandlingId)!!.gjeldendeVurderinger()
+            .single() as MigrertKrav
+        assertThat(gjeldende.resterendeKvoteOrdinær).isEqualTo(4)
+        assertThat(gjeldende.vurdertAv).isEqualTo(Bruker("Z123456"))
     }
 
     private fun migrertKravLøsningDto(
