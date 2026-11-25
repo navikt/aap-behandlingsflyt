@@ -26,6 +26,7 @@ import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class BehandlingService(
@@ -361,8 +362,28 @@ class BehandlingService(
             .singleOrNull { it.status().erÅpen() }
 
     /**
+     * Manuell opprettelse fra saksbehandler. Avvises hvis det allerede finnes en åpen behandling,
+     * i motsetning til søknader fra journalpost som settes i kø.
+     */
+    fun opprettManuellUtenlandsoppholdBehandling(sakId: SakId, mottattDato: LocalDate): Behandling {
+        if (finnÅpenUtenlandsoppholdBehandling(sakId) != null) {
+            throw UgyldigForespørselException(
+                "Kan ikke opprette behandling for søknad om opphold i utlandet mens en annen er åpen. Fullfør den åpne behandlingen først."
+            )
+        }
+        return opprettUtenlandsoppholdBehandling(
+            sakId,
+            VurderingsbehovOgÅrsak(
+                vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_UTENLANDSOPPHOLD)),
+                årsak = ÅrsakTilOpprettelse.MANUELL_OPPRETTELSE,
+                opprettet = mottattDato.atStartOfDay(),
+            )
+        )
+    }
+
+    /**
      * Behandlingene for søknad om opphold i utlandet utgjør en egen kjede, uavhengig av ytelsesbehandlingene.
-     * Det kan kun være én åpen om gangen. Søknader som kommer inn mens en behandling er åpen, settes i kø av mottak.
+     * Det kan kun være én åpen om gangen. Søknader fra journalpost som kommer inn mens en behandling er åpen, settes i kø av mottak.
      * Ny behandling peker på forrige i kjeden, og grunnlaget kopieres slik at tidligere vurderinger følger med.
      */
     private fun opprettUtenlandsoppholdBehandling(

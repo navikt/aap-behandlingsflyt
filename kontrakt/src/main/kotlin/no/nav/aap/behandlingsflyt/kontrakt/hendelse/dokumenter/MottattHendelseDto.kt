@@ -154,7 +154,7 @@ public class Innsending(
             }
 
             InnsendingType.SØKNAD_UTENLANDSOPPHOLD -> {
-                require(referanse.type == InnsendingReferanse.Type.JOURNALPOST || referanse.type == InnsendingReferanse.Type.MANUELL_OPPRETTELSE)
+                require(referanse.type == InnsendingReferanse.Type.JOURNALPOST)
                 requireNotNull(melding) { "Melding for søknad om opphold i utlandet kan ikke være null" }
                 require(melding is SøknadUtenlandsopphold)
             }

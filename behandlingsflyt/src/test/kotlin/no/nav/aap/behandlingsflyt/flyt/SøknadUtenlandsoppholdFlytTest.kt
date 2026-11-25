@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -17,7 +18,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import java.time.LocalDate
 
 class SøknadUtenlandsoppholdFlytTest : AbstraktFlytOrkestratorSnapshotTest(AlleAvskruddUnleash::class) {
 
@@ -56,23 +57,21 @@ class SøknadUtenlandsoppholdFlytTest : AbstraktFlytOrkestratorSnapshotTest(Alle
 
     @Test
     fun `søknad om opphold i utlandet kan opprettes manuelt`() {
-        val behandling = sak.sendInnSøknadUtenlandsopphold(
-            referanse = InnsendingReferanse(InnsendingReferanse.Type.MANUELL_OPPRETTELSE, UUID.randomUUID().toString())
-        )
+        val behandling = opprettManuellUtenlandsoppholdBehandling()
+        prosesserBehandling(behandling)
 
-        assertThat(behandling.typeBehandling()).isEqualTo(TypeBehandling.Utenlandsopphold)
-        assertThat(behandling.aktivtSteg()).isEqualTo(StegType.VURDER_SØKNAD_UTENLANDSOPPHOLD)
+        hentBehandling(behandling.referanse).medKontekst {
+            assertThat(this.behandling.typeBehandling()).isEqualTo(TypeBehandling.Utenlandsopphold)
+            assertThat(this.behandling.aktivtSteg()).isEqualTo(StegType.VURDER_SØKNAD_UTENLANDSOPPHOLD)
+        }
     }
 
     @Test
     fun `manuell opprettelse avvises mens en behandling er åpen`() {
         val åpen = sak.sendInnSøknadUtenlandsopphold()
 
-        assertThatThrownBy {
-            sak.sendInnSøknadUtenlandsopphold(
-                referanse = InnsendingReferanse(InnsendingReferanse.Type.MANUELL_OPPRETTELSE, UUID.randomUUID().toString())
-            )
-        }.isInstanceOf(UgyldigForespørselException::class.java)
+        assertThatThrownBy { opprettManuellUtenlandsoppholdBehandling() }
+            .isInstanceOf(UgyldigForespørselException::class.java)
 
         assertThat(hentUtenlandsoppholdbehandlinger().map { it.id }).containsExactly(åpen.id)
     }
@@ -100,6 +99,11 @@ class SøknadUtenlandsoppholdFlytTest : AbstraktFlytOrkestratorSnapshotTest(Alle
             .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
             .medKontekst { assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET) }
         assertThat(hentUtenlandsoppholdbehandlinger()).hasSize(2)
+    }
+
+    private fun opprettManuellUtenlandsoppholdBehandling() = dataSource.transaction { connection ->
+        BehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
+            .opprettManuellUtenlandsoppholdBehandling(sak.id, LocalDate.now())
     }
 
     private fun hentUtenlandsoppholdbehandlinger() = dataSource.transaction { connection ->

@@ -3,7 +3,6 @@ package no.nav.aap.behandlingsflyt.hendelse.mottak
 import no.nav.aap.behandlingsflyt.dokumentHendelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
@@ -13,7 +12,6 @@ import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtf
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakRepository
-import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.repository.RepositoryProvider
 import no.nav.aap.motor.FlytJobbRepository
 import org.slf4j.LoggerFactory
@@ -59,12 +57,6 @@ class MottattHendelseService(
             return
         }
 
-        if (erManuellSøknadUtenlandsoppholdMedÅpenBehandling(dto, sak, behandlingRepository)) {
-            throw UgyldigForespørselException(
-                "Kan ikke opprette behandling for søknad om opphold i utlandet mens en annen er åpen. Fullfør den åpne behandlingen først."
-            )
-        }
-
         if (kjennerTilDokumentFraFør(dto, sak, mottattDokumentRepository)) {
             log.warn("Allerede håndtert dokument med referanse {}", dto.referanse)
         } else {
@@ -102,23 +94,6 @@ private fun erBehandlingAvsluttetOgKanIkkeOppretteNyttVurderingsbehov(
     return false
 }
 
-/**
- * Søknader fra journalpost settes i kø når en utenlandsoppholdbehandling er åpen,
- * men manuell opprettelse avvises slik at saksbehandler får beskjed med en gang.
- */
-private fun erManuellSøknadUtenlandsoppholdMedÅpenBehandling(
-    innsending: Innsending,
-    sak: Sak,
-    behandlingRepository: BehandlingRepository
-): Boolean {
-    if (innsending.type != InnsendingType.SØKNAD_UTENLANDSOPPHOLD ||
-        innsending.referanse.type != InnsendingReferanse.Type.MANUELL_OPPRETTELSE
-    ) {
-        return false
-    }
-    return behandlingRepository.hentAlleFor(sak.id, listOf(TypeBehandling.Utenlandsopphold))
-        .any { it.status().erÅpen() }
-}
 
 private fun kjennerTilDokumentFraFør(
     innsending: Innsending,

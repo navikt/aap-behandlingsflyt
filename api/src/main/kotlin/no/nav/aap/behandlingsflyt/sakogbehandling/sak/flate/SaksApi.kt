@@ -113,6 +113,31 @@ fun NormalOpenAPIRoute.saksApi(
                 respond(dto)
             }
 
+        route("/{saksnummer}/opprettUtenlandsoppholdBehandling")
+            .authorizedPost<SaksnummerParameter, BehandlingAvTypeDTO, OpprettUtenlandsoppholdBehandlingDto>(
+                routeConfig = AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                    sakPathParam = SakPathParam("saksnummer"),
+                    operasjon = Operasjon.SE, // TODO: Skriveoperasjon krever behandlingsreferanse - bruker 'SE' enn så lenge
+                )
+            ) { req, body ->
+                val dto = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val sakId = repositoryProvider.provide<SakRepository>().hent(Saksnummer(req.saksnummer)).id
+
+                    val behandling = BehandlingService(repositoryProvider, gatewayProvider)
+                        .opprettManuellUtenlandsoppholdBehandling(sakId, body.mottattDato)
+
+                    ProsesserBehandlingService(repositoryProvider, gatewayProvider).triggProsesserBehandling(behandling)
+
+                    BehandlingAvTypeDTO(
+                        behandlingsReferanse = behandling.referanse.referanse,
+                        opprettetDato = behandling.opprettetTidspunkt
+                    )
+                }
+                respond(dto)
+            }
+
 
         @Suppress("UnauthorizedPost") route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
             val saker = dataSource.transaction(readOnly = true) { connection ->
