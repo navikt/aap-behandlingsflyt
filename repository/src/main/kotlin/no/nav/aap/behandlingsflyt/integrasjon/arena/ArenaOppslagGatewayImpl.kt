@@ -4,8 +4,8 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkRequest
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
-import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoMedVedtakResponse
-import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoRequest
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoSamordningRequest
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoSamordningResponse
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerRequest
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
@@ -23,7 +23,6 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
-import no.nav.aap.komponenter.httpklient.httpclient.error.IkkeFunnetException
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
@@ -88,22 +87,18 @@ class ArenaOppslagGatewayImpl : ArenaOppslagGateway {
         return response
     }
 
-    override fun hentMaksdato(ident: Ident): MaksdatoMedVedtakResponse {
-        return try {
-            val response: MaksdatoMedVedtakResponse? = restClient.post(
-                uri.resolve("/api/v1/person/maksdato"),
-                PostRequest(
-                    body = MaksdatoRequest(ident.identifikator),
-                    timeout = Duration.ofSeconds(5)
-                ),
-                mapper = { body, _ -> DefaultJsonMapper.fromJson<MaksdatoMedVedtakResponse>(body) }
-            )
-            requireNotNull(response) { "Fikk ikke gyldig svar fra /api/v1/person/maksdato" }
-            response
-        } catch (_: IkkeFunnetException) {
-            // Personen finnes ikke i Arena
-            MaksdatoMedVedtakResponse(sak = null)
-        }
+    override fun hentMaksdato(ident: Ident): MaksdatoSamordningResponse {
+        // Endepunktet svarer MaksdatoSamordningResponse.INGEN (200) når personen ikke finnes i Arena.
+        val response: MaksdatoSamordningResponse? = restClient.post(
+            uri.resolve("/api/v1/samordning/person/maksdato"),
+            PostRequest(
+                body = MaksdatoSamordningRequest(ident.identifikator),
+                timeout = Duration.ofSeconds(5)
+            ),
+            mapper = { body, _ -> DefaultJsonMapper.fromJson<MaksdatoSamordningResponse>(body) }
+        )
+        requireNotNull(response) { "Fikk ikke gyldig svar fra /api/v1/samordning/person/maksdato" }
+        return response
     }
 
     override fun hentKravDataForSak(arenasaksnummer: String): KravResponse {

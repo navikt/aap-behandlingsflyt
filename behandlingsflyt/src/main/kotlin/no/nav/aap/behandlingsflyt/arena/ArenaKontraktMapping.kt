@@ -2,7 +2,8 @@ package no.nav.aap.behandlingsflyt.arena
 
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
-import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoMedVedtakResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoSamordningResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.SamordningVedtakStatus
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaBeregningstidspunktResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaForutgaaendeMedlemskapResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaRefusjonskravResponse
@@ -11,6 +12,7 @@ import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaSykdomsvurderingResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVedtaksperiodeResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaVedtakStatus
 import java.time.LocalDate
 
 data class ArenaKrav(
@@ -18,6 +20,7 @@ data class ArenaKrav(
     val søknadsdato: LocalDate,
     val migreringsdato: LocalDate,
     val gjenståendeKvoteOrdinær: Int?,
+    val sisteFerdigBehandledeMeldekortTilDato: LocalDate?,
 )
 
 data class ArenaSak(
@@ -87,6 +90,7 @@ fun KravResponse.tilDomene(): ArenaKrav {
             "Kan ikke migrere krav for Arena-sak $arenaSaksnummer. Mangler migreringsdato fra Arena."
         },
         gjenståendeKvoteOrdinær = gjenstaaendeKvote.ordinaer,
+        sisteFerdigBehandledeMeldekortTilDato = sisteFerdigBehandledeMeldekortperiode?.tilOgMedDato,
     )
 }
 
@@ -160,13 +164,20 @@ fun ArenaBeregningstidspunktResponse.tilDomene(): ArenaBeregningstidspunkt? =
 
 fun HarHistorikkResponse.tilDomene(): ArenaHistorikk = ArenaHistorikk(harHistorikk = harHistorikk)
 
-// Samme valg av maksdato som MaksdatoSamordningResponse.from, men status STANSET gir ikke null her; status lagres separat.
-fun MaksdatoMedVedtakResponse.tilDomene(): ArenaMaksdato? = sak?.let {
+fun MaksdatoSamordningResponse.tilDomene(): ArenaMaksdato? = sisteAktuelleVedtak?.let {
     ArenaMaksdato(
         arenaSaksnummer = it.saknummer,
-        status = it.sakStatus,
-        maksdato = it.sisteVedtak.maxdatoUnntak ?: it.sisteVedtak.maxdatoOrdinaer,
-        vedtakTil = it.sisteVedtak.til,
-        vedtakId = it.sisteVedtak.vedtakId,
+        vedtakStatus = it.status.tilDomene(),
+        maksdato = it.maksdato,
+        vedtakTil = it.vedtakTil,
+        vedtakId = it.vedtakId,
+        harForlengelseEtter11_12 = it.harForlengelseEtter11_12,
     )
+}
+
+private fun SamordningVedtakStatus.tilDomene(): ArenaVedtakStatus = when (this) {
+    SamordningVedtakStatus.LØPENDE -> ArenaVedtakStatus.LØPENDE
+    SamordningVedtakStatus.STANSET -> ArenaVedtakStatus.STANSET
+    SamordningVedtakStatus.AVSLUTTET -> ArenaVedtakStatus.AVSLUTTET
+    SamordningVedtakStatus.ANNET -> ArenaVedtakStatus.ANNET
 }

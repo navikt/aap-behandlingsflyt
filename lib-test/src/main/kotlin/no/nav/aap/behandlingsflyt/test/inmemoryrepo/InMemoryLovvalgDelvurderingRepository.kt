@@ -15,16 +15,16 @@ object InMemoryLovvalgDelvurderingRepository : LovvalgDelvurderingRepository {
             grunnlag[behandlingId]?.lastOrNull()?.let { vurderinger.getValue(it) }.orEmpty()
         }
 
-    override fun lagre(behandlingId: BehandlingId, delvurderinger: List<LovvalgDelvurderingerGrunnlag>) {
-        require(delvurderinger.isNotEmpty()) { "Må lagre minst én delvurdering" }
-        require(delvurderinger.map { it.relevantDato }.distinct().size == delvurderinger.size) {
+    override fun lagre(behandlingId: BehandlingId, resultat: List<LovvalgDelvurderingerGrunnlag>) {
+        require(resultat.isNotEmpty()) { "Må lagre minst én delvurdering" }
+        require(resultat.map { it.relevantDato }.distinct().size == resultat.size) {
             "Kun én delvurdering per relevant dato"
         }
         synchronized(lock) {
-            if (hentAlle(behandlingId).toSet() == delvurderinger.toSet()) return
+            if (hentAlle(behandlingId).toSet() == resultat.toSet()) return
 
             val id = ++nesteId
-            vurderinger[id] = delvurderinger.sortedBy { it.relevantDato }
+            vurderinger[id] = resultat.sortedBy { it.relevantDato }
             grunnlag[behandlingId] = grunnlag[behandlingId].orEmpty() + id
         }
     }

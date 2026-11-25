@@ -28,6 +28,7 @@ data class MeldeperiodeMedMeldekortDto(
     val meldekort: MeldekortDto?,
     val tidligereMeldekort: List<MeldekortDto> = emptyList(),
     val meldepliktStatus: Set<MeldepliktStatus>,
+    val meldedato: LocalDate?,
 )
 
 data class MeldekortDto(
@@ -130,6 +131,7 @@ fun toMeldeperiodeMedMeldekortDto(
     nyesteMeldekort: Meldekort?,
     tidligereMeldekort: List<Meldekort>,
     mottatteDokumenter: Map<InnsendingReferanse, MottattDokument>,
+    meldedato: LocalDate?,
 ): MeldeperiodeMedMeldekortDto {
     val meldefrist = helligdagsunntakjustertMeldefrist(meldeperiode.tom.plusDays(8))
     if (nyesteMeldekort == null) {
@@ -138,6 +140,7 @@ fun toMeldeperiodeMedMeldekortDto(
             periode = oppfyltMeldeperiodeMedMeldepliktStatus.periode,
             meldefrist = meldefrist,
             meldepliktStatus = oppfyltMeldeperiodeMedMeldepliktStatus.meldepliktStatus,
+            meldedato = meldedato,
             meldekort = null,
         )
     }
@@ -147,6 +150,7 @@ fun toMeldeperiodeMedMeldekortDto(
         periode = oppfyltMeldeperiodeMedMeldepliktStatus.periode,
         meldefrist = meldefrist,
         meldepliktStatus = oppfyltMeldeperiodeMedMeldepliktStatus.meldepliktStatus,
+        meldedato = meldedato,
         meldekort = nyesteMeldekort.toDto(
             meldekortData = mottatteDokumenter.metadataFor(nyesteMeldekort),
         ),

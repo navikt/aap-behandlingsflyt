@@ -43,8 +43,5 @@ class InformasjonskravOppdatert(
     }
 }
 
-fun InformasjonskravOppdatert?.ikkeKjørtSisteKalenderdag(): Boolean =
-    this == null || datoOppdatert != LocalDate.now()
-
 fun InformasjonskravOppdatert?.ikkeKjørtSisteKalenderdagForBehandling(gjeldendeBehandlingId: BehandlingId): Boolean =
     this == null || datoOppdatert != LocalDate.now() || behandlingId != gjeldendeBehandlingId

@@ -11,15 +11,16 @@ argument-hint: "[basis-ref, for eksempel origin/main]"
    git -c core.quotePath=false ls-files --others --exclude-standard; } | sort -u`
    Moduler er første stikomponent, men bare de som finnes i `settings.gradle.kts`: `app`, `api`, `behandlingsflyt`,
    `repository`, `lib-test`, `kontrakt`. Endringer bare i `.md`-filer eller `.agents/` trenger ingen kjøring; si det
-   og stopp. Endringer i `build-logic/`, `gradle/` eller rot-`*.gradle.kts` påvirker alle moduler: kjør `coreTest`
-   for alle (`./gradlew coreTest`), men ikke hele `test`.
+   og stopp. Endringer i `build-logic/`, `gradle/` eller rot-`*.gradle.kts` påvirker alle moduler: kjør de raske
+   testene for alle (`./gradlew test -PcoreTestsOnly=true`), men ikke hele `test` uten dette flagget.
 2. Kompiler hver endret modul: `./gradlew :<modul>:compileKotlin :<modul>:compileTestKotlin`.
-3. Kjør testene uten Docker for hver endret modul: `./gradlew :<modul>:coreTest` (~10 s). De er raske, så kjør dem
+3. Kjør testene uten Docker for hver endret modul: `./gradlew :<modul>:test -PcoreTestsOnly=true` (~10 s).
+   Det finnes ingen egen `coreTest`-oppgave. Testene er raske, så kjør dem
    etter hver endring under arbeidet, ikke bare her. Feiler en test fordi den prøver å starte Docker
    (`DockerIkkeTillattIKjernetester`), mangler testklassen `@Tag("db")` eller `@Tag("kafka")`: legg den til.
 4. Kjør DB- og flyttester for hver endret fil i listen fra steg 1, én testklasse per kall, mest spesifikt først.
    Flyttestene er tyngst: kjør bare den for området, aldri mange samtidig. Ikke kjør hele `:<modul>:test` eller
-   `test`: det tar minutter, kan time ut og feiler ofte i en sandkasse. Det kjører CI.
+   `test` uten `-PcoreTestsOnly=true`: det tar minutter, kan time ut og feiler ofte i en sandkasse. Det kjører CI.
    - Endret `XxxSteg.kt` → `./gradlew :behandlingsflyt:test --tests "*XxxStegTest"`, deretter flyttesten for området
      (for eksempel `--tests "*StudentFlytTest"`) og `--tests "*EnklereFlytOrkestratorTest"` (stegsekvensen).
    - Endret løser/løsning → `--tests "*XxxLøserTest" --tests "*AvklaringsbehovsLøserTest"`.

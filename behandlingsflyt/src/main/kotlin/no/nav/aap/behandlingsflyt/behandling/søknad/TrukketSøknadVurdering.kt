@@ -6,7 +6,8 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
 
 data class TrukketSøknadVurdering(
-    val journalpostId: JournalpostId,
+    /** Null for migreringsbehandlinger fra Arena, som ikke har en søknad med journalpost. */
+    val journalpostId: JournalpostId?,
     val begrunnelse: String,
     val skalTrekkes: Boolean,
     val vurdertAv: Bruker,

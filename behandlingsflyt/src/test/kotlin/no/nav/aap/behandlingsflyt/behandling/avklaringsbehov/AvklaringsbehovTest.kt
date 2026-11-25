@@ -81,7 +81,7 @@ class AvklaringsbehovTest {
         behov.oppdater(
             perioderVedtaketBehøverVurdering = setOf(Periode(1 januar 2020, 1 februar 2020)),
             perioderSomIkkeErTilstrekkeligVurdert = setOf(Periode(1 januar 2020, 2 januar 2020)),
-            perioderKanVurderes = null,
+            perioderVilkåretErRelevant = null,
             gradBehov = null,
         )
         assertThat(behov.perioderVedtaketBehøverVurdering()).containsExactly(Periode(1 januar 2020, 1 februar 2020))

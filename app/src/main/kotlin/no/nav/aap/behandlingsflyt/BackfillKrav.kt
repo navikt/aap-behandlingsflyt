@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt
 
 import no.nav.aap.behandlingsflyt.behandling.BackfillBehandlingResultat
 import no.nav.aap.behandlingsflyt.behandling.BackfillKravService
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.lås.TaSkriveLåsRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.sak.SakRepositoryImpl
@@ -76,6 +77,11 @@ class BackfillKrav(
                     return@transaction
                 }
 
+                if (behandlinger.any { it.årsakTilOpprettelse === ÅrsakTilOpprettelse.HELSEOPPLYSNINGER && it.typeBehandling() == TypeBehandling.Førstegangsbehandling }) {
+                    log.warn("Backfiller ikke sak ${sak.saksnummer}; ble opprettet pga helseopplysninger")
+                    return@transaction
+                }
+
                 val taSkriveLåsRepository = TaSkriveLåsRepositoryImpl(connection)
                 val backfillService = BackfillKravService(postgresRepositoryRegistry.provider(connection))
 
@@ -110,6 +116,12 @@ class BackfillKrav(
                                     if (antallBackfillUtført % 1000 == 0) {
                                         log.info("Backfilled krav for {} behandlinger", antallBackfillUtført)
                                     }
+                                }
+                                
+                                BackfillBehandlingResultat.KunneIkkeBackfille -> {
+                                    log.warn(
+                                        "Kunne ikke backfille krav for behandling ${behandling.id.toLong()} i sak ${sak.id.toLong()}, hopper over"
+                                    )
                                 }
                             }
                         }

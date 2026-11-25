@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Re
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.somTidslinje
+import no.nav.aap.komponenter.type.Periode
 import java.time.LocalDate
 
 data class UnderveisGrunnlag(
@@ -12,6 +13,12 @@ data class UnderveisGrunnlag(
 ) {
     fun somTidslinje(): Tidslinje<Underveisperiode> {
         return perioder.somTidslinje { it.periode }
+    }
+
+    fun meldedatoForMeldeperiode(meldeperiode: Periode): LocalDate? {
+        val meldedatoer = perioder.filter { it.meldePeriode == meldeperiode }.mapNotNull { it.meldedato }.toSet()
+        check(meldedatoer.size <= 1) { "[Utviklerfeil] Flere meldedatoer for samme meldeperiode" }
+        return meldedatoer.singleOrNull()
     }
 
     fun sisteDagMedYtelse() = perioder.last { it.utfall == Utfall.OPPFYLT }.periode.tom

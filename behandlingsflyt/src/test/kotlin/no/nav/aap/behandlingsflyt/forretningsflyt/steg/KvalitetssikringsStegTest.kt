@@ -150,7 +150,7 @@ class KvalitetssikringsStegTest {
                 bruker = Bruker(VEILEDER),
                 perioderSomIkkeErTilstrekkeligVurdert = setOf(periode),
                 perioderVedtaketBehøverVurdering = setOf(periode),
-                perioderKanVurderes = setOf(periode)
+                perioderVilkåretErRelevant = setOf(periode)
             )
             avklaringsbehovene.løsAvklaringsbehov(definisjon, "fff", Bruker(VEILEDER))
 

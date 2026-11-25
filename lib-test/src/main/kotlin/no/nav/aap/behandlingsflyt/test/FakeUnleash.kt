@@ -84,9 +84,9 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
         BehandlingsflytFeature.SynkroniserArenaMeldeperiodesyklus to false,
         BehandlingsflytFeature.HandtereMaksdatoForKantTilKant to true,
-        BehandlingsflytFeature.DynamiskFrivilligSykestipend to true,
         BehandlingsflytFeature.MaksdatoSykepenger to true,
-        
+        BehandlingsflytFeature.ForvaltningsmeldingBrevbygger to true,
+
         // --- Krav ---
         BehandlingsflytFeature.BackfillKrav to true,
         BehandlingsflytFeature.KravSteg to true,
@@ -114,6 +114,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.DatadelingBehandlingVisning to true,
         BehandlingsflytFeature.HentInnLovvalgRegisterdataForNyesteAktuelleKrav to true,
         BehandlingsflytFeature.OvergangUfoereBrevbygger to true,
+        BehandlingsflytFeature.VedtaksperiodeBeslutter to true,
     )
 ) {
     override fun getVariantValue(featureToggle: FeatureToggle, variantName: String): String {

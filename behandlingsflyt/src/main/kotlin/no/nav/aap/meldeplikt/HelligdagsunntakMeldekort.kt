@@ -40,13 +40,13 @@ val EKSISTERNDE_FRITAKSUNNTAK_I_PROD = mapOf(
 
 val TEST_FRITAKSUNNTAK_I_DEV = mapOf(
     LocalDate.of(2026, 11, 25) to LocalDate.of(2026, 11, 23),
-    LocalDate.of(2026, 12, 2) to LocalDate.of(2026, 11, 30),
+    LocalDate.of(2026, 12, 2) to LocalDate.of(2026, 11, 25),
     LocalDate.of(2026, 12, 9) to LocalDate.of(2026, 12, 7),
 )
 
 val KOMMENDE_FRITAKSUNNTAK_I_PROD = mapOf(
     LocalDate.of(2026, 12, 16) to LocalDate.of(2026, 12, 14),
-    LocalDate.of(2026, 12, 23) to LocalDate.of(2026, 12, 21),
+    LocalDate.of(2026, 12, 23) to LocalDate.of(2026, 12, 16),
     LocalDate.of(2026, 12, 30) to LocalDate.of(2026, 12, 28),
 )
 
