@@ -68,7 +68,8 @@ class HåndterUbehandletDokumentJobbUtfører(
                 dokument.referanse,
                 dokument.mottattTidspunkt,
                 dokument.type,
-                melding
+                melding,
+                opprettetAv = dokument.opprettetAv
             )
         }
         taSkrivelåsRepository.verifiserSkrivelås(skrivelås)

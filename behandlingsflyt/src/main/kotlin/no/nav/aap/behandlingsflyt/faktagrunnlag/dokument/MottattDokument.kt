@@ -23,7 +23,8 @@ class MottattDokument(
     val kanal: Kanal,
     val status: Status = Status.MOTTATT,
     val strukturertDokument: StrukturerteData?,
-    val digitalisertAvPostmottak: Boolean? = null
+    val digitalisertAvPostmottak: Boolean? = null,
+    val opprettetAv: String? = null,
 ) {
 
     inline fun <reified T : Melding> strukturerteData(): StrukturertDokument<T>? {
@@ -73,4 +74,3 @@ class MottattDokument(
         }
     }
 }
-

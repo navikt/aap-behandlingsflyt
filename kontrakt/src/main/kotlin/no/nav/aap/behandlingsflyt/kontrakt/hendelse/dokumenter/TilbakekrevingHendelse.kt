@@ -77,7 +77,8 @@ public data class TilbakekrevingHendelseKafkaMelding(
             type = InnsendingType.TILBAKEKREVING_HENDELSE,
             kanal = Kanal.DIGITAL,
             mottattTidspunkt = LocalDateTime.now(),
-            melding = this.tilTilbakekrevingHendelseV0()
+            melding = this.tilTilbakekrevingHendelseV0(),
+            opprettetAv = "Kelvin"
         )
     }
 }
@@ -108,6 +109,7 @@ public data class FagsysteminfoBehovKafkaMelding(
             kanal = Kanal.DIGITAL,
             mottattTidspunkt = LocalDateTime.now(),
             melding = this.tilFagsysteminfoBehovV0(),
+            opprettetAv = "Kelvin",
         )
     }
 }

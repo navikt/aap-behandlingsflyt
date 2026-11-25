@@ -187,7 +187,7 @@ class MeldekortService(
 
             // Oppretter mottatt hendelse som prosesseres som en meldekort-behandling
             mottattHendelseService.registrerMottattHendelse(
-                tilInnsending(sak, journalpostId, mottattTidspunkt, meldekort)
+                tilInnsending(sak, journalpostId, mottattTidspunkt, meldekort, bruker)
             )
 
             return journalpostId
@@ -321,6 +321,7 @@ private fun tilInnsending(
     journalpostId: JournalpostId,
     mottattTidspunkt: LocalDateTime,
     meldekort: MeldekortV0,
+    bruker: Bruker,
 ): Innsending = Innsending(
     saksnummer = sak.saksnummer,
     referanse = InnsendingReferanse(journalpostId),
@@ -328,6 +329,7 @@ private fun tilInnsending(
     kanal = Kanal.DIGITAL,
     mottattTidspunkt = mottattTidspunkt,
     melding = meldekort,
+    opprettetAv = bruker.ident,
 )
 
 /**
