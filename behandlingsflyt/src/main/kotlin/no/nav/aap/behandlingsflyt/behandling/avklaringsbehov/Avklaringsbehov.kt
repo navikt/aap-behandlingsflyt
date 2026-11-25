@@ -114,7 +114,7 @@ class Avklaringsbehov(
 
     private fun sisteÅpneEndring(): Endring {
         return checkNotNull(aktivHistorikk.lastOrNull { it.status.erÅpent() }) {
-            "Prøver å totrinnsvurdere avklaringsbehov $definisjon (id=$id) som ikke har noen åpne endringer i aktiv historikk" +
+            "Prøver å totrinnsvurdere avklaringsbehov $definisjon (id=$id) som ikke har noen åpne endringer i aktiv historikk. " +
                     "Aktive statuser: ${aktivHistorikk.map { it.status }}."
         }
     }
