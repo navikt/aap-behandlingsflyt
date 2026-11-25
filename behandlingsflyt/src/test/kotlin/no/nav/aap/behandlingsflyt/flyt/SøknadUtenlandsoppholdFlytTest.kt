@@ -1,6 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderSøknadUtenlandsoppholdLøsning
+import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.SøknadUtenlandsoppholdLøsning
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
@@ -42,7 +42,7 @@ class SøknadUtenlandsoppholdFlytTest : AbstraktFlytOrkestratorSnapshotTest(Alle
                 assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
                     .containsOnly(Definisjon.VURDER_SØKNAD_UTENLANDSOPPHOLD)
             }
-            .løsAvklaringsBehov(VurderSøknadUtenlandsoppholdLøsning())
+            .løsAvklaringsBehov(SøknadUtenlandsoppholdLøsning())
             .medKontekst {
                 assertThat(behandling.aktivtSteg()).isEqualTo(StegType.BREV)
                 assertThat(avklaringsbehovSomMåLøses.map { it.definisjon })
@@ -91,7 +91,7 @@ class SøknadUtenlandsoppholdFlytTest : AbstraktFlytOrkestratorSnapshotTest(Alle
         sak.sendInnSøknadUtenlandsopphold(referanse = førsteReferanse)
         assertThat(hentUtenlandsoppholdbehandlinger().map { it.id }).containsExactly(første.id)
 
-        første.løsAvklaringsBehov(VurderSøknadUtenlandsoppholdLøsning())
+        første.løsAvklaringsBehov(SøknadUtenlandsoppholdLøsning())
             .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
 
         val behandlinger = hentUtenlandsoppholdbehandlinger()
@@ -101,7 +101,7 @@ class SøknadUtenlandsoppholdFlytTest : AbstraktFlytOrkestratorSnapshotTest(Alle
         assertThat(andre.status()).isEqualTo(Status.UTREDES)
         assertThat(andre.aktivtSteg()).isEqualTo(StegType.VURDER_SØKNAD_UTENLANDSOPPHOLD)
 
-        andre.løsAvklaringsBehov(VurderSøknadUtenlandsoppholdLøsning())
+        andre.løsAvklaringsBehov(SøknadUtenlandsoppholdLøsning())
             .løsVedtaksbrev(TypeBrev.VEDTAK_ENDRING)
             .medKontekst { assertThat(behandling.status()).isEqualTo(Status.AVSLUTTET) }
         assertThat(hentUtenlandsoppholdbehandlinger()).hasSize(2)

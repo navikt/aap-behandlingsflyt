@@ -13,7 +13,7 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(value = VURDER_SØKNAD_UTENLANDSOPPHOLD_KODE)
-class VurderSøknadUtenlandsoppholdLøsning(
+class SøknadUtenlandsoppholdLøsning(
     @param:JsonProperty(
         "behovstype",
         required = true,
