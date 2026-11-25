@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag
 import no.nav.aap.behandlingsflyt.help.opprettSak
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
+import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.repository.behandling.BehandlingRepositoryImpl
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
@@ -15,6 +16,7 @@ import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Tag
@@ -89,6 +91,41 @@ class BehandlingServiceTest {
             val behandlinger = behandlingRepository.hentAlleFor(sak.id)
             assertThat(behandlinger)
                 .hasSize(3)
+        }
+    }
+
+    @Test
+    fun `søknad om opphold i utlandet gir egen behandlingskjede uavhengig av ytelsesbehandlingen`() {
+        dataSource.transaction { connection ->
+            val behandlingService =
+                BehandlingService(postgresRepositoryRegistry.provider(connection), gatewayProvider)
+            val behandlingRepository = BehandlingRepositoryImpl(connection)
+            val sak = opprettSak(connection, 1 januar 2020)
+            val utenlandsopphold = VurderingsbehovOgÅrsak(
+                listOf(VurderingsbehovMedPeriode(Vurderingsbehov.SØKNAD_UTENLANDSOPPHOLD)),
+                ÅrsakTilOpprettelse.SØKNAD_UTENLANDSOPPHOLD,
+            )
+
+            val førstegangsbehandling = behandlingService.finnEllerOpprettBehandling(
+                sak.id,
+                VurderingsbehovOgÅrsak(
+                    listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTTATT_SØKNAD)),
+                    ÅrsakTilOpprettelse.SØKNAD,
+                )
+            ).åpenBehandling!!
+
+            val første = behandlingService.finnEllerOpprettBehandling(sak.id, utenlandsopphold).åpenBehandling!!
+            assertThat(første.typeBehandling()).isEqualTo(TypeBehandling.Utenlandsopphold)
+            assertThat(første.forrigeBehandlingId).isNull()
+            assertThatThrownBy { behandlingService.finnEllerOpprettBehandling(sak.id, utenlandsopphold) }
+                .isInstanceOf(IllegalStateException::class.java)
+
+            behandlingRepository.oppdaterBehandlingStatus(første.id, Status.AVSLUTTET)
+            val andre = behandlingService.finnEllerOpprettBehandling(sak.id, utenlandsopphold).åpenBehandling!!
+
+            assertThat(andre.forrigeBehandlingId).isEqualTo(første.id)
+            assertThat(behandlingRepository.hent(førstegangsbehandling.id).vurderingsbehov().map { it.type })
+                .doesNotContain(Vurderingsbehov.SØKNAD_UTENLANDSOPPHOLD)
         }
     }
 }

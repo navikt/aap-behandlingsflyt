@@ -317,6 +317,14 @@ public enum class StegType(
 
     // Aktivitetsplikt slutt
 
+    // Søknad om å beholde AAP under opphold i utlandet start
+    VURDER_SØKNAD_UTENLANDSOPPHOLD(
+        gruppe = StegGruppe.SØKNAD_UTENLANDSOPPHOLD,
+        status = Status.UTREDES,
+    ),
+
+    // Søknad om å beholde AAP under opphold i utlandet slutt
+
     UDEFINERT(
         gruppe = StegGruppe.UDEFINERT,
         status = Status.UTREDES,

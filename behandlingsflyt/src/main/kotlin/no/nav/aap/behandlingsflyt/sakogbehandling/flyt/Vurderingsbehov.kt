@@ -87,7 +87,8 @@ enum class Vurderingsbehov {
     AKTIVITETSPLIKTBEHANDLING_AVBRUTT,
     VURDER_AVSLAG_11_27,
     VURDER_ARBEIDSOPPTRAPPING,
-    MIGRERING_FRA_ARENA
+    MIGRERING_FRA_ARENA,
+    SØKNAD_UTENLANDSOPPHOLD
     ;
 
     companion object {
@@ -191,4 +192,5 @@ fun EksponertÅrsak.tilVurderingsbehov() =
         EksponertÅrsak.INSTITUSJONSOPPHOLD_HELSEINSTITUSJON -> Vurderingsbehov.INSTITUSJONSOPPHOLD_HELSEINSTITUSJON
         EksponertÅrsak.FERIE_I_SYKEPENGEPERIODE -> Vurderingsbehov.FERIE_I_SYKEPENGEPERIODE
         EksponertÅrsak.MIGRERING_FRA_ARENA -> Vurderingsbehov.MIGRERING_FRA_ARENA
+        EksponertÅrsak.SØKNAD_UTENLANDSOPPHOLD -> Vurderingsbehov.SØKNAD_UTENLANDSOPPHOLD
     }

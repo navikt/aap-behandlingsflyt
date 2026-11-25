@@ -11,6 +11,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettig
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.KantIKantMedArena
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.KantIKantUtfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder
@@ -173,6 +175,7 @@ class AvklarStønadsperiodeStegTest {
         assertThat(vurdering.harHattOrdinærSiste52Uker).isFalse()
         assertThat(vurdering.harGjenværendeKvote).isFalse()
         assertThat(vurdering.begrunnelse).contains(migrertKrav.arenaSaksnummer)
+        assertThat(vurdering.kantIKant).isNull()
     }
 
     @Test
@@ -288,6 +291,7 @@ class AvklarStønadsperiodeStegTest {
         val vurdering = hentVurdering(behandling.id, krav)
         assertVanligVurdering(vurdering, 3 august 2024)
         assertThat(vurdering.begrunnelse).isEqualTo("Automatisk vurdering")
+        assertKantIKantUtfall(vurdering, behandling.id, KantIKantUtfall.OPPHOLD_ETTER_MAKSDATO)
     }
 
     @Test
@@ -299,7 +303,9 @@ class AvklarStønadsperiodeStegTest {
         utførMedKravOgMaksdato(behandling.id, setOf(senereKrav, kravVedOvergang), MAKSDATO)
 
         assertKantIKant(hentVurdering(behandling.id, kravVedOvergang))
-        assertVanligVurdering(hentVurdering(behandling.id, senereKrav), 1 september 2024)
+        val senereVurdering = hentVurdering(behandling.id, senereKrav)
+        assertVanligVurdering(senereVurdering, 1 september 2024)
+        assertKantIKantUtfall(senereVurdering, behandling.id, KantIKantUtfall.ANNET_KRAV_ER_KANT_I_KANT)
     }
 
     @Test
@@ -370,6 +376,8 @@ class AvklarStønadsperiodeStegTest {
 
         assertVanligVurdering(hentVurdering(behandling.id, førsteKrav), 1 januar 2024)
         assertVanligVurdering(hentVurdering(behandling.id, andreKrav), 1 juni 2024)
+        assertKantIKantUtfall(hentVurdering(behandling.id, førsteKrav), behandling.id, KantIKantUtfall.INGEN_MAKSDATO)
+        assertKantIKantUtfall(hentVurdering(behandling.id, andreKrav), behandling.id, KantIKantUtfall.INGEN_MAKSDATO)
     }
 
     @Test
@@ -384,6 +392,21 @@ class AvklarStønadsperiodeStegTest {
 
         assertVanligVurdering(hentVurdering(behandling.id, førsteKrav), 1 januar 2024)
         assertVanligVurdering(hentVurdering(behandling.id, andreKrav), 1 juni 2024)
+        assertThat(hentVurdering(behandling.id, førsteKrav).kantIKant)
+            .isEqualTo(KantIKantMedArena(KantIKantUtfall.INGEN_ARENASAK, arenaMaksdatoId = null))
+    }
+
+    @Test
+    fun `ingen Arena-oppslag i behandlingen - ikke vurdert`() {
+        val behandling = opprettFørstegangsbehandling(opprettInMemorySak().id)
+        val krav = lagRelevantKrav(behandling.id, 1 juni 2024)
+        InMemoryKravRepository.lagre(behandling.id, setOf(krav))
+
+        steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
+
+        assertVanligVurdering(hentVurdering(behandling.id, krav), 1 juni 2024)
+        assertThat(hentVurdering(behandling.id, krav).kantIKant)
+            .isEqualTo(KantIKantMedArena(KantIKantUtfall.IKKE_VURDERT, arenaMaksdatoId = null))
     }
 
     @Test
@@ -399,6 +422,8 @@ class AvklarStønadsperiodeStegTest {
 
         assertVanligVurdering(hentVurdering(behandling.id, førsteKrav), 1 januar 2024)
         assertVanligVurdering(hentVurdering(behandling.id, andreKrav), 1 juni 2024)
+        assertThat(hentVurdering(behandling.id, førsteKrav).kantIKant)
+            .isEqualTo(KantIKantMedArena(KantIKantUtfall.IKKE_VURDERT, arenaMaksdatoId = null))
     }
 
     @Test
@@ -652,6 +677,20 @@ class AvklarStønadsperiodeStegTest {
         assertThat(vurdering.startDato).isEqualTo(startDato)
         assertThat(vurdering.harHattOrdinærSiste52Uker).isTrue()
         assertThat(vurdering.erKantIKantMedArena).isTrue()
+        assertThat(vurdering.kantIKant?.utfall).isEqualTo(KantIKantUtfall.KANT_I_KANT)
+        assertThat(vurdering.kantIKant?.arenaMaksdatoId)
+            .isNotNull()
+            .isEqualTo(InMemoryArenaMaksdatoRepository.hentHvisEksisterer(vurdering.vurdertIBehandling)?.arenaMaksdatoId)
+    }
+
+    private fun assertKantIKantUtfall(
+        vurdering: StønadsperiodeVurdering,
+        behandlingId: BehandlingId,
+        utfall: KantIKantUtfall,
+    ) {
+        assertThat(vurdering.kantIKant?.utfall).isEqualTo(utfall)
+        assertThat(vurdering.kantIKant?.arenaMaksdatoId)
+            .isEqualTo(InMemoryArenaMaksdatoRepository.hentHvisEksisterer(behandlingId)?.arenaMaksdatoId)
     }
 
     private fun assertVanligVurdering(vurdering: StønadsperiodeVurdering, startDato: LocalDate) {

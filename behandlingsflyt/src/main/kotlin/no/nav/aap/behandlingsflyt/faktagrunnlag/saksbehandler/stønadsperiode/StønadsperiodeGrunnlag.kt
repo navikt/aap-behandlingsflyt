@@ -44,11 +44,22 @@ data class StønadsperiodeVurdering(
     val relevantKravType: RelevantKravType,
     val startDato: LocalDate,
     /**
-     * Startdatoen er satt til dagen etter maksdato i tilstøtende Arena-sak.
+     * Kravet dekker overgangen fra tilstøtende Arena-sak. Startdatoen er den seneste av dagen etter maksdato
+     * og kravets mulig rett fra, slik at kant i kant ikke tilbakedaterer kravet. Se [KantIKantUtfall].
      */
     val erKantIKantMedArena: Boolean = false,
+    /**
+     * Utfallet av kant-i-kant-vurderingen. Null når Arena ikke er aktuelt: manuell vurdering, migrert sak
+     * og vurderinger lagret før feltet fantes.
+     */
+    val kantIKant: KantIKantMedArena? = null,
 ) : VurderingForKrav {
     init {
+        if (kantIKant != null) {
+            require(erKantIKantMedArena == kantIKant.erKantIKant) {
+                "[Utviklerfeil] erKantIKantMedArena=$erKantIKantMedArena stemmer ikke med utfall ${kantIKant.utfall}"
+            }
+        }
 
         /// harGjenværendeKvote | harHattOrdinærSiste52Uker
         /// true                                | true                                              | GJENINNTREKDEN/GJENOPPTAK
