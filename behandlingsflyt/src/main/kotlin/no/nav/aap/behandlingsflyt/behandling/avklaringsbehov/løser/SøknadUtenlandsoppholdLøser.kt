@@ -5,7 +5,7 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderSøk
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.lookup.repository.RepositoryProvider
 
-class VurderSøknadUtenlandsoppholdLøser() : AvklaringsbehovsLøser<VurderSøknadUtenlandsoppholdLøsning> {
+class SøknadUtenlandsoppholdLøser() : AvklaringsbehovsLøser<VurderSøknadUtenlandsoppholdLøsning> {
     constructor(repositoryProvider: RepositoryProvider) : this()
 
     // TODO: Lagre vurderingen når grunnlaget er på plass

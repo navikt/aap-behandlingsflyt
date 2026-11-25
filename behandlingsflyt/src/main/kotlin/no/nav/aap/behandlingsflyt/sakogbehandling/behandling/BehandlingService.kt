@@ -518,7 +518,6 @@ class BehandlingService(
             startNesteSøknadUtenlandsoppholdIKø(behandling.sakId)
         }
     }
-
     private fun startNesteSøknadUtenlandsoppholdIKø(sakId: SakId) {
         val nesteSøknad = mottattDokumentRepository
             .hentUbehandledeDokumenterAvType(sakId, InnsendingType.SØKNAD_UTENLANDSOPPHOLD)
