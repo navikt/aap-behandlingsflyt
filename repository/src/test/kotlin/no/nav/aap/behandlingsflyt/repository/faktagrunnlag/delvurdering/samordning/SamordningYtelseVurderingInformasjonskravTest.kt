@@ -16,36 +16,18 @@ import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mai
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.test.september
-import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
-@Tag("db")
 class SamordningYtelseVurderingInformasjonskravTest {
 
-    companion object {
-        private lateinit var dataSource: TestDataSource
-
-        @BeforeAll
-        @JvmStatic
-        fun setup() {
-            dataSource = TestDataSource()
-        }
-
-        @AfterAll
-        @JvmStatic
-        fun tearDown() = dataSource.close()
-
-    }
+    private val rettighetsperiode = Periode(1 januar 2023, 31 desember 2024)
 
     @Test
     fun `full overlapping med eksisterende ytelser med nye ytelser`() {
@@ -493,7 +475,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
         assertFalse(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
             vurderingsGrunnlag,
             setOf(nyYtelse),
-            sak.rettighetsperiode
+            rettighetsperiode
         ))
     }
 
@@ -538,7 +520,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
         assertTrue(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
             vurderingsGrunnlag,
             setOf(nyYtelse),
-            sak.rettighetsperiode
+            rettighetsperiode
         ))
     }
 
@@ -582,7 +564,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
         assertTrue(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
             vurderingsGrunnlag,
             setOf(nyYtelse),
-            sak.rettighetsperiode
+            rettighetsperiode
         ))
     }
 
@@ -626,7 +608,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
         assertTrue(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
             vurderingsGrunnlag,
             setOf(nyYtelse),
-            sak.rettighetsperiode
+            rettighetsperiode
         ))
     }
 
@@ -670,7 +652,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
         assertFalse(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
             vurderingsGrunnlag,
             setOf(nyYtelse),
-            sak.rettighetsperiode
+            rettighetsperiode
         ))
     }
 
@@ -714,7 +696,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
         assertTrue(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
             vurderingsGrunnlag,
             setOf(nyYtelse),
-            sak.rettighetsperiode
+            rettighetsperiode
         ))
     }
 
@@ -745,7 +727,7 @@ class SamordningYtelseVurderingInformasjonskravTest {
         assertTrue(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
             vurderingsGrunnlag,
             setOf(nyYtelse),
-            sak.rettighetsperiode
+            rettighetsperiode
         ))
     }
 
@@ -774,7 +756,76 @@ class SamordningYtelseVurderingInformasjonskravTest {
         assertFalse(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
             vurderingsGrunnlag,
             emptySet(),
-            sak.rettighetsperiode
+            rettighetsperiode
         ))
+    }
+
+    @Test
+    fun `endret ytelse før rettighetsperioden uten samordningsvurdering gir ikke behov for vurdering`() {
+        val eksisterendeYtelse = SamordningYtelse(
+            ytelseType = Ytelse.SYKEPENGER,
+            kilde = "KildeB",
+            ytelsePerioder = setOf(
+                SamordningYtelsePeriode(
+                    periode = Periode(1 mai 2023, 15 mai 2023),
+                    gradering = Prosent.`100_PROSENT`
+                )
+            )
+        )
+        val eksisterendeGrunnlag = SamordningYtelseGrunnlag(1L, setOf(eksisterendeYtelse))
+        val nyYtelse = eksisterendeYtelse.copy(
+            ytelsePerioder = setOf(
+                SamordningYtelsePeriode(
+                    periode = Periode(1 mai 2023, 31 mai 2023),
+                    gradering = Prosent.`100_PROSENT`
+                )
+            )
+        )
+        val rettighetsperiode = Periode(1 juni 2023, 31 desember 2023)
+
+        assertTrue(harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(eksisterendeGrunnlag, setOf(nyYtelse)))
+        assertFalse(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(null, setOf(nyYtelse), rettighetsperiode))
+    }
+
+    @Test
+    fun `udekket ytelse utenfor rettighetsperioden gir ikke endring, men overlapp på grensen gir endring`() {
+        val vurderingsGrunnlag = SamordningVurderingGrunnlag(
+            begrunnelse = "",
+            vurderinger = setOf(
+                SamordningVurdering(
+                    ytelseType = Ytelse.SYKEPENGER,
+                    vurderingPerioder = setOf(
+                        SamordningVurderingPeriode(
+                            periode = Periode(1 juni 2023, 30 juni 2023),
+                            gradering = Prosent.`100_PROSENT`,
+                            manuell = false
+                        )
+                    )
+                )
+            ),
+            vurdertAv = Bruker("ident"),
+            vurdertTidspunkt = LocalDateTime.of(2023, 6, 1, 0, 0)
+        )
+        val nyYtelse = SamordningYtelse(
+            ytelseType = Ytelse.SYKEPENGER,
+            kilde = "KildeB",
+            ytelsePerioder = setOf(
+                SamordningYtelsePeriode(
+                    periode = Periode(1 mai 2023, 31 mai 2023),
+                    gradering = Prosent.`100_PROSENT`
+                )
+            )
+        )
+
+        assertFalse(
+            harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
+                vurderingsGrunnlag, setOf(nyYtelse), Periode(1 juni 2023, 31 desember 2023)
+            )
+        )
+        assertTrue(
+            harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
+                vurderingsGrunnlag, setOf(nyYtelse), Periode(31 mai 2023, 31 desember 2023)
+            )
+        )
     }
 }
