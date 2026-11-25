@@ -117,6 +117,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadUtenlandsoppholdV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
@@ -1067,6 +1068,21 @@ open class AbstraktFlytOrkestratorTest(
             kanal = Kanal.DIGITAL,
             mottattTidspunkt = mottattTidspunkt,
             melding = oppfølgingsoppgave,
+        )
+        return hentSisteOpprettedeBehandlingForSak(saksnummer)
+    }
+
+    protected fun Sak.sendInnSøknadUtenlandsopphold(
+        referanse: InnsendingReferanse = InnsendingReferanse(journalpostId()),
+        mottattTidspunkt: LocalDateTime = LocalDateTime.now(),
+        søknad: SøknadUtenlandsoppholdV0 = SøknadUtenlandsoppholdV0(mottattDato = mottattTidspunkt.toLocalDate()),
+    ): Behandling {
+        sendInn(
+            referanse = referanse,
+            type = InnsendingType.SØKNAD_UTENLANDSOPPHOLD,
+            kanal = Kanal.PAPIR,
+            mottattTidspunkt = mottattTidspunkt,
+            melding = søknad,
         )
         return hentSisteOpprettedeBehandlingForSak(saksnummer)
     }
