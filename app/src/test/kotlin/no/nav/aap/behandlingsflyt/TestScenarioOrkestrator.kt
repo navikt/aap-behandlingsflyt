@@ -436,7 +436,7 @@ class TestScenarioOrkestrator(
     fun løsAvklaringsBehov(
         behandling: Behandling,
         avklaringsBehovLøsning: AvklaringsbehovLøsning,
-        bruker: Bruker = Bruker("SAKSBEHANDLER"),
+        bruker: Bruker = Bruker("S123456"),
     ): Behandling {
         datasource.transaction {
             AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(it), gatewayProvider)

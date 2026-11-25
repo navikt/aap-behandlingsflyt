@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.test.fakes
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
@@ -32,8 +33,9 @@ class NomFake : FakeServer() {
         installerStatusPages("NOM")
         routing {
             post("/graphql") {
-                val requestBody = call.receiveText()
-                val data = if (requestBody.contains("ressurser")) {
+                val jsonNode = call.receive<JsonNode>()
+                val navIdent = jsonNode["variables"]["navIdent"].asText()
+                val data = if (jsonNode["query"].asText().contains("ressurser")) {
                     NomRessurserVisningsnavn(
                         ressurser = listOf(
                             NomRessursResponse(NomRessursVisningsnavn("ABC1245", "Sak Behandlersen")),
@@ -50,7 +52,14 @@ class NomFake : FakeServer() {
                                     LocalDate.now(),
                                     null
                                 )
-                            ), visningsnavn = "Test Testesen"
+                            ), visningsnavn = when (navIdent) {
+                                "V123456" -> "Veileder Etternavn"
+                                "K123456" -> "Kvalitetssikrer Etternavn"
+                                "S123456" -> "Saksbehandler Etternavn"
+                                "B123456" -> "Beslutter Etternavn"
+                                "X123456" -> "Superbruker Etternavn"
+                                else -> "Ukjent Bruker"
+                            }
                         )
                     )
                 }

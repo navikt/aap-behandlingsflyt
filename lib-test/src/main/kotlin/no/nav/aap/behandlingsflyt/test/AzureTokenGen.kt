@@ -24,7 +24,7 @@ class AzureTokenGen(private val audience: String) {
         return signedJWT
     }
 
-    private fun claims(isApp: Boolean, azp: String?, navIdent: String?): JWTClaimsSet {
+    private fun claims(isApp: Boolean, azp: String?, navIdent: String?, groups: List<String>? = null): JWTClaimsSet {
         val builder = JWTClaimsSet
             .Builder()
             .subject(UUID.randomUUID().toString())
@@ -64,7 +64,7 @@ class AzureTokenGen(private val audience: String) {
             builder.claim("NAVident", navIdent ?: "X123456")
                 .claim(
                     "groups",
-                    listOf("saksbehandler-rolle", "veileder-rolle", "kvalitetssikrer-rolle", "beslutter-rolle")
+                    groups ?: listOf("saksbehandler-rolle", "veileder-rolle", "kvalitetssikrer-rolle", "beslutter-rolle")
                 )
         }
 
@@ -75,8 +75,8 @@ class AzureTokenGen(private val audience: String) {
         return Date.from(this.atZone(ZoneId.systemDefault()).toInstant())
     }
 
-    fun generate(isApp: Boolean, azp: String, navIdent: String? = null): String {
-        return signed(claims(isApp, azp, navIdent)).serialize()
+    fun generate(isApp: Boolean, azp: String, navIdent: String? = null, groups: List<String>? = null): String {
+        return signed(claims(isApp, azp, navIdent, groups)).serialize()
     }
 }
 
