@@ -6,12 +6,15 @@ import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.erSystembruker
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdatoGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdatoRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.kravtidslinje
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.KantIKantMedArena
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.KantIKantUtfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
@@ -62,8 +65,8 @@ class AvklarStønadsperiodeSteg(
         val gjeldendeSøknadKrav = gjeldendeRelevanteKrav.filterIsInstance<RelevantSøknadKrav>().toSet()
         val vedtattGrunnlag = kontekst.forrigeBehandlingId?.let(stønadsperiodeRepository::hentHvisEksisterer)
         val vedtatteVurderinger = vedtattGrunnlag?.gjeldendeVurderinger().orEmpty().associateBy { it.referanse }
-        val arenaMaksdato = hentArenaMaksdato(kontekst)
-        val kantIKantKrav = kravVedOvergangFraArena(gjeldendeSøknadKrav, arenaMaksdato)
+        val arenaMaksdatoGrunnlag = hentArenaMaksdatoGrunnlag(kontekst)
+        val kantIKantKrav = kravVedOvergangFraArena(gjeldendeSøknadKrav, arenaMaksdatoGrunnlag?.arenaMaksdato)
         if (kantIKantKrav != null) {
             sjekkAtIngenKravFørKantIKantKrav(kantIKantKrav, gjeldendeSøknadKrav)
         }
@@ -71,7 +74,7 @@ class AvklarStønadsperiodeSteg(
         val nyeVurderinger = gjeldendeRelevanteKrav
             .map { krav ->
                 when (krav) {
-                    is RelevantSøknadKrav -> vurderStønadsperiode(krav, kantIKantKrav, arenaMaksdato, kontekst)
+                    is RelevantSøknadKrav -> vurderStønadsperiode(krav, kantIKantKrav, arenaMaksdatoGrunnlag, kontekst)
                     is RelevantMigrertKrav -> migrertStønadsperiode(krav, kontekst)
                 }
             }
@@ -80,7 +83,7 @@ class AvklarStønadsperiodeSteg(
         // Svarer på om forrige lagrede vurdering var kant-i-kant. Må hentes før nye vurderinger lagres.
         val forrigeVurderingVarKantIKant = erKantIKant(kontekst.behandlingId)
         stønadsperiodeRepository.lagre(kontekst.behandlingId, vedtattGrunnlag?.vurderinger.orEmpty() + nyeVurderinger)
-        oppdaterRettighetsperiodeVedKantIKant(kontekst, forrigeVurderingVarKantIKant, arenaMaksdato)
+        oppdaterRettighetsperiodeVedKantIKant(kontekst, forrigeVurderingVarKantIKant, arenaMaksdatoGrunnlag?.arenaMaksdato)
     }
 
     private fun erKantIKant(behandlingId: BehandlingId): Boolean =
@@ -128,9 +131,9 @@ class AvklarStønadsperiodeSteg(
     private fun trengerNyVurdering(vedtatt: StønadsperiodeVurdering?, forslag: StønadsperiodeVurdering) =
         vedtatt == null || (vedtatt.vurdertAv.erSystembruker() && vedtatt.startDato != forslag.startDato)
 
-    private fun hentArenaMaksdato(kontekst: FlytKontekstMedPerioder): ArenaMaksdato? {
+    private fun hentArenaMaksdatoGrunnlag(kontekst: FlytKontekstMedPerioder): ArenaMaksdatoGrunnlag? {
         if (!unleashGateway.isEnabled(BehandlingsflytFeature.HandtereMaksdatoForKantTilKant)) return null
-        return arenaMaksdatoRepository.hentHvisEksisterer(kontekst.behandlingId)?.arenaMaksdato
+        return arenaMaksdatoRepository.hentHvisEksisterer(kontekst.behandlingId)
     }
 
     private fun migrertStønadsperiode(
@@ -151,10 +154,12 @@ class AvklarStønadsperiodeSteg(
     private fun vurderStønadsperiode(
         krav: RelevantSøknadKrav,
         kantIKantKrav: RelevantKrav?,
-        arenaMaksdato: ArenaMaksdato?,
+        arenaMaksdatoGrunnlag: ArenaMaksdatoGrunnlag?,
         kontekst: FlytKontekstMedPerioder,
     ): StønadsperiodeVurdering {
-        if (arenaMaksdato?.maksdato != null && krav.referanse == kantIKantKrav?.referanse) {
+        val kantIKant = vurderKantIKant(krav, kantIKantKrav, arenaMaksdatoGrunnlag)
+        val arenaMaksdato = arenaMaksdatoGrunnlag?.arenaMaksdato
+        if (kantIKant.erKantIKant && arenaMaksdato?.maksdato != null) {
             val dagenEtterMaksdato = arenaMaksdato.maksdato.plusDays(1)
             // Kant i kant skal ikke tilbakedatere kravet: krav fra mandag etter maksdato fredag starter mandag.
             val kravKomEtterDagenEtterMaksdato = krav.muligRettFra.isAfter(dagenEtterMaksdato)
@@ -173,7 +178,8 @@ class AvklarStønadsperiodeSteg(
                 harGjenværendeKvote = false,
                 relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
                 startDato = if (kravKomEtterDagenEtterMaksdato) krav.muligRettFra else dagenEtterMaksdato,
-                erKantIKantMedArena = true,
+                erKantIKantMedArena = kantIKant.erKantIKant,
+                kantIKant = kantIKant,
             )
         }
 
@@ -187,8 +193,27 @@ class AvklarStønadsperiodeSteg(
             harHattOrdinærSiste52Uker = false,
             harGjenværendeKvote = false,
             relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
-            startDato = krav.muligRettFra // Dum heuristikk på at stønadsperiode start = kravdato start
+            startDato = krav.muligRettFra, // Dum heuristikk på at stønadsperiode start = kravdato start
+            erKantIKantMedArena = kantIKant.erKantIKant,
+            kantIKant = kantIKant,
         )
+    }
+
+    private fun vurderKantIKant(
+        krav: RelevantKrav,
+        kantIKantKrav: RelevantKrav?,
+        arenaMaksdatoGrunnlag: ArenaMaksdatoGrunnlag?,
+    ): KantIKantMedArena {
+        val arenaMaksdatoId = arenaMaksdatoGrunnlag?.arenaMaksdatoId
+        val utfall = when {
+            arenaMaksdatoGrunnlag == null -> KantIKantUtfall.IKKE_VURDERT
+            arenaMaksdatoGrunnlag.arenaMaksdato == null -> KantIKantUtfall.INGEN_ARENASAK
+            arenaMaksdatoGrunnlag.arenaMaksdato.maksdato == null -> KantIKantUtfall.INGEN_MAKSDATO
+            kantIKantKrav == null -> KantIKantUtfall.OPPHOLD_ETTER_MAKSDATO
+            kantIKantKrav.referanse == krav.referanse -> KantIKantUtfall.KANT_I_KANT
+            else -> KantIKantUtfall.ANNET_KRAV_ER_KANT_I_KANT
+        }
+        return KantIKantMedArena(utfall, arenaMaksdatoId)
     }
 
     /**

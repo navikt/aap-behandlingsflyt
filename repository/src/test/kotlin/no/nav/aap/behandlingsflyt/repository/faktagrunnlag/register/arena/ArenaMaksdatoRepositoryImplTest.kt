@@ -1,9 +1,16 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.arena
 
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaVedtakStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.KantIKantMedArena
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.KantIKantUtfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettSak
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.DBConnection
@@ -14,6 +21,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -179,6 +187,67 @@ class ArenaMaksdatoRepositoryImplTest {
         }
 
         assertThat(antallGrunnlag).isEqualTo(1)
+    }
+
+    @Test
+    fun `grunnlaget gir id til Arena-maksdato, og id-en er stabil når samme data lagres igjen`() {
+        val behandlingId = opprettBehandlingId()
+        val arenaMaksdato = ArenaMaksdato("123", ArenaVedtakStatus.LØPENDE, LocalDate.of(2026, 12, 31), null, 42, false)
+
+        val (første, andre) = dataSource.transaction { connection ->
+            val repository = ArenaMaksdatoRepositoryImpl(connection)
+            repository.lagre(behandlingId, arenaMaksdato)
+            val første = repository.hentHvisEksisterer(behandlingId)
+            repository.lagre(behandlingId, arenaMaksdato)
+            første to repository.hentHvisEksisterer(behandlingId)
+        }
+
+        assertThat(første?.arenaMaksdatoId).isNotNull()
+        assertThat(andre?.arenaMaksdatoId).isEqualTo(første?.arenaMaksdatoId)
+    }
+
+    @Test
+    fun `slett beholder Arena-maksdato som en stønadsperiodevurdering peker på`() {
+        val behandlingId = opprettBehandlingId()
+        val arenaMaksdato = ArenaMaksdato("123", ArenaVedtakStatus.LØPENDE, LocalDate.of(2026, 12, 31), null, 42, false)
+
+        val arenaMaksdatoId = dataSource.transaction { connection ->
+            val repository = ArenaMaksdatoRepositoryImpl(connection)
+            repository.lagre(behandlingId, arenaMaksdato)
+            val id = repository.hentHvisEksisterer(behandlingId)!!.arenaMaksdatoId!!
+            StønadsperiodeRepositoryImpl(connection).lagre(
+                behandlingId,
+                setOf(
+                    StønadsperiodeVurdering(
+                        referanse = Kravreferanse.ny(),
+                        opprettet = Instant.now(),
+                        vurdertIBehandling = behandlingId,
+                        vurdertAv = SYSTEMBRUKER,
+                        begrunnelse = "Test",
+                        harHattOrdinærSiste52Uker = true,
+                        harGjenværendeKvote = false,
+                        relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
+                        startDato = LocalDate.of(2027, 1, 1),
+                        erKantIKantMedArena = true,
+                        kantIKant = KantIKantMedArena(KantIKantUtfall.KANT_I_KANT, id),
+                    )
+                )
+            )
+            id
+        }
+
+        dataSource.transaction { connection ->
+            ArenaMaksdatoRepositoryImpl(connection).slett(behandlingId)
+        }
+
+        val gjenværende = dataSource.transaction(readOnly = true) { connection ->
+            connection.queryFirst("SELECT count(*) AS antall FROM arena_maksdato WHERE id = ?") {
+                setParams { setLong(1, arenaMaksdatoId) }
+                setRowMapper { it.getLong("antall") }
+            }
+        }
+
+        assertThat(gjenværende).isEqualTo(1)
     }
 
     @Test
