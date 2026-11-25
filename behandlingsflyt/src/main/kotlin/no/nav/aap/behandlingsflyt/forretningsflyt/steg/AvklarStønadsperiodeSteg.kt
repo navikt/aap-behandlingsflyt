@@ -58,7 +58,7 @@ class AvklarStønadsperiodeSteg(
 
     private fun vurderAutomatisk(kontekst: FlytKontekstMedPerioder) {
         val gjeldendeRelevanteKrav =
-            kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.gjeldendeRelevanteKrav().orEmpty()
+            kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.gjeldendeRelevanteKravInkludertMigrerteKrav().orEmpty()
         val gjeldendeSøknadKrav = gjeldendeRelevanteKrav.filterIsInstance<RelevantSøknadKrav>().toSet()
         val vedtattGrunnlag = kontekst.forrigeBehandlingId?.let(stønadsperiodeRepository::hentHvisEksisterer)
         val vedtatteVurderinger = vedtattGrunnlag?.gjeldendeVurderinger().orEmpty().associateBy { it.referanse }

@@ -17,7 +17,7 @@ Gjelder: `behandlingsflyt/src/main/kotlin/no/nav/aap/behandlingsflyt/faktagrunnl
 - Grunnlagsmodeller: `data class`, proveniens-felt (`vurdertIBehandling`, `opprettet`, `Bruker`). Repository-grensesnitt
   (`XxxRepository : Repository` fra `no.nav.aap.lookup.repository`) ligger her; implementasjonen i `repository/`.
 - `RelevantKrav` er et sealed interface med `RelevantSøknadKrav` og `RelevantMigrertKrav`. Bruk
-  `gjeldendeRelevanteKrav()`/`kravtidslinje()` (begge typene) som standard. Bruk `gjeldendeSøknadKrav()` eller
+  `gjeldendeRelevanteKravInkludertMigrerteKrav()`/`kravtidslinje()` (begge typene) som standard. Bruk `gjeldendeSøknadKrav()` eller
   `gjeldendeMigrertKrav()` bare når du trenger felt som finnes på én type, og bruk `when` over subtypene, ikke `is`
   med stille `else`. En behandling har aldri både migrert krav og søknadskrav samtidig (valideres i `VurderKravLøser`).
   På sikt skal vi støtte flere krav, og man må da passe på at man kan få et krav som skal ta over for det migrerte kravet.

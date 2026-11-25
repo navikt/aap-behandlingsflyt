@@ -21,7 +21,7 @@ class KravGrunnlagTest {
 
         val grunnlag = KravGrunnlag(setOf(søknadKrav, migrertKrav, tilleggsopplysning))
 
-        assertThat(grunnlag.gjeldendeRelevanteKrav()).containsExactlyInAnyOrder(søknadKrav, migrertKrav)
+        assertThat(grunnlag.gjeldendeRelevanteKravInkludertMigrerteKrav()).containsExactlyInAnyOrder(søknadKrav, migrertKrav)
         assertThat(grunnlag.gjeldendeSøknadKrav()).containsExactly(søknadKrav)
         assertThat(grunnlag.gjeldendeMigrertKrav()).isEqualTo(migrertKrav)
     }
@@ -44,7 +44,7 @@ class KravGrunnlagTest {
 
         val grunnlag = KravGrunnlag(setOf(migrertKrav, nedgradert))
 
-        assertThat(grunnlag.gjeldendeRelevanteKrav()).isEmpty()
+        assertThat(grunnlag.gjeldendeRelevanteKravInkludertMigrerteKrav()).isEmpty()
         assertThat(grunnlag.gjeldendeMigrertKrav()).isNull()
     }
 

@@ -270,7 +270,7 @@ class BackfillKravService(
             return
         }
 
-        val gjeldendeKrav = grunnlag.gjeldendeRelevanteKrav()
+        val gjeldendeKrav = grunnlag.gjeldendeRelevanteKravInkludertMigrerteKrav()
         if (gjeldendeKrav.isEmpty()) throw IllegalStateException("Forventet ett relevant krav for nyeste behandling på sak ${sak.id}")
 
         val gjeldendeMuligRettFra: LocalDate = gjeldendeKrav.minOf { it.muligRettFra }

@@ -20,7 +20,7 @@ data class StønadsperiodeGrunnlag(
     override val vurderinger: Set<StønadsperiodeVurdering>
 ) : VurderingForKravGrunnlag<StønadsperiodeVurdering> {
     override fun tilTidslinje(kravGrunnlag: KravGrunnlag): Tidslinje<StønadsperiodeVurdering> {
-        val gjeldendeKravreferanser = kravGrunnlag.gjeldendeRelevanteKrav().map { it.referanse }
+        val gjeldendeKravreferanser = kravGrunnlag.gjeldendeRelevanteKravInkludertMigrerteKrav().map { it.referanse }
 
         return gjeldendeVurderinger()
             .filter { stønadsperiodeVurdering -> stønadsperiodeVurdering.referanse in gjeldendeKravreferanser }

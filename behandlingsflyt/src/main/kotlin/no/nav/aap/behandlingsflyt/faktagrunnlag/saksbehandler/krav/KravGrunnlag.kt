@@ -19,7 +19,7 @@ data class KravGrunnlag(
     }
 
     /** Alle gjeldende relevante krav, både fra søknad og fra migrering. */
-    fun gjeldendeRelevanteKrav(): Set<RelevantKrav> {
+    fun gjeldendeRelevanteKravInkludertMigrerteKrav(): Set<RelevantKrav> {
         return this.gjeldendeVurderinger().filterIsInstance<RelevantKrav>().toSet()
     }
 

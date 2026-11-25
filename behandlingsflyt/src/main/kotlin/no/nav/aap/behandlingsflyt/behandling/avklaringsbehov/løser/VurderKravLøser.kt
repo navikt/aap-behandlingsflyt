@@ -50,7 +50,7 @@ class VurderKravLøser(
 
         val alleVurderinger = nyeVurderinger + iverksatteVurderinger
 
-        KravValidering.validerIkkeBådeMigrertKravOgSøknadKrav(KravGrunnlag(alleVurderinger).gjeldendeRelevanteKrav())
+        KravValidering.validerIkkeBådeMigrertKravOgSøknadKrav(KravGrunnlag(alleVurderinger).gjeldendeRelevanteKravInkludertMigrerteKrav())
 
         kravRepository.lagre(kontekst.behandlingId(), alleVurderinger)
 
