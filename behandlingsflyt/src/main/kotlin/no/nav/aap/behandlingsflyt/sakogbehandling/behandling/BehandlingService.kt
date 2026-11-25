@@ -359,11 +359,7 @@ class BehandlingService(
     fun finnÅpenUtenlandsoppholdBehandling(sakId: SakId): Behandling? =
         behandlingRepository.hentAlleFor(sakId, listOf(TypeBehandling.Utenlandsopphold))
             .singleOrNull { it.status().erÅpen() }
-
-    /**
-     * Manuell opprettelse fra saksbehandler. Avvises hvis det allerede finnes en åpen behandling,
-     * i motsetning til søknader fra journalpost som settes i kø.
-     */
+    
     fun opprettManuellUtenlandsoppholdBehandling(sakId: SakId, beskrivelse: String): Behandling {
         if (beskrivelse.isBlank()) {
             throw UgyldigForespørselException("Beskrivelse av hvorfor behandlingen opprettes må fylles ut.")

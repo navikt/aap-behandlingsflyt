@@ -23,7 +23,8 @@ class VurderSøknadUtenlandsoppholdSteg private constructor(
             behov = { AvklaringsbehovService.Behov.PÅKREVD },
             // TODO: Erstatt med sjekk av lagret vurdering når grunnlaget er på plass
             erTilstrekkeligVurdert = { erLøst(kontekst) },
-            tilbakestillGrunnlag = { /* Behandlingen har ingen tidligere behandling å tilbakestille til */ },
+            // TODO: Tilbakestill vurderingen til forrige behandlings vurdering når grunnlaget er på plass
+            tilbakestillGrunnlag = { },
             kontekst = kontekst,
         )
         return Fullført
