@@ -80,7 +80,7 @@ class Avklaringsbehov(
         } else {
             Status.SENDT_TILBAKE_FRA_BESLUTTER
         }
-        val sisteEndring = aktivHistorikk.last { it.status.erÅpent() }
+        val sisteEndring = sisteÅpneEndring()
         historikk += sisteEndring.copy(
             status = status,
             begrunnelse = begrunnelse,
@@ -102,7 +102,7 @@ class Avklaringsbehov(
         } else {
             Status.SENDT_TILBAKE_FRA_KVALITETSSIKRER
         }
-        val sisteEndring = aktivHistorikk.last { it.status.erÅpent() }
+        val sisteEndring = sisteÅpneEndring()
         historikk += sisteEndring.copy(
             status = status,
             begrunnelse = begrunnelse,
@@ -110,6 +110,13 @@ class Avklaringsbehov(
             årsakTilRetur = årsakTilRetur,
             tidsstempel = LocalDateTime.now()
         )
+    }
+
+    private fun sisteÅpneEndring(): Endring {
+        return checkNotNull(aktivHistorikk.lastOrNull { it.status.erÅpent() }) {
+            "Prøver å totrinnsvurdere avklaringsbehov $definisjon (id=$id) som ikke har noen åpne endringer i aktiv historikk" +
+                    "Aktive statuser: ${aktivHistorikk.map { it.status }}."
+        }
     }
 
     internal fun reåpne(
