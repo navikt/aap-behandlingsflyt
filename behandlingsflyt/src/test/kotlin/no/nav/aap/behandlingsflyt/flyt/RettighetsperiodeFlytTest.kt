@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.MedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertManuellVurderingForLovvalgMedlemskapDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
@@ -260,7 +260,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                         .ignoringFields("opprettet")
                         .ignoringFields("referanse")
                         .isEqualTo(
-                            RelevantKrav(
+                            RelevantSøknadKrav(
                                 muligRettFra = nå.toLocalDate(),
                                 søknadsdato = Søknadsdato(
                                     årsak = SøknadsdatoÅrsak.SøknadMottatt,
@@ -317,7 +317,7 @@ class RettighetsperiodeFlytTest(val unleashGateway: KClass<UnleashGateway>) :
                         .ignoringFields("opprettet")
                         .ignoringFields("referanse")
                         .isEqualTo(
-                            RelevantKrav(
+                            RelevantSøknadKrav(
                                 muligRettFra = rettighetsperiodeVurdering.first,
                                 søknadsdato = Søknadsdato(
                                     årsak = SøknadsdatoÅrsak.SøknadMottatt,

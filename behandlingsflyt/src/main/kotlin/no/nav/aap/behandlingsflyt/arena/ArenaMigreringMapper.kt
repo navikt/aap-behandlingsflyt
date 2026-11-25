@@ -8,7 +8,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.refusjonkrav.RefusjonkravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
@@ -66,8 +66,8 @@ object ArenaMigreringMapper {
     fun tilMigrertKrav(
         fraArena: ArenaKrav,
         behandlingId: BehandlingId,
-    ): MigrertKrav {
-        return MigrertKrav(
+    ): RelevantMigrertKrav {
+        return RelevantMigrertKrav(
             referanse = Kravreferanse.ny(),
             vurdertAv = ARENA_MIGRERING_BRUKER,
             begrunnelse = "Migrering av sak ${fraArena.arenaSaksnummer} fra Arena",

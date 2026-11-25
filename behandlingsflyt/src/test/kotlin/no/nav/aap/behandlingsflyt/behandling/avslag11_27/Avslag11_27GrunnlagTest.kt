@@ -3,7 +3,9 @@ package no.nav.aap.behandlingsflyt.behandling.avslag11_27
 import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -46,7 +48,7 @@ class Avslag11_27GrunnlagTest {
     private fun relevantKrav(
         referanse: Kravreferanse = ref1,
         muligRettFra: LocalDate = 1 januar 2026,
-    ) = RelevantKrav(
+    ) = RelevantSøknadKrav(
         referanse = referanse,
         journalpostId = JournalpostId("jp-${referanse.verdi}"),
         vurdertAv = Bruker("testBruker"),
@@ -147,5 +149,33 @@ class Avslag11_27GrunnlagTest {
         val grunnlag = Avslag11_27Grunnlag(setOf(vurdering(ref2)))
 
         assertThat(grunnlag.tilTidslinje(kravGrunnlag).segmenter()).isEmpty()
+    }
+
+    // ── kravSomSkalVurderes ──────────────────────────────────────────────────
+
+    @Test
+    fun `kravSomSkalVurderes - migrert krav skal ikke vurderes etter 11-27`() {
+        val migrertKrav = RelevantMigrertKrav(
+            referanse = ref2,
+            vurdertAv = Bruker("testBruker"),
+            begrunnelse = "Migrert fra Arena",
+            vurdertIBehandling = behandlingId,
+            opprettet = Instant.now(),
+            virkningstidspunktArena = 1 januar 2025,
+            muligRettFra = 1 januar 2026,
+            arenaSaksnummer = "ARENA-1",
+            rettighetstype = MigrertRettighetstype.ORDINÆR,
+            resterendeKvoteOrdinær = 100,
+        )
+
+        assertThat(Avslag11_27Grunnlag.kravSomSkalVurderes(KravGrunnlag(setOf(migrertKrav)))).isEmpty()
+    }
+
+    @Test
+    fun `kravSomSkalVurderes - krav fra søknad skal vurderes`() {
+        val søknadKrav = relevantKrav(ref1)
+
+        assertThat(Avslag11_27Grunnlag.kravSomSkalVurderes(KravGrunnlag(setOf(søknadKrav))))
+            .containsExactly(søknadKrav)
     }
 }

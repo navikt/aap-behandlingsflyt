@@ -24,7 +24,7 @@ sealed class KravVurderingLøsningDto(
         opprettetTid: Instant,
     ): KravVurdering {
         return when (this) {
-            is RelevantKravLøsningDto -> RelevantKrav(
+            is RelevantKravLøsningDto -> RelevantSøknadKrav(
                 referanse = referanse?.let(::Kravreferanse) ?: Kravreferanse.ny(),
                 journalpostId = journalpostId,
                 vurdertAv = bruker,
@@ -45,7 +45,7 @@ sealed class KravVurderingLøsningDto(
                 opprettet = opprettetTid,
             )
 
-            is MigrertKravLøsningDto -> MigrertKrav(
+            is MigrertKravLøsningDto -> RelevantMigrertKrav(
                 referanse = referanse?.let(::Kravreferanse) ?: Kravreferanse.ny(),
                 vurdertAv = bruker,
                 begrunnelse = begrunnelse,
