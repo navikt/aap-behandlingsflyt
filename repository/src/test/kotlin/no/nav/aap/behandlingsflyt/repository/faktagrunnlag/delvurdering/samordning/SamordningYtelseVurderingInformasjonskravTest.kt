@@ -490,7 +490,11 @@ class SamordningYtelseVurderingInformasjonskravTest {
             )
         )
 
-        assertFalse(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(vurderingsGrunnlag, setOf(nyYtelse)))
+        assertFalse(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
+            vurderingsGrunnlag,
+            setOf(nyYtelse),
+            sak.rettighetsperiode
+        ))
     }
 
     @Test
@@ -531,7 +535,11 @@ class SamordningYtelseVurderingInformasjonskravTest {
             )
         )
 
-        assertTrue(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(vurderingsGrunnlag, setOf(nyYtelse)))
+        assertTrue(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
+            vurderingsGrunnlag,
+            setOf(nyYtelse),
+            sak.rettighetsperiode
+        ))
     }
 
     @Test
@@ -571,7 +579,11 @@ class SamordningYtelseVurderingInformasjonskravTest {
             )
         )
 
-        assertTrue(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(vurderingsGrunnlag, setOf(nyYtelse)))
+        assertTrue(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
+            vurderingsGrunnlag,
+            setOf(nyYtelse),
+            sak.rettighetsperiode
+        ))
     }
 
     @Test
@@ -611,7 +623,11 @@ class SamordningYtelseVurderingInformasjonskravTest {
             )
         )
 
-        assertTrue(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(vurderingsGrunnlag, setOf(nyYtelse)))
+        assertTrue(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
+            vurderingsGrunnlag,
+            setOf(nyYtelse),
+            sak.rettighetsperiode
+        ))
     }
 
     @Test
@@ -651,7 +667,11 @@ class SamordningYtelseVurderingInformasjonskravTest {
             )
         )
 
-        assertFalse(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(vurderingsGrunnlag, setOf(nyYtelse)))
+        assertFalse(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
+            vurderingsGrunnlag,
+            setOf(nyYtelse),
+            sak.rettighetsperiode
+        ))
     }
 
     @Test
@@ -691,7 +711,11 @@ class SamordningYtelseVurderingInformasjonskravTest {
             )
         )
 
-        assertTrue(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(vurderingsGrunnlag, setOf(nyYtelse)))
+        assertTrue(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
+            vurderingsGrunnlag,
+            setOf(nyYtelse),
+            sak.rettighetsperiode
+        ))
     }
 
     @Test
@@ -718,7 +742,11 @@ class SamordningYtelseVurderingInformasjonskravTest {
             )
         )
 
-        assertTrue(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(vurderingsGrunnlag, setOf(nyYtelse)))
+        assertTrue(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
+            vurderingsGrunnlag,
+            setOf(nyYtelse),
+            sak.rettighetsperiode
+        ))
     }
 
     @Test
@@ -743,6 +771,10 @@ class SamordningYtelseVurderingInformasjonskravTest {
             vurdertTidspunkt = LocalDateTime.now()
         )
 
-        assertFalse(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(vurderingsGrunnlag, emptySet()))
+        assertFalse(harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
+            vurderingsGrunnlag,
+            emptySet(),
+            sak.rettighetsperiode
+        ))
     }
 }

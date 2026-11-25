@@ -1,12 +1,17 @@
 package no.nav.aap.behandlingsflyt.prosessering
 
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonForhold
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.TjenestePensjonInformasjonskrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.TjenestePensjonGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningYtelseVurderingInformasjonskrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.ForeldrepengerResponse
@@ -53,10 +58,16 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.DummyBehandlingHendelseServiceFactory
 import no.nav.aap.behandlingsflyt.test.fixedClock
+import no.nav.aap.behandlingsflyt.test.august
 import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.juli
+import no.nav.aap.behandlingsflyt.test.november
+import no.nav.aap.behandlingsflyt.test.oktober
+import no.nav.aap.behandlingsflyt.test.september
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.type.Periode
+import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Tid
 import no.nav.aap.motor.FlytJobbRepository
@@ -64,6 +75,7 @@ import no.nav.aap.motor.JobbType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Tag
 import java.time.LocalDate
@@ -168,6 +180,61 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         fun tearDown() = dataSource.close()
     }
 
+    @BeforeEach
+    fun nullstillRegisterdata() {
+        FakeSykepengerGateway.sykepengerRespons = SykepengerResponse(emptyList())
+        FakeForeldrepengerGateway.response = ForeldrepengerResponse(emptyList())
+        FakeUføreRegisterGateway.response = emptySet()
+        FakeInstitusjonsoppholdGateway.response = emptyList()
+    }
+
+    @Test
+    fun `forlenget sykepengeperiode skal ikke opprette revurdering hvis periode ikke er dekket av vurderingen er før søknadsdatoen`() {
+        val opprinneligePerioder = listOf(
+            UtbetaltePerioder(1 juli 2026, 26 juli 2026, 50, null),
+            UtbetaltePerioder(17 august 2026, 30 august 2026, 50, null),
+            UtbetaltePerioder(31 august 2026, 30 september 2026, 100, null),
+            UtbetaltePerioder(1 oktober 2026, 4 oktober 2026, 80, null),
+            UtbetaltePerioder(12 oktober 2026, 26 oktober 2026, 80, null),
+            UtbetaltePerioder(27 oktober 2026, 8 november 2026, 100, null)
+        )
+        val vurdering = SamordningVurderingGrunnlag(
+            begrunnelse = "Samordning med sykepenger",
+            vurderinger = setOf(
+                SamordningVurdering(
+                    ytelseType = Ytelse.SYKEPENGER,
+                    vurderingPerioder = setOf(
+                        SamordningVurderingPeriode(
+                            periode = Periode(5 august 2026, 30 november 2026),
+                            gradering = Prosent.`100_PROSENT`,
+                            manuell = true
+                        )
+                    )
+                )
+            ),
+            vurdertAv = Bruker("saksbehandler"),
+            vurdertTidspunkt = LocalDateTime.of(2026, 11, 9, 12, 0)
+        )
+        FakeSykepengerGateway.sykepengerRespons = SykepengerResponse(opprinneligePerioder)
+        val (sak, førstegangsbehandlingen) = settOppFørstegangsvurdering(5 august  2026, vurdering)
+        FakeSykepengerGateway.sykepengerRespons = SykepengerResponse(
+            opprinneligePerioder.dropLast(1) + opprinneligePerioder.last().copy(tom = 22 november 2026)
+        )
+
+        dataSource.transaction { connection ->
+            val repositoryProvider = postgresRepositoryRegistry.provider(connection)
+            OppdagEndretInformasjonskravJobbUtfører
+                .konstruerMedKlokke(repositoryProvider, gatewayProvider, fixedClock(25 november 2026))
+                .utfør(sak.id)
+
+            val gjeldendeEllerÅpenBehandling = BehandlingService(repositoryProvider, gatewayProvider)
+                .finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)!!
+            assertThat(gjeldendeEllerÅpenBehandling.id).isEqualTo(førstegangsbehandlingen.id)
+            assertThat(gjeldendeEllerÅpenBehandling.typeBehandling()).isEqualTo(TypeBehandling.Førstegangsbehandling)
+            assertThat(gjeldendeEllerÅpenBehandling.vurderingsbehov().map { it.type })
+                .doesNotContain(Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER)
+        }
+    }
 
     @Test
     fun `endring i register fører til revurdering og deduplisering av vurderingsbehov`() {
@@ -258,10 +325,13 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
         }
     }
 
-    private fun settOppFørstegangsvurdering(): Pair<Sak, Behandling> {
+    private fun settOppFørstegangsvurdering(
+        søknadsdato: LocalDate = periode.fom,
+        samordningVurdering: SamordningVurderingGrunnlag? = null
+    ): Pair<Sak, Behandling> {
         return dataSource.transaction { connection ->
             val repositoryProvider = postgresRepositoryRegistry.provider(connection)
-            val sak = sak(connection, periode.fom)
+            val sak = sak(connection, søknadsdato)
             val førstegangsbehandlingen = finnEllerOpprettBehandling(connection, sak)
 
             val kontekst = flytKontekstMedPerioder {
@@ -288,6 +358,10 @@ class OppdagEndretInformasjonskravJobbUtførerTest {
                 PersonopplysningInformasjonskrav
             ).let(::klargjørInformasjonskrav)
 
+            if (samordningVurdering != null) {
+                repositoryProvider.provide<SamordningVurderingRepository>()
+                    .lagreVurderinger(førstegangsbehandlingen.id, samordningVurdering)
+            }
 
             repositoryProvider.provide<VilkårsresultatRepository>().lagre(
                 førstegangsbehandlingen.id,
