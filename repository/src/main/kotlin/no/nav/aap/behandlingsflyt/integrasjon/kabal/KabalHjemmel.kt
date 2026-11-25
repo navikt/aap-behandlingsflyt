@@ -31,7 +31,10 @@ enum class KabalHjemmel {
     FTRL_11_31,
     FTRL_21_3,
     FTRL_21_7,
+    FTRL_22_7,
+    FTRL_22_8,
     FTRL_22_13,
+    FTRL_22_14,
     FTRL_22_15,
     FTRL_22_17, 
     TRRL_9_FVL_31,
@@ -88,6 +91,10 @@ fun Hjemmel.tilKabalHjemmel(): KabalHjemmel {
         Hjemmel.FOLKETRYGDLOVEN_21_3 -> KabalHjemmel.FTRL_21_3
         Hjemmel.FOLKETRYGDLOVEN_21_7 -> KabalHjemmel.FTRL_21_7
 
+        Hjemmel.FOLKETRYGDLOVEN_22_7 -> KabalHjemmel.FTRL_22_7
+        Hjemmel.FOLKETRYGDLOVEN_22_8 -> KabalHjemmel.FTRL_22_8
+
+        Hjemmel.FOLKETRYGDLOVEN_22_14_FJERDE_LEDD -> KabalHjemmel.FTRL_22_14
         Hjemmel.FOLKETRYGDLOVEN_22_13 -> KabalHjemmel.FTRL_22_13
         Hjemmel.FOLKETRYGDLOVEN_22_15 -> KabalHjemmel.FTRL_22_15
         Hjemmel.FOLKETRYGDLOVEN_22_17 -> KabalHjemmel.FTRL_22_17

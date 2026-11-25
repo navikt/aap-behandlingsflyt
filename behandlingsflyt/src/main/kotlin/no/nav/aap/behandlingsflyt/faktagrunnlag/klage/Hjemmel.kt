@@ -50,9 +50,13 @@ enum class Hjemmel(val hjemmel: String) {
 
     FOLKETRYGDLOVEN_21_3("§ 21-3"), // Ikke aktuelt som hjemmel for omgjøring
     FOLKETRYGDLOVEN_21_7("§ 21-7"), // Ikke aktuelt som hjemmel for omgjøring
+    FOLKETRYGDLOVEN_22_7("§ 22-7"),
+    FOLKETRYGDLOVEN_22_8("§ 22-8"),
     FOLKETRYGDLOVEN_22_13("§ 22-13"), // TODO: Hva kan klages på her?
+    FOLKETRYGDLOVEN_22_14_FJERDE_LEDD("§ 22-14 fjerde ledd"),
     FOLKETRYGDLOVEN_22_15("§ 22-15"), // TODO: Må videre til Team Tilbake?
     FOLKETRYGDLOVEN_22_17("§ 22-17"), // TODO: Hva kan klages på her?
+
     ANDRE_TRYGDEAVTALER("Andre bilaterale trygdeavtaler");
 
     companion object {
@@ -122,8 +126,12 @@ enum class Hjemmel(val hjemmel: String) {
             FOLKETRYGDLOVEN_21_3, // Ikke aktuell?
             FOLKETRYGDLOVEN_21_7, // Ikke aktuell?
             FOLKETRYGDLOVEN_22_15, // TODO: Opprett tilbakekreving
-            FOLKETRYGDLOVEN_22_17 // Ikke aktuell?
+            FOLKETRYGDLOVEN_22_17, // Ikke aktuell?
+            FOLKETRYGDLOVEN_22_7,
+            FOLKETRYGDLOVEN_22_8,
+            FOLKETRYGDLOVEN_22_14_FJERDE_LEDD
                 -> throw IllegalStateException("Ingen ÅrsakTilBehandling-mapping er implementert for klage på hjemmel $name ($hjemmel).")
+
         }
     }
 }
