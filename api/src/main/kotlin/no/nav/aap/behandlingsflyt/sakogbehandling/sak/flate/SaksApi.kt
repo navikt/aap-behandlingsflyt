@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -124,11 +125,15 @@ fun NormalOpenAPIRoute.saksApi(
                 val dto = dataSource.transaction { connection ->
                     val repositoryProvider = repositoryRegistry.provider(connection)
                     val sakId = repositoryProvider.provide<SakRepository>().hent(Saksnummer(req.saksnummer)).id
+                    val låsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
+                    
+                    val skrivelås = låsRepository.låsSak(sakId)
 
                     val behandling = BehandlingService(repositoryProvider, gatewayProvider)
                         .opprettManuellUtenlandsoppholdBehandling(sakId, body.beskrivelse)
 
                     ProsesserBehandlingService(repositoryProvider, gatewayProvider).triggProsesserBehandling(behandling)
+                    låsRepository.verifiserSkrivelås(skrivelås)
 
                     BehandlingAvTypeDTO(
                         behandlingsReferanse = behandling.referanse.referanse,
