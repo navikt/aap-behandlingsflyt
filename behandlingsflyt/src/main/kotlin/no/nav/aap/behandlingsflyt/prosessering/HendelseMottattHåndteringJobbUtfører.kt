@@ -170,10 +170,11 @@ class HendelseMottattHåndteringJobbUtfører(
             }
 
             InnsendingType.UFØRE_VEDTAK_HENDELSE -> {
+                require(parsedMelding is Uførevedtak) { "Melding må være av typen Uførevedtak" }
                 håndterUførevedtakService.håndterMottattUførevedtakHendelse(
                     sakId = sakId,
                     referanse = referanse,
-                    uførevedtak = parsedMelding as Uførevedtak,
+                    uførevedtak = parsedMelding,
                     mottattTidspunkt = mottattTidspunkt,
                 )
             }
