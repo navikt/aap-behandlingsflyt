@@ -14,5 +14,10 @@ Gjelder: `api/src/main/kotlin/**`, `app/src/main/kotlin/**`
 - `api/.../test/` er testendepunkter som bevisst ligger i `main` (skrudd av i prod). Ikke slett, ikke utvid med prodlogikk.
 - Kafka-konsumenter ligger i `api/.../hendelse/kafka/`. En uventet exception avslutter konsument-løkka; håndter
   forventede feil eksplisitt. Dette er det området som oftest får fiks-commits uten test (59 %).
+  `KafkaKonsument` eier polling, iterasjon, commit og nedstenging. Den committer først når alle meldingene fra
+  ett poll er håndtert. Meldingshåndtererne implementerer `KafkaMeldingsHåndterer<K, V>` med `val navn` og
+  `håndter(ConsumerRecord<K, V>)`, og sendes direkte til `håndter` i `App.kt`, uten arv fra konsumenten.
+  Behold navnene ved refaktorering, siden de inngår i Kafka-klient-ID-en. Test meldingshåndtereren direkte;
+  bruk `MockConsumer` for konsument-løkka uten Kafka-server.
 - Test: Ktor `testApplication` med `MockDataSource` tåler ingen transaksjon – bruk `TestDataSource()` (og
   `@Tag("db")` på testklassen) hvis ruten faktisk leser. Minst én 401-test for ny rute.

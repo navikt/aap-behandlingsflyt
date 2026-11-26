@@ -4,8 +4,10 @@ import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import no.nav.aap.behandlingsflyt.help.FakePdlGateway
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
+import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
-import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PDL_HENDELSE_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseMeldingsHåndterer
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.test.FakeOppgavestyringGateway
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
@@ -41,16 +43,21 @@ class PdlHendelseKafkaKonsumentTest {
         }
     }
 
-    val konsument = PdlHendelseKafkaKonsument(
-        testConfig(SharedKafkaTestContainer.kafka.bootstrapServers),
+    private val håndterer = PdlHendelseMeldingsHåndterer(
         dataSource = dataSource,
         repositoryRegistry = repositoryRegistry,
         gatewayProvider = createGatewayProvider {
             register<AlleAvskruddUnleash>()
             register<FakeOppgavestyringGateway>()
             register<FakePdlGateway>()
-        },
+        }
+    )
+
+    val konsument = KafkaKonsument(
+        topic = PDL_HENDELSE_TOPIC,
+        config = testConfig(SharedKafkaTestContainer.kafka.bootstrapServers),
         pollTimeout = 50.milliseconds,
+        håndter = håndterer
     )
 
     @Test

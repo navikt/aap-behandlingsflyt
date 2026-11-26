@@ -1,23 +1,38 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka
 
+import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.WakeupException
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
-abstract class KafkaKonsument<K, V>(
+class KafkaKonsument<K, V>(
     val topic: String,
-    config: KafkaConsumerConfig,
-    consumerName: String,
-    private val pollTimeout: Duration,
-    private val closeTimeout: Duration,
+    private val konsument: Consumer<K, V>,
+    private val pollTimeout: Duration = 10.seconds,
+    private val closeTimeout: Duration = 30.seconds,
+    private val håndter: KafkaMeldingsHåndterer<K, V>
 ) {
+    constructor(
+        topic: String,
+        config: KafkaConsumerConfig,
+        pollTimeout: Duration = 10.seconds,
+        closeTimeout: Duration = 30.seconds,
+        håndter: KafkaMeldingsHåndterer<K, V>
+    ) : this(
+        topic = topic,
+        konsument = KafkaConsumer<K, V>(config.consumerProperties(consumerName = håndter.navn)),
+        pollTimeout = pollTimeout,
+        closeTimeout = closeTimeout,
+        håndter = håndter
+    )
+
     private val log = LoggerFactory.getLogger(javaClass)
     private val lukket: AtomicBoolean = AtomicBoolean(false)
-    private val konsument = KafkaConsumer<K, V>(config.consumerProperties(consumerName = consumerName))
 
     @Volatile
     var antallMeldinger = 0
@@ -36,7 +51,7 @@ abstract class KafkaKonsument<K, V>(
             konsument.subscribe(listOf(topic))
             while (!lukket.get()) {
                 val meldinger: ConsumerRecords<K, V> = konsument.poll(pollTimeout.toJavaDuration())
-                håndter(meldinger)
+                meldinger.forEach(håndter::håndter)
                 konsument.commitSync()
                 antallMeldinger += meldinger.count()
             }
@@ -60,7 +75,5 @@ abstract class KafkaKonsument<K, V>(
     fun erLukket(): Boolean {
         return lukket.get()
     }
-
-    abstract fun håndter(meldinger: ConsumerRecords<K, V>)
 
 }

@@ -7,9 +7,10 @@ import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.sak
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceFactory
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
+import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
-import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalMeldingsHåndterer
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -56,7 +57,6 @@ import kotlin.time.Duration.Companion.milliseconds
 class KabalKafkaKonsumentTest {
     companion object {
         private val repositoryRegistry = postgresRepositoryRegistry
-        private const val UBRUKT_BROKER_ADRESSE = "localhost:9092"
         private val periode = Periode(LocalDate.now(), LocalDate.now().plusYears(3))
 
         private lateinit var dataSource: TestDataSource
@@ -104,12 +104,11 @@ class KabalKafkaKonsumentTest {
             finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
         }
 
-        val konsument = KabalKafkaKonsument(
-            testConfig(SharedKafkaTestContainer.kafka.bootstrapServers),
-            dataSource = dataSource,
-            repositoryRegistry = repositoryRegistry,
+        val konsument = KafkaKonsument(
+            config = testConfig(SharedKafkaTestContainer.kafka.bootstrapServers),
             pollTimeout = 50.milliseconds,
             topic = testTopic,
+            håndter = KabalMeldingsHåndterer(dataSource, repositoryRegistry)
         )
 
         val pollThread = startConsumerThread {
@@ -178,12 +177,11 @@ class KabalKafkaKonsumentTest {
             finnEllerOpprettBehandling(connection, sak, Vurderingsbehov.MOTATT_KLAGE)
         }
 
-        val konsument = KabalKafkaKonsument(
-            testConfig(SharedKafkaTestContainer.kafka.bootstrapServers),
-            dataSource = dataSource,
-            repositoryRegistry = repositoryRegistry,
+        val konsument = KafkaKonsument(
+            config = testConfig(SharedKafkaTestContainer.kafka.bootstrapServers),
             pollTimeout = 50.milliseconds,
             topic = testTopic,
+            håndter = KabalMeldingsHåndterer(dataSource, repositoryRegistry)
         )
 
         val pollThread = startConsumerThread {
@@ -209,16 +207,14 @@ class KabalKafkaKonsumentTest {
 
     @Test
     fun `Skal opprette feiljobb for meldinger som skal til Kelvin, men som vi ikke finner saksnummer for`() {
-        val konsument = KabalKafkaKonsument(
-            testConfig(UBRUKT_BROKER_ADRESSE),
+        val håndterer = KabalMeldingsHåndterer(
             dataSource = dataSource,
-            repositoryRegistry = repositoryRegistry,
-            pollTimeout = 50.milliseconds,
+            repositoryRegistry = repositoryRegistry
         )
 
         val melding = """{"kilde": "KELVIN", "eventId": "123", "kildeReferanse": "123", "resten": "Noe tull"}"""
 
-        konsument.håndter(melding)
+        håndterer.håndter(melding)
 
         dataSource.transaction { connection ->
             val jobber = hentJobber(connection).filter { it.payload == melding }
