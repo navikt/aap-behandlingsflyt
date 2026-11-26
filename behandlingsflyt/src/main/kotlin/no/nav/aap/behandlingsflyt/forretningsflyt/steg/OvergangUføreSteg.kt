@@ -25,7 +25,7 @@ import no.nav.aap.behandlingsflyt.flyt.steg.StegResultat
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Uførevedtak
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
@@ -157,7 +157,7 @@ class OvergangUføreSteg private constructor(
         ).maxByOrNull { it.mottattTidspunkt } ?: return null
 
         return MottattUførevedtak(
-            vedtak = requireNotNull(dokument.strukturerteData<UførevedtakV0>()?.data) {
+            vedtak = requireNotNull(dokument.strukturerteData<Uførevedtak>()?.data) {
                 "Fant ikke uførevedtak for sak $sakId"
             },
             mottattDato = dokument.mottattTidspunkt.toLocalDate(),
@@ -165,7 +165,7 @@ class OvergangUføreSteg private constructor(
     }
 
     private data class MottattUførevedtak(
-        val vedtak: UførevedtakV0,
+        val vedtak: Uførevedtak,
         val mottattDato: LocalDate,
     )
 

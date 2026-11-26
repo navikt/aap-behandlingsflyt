@@ -138,7 +138,7 @@ public class Innsending(
             InnsendingType.UFØRE_VEDTAK_HENDELSE -> {
                 require(referanse.type == InnsendingReferanse.Type.UFØREVEDTAK_HENDELSE_ID)
                 requireNotNull(melding) {"Melding fra uførevedtakhendelse kan ikke være null"}
-                require(melding is UførevedtakV0)
+                require(melding is Uførevedtak)
             }
 
             InnsendingType.MIGRERING_FRA_ARENA -> {

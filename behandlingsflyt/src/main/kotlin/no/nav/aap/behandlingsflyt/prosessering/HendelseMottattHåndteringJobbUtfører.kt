@@ -19,7 +19,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OmgjøringKlageRevurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Uførevedtak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
@@ -170,10 +170,11 @@ class HendelseMottattHåndteringJobbUtfører(
             }
 
             InnsendingType.UFØRE_VEDTAK_HENDELSE -> {
+                require(parsedMelding is Uførevedtak) { "Melding må være av typen Uførevedtak" }
                 håndterUførevedtakService.håndterMottattUførevedtakHendelse(
                     sakId = sakId,
                     referanse = referanse,
-                    uførevedtak = parsedMelding as UførevedtakV0,
+                    uførevedtak = parsedMelding,
                     mottattTidspunkt = mottattTidspunkt,
                 )
             }
