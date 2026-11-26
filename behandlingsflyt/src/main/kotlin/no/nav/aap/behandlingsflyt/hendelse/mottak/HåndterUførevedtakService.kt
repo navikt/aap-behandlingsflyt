@@ -165,7 +165,7 @@ class HåndterUførevedtakService(
             .somOvergangUforevurderingstidslinje()
             .filter {
                 val vurdering = it.verdi
-                vurdering.fom >= (if (uførevedtak is UførevedtakV1) opphørsdato else uførevedtak.virkningsdato) &&
+                vurdering.fom >= minOf(uførevedtak.virkningsdato, opphørsdato) &&
                         vurdering.brukerRettPåAAP == false &&
                         vurdering.brukerHarFåttVedtakOmUføretrygd in setOf(
                     UføreSøknadVedtakResultat.JA_INNVILGET_FULL,
