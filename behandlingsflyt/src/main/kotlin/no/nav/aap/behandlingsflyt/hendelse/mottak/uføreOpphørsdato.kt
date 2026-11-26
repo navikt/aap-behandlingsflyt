@@ -8,5 +8,5 @@ import java.time.LocalDate
 internal fun Uførevedtak.opphørsdato(mottattDato: LocalDate): LocalDate =
     if (!virkningsdato.isBefore(mottattDato)) virkningsdato else when (this) {
         is UførevedtakV0 -> mottattDato.plusDays(1)
-        is UførevedtakV1 -> vedtaksdato
+        is UførevedtakV1 -> maxOf(virkningsdato, vedtaksdato)
     }
