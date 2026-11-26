@@ -82,13 +82,19 @@ import no.nav.aap.behandlingsflyt.flyt.behandlingApi
 import no.nav.aap.behandlingsflyt.flyt.flytApi
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.ForeldrepengevedtakKafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.InstitusjonsOppholdKafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalKafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.sykepenger.SykepengevedtakKafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TilbakekrevingKafkaKonsument
-import no.nav.aap.behandlingsflyt.hendelse.kafka.uføre.UførevedtakKafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaMeldingsHåndterer
+import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.FORELDREPENGEVEDTAK_EVENT_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger.ForeldrepengevedtakMeldingsHåndterer
+import no.nav.aap.behandlingsflyt.hendelse.kafka.inst2.InstitusjonsOppholdMeldingsHåndterer
+import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KABAL_EVENT_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.klage.KabalMeldingsHåndterer
+import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PDL_HENDELSE_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseMeldingsHåndterer
+import no.nav.aap.behandlingsflyt.hendelse.kafka.sykepenger.SYKEPENGEVEDTAK_EVENT_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.sykepenger.SykepengevedtakMeldingsHåndterer
+import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TILBAKEKREVING_EVENT_TOPIC
+import no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving.TilbakekrevingMeldingsHåndterer
+import no.nav.aap.behandlingsflyt.hendelse.kafka.uføre.UførevedtakMeldingsHåndterer
 import no.nav.aap.behandlingsflyt.hendelse.mottattHendelseApi
 import no.nav.aap.behandlingsflyt.integrasjon.defaultGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
@@ -104,6 +110,7 @@ import no.nav.aap.behandlingsflyt.test.opprettDummySakApi
 import no.nav.aap.behandlingsflyt.ytelseoppslag.foreldrepengeperioderApi
 import no.nav.aap.behandlingsflyt.ytelseoppslag.sykepengeperioderApi
 import no.nav.aap.bistandsbehov.bistandsgrunnlagApi
+import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbmigrering.Migrering
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -407,71 +414,61 @@ private fun Application.startKafkakonsumenter(
     gatewayProvider: GatewayProvider
 ) {
     if (!Miljø.erLokal()) {
-        startKonsument(
-            KabalKafkaKonsument(
-                config = KafkaConsumerConfig(),
-                dataSource = dataSource,
-                repositoryRegistry = repositoryRegistry,
-                closeTimeout = AppConfig.stansArbeidTimeout
-            )
+        fun <K, V> konsument(
+            topic: String,
+            håndter: KafkaMeldingsHåndterer<K, V>,
+            config: KafkaConsumerConfig = KafkaConsumerConfig()
+        ) = KafkaKonsument(
+            topic = topic,
+            config = config,
+            closeTimeout = AppConfig.stansArbeidTimeout,
+            håndter = håndter
         )
-        startKonsument(
-            PdlHendelseKafkaKonsument(
+
+        listOf(
+            konsument(
+                topic = KABAL_EVENT_TOPIC,
+                håndter = KabalMeldingsHåndterer(dataSource, repositoryRegistry)
+            ),
+            konsument(
+                topic = PDL_HENDELSE_TOPIC,
+                håndter = PdlHendelseMeldingsHåndterer(dataSource, repositoryRegistry, gatewayProvider),
                 config = KafkaConsumerConfig(
                     valueDeserializer = KafkaAvroDeserializer::class.java
+                )
+            ),
+            konsument(
+                topic = TILBAKEKREVING_EVENT_TOPIC,
+                håndter = TilbakekrevingMeldingsHåndterer(dataSource, repositoryRegistry)
+            ),
+            konsument(
+                topic = SYKEPENGEVEDTAK_EVENT_TOPIC,
+                håndter = SykepengevedtakMeldingsHåndterer(
+                    dataSource, repositoryRegistry, gatewayProvider
+                )
+            ),
+            konsument(
+                topic = requiredConfigForKey("INTEGRASJON_INSTITUSJONSOPPHOLD_EVENT_TOPIC"),
+                håndter = InstitusjonsOppholdMeldingsHåndterer(
+                    dataSource = dataSource,
+                    repositoryRegistry = repositoryRegistry,
+                    gatewayProvider = gatewayProvider
                 ),
-                dataSource = dataSource,
-                repositoryRegistry = repositoryRegistry,
-                closeTimeout = AppConfig.stansArbeidTimeout,
-                gatewayProvider = gatewayProvider
-            )
-        )
-        startKonsument(
-            TilbakekrevingKafkaKonsument(
-                config = KafkaConsumerConfig(),
-                dataSource = dataSource,
-                repositoryRegistry = repositoryRegistry,
-                closeTimeout = AppConfig.stansArbeidTimeout
-            )
-        )
-        startKonsument(
-            SykepengevedtakKafkaKonsument(
-                config = KafkaConsumerConfig(),
-                dataSource = dataSource,
-                repositoryRegistry = repositoryRegistry,
-                closeTimeout = AppConfig.stansArbeidTimeout,
-                gatewayProvider = gatewayProvider
-            )
-        )
-        startKonsument(
-            InstitusjonsOppholdKafkaKonsument(
                 config = KafkaConsumerConfig(
-                    valueDeserializer = JsonDeserializerInstitusjonsOppholdHendelse::class.java,
-                ),
-                dataSource = dataSource,
-                repositoryRegistry = repositoryRegistry,
-                closeTimeout = AppConfig.stansArbeidTimeout,
-                gatewayProvider = gatewayProvider,
+                    valueDeserializer = JsonDeserializerInstitusjonsOppholdHendelse::class.java
+                )
+            ),
+            konsument(
+                topic = requiredConfigForKey("INTEGRASJON_UFORE_VEDTAK_TOPIC"),
+                håndter = UførevedtakMeldingsHåndterer(dataSource, repositoryRegistry, gatewayProvider)
+            ),
+            konsument(
+                topic = FORELDREPENGEVEDTAK_EVENT_TOPIC,
+                håndter = ForeldrepengevedtakMeldingsHåndterer(
+                    dataSource, repositoryRegistry, gatewayProvider
+                )
             )
-        )
-        startKonsument(
-            UførevedtakKafkaKonsument(
-                config = KafkaConsumerConfig(),
-                dataSource = dataSource,
-                repositoryRegistry = repositoryRegistry,
-                closeTimeout = AppConfig.stansArbeidTimeout,
-                gatewayProvider = gatewayProvider
-            )
-        )
-        startKonsument(
-            ForeldrepengevedtakKafkaKonsument(
-                config = KafkaConsumerConfig(),
-                dataSource = dataSource,
-                repositoryRegistry = repositoryRegistry,
-                closeTimeout = AppConfig.stansArbeidTimeout,
-                gatewayProvider = gatewayProvider
-            )
-        )
+        ).forEach { startKonsument(it) }
     }
 }
 

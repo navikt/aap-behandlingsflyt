@@ -1,10 +1,9 @@
-package no.nav.aap.behandlingsflyt.hendelse.kafka.foreldrepenger
+package no.nav.aap.behandlingsflyt.hendelse.kafka.sykepenger
 
+import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaMeldingsHåndterer
 import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
-import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
-import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ForeldrepengevedtakKafkaMelding
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SykepengevedtakKafkaMelding
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
@@ -16,37 +15,23 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
-const val FORELDREPENGEVEDTAK_EVENT_TOPIC = "teamforeldrepenger.vedtak-ekstern"
+const val SYKEPENGEVEDTAK_EVENT_TOPIC = "tbd.boo"
 
-class ForeldrepengevedtakKafkaKonsument(
-    config: KafkaConsumerConfig,
-    pollTimeout: Duration = 10.seconds,
-    closeTimeout: Duration = 30.seconds,
+class SykepengevedtakMeldingsHåndterer(
     private val dataSource: DataSource,
     private val repositoryRegistry: RepositoryRegistry,
-    private val gatewayProvider: GatewayProvider,
-) : KafkaKonsument<String, String>(
-    topic = FORELDREPENGEVEDTAK_EVENT_TOPIC,
-    config = config,
-    pollTimeout = pollTimeout,
-    closeTimeout = closeTimeout,
-    consumerName = "AapBehandlingsflytForeldrepengevedtak",
-) {
+    private val gatewayProvider: GatewayProvider
+) : KafkaMeldingsHåndterer<String, String> {
+    override val navn = "AapBehandlingsflytSykepengevedtak"
+
     private val log = LoggerFactory.getLogger(javaClass)
 
-    override fun håndter(meldinger: ConsumerRecords<String, String>) {
-        meldinger.forEach(::håndter)
-    }
-
-    fun håndter(melding: ConsumerRecord<String, String>) {
+    override fun håndter(melding: ConsumerRecord<String, String>) {
         log.info(
-            "Behandler foreldrepengevedtak-record med id: ${melding.key()}, partition ${melding.partition()}, offset: ${melding.offset()}, topic: $topic"
+            "Behandler sykepengevedtak-record med id: ${melding.key()}, partition ${melding.partition()}, offset: ${melding.offset()}, topic: ${melding.topic()}"
         )
         val meldingKey = "${melding.partition()}-${melding.offset()}"
         håndter(meldingKey, melding.value())
@@ -60,26 +45,25 @@ class ForeldrepengevedtakKafkaKonsument(
             val hendelseService = MottattHendelseService(repositoryProvider)
             val trukketSøknadService = TrukketSøknadService(repositoryProvider)
             val behandlingService = BehandlingService(repositoryProvider, gatewayProvider)
-            val foreldrepengevedtakMelding = DefaultJsonMapper.fromJson<ForeldrepengevedtakKafkaMelding>(meldingVerdi)
-            val ident = Ident(foreldrepengevedtakMelding.personidentifikator)
+            val sykepengevedtakMelding = DefaultJsonMapper.fromJson<SykepengevedtakKafkaMelding>(meldingVerdi)
+            val ident = Ident(sykepengevedtakMelding.personidentifikator)
             val person = personRepository.finn(ident) ?: finnPersonMedIdenterFraPdl(ident, personRepository)
             if (person != null) {
                 val saker = sakRepository.finnSakerFor(person.id)
                 for (saken in saker) {
                     val sisteYtelsesBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(saken.id)
                     if (sisteYtelsesBehandling == null) {
-                        log.info("Det finnes ingen behandling - oppretter ikke mottatt foreldrepengehendelse for sak ${saken.saksnummer}")
+                        log.info("Det finnes ingen behandling - oppretter ikke mottatt sykepengehendelse for sak ${saken.saksnummer}")
                         continue
                     }
                     val søknadErTrukket = trukketSøknadService.søknadErTrukket(sisteYtelsesBehandling.id)
                     if (søknadErTrukket) {
-                        log.info("Søknad er trukket - oppretter ikke mottatt foreldrepengehendelse for sak ${saken.saksnummer}")
+                        log.info("Søknad er trukket - oppretter ikke mottatt sykepengehendelse for sak ${saken.saksnummer}")
                         continue
                     }
-
-                    log.info("Oppretter mottatt foreldrepengehendelse for sak ${saken.saksnummer}")
+                    log.info("Oppretter mottatt sykepengehendelse for sak ${saken.saksnummer}")
                     hendelseService.registrerMottattHendelse(
-                        dto = foreldrepengevedtakMelding.tilInnsending(
+                        dto = sykepengevedtakMelding.tilInnsending(
                             meldingKey,
                             saken.saksnummer
                         )

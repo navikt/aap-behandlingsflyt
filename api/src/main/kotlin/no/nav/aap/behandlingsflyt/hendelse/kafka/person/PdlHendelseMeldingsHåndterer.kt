@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.person
 
-import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
-import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaMeldingsHåndterer
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Endringstype
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Navn
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Opplysningstype
@@ -10,28 +9,18 @@ import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.person.pdl.leesah.Personhendelse
-import org.apache.kafka.clients.consumer.ConsumerRecords
+import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 const val PDL_HENDELSE_TOPIC = "pdl.leesah-v1"
 
-class PdlHendelseKafkaKonsument(
-    config: KafkaConsumerConfig,
-    pollTimeout: Duration = 10.seconds,
-    closeTimeout: Duration = 30.seconds,
+class PdlHendelseMeldingsHåndterer(
     private val dataSource: DataSource,
     private val repositoryRegistry: RepositoryRegistry,
-    private val gatewayProvider: GatewayProvider,
-) : KafkaKonsument<String, Personhendelse>(
-    consumerName = "PdlHendelse",
-    topic = PDL_HENDELSE_TOPIC,
-    config = config,
-    pollTimeout = pollTimeout,
-    closeTimeout = closeTimeout,
-) {
+    private val gatewayProvider: GatewayProvider
+) : KafkaMeldingsHåndterer<String, Personhendelse> {
+    override val navn = "PdlHendelse"
 
     init {
         // Avro-sikkerhet, trengs for å unngå java.lang.SecurityException
@@ -42,12 +31,10 @@ class PdlHendelseKafkaKonsument(
     }
 
     private val log = LoggerFactory.getLogger(javaClass)
-    override fun håndter(meldinger: ConsumerRecords<String, Personhendelse>) {
-        meldinger.forEach { record ->
-            val personHendelse = record.value().tilDomain()
-            dataSource.transaction { connection ->
-                PdlHendelseService(repositoryRegistry.provider(connection), gatewayProvider).håndter(personHendelse)
-            }
+    override fun håndter(melding: ConsumerRecord<String, Personhendelse>) {
+        val personHendelse = melding.value().tilDomain()
+        dataSource.transaction { connection ->
+            PdlHendelseService(repositoryRegistry.provider(connection), gatewayProvider).håndter(personHendelse)
         }
     }
 

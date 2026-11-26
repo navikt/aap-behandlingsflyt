@@ -1,8 +1,7 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.klage
 
-import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
+import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaMeldingsHåndterer
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
-import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseKafkaMelding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KabalHendelseKilde
@@ -15,36 +14,21 @@ import no.nav.aap.komponenter.repository.RepositoryRegistry
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.Prioritet
 import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.LoggerFactory
 import java.util.UUID
 import javax.sql.DataSource
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 const val KABAL_EVENT_TOPIC = "klage.behandling-events.v1"
 
-class KabalKafkaKonsument(
-    config: KafkaConsumerConfig,
-    pollTimeout: Duration = 10.seconds,
-    closeTimeout: Duration = 30.seconds,
-    topic: String = KABAL_EVENT_TOPIC,
+class KabalMeldingsHåndterer(
     private val dataSource: DataSource,
     private val repositoryRegistry: RepositoryRegistry
-) : KafkaKonsument<String, String>(
-    topic = topic,
-    config = config,
-    pollTimeout = pollTimeout,
-    closeTimeout = closeTimeout,
-    consumerName = "KabalHendelse",
-) {
+) : KafkaMeldingsHåndterer<String, String> {
+    override val navn = "KabalHendelse"
+
     private val log = LoggerFactory.getLogger(javaClass)
 
-    override fun håndter(meldinger: ConsumerRecords<String, String>) {
-        meldinger.forEach(::håndter)
-    }
-
-    fun håndter(melding: ConsumerRecord<String, String>) {
+    override fun håndter(melding: ConsumerRecord<String, String>) {
         log.info(
             "Behandler klage-record med id: ${melding.key()}, partition: ${melding.partition()}, offset: ${melding.offset()}",
         )

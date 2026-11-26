@@ -4,7 +4,7 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.barnetillegg.BarnRepository
 import no.nav.aap.barnetillegg.SaksbehandlerOppgitteBarn
-import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseKafkaKonsument.Dødsfalltype
+import no.nav.aap.behandlingsflyt.hendelse.kafka.person.PdlHendelseMeldingsHåndterer.Dødsfalltype
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Endringstype
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Opplysningstype

@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.hendelse.kafka.tilbakekreving
 
-import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
-import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
+import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaMeldingsHåndterer
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.FagsysteminfoBehovKafkaMelding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelseKafkaMelding
@@ -12,35 +11,21 @@ import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 const val TILBAKEKREVING_EVENT_TOPIC = "tilbake.privat-tilbakekreving-arbeidsavklaringspenger"
 
-class TilbakekrevingKafkaKonsument(
-    config: KafkaConsumerConfig,
-    pollTimeout: Duration = 10.seconds,
-    closeTimeout: Duration = 30.seconds,
+class TilbakekrevingMeldingsHåndterer(
     private val dataSource: DataSource,
-    private val repositoryRegistry: RepositoryRegistry,
-) : KafkaKonsument<String, String>(
-    topic = TILBAKEKREVING_EVENT_TOPIC,
-    config = config,
-    pollTimeout = pollTimeout,
-    closeTimeout = closeTimeout,
-    consumerName = "AapBehandlingsflytTilbakekrevingHendelse",
-) {
+    private val repositoryRegistry: RepositoryRegistry
+) : KafkaMeldingsHåndterer<String, String> {
+    override val navn = "AapBehandlingsflytTilbakekrevingHendelse"
+
     private val log = LoggerFactory.getLogger(javaClass)
     private val secureLogger = LoggerFactory.getLogger("team-logs")
 
-    override fun håndter(meldinger: ConsumerRecords<String, String>) {
-        meldinger.forEach(::håndter)
-    }
-
-    fun håndter(melding: ConsumerRecord<String, String>) {
+    override fun håndter(melding: ConsumerRecord<String, String>) {
         log.info(
             "Behandler tilbakekreving-record med id: {}, partition {}, offset: {}",
             melding.key(),
