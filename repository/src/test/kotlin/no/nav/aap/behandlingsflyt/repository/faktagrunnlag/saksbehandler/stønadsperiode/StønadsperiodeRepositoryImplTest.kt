@@ -204,24 +204,6 @@ class StønadsperiodeRepositoryImplTest {
     }
 
     @Test
-    fun `kant i kant med Arena lagres og hentes`() {
-        val behandlingId = opprettBehandlingId()
-        val kantIKant = vurdering(behandlingId).copy(erKantIKantMedArena = true)
-        val vanlig = vurdering(behandlingId)
-
-        dataSource.transaction { connection ->
-            StønadsperiodeRepositoryImpl(connection).lagre(behandlingId, setOf(kantIKant, vanlig))
-        }
-
-        val vurderinger = dataSource.transaction(readOnly = true) { connection ->
-            StønadsperiodeRepositoryImpl(connection).hentHvisEksisterer(behandlingId)
-        }!!.vurderinger.associateBy { it.referanse }
-
-        assertThat(vurderinger.getValue(kantIKant.referanse).erKantIKantMedArena).isTrue()
-        assertThat(vurderinger.getValue(vanlig.referanse).erKantIKantMedArena).isFalse()
-    }
-
-    @Test
     fun `kant-i-kant-utfall og peker til Arena-maksdato lagres og hentes`() {
         val behandlingId = opprettBehandlingId()
         val arenaMaksdatoId = dataSource.transaction { connection ->
@@ -231,7 +213,6 @@ class StønadsperiodeRepositoryImplTest {
             ArenaMaksdatoRepositoryImpl(connection).hentHvisEksisterer(behandlingId)!!.arenaMaksdatoId!!
         }
         val kantIKant = vurdering(behandlingId).copy(
-            erKantIKantMedArena = true,
             kantIKant = KantIKantMedArena(KantIKantUtfall.KANT_I_KANT, arenaMaksdatoId),
         )
         val ingenArenasak = vurdering(behandlingId).copy(

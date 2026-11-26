@@ -228,7 +228,6 @@ class ArenaMaksdatoRepositoryImplTest {
                         harGjenværendeKvote = false,
                         relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
                         startDato = LocalDate.of(2027, 1, 1),
-                        erKantIKantMedArena = true,
                         kantIKant = KantIKantMedArena(KantIKantUtfall.KANT_I_KANT, id),
                     )
                 )

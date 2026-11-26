@@ -79,7 +79,6 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
                 v.vurdert_tidspunkt                 AS v_vurdert_tidspunkt,
                 v.vurdert_av                        AS v_vurdert_av,
                 v.startdato                         AS v_startdato,
-                v.kant_i_kant_med_arena             AS v_kant_i_kant_med_arena,
                 v.kant_i_kant_utfall                AS v_kant_i_kant_utfall,
                 v.kant_i_kant_arena_maksdato_id     AS v_kant_i_kant_arena_maksdato_id
             FROM stonadsperiode_vurdering v 
@@ -110,7 +109,6 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
                         opprettet = it.getInstant("v_vurdert_tidspunkt"),
                         vurdertAv = it.getBruker("v_vurdert_av"),
                         startDato = it.getLocalDate("v_startdato"),
-                        erKantIKantMedArena = it.getBoolean("v_kant_i_kant_med_arena"),
                         kantIKant = it.getStringOrNull("v_kant_i_kant_utfall")?.let { utfall ->
                             KantIKantMedArena(
                                 utfall = KantIKantUtfall.valueOf(utfall),
@@ -243,6 +241,7 @@ class StønadsperiodeRepositoryImpl(private val connection: DBConnection) : Stø
                 setLong(9, vurderingerId)
                 setBruker(10, vurdering.vurdertAv)
                 setLocalDate(11, vurdering.startDato)
+                // Skrives til kolonnen fjernes, fordi gamle pods leser den under rullende deploy.
                 setBoolean(12, vurdering.erKantIKantMedArena)
                 setEnumName(13, vurdering.kantIKant?.utfall)
                 setLong(14, vurdering.kantIKant?.arenaMaksdatoId)
