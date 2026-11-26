@@ -282,9 +282,9 @@ class BeregnTilkjentYtelseTest {
         } else {
             28 januar 2025
         }
-        assertTidslinje(tilkjentYtelse, periode to {
-            assertThat(it.utbetalingsdato).isEqualTo(forventetUtbetalingsdato)
-        })
+        val segment = tilkjentYtelse.segmenter().single()
+        assertThat(segment.periode).isEqualTo(periode)
+        assertThat(segment.verdi.utbetalingsdato).isEqualTo(forventetUtbetalingsdato)
     }
 
     @Test
