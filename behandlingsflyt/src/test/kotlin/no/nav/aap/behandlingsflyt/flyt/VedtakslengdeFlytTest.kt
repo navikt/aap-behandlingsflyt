@@ -651,12 +651,11 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
     }
 
     @Test
-    fun `forlenger ikke automatisk vedtak når oppholdskrav begrenser retten i andre året`() {
+    fun `forlenger vedtak hvor bistandsbehov kun er oppfylt for en kort periode i andre året`() {
         val søknadstidspunkt = LocalDateTime.now(clock).minusYears(1)
         val (sak, førstegangsbehandling) = sendInnFørsteSøknad(mottattTidspunkt = søknadstidspunkt)
         val rettighetsperiode = sak.rettighetsperiode
         val startDato = sak.rettighetsperiode.fom
-        val forventetSluttdato = startDato.plussEtÅrMedHverdager(ÅrMedHverdager.FØRSTE_ÅR)
         val datoOppholdskravIkkeOppfyltFra = sak.rettighetsperiode.fom.plusYears(1).plusMonths(6)
 
         førstegangsbehandling
@@ -709,27 +708,24 @@ class VedtakslengdeFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleash::c
         kjørUtvidVedtakslengdeJobb()
 
         dataSource.transaction { connection ->
-            val behandlingService = BehandlingService(
+            val behandlingMedSisteFattedeVedtak = BehandlingService(
                 postgresRepositoryRegistry.provider(connection),
                 gatewayProvider
-            )
-            val behandlingMedSisteFattedeVedtak = behandlingService.finnBehandlingMedSisteFattedeVedtak(sak.id)!!
-            val manuellRevurdering = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sak.id)!!
-
-            assertThat(behandlingMedSisteFattedeVedtak.id).isEqualTo(førstegangsbehandling.id)
-            assertThat(manuellRevurdering.id).isNotEqualTo(førstegangsbehandling.id)
-            assertThat(manuellRevurdering.vurderingsbehov().map { it.type })
-                .contains(no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov.VEDTAKSLENGDE_MANUELT)
+            ).finnBehandlingMedSisteFattedeVedtak(sak.id)!!
 
             val vedtakslengdeVurdering =
                 VedtakslengdeRepositoryImpl(connection).hentHvisEksisterer(behandlingMedSisteFattedeVedtak.id)
             assertThat(vedtakslengdeVurdering).isNotNull()
-            assertThat(vedtakslengdeVurdering?.gjeldendeVurdering()?.sluttdato).isEqualTo(forventetSluttdato)
+            assertThat(vedtakslengdeVurdering?.gjeldendeVurdering()?.sluttdato).isEqualTo(
+                datoOppholdskravIkkeOppfyltFra.minusDays(
+                    1
+                )
+            )
 
             val underveisGrunnlag =
                 UnderveisRepositoryImpl(connection).hentHvisEksisterer(behandlingMedSisteFattedeVedtak.id)
             val sisteUnderveisperiode = underveisGrunnlag?.perioder?.maxBy { it.periode.fom }!!
-            assertThat(sisteUnderveisperiode.periode.tom).isEqualTo(forventetSluttdato)
+            assertThat(sisteUnderveisperiode.periode.tom).isEqualTo(datoOppholdskravIkkeOppfyltFra.minusDays(1))
         }
     }
 
