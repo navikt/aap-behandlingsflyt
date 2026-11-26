@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Oppfølgingsoppgave
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadUtenlandsopphold
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingHendelse
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.prosessering.datadeling.DatadelingNySøknadJobbUtfører
@@ -65,6 +66,11 @@ class HåndterMottattDokumentService(
                 )
             )
         }
+        if (melding is SøknadUtenlandsopphold && behandlingService.finnÅpenUtenlandsoppholdBehandling(sakId) != null) {
+            log.info("Det finnes allerede en åpen behandling for søknad om opphold i utlandet på sak $sakId. Søknaden med referanse $referanse settes i kø.")
+            return
+        }
+
         val sak = sakService.hent(sakId)
         val vurderingsbehov = MottattHendelseUtleder.utledVurderingsbehov(brevkategori, melding)
         val årsakTilOpprettelse = MottattHendelseUtleder.utledÅrsakTilOpprettelse(brevkategori, melding)
@@ -149,11 +155,12 @@ class HåndterMottattDokumentService(
     }
 
     /**
-     * Knytter klage og oppfølgingsbehandling direkte til behandlingen den opprettet, ikke via informasjonskrav.
-     * Dette fordi det være flere åpne behandlinger av disse typene.
+     * Knytter klage, oppfølgingsbehandling og søknad om opphold i utlandet direkte til behandlingen den opprettet, ikke via informasjonskrav.
+     * Dette fordi det kan være flere åpne behandlinger av de to første typene. Søknad om opphold i utlandet behandles én om gangen,
+     * og søknader i kø står som ubehandlet til de får sin egen behandling.
      * ManuellVurdering og NyÅrsakTilBehandling er knyttet eksplisitt til behandling og er ikke et informasjonskrav i flyten
      */
     private fun skalMarkereDokumentSomBehandlet(melding: Melding?): Boolean =
-        melding is KabalHendelse || melding is Oppfølgingsoppgave || melding is ManuellRevurdering || melding is NyÅrsakTilBehandling || melding is TilbakekrevingHendelse
+        melding is KabalHendelse || melding is Oppfølgingsoppgave || melding is SøknadUtenlandsopphold || melding is ManuellRevurdering || melding is NyÅrsakTilBehandling || melding is TilbakekrevingHendelse
 
 }

@@ -281,13 +281,14 @@ class ArenaMigreringMapperTest {
     }
 
     @Test
-    fun `ArenaMigreringMapper mapper ArenaKrav til MigrertKrav`() {
+    fun `ArenaMigreringMapper mapper ArenaKrav til RelevantMigrertKrav`() {
         val behandlingId = BehandlingId(1)
         val fraArena = ArenaKrav(
             arenaSaksnummer = "2016-123456",
             søknadsdato = LocalDate.of(2025, 1, 15),
             migreringsdato = LocalDate.of(2025, 12, 1),
             gjenståendeKvoteOrdinær = 150,
+            sisteFerdigBehandledeMeldekortTilDato = LocalDate.of(2025, 11, 30),
         )
 
         val krav = ArenaMigreringMapper.tilMigrertKrav(fraArena, behandlingId)
@@ -346,6 +347,7 @@ class ArenaMigreringMapperTest {
             søknadsdato = LocalDate.of(2025, 1, 15),
             migreringsdato = LocalDate.of(2025, 12, 1),
             gjenståendeKvoteOrdinær = null,
+            sisteFerdigBehandledeMeldekortTilDato = LocalDate.of(2025, 11, 30),
         )
 
         assertThat(ArenaMigreringMapper.tilMigrertKrav(fraArena, BehandlingId(1)).resterendeKvoteOrdinær).isEqualTo(0)

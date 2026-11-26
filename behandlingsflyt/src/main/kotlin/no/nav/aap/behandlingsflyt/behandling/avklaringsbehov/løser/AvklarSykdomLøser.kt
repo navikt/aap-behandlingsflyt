@@ -11,9 +11,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.utils.Validation
-import no.nav.aap.behandlingsflyt.utils.toHumanReadable
 import no.nav.aap.komponenter.gateway.GatewayProvider
-import no.nav.aap.komponenter.tidslinje.Segment
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 
@@ -75,7 +73,11 @@ class AvklarSykdomLøser(
         sykdomLøsning.segmenter().forEach { segment ->
             val feil = segment.verdi.validerKonsistensForSykdom(harYrkesskade)
             if (feil.isNotEmpty()) {
-                logWarning(harYrkesskade, behandling, segment, feil)
+                log.warn(
+                    "Sykdomsvurdering er inkonsistent med yrkesskade. typeBehandling={}, valideringsfeil={}",
+                    behandling.typeBehandling(),
+                    feil.joinToString()
+                )
 
                 val meldinger = feil.map { feiltype ->
                     when (feiltype) {
@@ -101,33 +103,6 @@ class AvklarSykdomLøser(
         }
 
         return Validation.Valid(gjeldendeSykdomsvurderinger)
-    }
-
-    private fun logWarning(
-        harYrkesskade: Boolean,
-        behandling: Behandling,
-        segment: Segment<Sykdomsvurdering>,
-        feil: List<SykdomsvurderingValideringsfeil>,
-    ) {
-        val vurdering = segment.verdi
-
-        log.warn(
-            "Sykdomsvurdering er inkonsistent med yrkesskade. " +
-                    "typeBehandling={}, harYrkesskade={}, periode={}, valideringsfeil={}, " +
-                    "harSkadeSykdomEllerLyte={}, harNedsattArbeidsevne={}, " +
-                    "erNedsettelseIArbeidsevneMerEnnHalvparten={}, " +
-                    "erSkadeSykdomEllerLyteVesentligdel={}, " +
-                    "erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense={}",
-            behandling.typeBehandling(),
-            harYrkesskade,
-            segment.periode.toHumanReadable(),
-            feil.joinToString(),
-            vurdering.harSkadeSykdomEllerLyte,
-            vurdering.harNedsattArbeidsevne,
-            vurdering.erNedsettelseIArbeidsevneMerEnnHalvparten,
-            vurdering.erSkadeSykdomEllerLyteVesentligdel,
-            vurdering.erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense,
-        )
     }
 
     override fun forBehov(): Definisjon {

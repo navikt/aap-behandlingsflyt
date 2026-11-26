@@ -7,7 +7,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.ArenaSakOppsummeringKontrakt
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
-import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoMedVedtakResponse
+import no.nav.aap.arenaoppslag.kontrakt.apiv1.MaksdatoSamordningResponse
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.SakerResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaBeregningstidspunktResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaDiagnose
@@ -19,6 +19,7 @@ import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVedtaksperiodeResponse
 import no.nav.aap.arenaoppslag.kontrakt.migrering.ArenaVilkar
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
+import no.nav.aap.arenaoppslag.kontrakt.modeller.Periode
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
@@ -53,12 +54,8 @@ class ArenaoppslagFake : FakeServer() {
                     )
                 )
             }
-            post("/api/v1/person/maksdato") {
-                call.respond(
-                    MaksdatoMedVedtakResponse(
-                        sak = null
-                    )
-                )
+            post("/api/v1/samordning/person/maksdato") {
+                call.respond(MaksdatoSamordningResponse.INGEN)
             }
             get("/api/migrering/{saksnummerArena}/sykdom") {
                 call.respond(
@@ -144,15 +141,20 @@ class ArenaoppslagFake : FakeServer() {
                 call.respond(ArenaRefusjonskravResponse(refusjonskrav = null))
             }
             get("/api/migrering/{saksnummer}/krav") {
+                val migreringsdato = LocalDate.now().with(TemporalAdjusters.previous(DayOfWeek.MONDAY)).minusWeeks(1)
                 call.respond(
                     KravResponse(
                         lopenr = 123456,
                         aar = 2016,
                         soknadsdato = LocalDate.now().minusYears(1),
-                        migreringsdato = LocalDate.now().with(TemporalAdjusters.previous(DayOfWeek.MONDAY)),
+                        migreringsdato = migreringsdato,
                         gjenstaaendeKvote = GjenstaaendeKvote(
                             ordinaer = 150
-                        )
+                        ),
+                        sisteFerdigBehandledeMeldekortperiode = Periode(
+                            migreringsdato.minusWeeks(2),
+                            migreringsdato.minusDays(1)
+                        ),
                     )
                 )
             }

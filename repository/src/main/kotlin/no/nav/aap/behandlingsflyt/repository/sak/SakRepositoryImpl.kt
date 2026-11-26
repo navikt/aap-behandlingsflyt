@@ -280,19 +280,9 @@ where not exists (
 
     override fun finnSakerMedBarnetillegg(påDato: LocalDate): List<SakId> {
         val sql = """
-with gjeldende_behandlinger as (SELECT *
-                                FROM (SELECT s.id as s_sak_id,
-                                             ROW_NUMBER()
-                                             OVER (PARTITION BY b.sak_id ORDER BY v.vedtakstidspunkt DESC) rn,
-                                             b.id as behandling_id
-                                      FROM behandling b
-                                               JOIN sak s ON b.sak_id = s.id
-                                               join vedtak v on b.id = v.behandling_id
-                                      WHERE b.status in ('AVSLUTTET', 'IVERKSETTES')) q
-                                WHERE rn = 1)
-select distinct b.s_sak_id as id
+select distinct b.sak_id as id
 from tilkjent_ytelse ty
-         join gjeldende_behandlinger b on ty.behandling_id = b.behandling_id
+         join gjeldende_vedtatte_behandlinger b on ty.behandling_id = b.behandling_id
          join public.tilkjent_periode tp on ty.id = tp.tilkjent_ytelse_id
 where aktiv = true
   and tp.barnetillegg > 0

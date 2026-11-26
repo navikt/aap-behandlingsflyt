@@ -32,7 +32,15 @@ sealed interface KravVurdering {
     }
 }
 
-data class RelevantKrav(
+/**
+ * Et krav som gir mulig rett til AAP fra [muligRettFra]. Kravet stammer enten fra en søknad eller fra en
+ * sak migrert fra Arena. Bruk `when` over subtypene når du trenger felt som bare finnes på én av dem.
+ */
+sealed interface RelevantKrav : KravVurdering {
+    val muligRettFra: LocalDate
+}
+
+data class RelevantSøknadKrav(
     override val referanse: Kravreferanse,
     override val journalpostId: JournalpostId,
     override val vurdertAv: Bruker,
@@ -42,8 +50,8 @@ data class RelevantKrav(
 
     val søknadsdato: Søknadsdato,
     val overstyrMuligRettFra: OverstyrMuligRettFra?,
-    val muligRettFra: LocalDate,
-) : KravVurdering
+    override val muligRettFra: LocalDate,
+) : RelevantKrav
 
 data class TrukketSøknad(
     override val referanse: Kravreferanse,
@@ -72,7 +80,7 @@ data class Tilleggsopplysning(
     override val opprettet: Instant,
 ) : KravVurdering
 
-data class MigrertKrav(
+data class RelevantMigrertKrav(
     override val referanse: Kravreferanse,
     override val vurdertAv: Bruker,
     override val begrunnelse: String,
@@ -80,11 +88,11 @@ data class MigrertKrav(
     override val opprettet: Instant,
 
     val virkningstidspunktArena: LocalDate,
-    val muligRettFra: LocalDate,
+    override val muligRettFra: LocalDate,
     val arenaSaksnummer: String,
     val rettighetstype: MigrertRettighetstype,
     val resterendeKvoteOrdinær: Int,
-) : KravVurdering {
+) : RelevantKrav {
     override val journalpostId: JournalpostId? = null
 }
 

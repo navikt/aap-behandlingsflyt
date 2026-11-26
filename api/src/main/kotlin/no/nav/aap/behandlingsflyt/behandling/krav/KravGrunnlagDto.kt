@@ -3,9 +3,9 @@ package no.nav.aap.behandlingsflyt.behandling.krav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
@@ -21,6 +21,7 @@ data class KravGrunnlagDto(
     val harTilgangTilÅSaksbehandle: Boolean,
     val nyeVurderinger: List<KravVurderingDto>,
     val vedtatteVurderinger: List<KravVurderingDto>,
+    val gjeldendeVurderinger: List<KravVurderingDto>,
     val søknaderUtenKravvurdering: List<SøknadUtenKravDto>,
     val søknader: List<SøknadUtenKravDto>,
 )
@@ -102,7 +103,7 @@ data class MigrertKravDto(
 }
 
 fun KravVurdering.somDto(): KravVurderingDto = when (this) {
-    is RelevantKrav -> RelevantKravDto(
+    is RelevantSøknadKrav -> RelevantKravDto(
         referanse = this.referanse.verdi,
         journalpostId = this.journalpostId,
         vurdertAv = this.vurdertAv,
@@ -141,7 +142,7 @@ fun KravVurdering.somDto(): KravVurderingDto = when (this) {
         opprettet = this.opprettet,
     )
 
-    is MigrertKrav -> MigrertKravDto(
+    is RelevantMigrertKrav -> MigrertKravDto(
         referanse = this.referanse.verdi,
         vurdertAv = this.vurdertAv,
         begrunnelse = this.begrunnelse,

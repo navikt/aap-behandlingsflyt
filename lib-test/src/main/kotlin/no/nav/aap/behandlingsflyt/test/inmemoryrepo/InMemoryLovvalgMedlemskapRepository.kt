@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.test.inmemoryrepo
 
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.InntekterINorgeRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.LovvalgMedlemskapRegisterGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.ManuellVurderingForLovvalgMedlemskap
@@ -42,7 +43,7 @@ object InMemoryLovvalgMedlemskapRepository : LovvalgMedlemskapRepository {
                 behandlingId,
                 LovvalgMedlemskapGrunnlag(
                     registerGrunnlag = forrige?.registerGrunnlag
-                        ?: LovvalgMedlemskapRegisterGrunnlag(null, null),
+                        ?: LovvalgMedlemskapRegisterGrunnlag(null, InntekterINorgeRegisterGrunnlag(emptySet())),
                     vurderinger = vurderinger
                 )
             )

@@ -3,6 +3,7 @@ package no.nav.aap.behandlingsflyt.prosessering
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
 import no.nav.aap.behandlingsflyt.hendelse.mottak.HåndterMottattDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
@@ -39,8 +40,29 @@ class HåndterUbehandletDokumentJobbUtfører(
         val dokument = mottattDokumentRepository.hent(sakId, innsendingsreferanse)
         when (dokument.type) {
             InnsendingType.MELDEKORT -> håndterUbehandletMeldekort(dokument)
+            InnsendingType.SØKNAD_UTENLANDSOPPHOLD -> håndterSøknadUtenlandsoppholdIKø(dokument)
             else -> log.warn("Jobb ble opprettet for innsendingstype som ikke støttes")
         }
+    }
+
+    private fun håndterSøknadUtenlandsoppholdIKø(dokument: MottattDokument) {
+        val skrivelås = taSkrivelåsRepository.låsSak(dokument.sakId)
+
+        if (dokument.status == Status.BEHANDLET) {
+            log.info("Søknad om opphold i utlandet med referanse ${dokument.referanse} er allerede behandlet")
+        } else {
+            val melding = requireNotNull(dokument.ustrukturerteData()?.let { DefaultJsonMapper.fromJson<Melding>(it) }) {
+                "Klarte ikke parse søknad om opphold i utlandet som melding"
+            }
+            håndterMottattDokumentService.håndterMottatteDokumenter(
+                dokument.sakId,
+                dokument.referanse,
+                dokument.mottattTidspunkt,
+                dokument.type,
+                melding
+            )
+        }
+        taSkrivelåsRepository.verifiserSkrivelås(skrivelås)
     }
 
     private fun håndterUbehandletMeldekort(dokument: MottattDokument) {

@@ -20,6 +20,7 @@ import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.HåndterConflictRes
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.barnetillegg.VurderingAvForeldreAnsvar
+import no.nav.aap.behandlingsflyt.behandling.brev.KlageOpprettholdelse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakYtterligereNedsatt
 import no.nav.aap.meldeplikt.MeldepliktGrunnlag
@@ -387,6 +388,9 @@ class BrevGateway : BrevbestillingGateway {
         TypeBrev.KLAGE_TRUKKET -> Brevtype.KLAGE_TRUKKET
         TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV -> Brevtype.FORHÅNDSVARSEL_KLAGE_FORMKRAV
         TypeBrev.FORVALTNINGSMELDING -> Brevtype.FORVALTNINGSMELDING
+        // TODO: Bytt til egen Brevtype når den finnes i aap-brev sin kontrakt. Inntil da får kant i kant-saker
+        //  samme brev som før, så ingen sak blir stående om toggelen er på.
+        TypeBrev.FORVALTNINGSMELDING_KANT_I_KANT -> Brevtype.FORVALTNINGSMELDING_KANT_I_KANT
         TypeBrev.VEDTAK_11_17 -> Brevtype.VEDTAK_11_17
         TypeBrev.VEDTAK_11_18 -> Brevtype.VEDTAK_11_18
         TypeBrev.VEDTAK_11_7 -> Brevtype.VEDTAK_11_7
@@ -449,11 +453,17 @@ class BrevGateway : BrevbestillingGateway {
                         ordinær.foreldreansvarVurderinger?.let { add(foreldreansvarVurderingerTilFaktaGrunnlag(it)) }
                         ordinær.forholdTilAndreYtelser?.let { add(forholdTilAndreYtelserTilFaktagrunnlag(it)) }
                         ordinær.yrkesskadeBeregning?.let { add(yrkesskadeBeregningTilFaktagrunnlag(it)) }
-                        ordinær.yrkesSkadeISøknadIkkeIRegister?.let { add(Faktagrunnlag.YrkesskadeISøknadIkkeIRegister(it)) }
+                        ordinær.yrkesSkadeISøknadIkkeIRegister?.let {
+                            add(
+                                Faktagrunnlag.YrkesskadeISøknadIkkeIRegister(
+                                    it
+                                )
+                            )
+                        }
                         ordinær.meldepliktGrunnlag?.let { add(fritakmeldepliktTilFaktagrunnlag(it)) }
                     }
                     brevBehov.uføreVurdering.sisteDagMedYtelse.let { add(Faktagrunnlag.SisteDagMedYtelse(it)) }
-                    brevBehov.uføreVurdering.kravdatoUføretrygd.let { add(Faktagrunnlag.KravdatoUføretrygd(it))}
+                    brevBehov.uføreVurdering.kravdatoUføretrygd.let { add(Faktagrunnlag.KravdatoUføretrygd(it)) }
                 }
             }
 
@@ -518,6 +528,15 @@ class BrevGateway : BrevbestillingGateway {
 
             is VedtakEndringDødsfall ->
                 setOf(Faktagrunnlag.Dødsfall(brevBehov.dødsdato, brevBehov.navn))
+
+            is KlageOpprettholdelse -> setOf(
+                Faktagrunnlag.Klage(
+                    påklagetVedtaksdato = brevBehov.påklagetVedtaksdato,
+                    klagedato = brevBehov.klagedato,
+                    nayVurdering = brevBehov.begrunnelseNay,
+                    navKontorVurdering = brevBehov.begrunnelseNavKontor
+                )
+            )
 
             else -> emptySet()
         }

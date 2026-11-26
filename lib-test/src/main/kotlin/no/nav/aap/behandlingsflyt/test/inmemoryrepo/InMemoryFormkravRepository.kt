@@ -8,15 +8,20 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import java.time.LocalDate
 
 object InMemoryFormkravRepository : FormkravRepository {
+    private val grunnlag = mutableMapOf<BehandlingId, FormkravGrunnlag>()
+
     override fun hentHvisEksisterer(behandlingId: BehandlingId): FormkravGrunnlag? {
-        TODO("Not yet implemented")
+        return grunnlag[behandlingId]
     }
 
     override fun lagre(
         behandlingId: BehandlingId,
         formkravVurdering: FormkravVurdering
     ) {
-        TODO("Not yet implemented")
+        grunnlag[behandlingId] = FormkravGrunnlag(
+            vurdering = formkravVurdering,
+            varsel = grunnlag[behandlingId]?.varsel
+        )
     }
 
     override fun lagreVarsel(

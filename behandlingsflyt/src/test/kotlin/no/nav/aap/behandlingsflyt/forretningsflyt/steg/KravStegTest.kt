@@ -9,6 +9,7 @@ import no.nav.aap.behandlingsflyt.ARENA_MIGRERING_BRUKER
 import io.mockk.verify
 import no.nav.aap.arenaoppslag.kontrakt.migrering.GjenstaaendeKvote
 import no.nav.aap.arenaoppslag.kontrakt.migrering.KravResponse
+import no.nav.aap.arenaoppslag.kontrakt.modeller.Periode
 import no.nav.aap.behandlingsflyt.arena.ArenaOppslagGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
@@ -24,11 +25,12 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
@@ -145,7 +147,7 @@ class KravStegTest {
     }
 
     @Test
-    fun `migrering fra Arena med automatisk migrering - lagrer MigrertKrav basert på data fra Arena`() {
+    fun `migrering fra Arena med automatisk migrering - lagrer RelevantMigrertKrav basert på data fra Arena`() {
         val stegMedAutomatiskMigrering = stegMedAutomatiskMigrering()
         val sak = opprettInMemorySak()
         every { sakService.hent(sak.id) } returns sak
@@ -156,7 +158,7 @@ class KravStegTest {
 
         assertThat(resultat).isEqualTo(Fullført)
         val fraArena = FakeArenaOppslagGateway().hentKravDataForSak("2016-123456").tilDomene()
-        val krav = InMemoryKravRepository.hentHvisEksisterer(behandling.id)!!.vurderinger.single() as MigrertKrav
+        val krav = InMemoryKravRepository.hentHvisEksisterer(behandling.id)!!.vurderinger.single() as RelevantMigrertKrav
         assertThat(krav.virkningstidspunktArena).isEqualTo(fraArena.søknadsdato)
         assertThat(krav.muligRettFra).isEqualTo(fraArena.migreringsdato)
         assertThat(krav.arenaSaksnummer).isEqualTo(fraArena.arenaSaksnummer)
@@ -220,7 +222,7 @@ class KravStegTest {
 
 
     @Test
-    fun `migrering fra Arena - oppdaterer MigrertKrav når data fra Arena er endret`() {
+    fun `migrering fra Arena - oppdaterer RelevantMigrertKrav når data fra Arena er endret`() {
         val sak = opprettInMemorySak()
         every { sakService.hent(sak.id) } returns sak
         val behandling = opprettFørstegangsbehandling(sak.id)
@@ -243,7 +245,7 @@ class KravStegTest {
 
         steg.utfør(kontekst)
 
-        val førsteKrav = InMemoryKravRepository.hent(behandling.id).vurderinger.single() as MigrertKrav
+        val førsteKrav = InMemoryKravRepository.hent(behandling.id).vurderinger.single() as RelevantMigrertKrav
         assertThat(førsteKrav.virkningstidspunktArena).isEqualTo(LocalDate.of(2025, 1, 6))
         assertThat(førsteKrav.muligRettFra).isEqualTo(LocalDate.of(2026, 9, 28))
         assertThat(førsteKrav.resterendeKvoteOrdinær).isEqualTo(150)
@@ -251,7 +253,7 @@ class KravStegTest {
 
         steg.utfør(kontekst)
 
-        val oppdatertKrav = InMemoryKravRepository.hent(behandling.id).vurderinger.single() as MigrertKrav
+        val oppdatertKrav = InMemoryKravRepository.hent(behandling.id).vurderinger.single() as RelevantMigrertKrav
         assertThat(oppdatertKrav.referanse).isNotEqualTo(førsteKrav.referanse)
         assertThat(oppdatertKrav.virkningstidspunktArena).isEqualTo(LocalDate.of(2025, 2, 3))
         assertThat(oppdatertKrav.muligRettFra).isEqualTo(LocalDate.of(2026, 9, 21))
@@ -302,17 +304,16 @@ class KravStegTest {
     }
 
     @Test
-    fun `revurdering med migrert krav skal vurderes manuelt selv om helautomatisk-vurdering er påskrudd`() {
+    fun `saksbehandlers revurdering av migrert krav skal vurderes manuelt selv om helautomatisk-vurdering er påskrudd`() {
         val sak = opprettInMemorySak()
         every { sakService.hent(sak.id) } returns sak
         val migreringsbehandling = opprettFørstegangsbehandling(sak.id)
         arenaMigreringForSak = arenaMigrering(sak.id)
         stegMedAutomatiskMigrering().utfør(migreringKontekst(migreringsbehandling))
-        val migrertKrav = InMemoryKravRepository.hent(migreringsbehandling.id).vurderinger.single() as MigrertKrav
+        val migrertKrav = InMemoryKravRepository.hent(migreringsbehandling.id).vurderinger.single() as RelevantMigrertKrav
 
         val revurdering = opprettRevurdering(sak.id, migreringsbehandling.id)
         InMemoryKravRepository.kopier(migreringsbehandling.id, revurdering.id)
-        leggTilSøknad(revurdering.id, sak.id, LocalDate.of(2026, 10, 1).atStartOfDay())
 
         val avklaringsbehovService = mockk<AvklaringsbehovService>(relaxed = true)
         val vedtakBehøverVurdering = slot<() -> Boolean>()
@@ -338,7 +339,7 @@ class KravStegTest {
         val resultat = stegUtenManuellVurdering.utfør(flytKontekstMedPerioder {
             this.behandling = revurdering
             this.vurderingType = VurderingType.REVURDERING
-            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.VURDER_KRAV)
         })
 
         assertThat(resultat).isEqualTo(Fullført)
@@ -349,6 +350,47 @@ class KravStegTest {
             )
         }
         assertThat(vedtakBehøverVurdering.captured()).isTrue()
+    }
+
+    @Test
+    fun `migrering fra Arena - feiler når siste ferdig behandlede meldekortperiode mangler`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        arenaMigreringForSak = arenaMigrering(sak.id)
+        val arenaOppslagGateway = mockk<ArenaOppslagGateway>()
+        every { arenaOppslagGateway.hentKravDataForSak(any()) } returns kravResponse(
+            søknadsdato = LocalDate.of(2025, 1, 6),
+            migreringsdato = LocalDate.of(2026, 9, 28),
+            kvote = 150,
+            sisteMeldekortperiode = null,
+        )
+
+        assertThatThrownBy {
+            stegMedAutomatiskMigrering(arenaOppslagGateway = arenaOppslagGateway).utfør(migreringKontekst(behandling))
+        }
+            .isInstanceOf(IllegalStateException::class.java)
+            .hasMessageContaining("ingen ferdig behandlet meldekortperiode")
+    }
+
+    @Test
+    fun `migrering fra Arena - feiler når migreringsdato ikke er dagen etter siste ferdig behandlede meldekortperiode`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettFørstegangsbehandling(sak.id)
+        arenaMigreringForSak = arenaMigrering(sak.id)
+        val arenaOppslagGateway = mockk<ArenaOppslagGateway>()
+        every { arenaOppslagGateway.hentKravDataForSak(any()) } returns kravResponse(
+            søknadsdato = LocalDate.of(2025, 1, 6),
+            migreringsdato = LocalDate.of(2026, 9, 28),
+            kvote = 150,
+            sisteMeldekortperiode = Periode(LocalDate.of(2026, 9, 7), LocalDate.of(2026, 9, 20)),
+        )
+
+        assertThatThrownBy {
+            stegMedAutomatiskMigrering(arenaOppslagGateway = arenaOppslagGateway).utfør(migreringKontekst(behandling))
+        }
+            .isInstanceOf(IllegalStateException::class.java)
+            .hasMessageContaining("2026-09-28")
+            .hasMessageContaining("2026-09-20")
     }
 
     @Test
@@ -374,16 +416,90 @@ class KravStegTest {
             this.vurderingType = VurderingType.REVURDERING
         })
 
-        assertThat(InMemoryKravRepository.hent(revurdering.id).vurderinger.filterIsInstance<RelevantKrav>()).hasSize(1)
+        assertThat(InMemoryKravRepository.hent(revurdering.id).vurderinger.filterIsInstance<RelevantSøknadKrav>()).hasSize(1)
         verify(exactly = 0) { avklaringsbehovService.oppdaterAvklaringsbehov(any(), any(), any(), any(), any()) }
     }
 
-    private fun kravResponse(søknadsdato: LocalDate, migreringsdato: LocalDate, kvote: Int) = KravResponse(
+    @Test
+    fun `søknad i revurdering etter migrering blir Tilleggsopplysning når manuell kravvurdering er av`() {
+        verifiserSøknadEtterMigreringBlirTilleggsopplysning(AlleAvskruddUnleash)
+    }
+
+    @Test
+    fun `søknad i revurdering etter migrering blir Tilleggsopplysning når manuell kravvurdering er på`() {
+        verifiserSøknadEtterMigreringBlirTilleggsopplysning(KravManuellVurderingUnleash)
+    }
+
+    private fun verifiserSøknadEtterMigreringBlirTilleggsopplysning(unleash: FakeUnleashBaseWithDefaultDisabled) {
+        val sak = opprettInMemorySak()
+        every { sakService.hent(sak.id) } returns sak
+        val migreringsbehandling = opprettFørstegangsbehandling(sak.id)
+        arenaMigreringForSak = arenaMigrering(sak.id)
+        stegMedAutomatiskMigrering().utfør(migreringKontekst(migreringsbehandling))
+        val migrertKrav = InMemoryKravRepository.hent(migreringsbehandling.id).vurderinger.single() as RelevantMigrertKrav
+
+        val revurdering = opprettRevurdering(sak.id, migreringsbehandling.id)
+        InMemoryKravRepository.kopier(migreringsbehandling.id, revurdering.id)
+        leggTilSøknad(revurdering.id, sak.id, LocalDate.of(2026, 10, 1).atStartOfDay())
+
+        val avklaringsbehovService = mockk<AvklaringsbehovService>(relaxed = true)
+        val vedtakBehøverVurdering = slot<() -> Boolean>()
+        val erTilstrekkeligVurdert = slot<() -> Boolean>()
+        every {
+            avklaringsbehovService.oppdaterAvklaringsbehov(
+                definisjon = Definisjon.VURDER_KRAV,
+                vedtakBehøverVurdering = capture(vedtakBehøverVurdering),
+                erTilstrekkeligVurdert = capture(erTilstrekkeligVurdert),
+                tilbakestillGrunnlag = any(),
+                kontekst = any(),
+            )
+        } returns Unit
+        val steg = KravSteg(
+            unleashGateway = unleash,
+            kravRepository = InMemoryKravRepository,
+            mottattDokumentRepository = InMemoryMottattDokumentRepository,
+            avklaringsbehovService = avklaringsbehovService,
+            sakRepository = InMemorySakRepository,
+            sakService = sakService,
+            arenaMigreringService = arenaMigreringService,
+        )
+        val kontekst = flytKontekstMedPerioder {
+            this.behandling = revurdering
+            this.vurderingType = VurderingType.REVURDERING
+            this.vurderingsbehovRelevanteForSteg = setOf(Vurderingsbehov.MOTTATT_SØKNAD)
+        }
+
+        steg.utfør(kontekst)
+        val etterFørsteKjøring = InMemoryKravRepository.hent(revurdering.id).gjeldendeVurderinger()
+        steg.utfør(kontekst)
+
+        val gjeldende = InMemoryKravRepository.hent(revurdering.id).gjeldendeVurderinger()
+        assertThat(gjeldende).containsExactlyInAnyOrderElementsOf(etterFørsteKjøring)
+        assertThat(gjeldende.filterIsInstance<RelevantSøknadKrav>()).isEmpty()
+        assertThat(gjeldende.filterIsInstance<RelevantKrav>()).containsExactly(migrertKrav)
+        val tilleggsopplysning = gjeldende.filterIsInstance<Tilleggsopplysning>().single()
+        assertThat(tilleggsopplysning.vurdertIBehandling).isEqualTo(revurdering.id)
+        assertThat(tilleggsopplysning.erAutomatiskVurdert()).isTrue()
+        if (vedtakBehøverVurdering.isCaptured) {
+            assertThat(vedtakBehøverVurdering.captured()).isFalse()
+        }
+        if (erTilstrekkeligVurdert.isCaptured) {
+            assertThat(erTilstrekkeligVurdert.captured()).isTrue()
+        }
+    }
+
+    private fun kravResponse(
+        søknadsdato: LocalDate,
+        migreringsdato: LocalDate,
+        kvote: Int,
+        sisteMeldekortperiode: Periode? = Periode(migreringsdato.minusDays(14), migreringsdato.minusDays(1)),
+    ) = KravResponse(
         lopenr = 123456,
         aar = 2016,
         soknadsdato = søknadsdato,
         migreringsdato = migreringsdato,
         gjenstaaendeKvote = GjenstaaendeKvote(ordinaer = kvote),
+        sisteFerdigBehandledeMeldekortperiode = sisteMeldekortperiode,
     )
 
     private fun stegMedAutomatiskMigrering(
@@ -434,8 +550,8 @@ class KravStegTest {
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
         assertThat(vurderinger).hasSize(1)
         val krav = vurderinger.single()
-        assertThat(krav).isInstanceOf(RelevantKrav::class.java)
-        assertThat((krav as RelevantKrav).muligRettFra).isEqualTo(søknadsdato)
+        assertThat(krav).isInstanceOf(RelevantSøknadKrav::class.java)
+        assertThat((krav as RelevantSøknadKrav).muligRettFra).isEqualTo(søknadsdato)
         assertThat(krav.overstyrMuligRettFra).isNull()
     }
 
@@ -452,9 +568,9 @@ class KravStegTest {
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
 
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
-        assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(1)
+        assertThat(vurderinger.filterIsInstance<RelevantSøknadKrav>()).hasSize(1)
         assertThat(vurderinger.filterIsInstance<Tilleggsopplysning>()).hasSize(2)
-        assertThat(vurderinger.filterIsInstance<RelevantKrav>().single().muligRettFra).isEqualTo(eldsteDato)
+        assertThat(vurderinger.filterIsInstance<RelevantSøknadKrav>().single().muligRettFra).isEqualTo(eldsteDato)
     }
 
     @Test
@@ -469,7 +585,7 @@ class KravStegTest {
         steg.utfør(flytKontekstMedPerioder { this.behandling = forrigeBehandling })
         val vurderingerFørstegangsbehandling = InMemoryKravRepository.hent(forrigeBehandling.id).vurderinger
         assertThat(vurderingerFørstegangsbehandling).hasSize(1)
-        assertThat(vurderingerFørstegangsbehandling.single()).isInstanceOf(RelevantKrav::class.java)
+        assertThat(vurderingerFørstegangsbehandling.single()).isInstanceOf(RelevantSøknadKrav::class.java)
 
         // Simulerer GrunnlagKopierer.kopier som kjøres ved opprettelse av revurdering
         InMemoryKravRepository.kopier(forrigeBehandling.id, behandling.id)
@@ -478,8 +594,8 @@ class KravStegTest {
 
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
         assertThat(vurderinger).hasSize(2)
-        assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(1)
-        assertThat(vurderinger.filterIsInstance<RelevantKrav>().first().vurdertIBehandling).isEqualTo(forrigeBehandling.id)
+        assertThat(vurderinger.filterIsInstance<RelevantSøknadKrav>()).hasSize(1)
+        assertThat(vurderinger.filterIsInstance<RelevantSøknadKrav>().first().vurdertIBehandling).isEqualTo(forrigeBehandling.id)
         assertThat(vurderinger.filterIsInstance<Tilleggsopplysning>()).hasSize(1)
         assertThat(vurderinger.filterIsInstance<Tilleggsopplysning>().first().vurdertIBehandling).isEqualTo(behandling.id)
     }
@@ -506,13 +622,13 @@ class KravStegTest {
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
         assertThat(vurderinger.filter{it.vurdertIBehandling == forrigeBehandling.id}).hasSize(1)
         assertThat(vurderinger.filter{it.vurdertIBehandling == behandling.id}).hasSize(2)
-        assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(2)
+        assertThat(vurderinger.filterIsInstance<RelevantSøknadKrav>()).hasSize(2)
         assertThat(vurderinger.filterIsInstance<Tilleggsopplysning>()).hasSize(1)
-        assertThat(vurderinger.filterIsInstance<RelevantKrav>().map { it.referanse }).contains(gammeltNyttKrav.referanse)
+        assertThat(vurderinger.filterIsInstance<RelevantSøknadKrav>().map { it.referanse }).contains(gammeltNyttKrav.referanse)
     }
 
     @Test
-    fun `overstyrt krav i inneværende behandling – overstyring kopieres til nytt RelevantKrav fra søknad`() {
+    fun `overstyrt krav i inneværende behandling – overstyring kopieres til nytt RelevantSøknadKrav fra søknad`() {
         val sak = opprettInMemorySak()
         every { sakService.hent(sak.id) } returns sak
         val behandling = opprettFørstegangsbehandling(sak.id)
@@ -535,9 +651,9 @@ class KravStegTest {
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
 
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
-        val relevanteKrav = vurderinger.filterIsInstance<RelevantKrav>()
+        val relevanteKrav = vurderinger.filterIsInstance<RelevantSøknadKrav>()
         assertThat(relevanteKrav).hasSize(1)
-        // Ny RelevantKrav fra søknad – ikke den gamle manuelle
+        // Ny RelevantSøknadKrav fra søknad – ikke den gamle manuelle
         assertThat(relevanteKrav.single().referanse).isNotEqualTo(overstyrtKrav.referanse)
         // Overstyringen er kopiert
         assertThat(relevanteKrav.single().overstyrMuligRettFra?.dato).isEqualTo(overstyrtDato)
@@ -573,7 +689,7 @@ class KravStegTest {
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
 
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
-        val relevantKravIInneværende = vurderinger.filterIsInstance<RelevantKrav>()
+        val relevantKravIInneværende = vurderinger.filterIsInstance<RelevantSøknadKrav>()
             .filter { it.vurdertIBehandling == behandling.id }
         assertThat(relevantKravIInneværende).hasSize(1)
         assertThat(vurderinger.filterIsInstance<Tilleggsopplysning>()).isEmpty()
@@ -592,7 +708,7 @@ class KravStegTest {
 
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
         assertThat(vurderinger).hasSize(1)
-        assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(1)
+        assertThat(vurderinger.filterIsInstance<RelevantSøknadKrav>()).hasSize(1)
     }
 
     @Test
@@ -608,13 +724,13 @@ class KravStegTest {
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
 
         val vurderinger = InMemoryKravRepository.hent(behandling.id).vurderinger
-        assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(1)
-        assertThat(vurderinger.filterIsInstance<RelevantKrav>().single().muligRettFra).isEqualTo(søknadDato)
+        assertThat(vurderinger.filterIsInstance<RelevantSøknadKrav>()).hasSize(1)
+        assertThat(vurderinger.filterIsInstance<RelevantSøknadKrav>().single().muligRettFra).isEqualTo(søknadDato)
         assertThat(vurderinger.filterIsInstance<Tilleggsopplysning>()).isEmpty()
     }
 
     @Test
-    fun `revurdering med søknad eldre enn vedtatt krav – søknad tar over som RelevantKrav, gammelt krav nedgraderes`() {
+    fun `revurdering med søknad eldre enn vedtatt krav – søknad tar over som RelevantSøknadKrav, gammelt krav nedgraderes`() {
         val sak = opprettInMemorySak()
         every { sakService.hent(sak.id) } returns sak
         val behandling = opprettFørstegangsbehandling(sak.id)
@@ -626,14 +742,14 @@ class KravStegTest {
         leggTilSøknad(behandling.id, sak.id, gammeltSøknadDato.atStartOfDay())
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
 
-        val gammeltKrav = InMemoryKravRepository.hent(behandling.id).gjeldendeRelevanteKrav().single()
+        val gammeltKrav = InMemoryKravRepository.hent(behandling.id).gjeldendeSøknadKrav().single()
         InMemoryKravRepository.kopier(behandling.id, revurdering.id)
 
         leggTilSøknad(revurdering.id, sak.id, nyttSøknadDato.atStartOfDay())
         steg.utfør(flytKontekstMedPerioder { this.behandling = revurdering })
 
         val gjeldendeVurderinger = InMemoryKravRepository.hent(revurdering.id).gjeldendeVurderinger()
-        val relevanteKrav = gjeldendeVurderinger.filterIsInstance<RelevantKrav>()
+        val relevanteKrav = gjeldendeVurderinger.filterIsInstance<RelevantSøknadKrav>()
         val tilleggsopplysninger = gjeldendeVurderinger.filterIsInstance<Tilleggsopplysning>()
 
         assertThat(relevanteKrav).hasSize(1)
@@ -656,7 +772,7 @@ class KravStegTest {
         leggTilSøknad(behandling.id, sak.id, gammeltSøknadDato.atStartOfDay())
         steg.utfør(flytKontekstMedPerioder { this.behandling = behandling })
 
-        val gammeltKrav = InMemoryKravRepository.hent(behandling.id).gjeldendeRelevanteKrav().single()
+        val gammeltKrav = InMemoryKravRepository.hent(behandling.id).gjeldendeSøknadKrav().single()
         InMemoryKravRepository.lagre(
             behandling.id,
             InMemoryKravRepository.hent(behandling.id).vurderinger
@@ -671,7 +787,7 @@ class KravStegTest {
         leggTilSøknad(revurdering.id, sak.id, nyttSøknadDato.atStartOfDay())
         steg.utfør(flytKontekstMedPerioder { this.behandling = revurdering })
 
-        val nyttKrav = InMemoryKravRepository.hent(revurdering.id).gjeldendeRelevanteKrav().single()
+        val nyttKrav = InMemoryKravRepository.hent(revurdering.id).gjeldendeSøknadKrav().single()
         assertThat(nyttKrav.søknadsdato.dato).isEqualTo(nyttSøknadDato)
         assertThat(nyttKrav.overstyrMuligRettFra).isNotNull()
         assertThat(nyttKrav.overstyrMuligRettFra!!.dato).isEqualTo(overstyrtDato)
@@ -733,7 +849,7 @@ class KravStegTest {
         journalpostId: JournalpostId,
         mottattDato: LocalDate,
         overstyrMuligRettFra: OverstyrMuligRettFra? = null,
-    ) = RelevantKrav(
+    ) = RelevantSøknadKrav(
         referanse = Kravreferanse.ny(),
         journalpostId = journalpostId,
         vurdertAv = SYSTEMBRUKER,

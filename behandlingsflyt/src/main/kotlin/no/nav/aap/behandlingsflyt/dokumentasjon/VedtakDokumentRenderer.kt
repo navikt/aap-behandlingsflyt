@@ -13,9 +13,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknad
@@ -153,7 +153,7 @@ internal object VedtakDokumentRenderer {
         return Seksjon(
             tittel = Tekst("Krav"),
             subseksjoner = vurderinger.map { vurdering ->
-                val overstyring = (vurdering as? RelevantKrav)?.overstyrMuligRettFra
+                val overstyring = (vurdering as? RelevantSøknadKrav)?.overstyrMuligRettFra
                 Seksjon(
                     tittel = Span(
                         Tekst(vurdering.typeTekst()),
@@ -161,7 +161,7 @@ internal object VedtakDokumentRenderer {
                     ),
                     Fritekstfelt("Begrunnelse", vurdering.begrunnelse),
                     when (vurdering) {
-                        is RelevantKrav -> Dict(
+                        is RelevantSøknadKrav -> Dict(
                             "Søknadsdato" to Dato(vurdering.søknadsdato.dato),
                             "Årsak til søknadsdato" to Tekst(vurdering.søknadsdato.årsak.visningsnavn()),
                             "Mulig rett fra" to Dato(vurdering.muligRettFra),
@@ -171,7 +171,7 @@ internal object VedtakDokumentRenderer {
                                     (overstyring?.årsak?.visningsnavn()?.let(::Tekst) ?: Tekst("Ikke overstyrt")),
                         )
 
-                        is MigrertKrav,
+                        is RelevantMigrertKrav,
                         is Klage,
                         is Tilleggsopplysning,
                         is TrukketSøknad -> null
@@ -182,11 +182,11 @@ internal object VedtakDokumentRenderer {
     }
 
     private fun KravVurdering.typeTekst(): String = when (this) {
-        is RelevantKrav -> "Relevant krav"
+        is RelevantSøknadKrav -> "Relevant krav"
         is TrukketSøknad -> "Trukket søknad"
         is Klage -> "Klage"
         is Tilleggsopplysning -> "Tilleggsopplysning"
-        is MigrertKrav -> "Migrert krav"
+        is RelevantMigrertKrav -> "Migrert krav"
     }
 
     private fun SøknadsdatoÅrsak.visningsnavn(): String = when (this) {

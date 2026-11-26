@@ -101,7 +101,9 @@ object Revurdering : BehandlingType {
             .medSteg(
                 steg = SendForvaltningsmeldingSteg,
                 vurderingsbehovRelevanteForSteg = listOf(Vurderingsbehov.MOTTATT_SØKNAD, Vurderingsbehov.MIGRERING_FRA_ARENA),
-                informasjonskrav = emptyList()
+                // Arena-maksdato hentes her bare når NykantIkantForvaltningsmelding er på, slik at vanlig
+                // forvaltningsmelding ikke venter på Arena. Ellers hentes den i AvklarStønadsperiodeSteg.
+                informasjonskrav = listOf(ArenaMaksdatoInformasjonskrav)
             )
             .medSteg(
                 steg = RettighetsperiodeSteg,

@@ -11,9 +11,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravValidering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
@@ -139,6 +139,10 @@ class KravSteg(
     }
 
     private fun vurderAutomatiskHvisMulig(kontekst: FlytKontekstMedPerioder) {
+        if (harMigrertKrav(kontekst)) {
+            vurderSøknaderSomTilleggsopplysningTilMigrertKrav(kontekst)
+            return
+        }
         if (erFørstegangsbehandlingUtenEksisterendeKrav(kontekst)) {
             val søknaderMottattIBehandling =
                 mottattDokumentRepository.hentDokumenterAvType(kontekst.behandlingId, InnsendingType.SØKNAD)
@@ -147,7 +151,7 @@ class KravSteg(
                 val søknad = søknaderMottattIBehandling.first()
                 kravRepository.lagre(
                     kontekst.behandlingId, vurderinger = setOf(
-                        RelevantKrav(
+                        RelevantSøknadKrav(
                             referanse = Kravreferanse.ny(),
                             journalpostId = søknad.referanse.asJournalpostId,
                             vurdertAv = SYSTEMBRUKER,
@@ -168,6 +172,26 @@ class KravSteg(
         }
     }
 
+    /**
+     * Migrert krav er fasit for saker fra Arena. Søknader som kommer inn senere er opplysninger til den
+     * eksisterende saken (ferie, barnetillegg o.l.) og skal ikke tolkes som nytt krav.
+     *
+     * OBS OBS: Her må vi huske på å tenke på nye krav. Hvis vi får en søknad på slutten av saken
+     * så skal det trolig gjøres 11-12 vurdering og potensielt bli et nytt krav. Da vil ikke dette fly
+     */
+    private fun vurderSøknaderSomTilleggsopplysningTilMigrertKrav(kontekst: FlytKontekstMedPerioder) {
+        val eksisterendeVurderinger = kravRepository.hentHvisEksisterer(kontekst.behandlingId)?.vurderinger.orEmpty()
+        val nyeTilleggsopplysninger = mottattDokumentRepository
+            .hentDokumenterAvType(kontekst.behandlingId, InnsendingType.SØKNAD)
+            .filter { søknad -> eksisterendeVurderinger.none { it.forJournalpostId(søknad.referanse.asJournalpostId) } }
+            .sortedBy { it.mottattTidspunkt }
+            .map { tilleggsopplysning(kontekst.behandlingId, it) }
+
+        if (nyeTilleggsopplysninger.isNotEmpty()) {
+            kravRepository.lagre(kontekst.behandlingId, eksisterendeVurderinger + nyeTilleggsopplysninger)
+        }
+    }
+
     // Denne antar kun ett relevant krav. Når vi skal støtte flere relevante krav må vi løfte avklaringsbehov
     private fun vurderHelautomatisk(kontekst: FlytKontekstMedPerioder) {
         val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
@@ -183,7 +207,7 @@ class KravSteg(
         // Dersom saksbehandler har overstyrt muligRettFra i denne behandlingen, bevarer vi overstyringen
         // (verdien) men lar KravSteg re-vurdere hvilken søknad som er RelevantKrav.
         val overstyringFraDenneBehandlingen = kravGrunnlag
-            ?.gjeldendeRelevanteKrav()
+            ?.gjeldendeSøknadKrav()
             ?.firstOrNull { it.vurdertIBehandling == kontekst.behandlingId }
             ?.overstyrMuligRettFra
 
@@ -191,7 +215,7 @@ class KravSteg(
             kontekst.forrigeBehandlingId?.let { kravRepository.hentHvisEksisterer(it) }?.vurderinger.orEmpty()
 
         val gjeldendeKravFraForrige = KravGrunnlag(vedtatteVurderinger.toSet())
-            .gjeldendeRelevanteKrav()
+            .gjeldendeSøknadKrav()
             .minByOrNull { it.muligRettFra }
 
         // Dersom eldste nye dokument er eldre enn det vedtatte kravets søknadsdato, overtar det som nytt RelevantKrav.
@@ -240,8 +264,8 @@ class KravSteg(
         behandlingId: BehandlingId,
         dokument: MottattDokument,
         overstyrMuligRettFra: OverstyrMuligRettFra? = null,
-    ): RelevantKrav {
-        return RelevantKrav(
+    ): RelevantSøknadKrav {
+        return RelevantSøknadKrav(
             referanse = Kravreferanse.ny(),
             journalpostId = dokument.referanse.asJournalpostId,
             vurdertAv = SYSTEMBRUKER,
@@ -283,6 +307,7 @@ class KravSteg(
         val kravdataFraArena = arenaMigreringService.hentKravDataForSak(kontekst.sakId)
         val eksisterendeKrav = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
         requireNotNull(kravdataFraArena) { "Kan ikke migrere krav. Klarte ikke finne relatert sak i Arena." }
+        validerAtAlleMeldekortErBehandlet(kravdataFraArena)
 
         if (!kravdataFraArena.erLikVurdering(eksisterendeKrav)) {
             arenaMigreringService.lagreMigreringsdataForSporing(kontekst.behandlingId, StegType.KRAV, kravdataFraArena)
@@ -300,13 +325,34 @@ class KravSteg(
         }
     }
 
-    private fun harIkkeMigrertKrav(kontekst: FlytKontekstMedPerioder): Boolean {
+    private fun harMigrertKrav(kontekst: FlytKontekstMedPerioder): Boolean {
         val kravGrunnlag = kravRepository.hentHvisEksisterer(kontekst.behandlingId)
-        return kravGrunnlag?.gjeldendeMigrertKrav() == null
+        return kravGrunnlag?.gjeldendeMigrertKrav() != null
+    }
+
+    private fun harIkkeMigrertKrav(kontekst: FlytKontekstMedPerioder): Boolean {
+        return !harMigrertKrav(kontekst)
+    }
+
+    /**
+     * Gjelder bevisst bare automatisk migrering. Manuelt [RelevantMigrertKrav] sendes i praksis bare inn når
+     * saksbehandler revurderer et krav som allerede er migrert automatisk og kontrollert her. Endrer
+     * saksbehandler migreringsdato eller kvote da, er det en aktiv avgjørelse som vi ikke skal hindre.
+     */
+    private fun validerAtAlleMeldekortErBehandlet(krav: ArenaKrav) {
+        val sisteTilDato = checkNotNull(krav.sisteFerdigBehandledeMeldekortTilDato) {
+            "Kan ikke migrere Arena-sak ${krav.arenaSaksnummer}: Arena har ingen ferdig behandlet meldekortperiode. " +
+                    "Migrering krever at alle meldekort er levert av bruker og ferdig behandlet."
+        }
+        check(sisteTilDato.plusDays(1) == krav.migreringsdato) {
+            "Kan ikke migrere Arena-sak ${krav.arenaSaksnummer}: Migreringsdato ${krav.migreringsdato} må være dagen " +
+                    "etter siste ferdig behandlede meldekortperiode (til og med $sisteTilDato), " +
+                    "dvs. ${sisteTilDato.plusDays(1)}. Migrering krever at alle meldekort er levert av bruker og ferdig behandlet."
+        }
     }
 
     private fun ArenaKrav.erLikVurdering(grunnlag: KravGrunnlag?): Boolean {
-        val migrerteKravVurderinger = grunnlag?.vurderinger?.filterIsInstance<MigrertKrav>()
+        val migrerteKravVurderinger = grunnlag?.vurderinger?.filterIsInstance<RelevantMigrertKrav>()
 
         if (migrerteKravVurderinger.isNullOrEmpty()) {
             return false

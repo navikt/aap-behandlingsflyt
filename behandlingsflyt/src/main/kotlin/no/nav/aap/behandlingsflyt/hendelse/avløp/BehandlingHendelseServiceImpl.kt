@@ -103,6 +103,8 @@ class BehandlingHendelseServiceImpl(
             hendelsesTidspunkt = LocalDateTime.now(),
             versjon = ApplikasjonsVersjon.versjon,
             gjenståendeSykedager = hentGjenståendeSykedager(behandling, faktiskBehandlingstype),
+            saksbehandlereSomIkkeKanBeslutte = avklaringsbehovene.brukereSomIkkeKanBeslutte()
+                .map { it.ident }
         ).copy(behandlingType = faktiskBehandlingstype)
 
         log.info("Legger til flytjobber til statistikk og stoppethendelse for behandling: ${behandling.id}")

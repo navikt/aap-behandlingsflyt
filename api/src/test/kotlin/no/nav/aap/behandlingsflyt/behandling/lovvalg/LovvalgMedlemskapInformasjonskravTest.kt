@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Inntekt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.Virksomhet
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
@@ -247,6 +247,46 @@ class LovvalgMedlemskapInformasjonskravTest {
     }
 
 
+    @Test
+    fun `Tom inntektsliste for en dato to ganger på rad skal ikke gi endring`() {
+        val informasjonskrav = LovvalgMedlemskapInformasjonskrav.konstruer(
+            inMemoryRepositoryProvider,
+            testGatewayProvider(LovvalgInformasjonskravPå::class)
+        )
+
+        val (sak, behandling) = opprettInMemorySakOgBehandling(søknadsdato = 1 mars 2025)
+        settOppKravOgStønadsperiode(
+            behandling, mapOf(
+                1 mars 2025 to Pair(null, RelevantKravType.NY_STØNADSPERIODE),
+                1 januar 2026 to Pair(null, RelevantKravType.GJENINNTREDEN_ETTER_OPPHØR)
+            )
+        )
+
+        val kontekst = flytKontekstMedPerioder {
+            this.behandling = behandling
+            this.rettighetsperiode = sak.rettighetsperiode
+        }
+
+        val input1 = informasjonskrav.klargjør(kontekst)
+        assertThat(input1.datoerSomInntektSkalHentesIForholdTil).isEqualTo(setOf(1 mars 2025, 1 januar 2026))
+        assertThat(oppdater(informasjonskrav, input1, kontekst, datoerUtenInntekt = setOf(1 mars 2025)))
+            .isEqualTo(Informasjonskrav.Endret.ENDRET)
+
+        val lagredeDatoer = InMemoryLovvalgMedlemskapRepository.hentHvisEksisterer(behandling.id)
+            ?.registerGrunnlag?.inntekterINorgeGrunnlag?.inntekterForKrav.orEmpty()
+            .map { it.relevantDato }
+        assertThat(lagredeDatoer)
+            .describedAs("Dato uten inntekter lagres ikke, slik som i databasen")
+            .containsExactly(1 januar 2026)
+
+        val input2 = informasjonskrav.klargjør(kontekst)
+        assertThat(input2.datoerSomInntektSkalHentesIForholdTil)
+            .describedAs("Dato uten lagrede inntekter skal hentes på nytt")
+            .isEqualTo(setOf(1 mars 2025, 1 januar 2026))
+        assertThat(oppdater(informasjonskrav, input2, kontekst, datoerUtenInntekt = setOf(1 mars 2025)))
+            .isEqualTo(Informasjonskrav.Endret.IKKE_ENDRET)
+    }
+
     private fun settOppKravOgStønadsperiode(
         behandling: Behandling,
         kravMap: Map<LocalDate, Pair<Kravreferanse?, RelevantKravType>>
@@ -254,13 +294,13 @@ class LovvalgMedlemskapInformasjonskravTest {
         val kravRepsitory: KravRepository = inMemoryRepositoryProvider.provide()
         val stønadsperiodeRepository: StønadsperiodeRepository = inMemoryRepositoryProvider.provide()
 
-        val test: List<Pair<RelevantKrav, StønadsperiodeVurdering>> =
+        val test: List<Pair<RelevantSøknadKrav, StønadsperiodeVurdering>> =
             kravMap.entries.map { (dato, referanseOgkravType) ->
                 val (referanse, kravType) = referanseOgkravType
                 val ref = referanse ?: Kravreferanse(UUID.randomUUID())
 
                 Pair(
-                    RelevantKrav(
+                    RelevantSøknadKrav(
                         referanse = ref,
                         journalpostId = JournalpostId("123"),
                         vurdertAv = SYSTEMBRUKER,
@@ -317,12 +357,14 @@ class LovvalgMedlemskapInformasjonskravTest {
     private fun oppdater(
         informasjonskrav: LovvalgMedlemskapInformasjonskrav,
         input: LovvalgMedlemskapInformasjonskrav.LovvalgInput,
-        kontekst: FlytKontekstMedPerioder
+        kontekst: FlytKontekstMedPerioder,
+        datoerUtenInntekt: Set<LocalDate> = emptySet()
     ) =
         informasjonskrav.oppdater(
             input, LovvalgMedlemskapInformasjonskrav.LovvalgRegisterData(
                 medlemskapPerioder = emptyList(),
                 inntektPerDato = input.datoerSomInntektSkalHentesIForholdTil.associate { dato ->
+                    if (dato in datoerUtenInntekt) return@associate dato to emptyList()
                     dato to listOf(
                         ArbeidsInntektMåned(
                             årMåned = YearMonth.from(dato),

@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.Minstesats
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseRepository
 import no.nav.aap.behandlingsflyt.behandling.vedtak.Vedtak
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakRepository
+import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakService
 import no.nav.aap.behandlingsflyt.behandling.vedtakslengde.VedtakslengdeService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.avbrytaktivitetspliktbehandling.AvbrytAktivitetspliktbehandlingService
@@ -43,6 +44,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRe
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.perioderMedArbeidsopptrapping
 import no.nav.aap.barnetillegg.VurderingAvForeldreAnsvar
+import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.dokument.KlagedokumentInformasjonUtleder
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagebehandlingKontorRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagebehandlingNayRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.OvergangUføreRepository
@@ -104,6 +111,8 @@ class BrevUtlederService(
     private val avbrytAktivitetspliktbehandlingService: AvbrytAktivitetspliktbehandlingService,
     private val arbeidsopptrappingRepository: ArbeidsopptrappingRepository,
     private val sykdomsvurderingForBrevRepository: SykdomsvurderingForBrevRepository,
+    private val klageBehandlingNavKontorVurderingForBrevRepository: KlagebehandlingKontorRepository,
+    private val klageBehandlingNAYVurderingForBrevRepository: KlagebehandlingNayRepository,
     private val overgangUføreRepository: OvergangUføreRepository,
     private val vedtakslengdeService: VedtakslengdeService,
     private val unleashGateway: UnleashGateway,
@@ -125,7 +134,11 @@ class BrevUtlederService(
     private val personOpplysningRepository: PersonopplysningRepository,
     private val sakRepository: SakRepository,
     private val refusjonkravRepository: RefusjonkravRepository,
-    private val personinfoBulkGateway: PersoninfoBulkGateway
+    private val personinfoBulkGateway: PersoninfoBulkGateway,
+    private val klagedokumentInformasjonUtleder: KlagedokumentInformasjonUtleder,
+    private val påklagetBehandlingRepository: PåklagetBehandlingRepository,
+    private val tilbakekrevingRepository: TilbakekrevingRepository,
+    private val vedtakService: VedtakService
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         behandlingRepository = repositoryProvider.provide(),
@@ -139,6 +152,8 @@ class BrevUtlederService(
         aktivitetsplikt11_7Repository = repositoryProvider.provide(),
         arbeidsopptrappingRepository = repositoryProvider.provide(),
         sykdomsvurderingForBrevRepository = repositoryProvider.provide(),
+        klageBehandlingNavKontorVurderingForBrevRepository = repositoryProvider.provide(),
+        klageBehandlingNAYVurderingForBrevRepository = repositoryProvider.provide(),
         overgangUføreRepository = repositoryProvider.provide(),
         vedtakslengdeService = VedtakslengdeService(repositoryProvider, gatewayProvider),
         unleashGateway = gatewayProvider.provide(),
@@ -162,6 +177,10 @@ class BrevUtlederService(
         refusjonkravRepository = repositoryProvider.provide(),
         avbrytAktivitetspliktbehandlingService = AvbrytAktivitetspliktbehandlingService(repositoryProvider),
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
+        klagedokumentInformasjonUtleder = KlagedokumentInformasjonUtleder(repositoryProvider),
+        påklagetBehandlingRepository = repositoryProvider.provide(),
+        tilbakekrevingRepository = repositoryProvider.provide(),
+        vedtakService = VedtakService(repositoryProvider, gatewayProvider)
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -309,10 +328,22 @@ class BrevUtlederService(
             }
 
             TypeBehandling.Klage -> {
-                val klageresulat = klageresultatUtleder.utledKlagebehandlingResultat(behandlingId)
-                return when (klageresulat) {
+                val klageresultat = klageresultatUtleder.utledKlagebehandlingResultat(behandlingId)
+                return when (klageresultat) {
                     is Avslått -> KlageAvvist
-                    is Opprettholdes, is DelvisOmgjøres -> KlageOpprettholdelse
+                    is Opprettholdes, is DelvisOmgjøres -> KlageOpprettholdelse(
+                        påklagetVedtaksdato = hentPåklagetVedtaksdato(behandlingId),
+                        klagedato = checkNotNull(
+                            klagedokumentInformasjonUtleder
+                                .utledKravMottattDatoForKlageBehandling(behandlingId)
+                        ) {
+                            "[Utviklerfeil] Mangler mottaksdato for klagen"
+                        },
+                        begrunnelseNavKontor = klageBehandlingNavKontorVurderingForBrevRepository
+                            .hentHvisEksisterer(behandlingId)?.vurdering?.begrunnelse,
+                        begrunnelseNay = klageBehandlingNAYVurderingForBrevRepository
+                            .hentHvisEksisterer(behandlingId)?.vurdering?.begrunnelse
+                    )
                     else -> null
                 }
             }
@@ -340,6 +371,39 @@ class BrevUtlederService(
 
             TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling, TypeBehandling.Aktivitetsplikt11_9 ->
                 return null // TODO
+
+            // TODO: Placeholder til egne brevmaler for søknad om opphold i utlandet er på plass
+            TypeBehandling.Utenlandsopphold -> return VedtakEndring
+        }
+    }
+
+    private fun hentPåklagetVedtaksdato(behandlingId: BehandlingId): LocalDate? {
+        val vurdering = checkNotNull(
+            påklagetBehandlingRepository.hentHvisEksisterer(behandlingId)?.vurdering
+        ) {
+            "[Utviklerfeil] Mangler vurdering av påklaget behandling"
+        }
+
+        return when (vurdering.påklagetVedtakType) {
+            PåklagetVedtakType.KELVIN_BEHANDLING -> {
+                val påklagetBehandlingId = checkNotNull(vurdering.påklagetBehandling) {
+                    "[Utviklerfeil] Mangler referanse til påklaget Kelvin-behandling"
+                }
+                val påklagetBehandling = behandlingRepository.hent(påklagetBehandlingId)
+                val vedtakstidspunkt = checkNotNull(vedtakService.vedtakstidspunkt(påklagetBehandling)) {
+                    "[Utviklerfeil] Mangler vedtak for påklaget Kelvin-behandling"
+                }
+                vedtakstidspunkt.toLocalDate()
+            }
+
+            PåklagetVedtakType.TILBAKEKREVING -> {
+                val referanse = checkNotNull(vurdering.påklagetTilbakekrevingsbehandling) {
+                    "[Utviklerfeil] Mangler referanse til påklaget tilbakekrevingsbehandling"
+                }
+                tilbakekrevingRepository.hent(referanse).vedtaksdato
+            }
+
+            PåklagetVedtakType.ARENA_VEDTAK -> null
         }
     }
 

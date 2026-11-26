@@ -132,6 +132,7 @@ class UnderveisService(
                         brukerAvKvoter = it.verdi.varighetVurdering?.brukerAvKvoter.orEmpty(),
                         institusjonsoppholdReduksjon = if (it.verdi.institusjonVurdering?.skalReduseres == true) Prosent.`50_PROSENT` else Prosent.`0_PROSENT`,
                         meldepliktStatus = it.verdi.meldepliktVurdering?.status,
+                        meldedato = it.verdi.meldepliktVurdering?.meldedato,
                         meldepliktGradering = if (it.verdi.meldepliktVurdering?.utfall == Utfall.OPPFYLT)
                             Prosent.`0_PROSENT`
                         else

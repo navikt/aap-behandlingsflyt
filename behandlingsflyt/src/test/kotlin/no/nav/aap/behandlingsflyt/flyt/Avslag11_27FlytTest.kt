@@ -224,7 +224,7 @@ class Avslag11_27FlytTest : AbstraktFlytOrkestratorTest(Avslag11_27FlytTestUnlea
                     postgresRepositoryRegistry.provider(connection)
                         .provide<KravRepository>()
                         .hentHvisEksisterer(behandling.id)
-                        ?.gjeldendeRelevanteKrav()
+                        ?.gjeldendeRelevanteKravInkludertMigrerteKrav()
                         .orEmpty()
                 }
                 assertThat(kravreferanser)

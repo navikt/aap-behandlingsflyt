@@ -15,6 +15,7 @@ import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.TidligereVurde
 import no.nav.aap.behandlingsflyt.behandling.tidligerevurderinger.TidligereVurderingerReq
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelse2Dto
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.TilkjentYtelseService
+import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.VirkningstidspunktService
 import no.nav.aap.behandlingsflyt.behandling.vedtak.VedtakId
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
@@ -36,13 +37,15 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRe
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Yrkesskadevurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.vedtakslengde.VedtakslengdeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
@@ -265,33 +268,33 @@ fun NormalOpenAPIRoute.driftApi(
                             KravDto(
                                 referanse = krav.referanse.verdi.toString(),
                                 type = when (krav) {
-                                    is RelevantKrav -> KravType.RELEVANT_KRAV
+                                    is RelevantSøknadKrav -> KravType.RELEVANT_KRAV
                                     is Tilleggsopplysning -> KravType.TILLEGGSOPPLYSNING
                                     is TrukketSøknad -> KravType.TRUKKET_SØKNAD
-                                    is MigrertKrav -> KravType.MIGRERT_KRAV
+                                    is RelevantMigrertKrav -> KravType.MIGRERT_KRAV
                                     is Klage -> KravType.KLAGE
                                 },
                                 journalpostId = krav.journalpostId?.identifikator,
                                 opprettet = krav.opprettet,
                                 vurdertAv = krav.vurdertAv.ident,
                                 søknadsdato = when {
-                                    krav is RelevantKrav -> krav.søknadsdato.dato
+                                    krav is RelevantSøknadKrav -> krav.søknadsdato.dato
                                     else -> null
                                 },
                                 søknadsdatoÅrsak = when (krav) {
-                                    is RelevantKrav -> krav.søknadsdato.årsak.toString()
+                                    is RelevantSøknadKrav -> krav.søknadsdato.årsak.toString()
                                     else -> null
                                 },
-                                muligRettFra = when {
-                                    krav is RelevantKrav -> krav.muligRettFra
+                                muligRettFra = when (krav) {
+                                    is RelevantKrav -> krav.muligRettFra
                                     else -> null
                                 },
                                 overstyrMuligRettFra = when (krav) {
-                                    is RelevantKrav -> krav.overstyrMuligRettFra?.dato
+                                    is RelevantSøknadKrav -> krav.overstyrMuligRettFra?.dato
                                     else -> null
                                 },
                                 overstyrMuligRettFraÅrsak = when (krav) {
-                                    is RelevantKrav -> krav.overstyrMuligRettFra?.årsak?.toString()
+                                    is RelevantSøknadKrav -> krav.overstyrMuligRettFra?.årsak?.toString()
                                     else -> null
                                 },
                                 erNy = krav.vurdertIBehandling == behandling.id
@@ -381,6 +384,36 @@ fun NormalOpenAPIRoute.driftApi(
                 krevDtoErUtenFødselsnummer(tilkjentYtelseDto)
 
                 respond(tilkjentYtelseDto)
+            }
+        }
+
+        route("/behandling/{referanse}/vedtakslengde") {
+            authorizedGet<BehandlingReferanse, List<VedtakslengdeVurderingDriftsinfoDto>>(
+                AuthorizationParamPathConfig(
+                    behandlingPathParam = BehandlingPathParam("referanse"),
+                    relevanteIdenterResolver = relevanteIdenterForBehandlingResolver(repositoryRegistry, dataSource),
+                    operasjon = Operasjon.DRIFT_LES
+                )
+            ) { referanse ->
+                val vurderinger = dataSource.transaction(readOnly = true) { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val sakRepository = repositoryProvider.provide<SakRepository>()
+                    val behandlingRepository = repositoryProvider.provide<BehandlingRepository>()
+                    val vedtakslengdeRepository = repositoryProvider.provide<VedtakslengdeRepository>()
+
+                    val behandling = BehandlingReferanseService(behandlingRepository).behandling(referanse)
+                    val virkningstidspunktService = VirkningstidspunktService(repositoryProvider, gatewayProvider)
+                    val grunnlag = vedtakslengdeRepository.hentHvisEksisterer(behandling.id)
+                    val startdato = virkningstidspunktService.finnVirkningstidspunkt(behandling)
+                        ?: sakRepository.hent(behandling.sakId).rettighetsperiode.fom
+
+                    grunnlag?.gjeldendeVurderinger(startdato)
+                        ?.segmenter()
+                        ?.map { it.tilDriftsinfoDto(behandling.id) } ?: emptyList()
+                }
+
+                krevDtoErUtenFødselsnummer(vurderinger)
+                respond(vurderinger)
             }
         }
 
@@ -585,6 +618,7 @@ fun NormalOpenAPIRoute.driftApi(
                                             fristSettPåVent = endring.frist,
                                             perioderUgyldigVurdering = endring.perioderSomIkkeErTilstrekkeligVurdert,
                                             perioderKreverVurdering = endring.perioderVedtaketBehøverVurdering,
+                                            perioderVilkåretErRelevant = endring.perioderVilkåretErRelevant,
                                             tidsstempel = endring.tidsstempel,
                                             endretAv = endring.endretAv
                                         )
@@ -772,6 +806,7 @@ private data class BehandlingDriftsinfo(
     val opprettet: LocalDateTime,
     val vedtatt: LocalDateTime?,
     val avklaringsbehov: List<ForenkletAvklaringsbehov>,
+    val aktivtSteg: StegType,
 ) {
     companion object {
         fun fra(
@@ -790,6 +825,7 @@ private data class BehandlingDriftsinfo(
                 opprettet = behandling.opprettetTidspunkt,
                 avklaringsbehov = avklaringsbehovene,
                 vedtatt = vedtatt,
+                aktivtSteg = behandling.aktivtSteg()
             )
     }
 }
@@ -800,6 +836,7 @@ private data class ForenkletAvklaringsbehov(
     val gradBehov: GradBehov?,
     val perioderUgyldigVurdering: Set<Periode>?,
     val perioderKreverVurdering: Set<Periode>?,
+    val perioderVilkåretErRelevant: Set<Periode>?,
     val tidsstempel: LocalDateTime = LocalDateTime.now(),
     val endretAv: Bruker,
     val årsakTilSettPåVent: ÅrsakTilSettPåVent?,

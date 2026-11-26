@@ -20,11 +20,10 @@ data class StønadsperiodeGrunnlag(
     override val vurderinger: Set<StønadsperiodeVurdering>
 ) : VurderingForKravGrunnlag<StønadsperiodeVurdering> {
     override fun tilTidslinje(kravGrunnlag: KravGrunnlag): Tidslinje<StønadsperiodeVurdering> {
-        val gjeldendeKravreferanser = kravGrunnlag.gjeldendeRelevanteKrav().map { it.referanse }
-        val gjeldendeMigrertKrav = kravGrunnlag.gjeldendeMigrertKrav()?.referanse
+        val gjeldendeKravreferanser = kravGrunnlag.gjeldendeRelevanteKravInkludertMigrerteKrav().map { it.referanse }
 
         return gjeldendeVurderinger()
-            .filter { stønadsperiodeVurdering -> stønadsperiodeVurdering.referanse in gjeldendeKravreferanser + gjeldendeMigrertKrav }
+            .filter { stønadsperiodeVurdering -> stønadsperiodeVurdering.referanse in gjeldendeKravreferanser }
             .sortedBy { it.startDato }
             .somTidslinje { Periode(it.startDato, Tid.MAKS) }
     }
@@ -45,12 +44,18 @@ data class StønadsperiodeVurdering(
     val relevantKravType: RelevantKravType,
     val startDato: LocalDate,
     /**
-     * Startdatoen er satt til dagen etter maksdato i tilstøtende Arena-sak.
+     * Utfallet av kant-i-kant-vurderingen. Null når Arena ikke er aktuelt: manuell vurdering, migrert sak
+     * og vurderinger lagret før feltet fantes.
      */
-    val erKantIKantMedArena: Boolean = false,
+    val kantIKant: KantIKantMedArena? = null,
 ) : VurderingForKrav {
-    init {
+    /**
+     * Kravet dekker overgangen fra tilstøtende Arena-sak. Startdatoen er den seneste av dagen etter maksdato
+     * og kravets mulig rett fra, slik at kant i kant ikke tilbakedaterer kravet. Se [KantIKantUtfall].
+     */
+    val erKantIKantMedArena: Boolean get() = kantIKant?.erKantIKant == true
 
+    init {
         /// harGjenværendeKvote | harHattOrdinærSiste52Uker
         /// true                                | true                                              | GJENINNTREKDEN/GJENOPPTAK
         /// true                                | false                                             | NY_STØNADSPERIODE

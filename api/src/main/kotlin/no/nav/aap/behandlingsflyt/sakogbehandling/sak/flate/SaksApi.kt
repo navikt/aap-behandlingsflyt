@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -103,6 +104,35 @@ fun NormalOpenAPIRoute.saksApi(
                     )
 
                     ProsesserBehandlingService(repositoryProvider, gatewayProvider).triggProsesserBehandling(behandling)
+
+                    BehandlingAvTypeDTO(
+                        behandlingsReferanse = behandling.referanse.referanse,
+                        opprettetDato = behandling.opprettetTidspunkt
+                    )
+                }
+                respond(dto)
+            }
+
+        route("/{saksnummer}/opprettUtenlandsoppholdBehandling")
+            .authorizedPost<SaksnummerParameter, BehandlingAvTypeDTO, OpprettUtenlandsoppholdBehandlingDto>(
+                routeConfig = AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                    sakPathParam = SakPathParam("saksnummer"),
+                    operasjon = Operasjon.SE, // TODO: Skriveoperasjon krever behandlingsreferanse - bruker 'SE' enn så lenge
+                )
+            ) { req, body ->
+                val dto = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val sakId = repositoryProvider.provide<SakRepository>().hent(Saksnummer(req.saksnummer)).id
+                    val låsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
+                    
+                    val skrivelås = låsRepository.låsSak(sakId)
+
+                    val behandling = BehandlingService(repositoryProvider, gatewayProvider)
+                        .opprettManuellUtenlandsoppholdBehandling(sakId, body.beskrivelse)
+
+                    ProsesserBehandlingService(repositoryProvider, gatewayProvider).triggProsesserBehandling(behandling)
+                    låsRepository.verifiserSkrivelås(skrivelås)
 
                     BehandlingAvTypeDTO(
                         behandlingsReferanse = behandling.referanse.referanse,

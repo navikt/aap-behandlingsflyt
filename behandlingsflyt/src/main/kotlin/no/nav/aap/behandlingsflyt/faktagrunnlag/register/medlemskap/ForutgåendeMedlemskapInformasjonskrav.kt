@@ -2,6 +2,7 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap
 
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.ArbeidINorgeGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.lovvalg.EnhetGrunnlag
+import no.nav.aap.behandlingsflyt.behandling.lovvalg.ForutgåendeMedlemskapGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderingerImpl
 import no.nav.aap.behandlingsflyt.faktagrunnlag.informasjonskravExecutor
@@ -13,7 +14,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdagForBehandling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdGateway
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aaregisteret.ArbeidsforholdRequest
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
@@ -61,7 +62,7 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
         }
 
         return fellesRegler
-                && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
+                && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
     data class MedlemsskapInput(val sak: Sak) : InformasjonskravInput
@@ -109,12 +110,33 @@ class ForutgåendeMedlemskapInformasjonskrav private constructor(
 
         val eksisterendeData = grunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
 
-        // TODO: kun lagre hvis forskjell!!
+        if (eksisterendeData != null && eksisterendeData.harSammeRegisterdataSom(registerdata)) {
+            return IKKE_ENDRET
+        }
+
         lagre(kontekst.behandlingId, medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag)
 
         val nyeData = grunnlagRepository.hentHvisEksisterer(kontekst.behandlingId)
 
         return if (nyeData == eksisterendeData) IKKE_ENDRET else ENDRET
+    }
+
+    private fun ForutgåendeMedlemskapGrunnlag.harSammeRegisterdataSom(registerdata: MedlemsskapReggisterdata): Boolean {
+        val (medlemskapPerioder, arbeidGrunnlag, inntektGrunnlag, enhetGrunnlag) = registerdata
+
+        val nyttMedlemskapUnntak = medlemskapPerioder
+            .takeIf { it.isNotEmpty() }
+            ?.let { MedlemskapUnntakGrunnlag(it.tilDomene()) }
+        val nyeArbeidsforhold = arbeidGrunnlag.map { arbeid ->
+            arbeid.copy(organisasjonsNavn = enhetGrunnlag.firstOrNull { it.orgnummer == arbeid.identifikator }?.orgNavn)
+        }
+        val nyeInntekter = inntektGrunnlag.flatMap { it.tilDomene(enhetGrunnlag) }
+
+        return medlemskapUnntakGrunnlag == nyttMedlemskapUnntak
+                && arbeiderINorgeGrunnlag.size == nyeArbeidsforhold.size
+                && arbeiderINorgeGrunnlag.toSet() == nyeArbeidsforhold.toSet()
+                && inntekterINorgeGrunnlag.size == nyeInntekter.size
+                && inntekterINorgeGrunnlag.toSet() == nyeInntekter.toSet()
     }
 
     private fun innhentAARegisterGrunnlag5år(sak: Sak): List<ArbeidINorgeGrunnlag> {

@@ -4,6 +4,7 @@ import no.nav.aap.behandlingsflyt.PeriodiserteVurderingerDto
 import no.nav.aap.behandlingsflyt.VurderingDto
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.EØSLandEllerLandMedAvtale
 import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.KanBehandlesAutomatiskVurdering
+import no.nav.aap.behandlingsflyt.behandling.vilkår.medlemskap.LovvalgDelvurderingerGrunnlag
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurderingerMetaResponse
 import no.nav.aap.behandlingsflyt.behandling.vurdering.VurdertAvService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.LovvalgDto
@@ -22,8 +23,27 @@ data class PeriodisertLovvalgMedlemskapGrunnlagResponse(
     override val ikkeRelevantePerioder: List<Periode>,
     override val behøverVurderinger: List<Periode>,
     val overstyrt: Boolean = false,
-    val delvurderinger: KanBehandlesAutomatiskVurdering
-): PeriodiserteVurderingerDto<PeriodisertManuellVurderingForLovvalgMedlemskapResponse>
+    val delvurderinger: List<DelvurderingForKravResponse>
+) : PeriodiserteVurderingerDto<PeriodisertManuellVurderingForLovvalgMedlemskapResponse>
+
+data class DelvurderingForKravResponse(
+    val relevantDato: LocalDate,
+    val delvurdering: KanBehandlesAutomatiskVurdering,
+)
+
+fun LovvalgDelvurderingerGrunnlag.tilDelvurderingForKrav() =
+    DelvurderingForKravResponse(relevantDato = relevantDato, delvurdering = vurdering())
+
+/**
+ * Delvurderingen for en manuell vurdering. Hvis vurderingen er samme som relevant dato så gjelder denne,
+ * ellers den forrige relevante datoen.
+ */
+fun List<LovvalgDelvurderingerGrunnlag>.delvurderingForVurdering(
+    vurderingFom: LocalDate,
+): KanBehandlesAutomatiskVurdering? =
+    (firstOrNull { it.relevantDato == vurderingFom }
+        ?: filter { it.relevantDato.isBefore(vurderingFom) }.maxByOrNull { it.relevantDato })
+        ?.vurdering()
 
 data class PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
     override val fom: LocalDate,
@@ -32,9 +52,8 @@ data class PeriodisertManuellVurderingForLovvalgMedlemskapResponse(
     val lovvalg: LovvalgResponse,
     val medlemskap: MedlemskapResponse?,
     val overstyrt: Boolean = false,
-    // Delvurderingene som var gjeldende i behandlingen den manuelle vurderingen ble gjort
     val delvurderinger: KanBehandlesAutomatiskVurdering? = null,
-): VurderingDto
+) : VurderingDto
 
 data class LovvalgResponse(
     val begrunnelse: String,
@@ -56,7 +75,7 @@ fun ManuellVurderingForLovvalgMedlemskap.toResponse(
         fom = fom,
         tom = tom,
         vurderingerMeta = vurdertAvService.byggVurderingerMeta(
-            definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
+            definisjon = if (overstyrt) Definisjon.MANUELL_OVERSTYRING_LOVVALG else Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
             behandlingId = vurdertIBehandling,
             vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, vurdertDato.toLocalDate()),
         ),

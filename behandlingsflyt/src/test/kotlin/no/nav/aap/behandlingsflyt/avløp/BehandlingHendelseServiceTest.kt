@@ -4,7 +4,6 @@ import io.mockk.checkUnnecessaryStub
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedager
@@ -40,6 +39,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryGjenståendeSykedagerRepository
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
@@ -52,8 +52,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.time.LocalDate
 import java.time.LocalDateTime
+import kotlin.random.Random
 
 class BehandlingHendelseServiceTest {
     private val sakService = mockk<SakService>()
@@ -86,18 +89,7 @@ class BehandlingHendelseServiceTest {
 
         val (behandlingHendelseService, behandling) = settOppFlyt()
 
-        val avklaringsbehovene = mockk<Avklaringsbehovene>()
-
-        every { avklaringsbehovene.alle() } returns listOf(
-            Avklaringsbehov(
-                1L,
-                Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
-                emptyList(),
-                StegType.VURDER_LOVVALG,
-                true
-            )
-        )
-        every { avklaringsbehovene.hentÅpneVentebehov() } returns emptyList()
+        val avklaringsbehovene = avklaringsbehoveneMedÉttÅpent()
 
         // ACT
 
@@ -122,18 +114,26 @@ class BehandlingHendelseServiceTest {
         assertThat(hendelse.referanse.referanse).isEqualTo(behandling.referanse.referanse)
     }
 
-    @Test
-    fun `sender gjenstående sykedager til oppgave for førstegangsbehandling`() {
+    @ParameterizedTest
+    @EnumSource(
+        GjenståendeSykedagerGrunnlag::class,
+        names = ["VEDTAK_I_NY_LØSNING", "SISTE_UTBETALING_I_INFOTRYGD", "MAKSDATO_I_INFOTRYGD"]
+    )
+    fun `sender gjenstående sykedager og maksdato til oppgave for førstegangsbehandling`(
+        grunnlag: GjenståendeSykedagerGrunnlag
+    ) {
         val (behandlingHendelseService, behandling) = settOppFlyt()
         InMemoryGjenståendeSykedagerRepository.lagre(
             behandling.id,
-            GjenståendeSykedager(GjenståendeSykedagerGrunnlag.VEDTAK_I_NY_LØSNING, 42, 1 januar 2026)
+            GjenståendeSykedager(grunnlag, 42, 1 januar 2026)
         )
 
         behandlingHendelseService.stoppet(behandling, avklaringsbehoveneMedÉttÅpent())
 
         assertThat(oppgaveHendelse().gjenståendeSykedager).isEqualTo(
-            GjenståendeSykedagerDto(GjenståendeSykedagerGrunnlagDto.VEDTAK_I_NY_LØSNING, 42, 1 januar 2026, 2 mars 2026)
+            GjenståendeSykedagerDto(
+                GjenståendeSykedagerGrunnlagDto.valueOf(grunnlag.name), 42, 1 januar 2026, 2 mars 2026
+            )
         )
     }
 
@@ -165,10 +165,7 @@ class BehandlingHendelseServiceTest {
 
         val (behandlingHendelseService, behandling) = settOppFlyt()
 
-        val avklaringsbehovene = mockk<Avklaringsbehovene>()
-
-        every { avklaringsbehovene.alle() } returns emptyList()
-        every { avklaringsbehovene.hentÅpneVentebehov() } returns emptyList()
+        val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, nyBehandlingId())
 
         // ACT
 
@@ -195,18 +192,7 @@ class BehandlingHendelseServiceTest {
     fun `Hvis vurderingsbehov opprettet flere ganger på samme sak, utled reserverTil basert på senest mottatte dokument`() {
         val (behandlingHendelseService, behandling) = settOppFlyt()
 
-        val avklaringsbehovene = mockk<Avklaringsbehovene>()
-
-        every { avklaringsbehovene.alle() } returns listOf(
-            Avklaringsbehov(
-                1L,
-                Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
-                emptyList(),
-                StegType.VURDER_LOVVALG,
-                true
-            )
-        )
-        every { avklaringsbehovene.hentÅpneVentebehov() } returns emptyList()
+        val avklaringsbehovene = avklaringsbehoveneMedÉttÅpent()
 
         // To trekk søknad-"dokumenter"
         every {
@@ -282,13 +268,12 @@ class BehandlingHendelseServiceTest {
     }
 
     private fun avklaringsbehoveneMedÉttÅpent(): Avklaringsbehovene {
-        val avklaringsbehovene = mockk<Avklaringsbehovene>()
-        every { avklaringsbehovene.alle() } returns listOf(
-            Avklaringsbehov(1L, Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, emptyList(), StegType.VURDER_LOVVALG, true)
-        )
-        every { avklaringsbehovene.hentÅpneVentebehov() } returns emptyList()
+        val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, nyBehandlingId())
+        avklaringsbehovene.leggTil(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, StegType.VURDER_LOVVALG, null, null, null)
         return avklaringsbehovene
     }
+
+    private fun nyBehandlingId() = BehandlingId(Random.nextLong(1_000_000, Long.MAX_VALUE))
 
     private fun oppgaveHendelse(): BehandlingFlytStoppetHendelse {
         val calls = mutableListOf<JobbInput>()

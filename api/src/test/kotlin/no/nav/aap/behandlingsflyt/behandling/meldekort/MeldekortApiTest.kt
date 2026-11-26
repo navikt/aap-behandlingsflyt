@@ -101,17 +101,18 @@ class MeldekortApiTest : BaseApiTest() {
     }
 
     @Test
-    fun `returnerer tomt meldekort for meldeperiode uten innsendt meldekort`() {
+    fun `returnerer meldedato uten innsendt meldekort`() {
         val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
         InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
 
         val meldeperiode = Periode(6 januar 2025, 19 januar 2025)
+        val meldedato = 8 januar 2025
 
         InMemoryUnderveisRepository.lagre(
             behandlingId = behandling.id,
-            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, meldeperiode)),
+            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, meldeperiode, meldedato = meldedato)),
             input = object : Faktagrunnlag {}
         )
 
@@ -132,11 +133,12 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(meldeperiodeMedMeldekort.meldeperiode).isEqualTo(meldeperiode)
             assertThat(meldeperiodeMedMeldekort.meldefrist).isEqualTo(meldeperiode.tom.plusDays(8))
             assertThat(meldeperiodeMedMeldekort.meldekort).isNull()
+            assertThat(meldeperiodeMedMeldekort.meldedato).isEqualTo(meldedato)
         }
     }
 
     @Test
-    fun `returnerer meldekort for siste fattede vedtak`() {
+    fun `returnerer meldedato fra underveis sammen med rapporterte timer`() {
         val sak = opprettInMemorySak()
         val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
 
@@ -145,6 +147,7 @@ class MeldekortApiTest : BaseApiTest() {
         val dag1 = 6 januar 2025
         val dag2 = 7 januar 2025
         val meldeperiode = Periode(dag1, dag1.plusDays(13))
+        val meldedato = 8 januar 2025
         val meldekort = Meldekort(
             journalpostId = JournalpostId("111"),
             timerArbeidPerPeriode = setOf(
@@ -157,7 +160,7 @@ class MeldekortApiTest : BaseApiTest() {
 
         InMemoryUnderveisRepository.lagre(
             behandlingId = behandling.id,
-            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, meldeperiode)),
+            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, meldeperiode, meldedato = meldedato)),
             input = object : Faktagrunnlag {}
         )
 
@@ -191,6 +194,7 @@ class MeldekortApiTest : BaseApiTest() {
 
             val meldeperiodeMedMeldekort = body.meldeperioderMedMeldekort.first()
             assertThat(meldeperiodeMedMeldekort.meldeperiode).isEqualTo(meldeperiode)
+            assertThat(meldeperiodeMedMeldekort.meldedato).isEqualTo(meldedato)
             val meldekortDto = requireNotNull(meldeperiodeMedMeldekort.meldekort) { "Forventet meldekort, men var null" }
             assertThat(meldekortDto.journalpostId).isEqualTo(meldekort.journalpostId.identifikator)
             assertThat(meldekortDto.oppdatertTidspunkt).isEqualTo(LocalDate.of(2025, 1, 20))
@@ -200,6 +204,34 @@ class MeldekortApiTest : BaseApiTest() {
             assertThat(meldekortDto.dager.map { it.dato }).containsExactlyInAnyOrder(dag1, dag2)
             assertThat(meldekortDto.dager.map { it.timerArbeidet }).containsExactlyInAnyOrder(7.5, 3.0)
             assertThat(meldeperiodeMedMeldekort.tidligereMeldekort).isEmpty()
+        }
+    }
+
+    @Test
+    fun `returnerer null som meldedato når underveisgrunnlaget mangler datoen`() {
+        val sak = opprettInMemorySak()
+        val behandling = opprettBehandling(sak, TypeBehandling.Førstegangsbehandling)
+        val meldeperiode = Periode(6 januar 2025, 19 januar 2025)
+
+        InMemoryVedtakRepository.lagre(behandling.id, LocalDateTime.now(), LocalDate.now())
+        InMemoryUnderveisRepository.lagre(
+            behandlingId = behandling.id,
+            underveisperioder = listOf(underveisperiode(Utfall.OPPFYLT, meldeperiode)),
+            input = object : Faktagrunnlag {}
+        )
+
+        testApplication {
+            installApplication {
+                meldekortApi(MockDataSource(), inMemoryRepositoryRegistry, createTestGatewayProvider(), fixedClock)
+            }
+
+            val response = createClient().get("/api/meldekort/${sak.saksnummer}") {
+                header("Authorization", "Bearer ${getToken().token()}")
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val body = response.body<MeldeperioderMedMeldekortResponse>()
+            assertThat(body.meldeperioderMedMeldekort.single().meldedato).isNull()
         }
     }
 
@@ -889,7 +921,13 @@ class MeldekortApiTest : BaseApiTest() {
         assertThat(oppdaterMeldekort.meldekortMedTimerRegistrert()).isFalse
     }
 
-    private fun underveisperiode(utfall: Utfall, periode: Periode, meldePeriode: Periode = periode, trekk: Dagsatser = Dagsatser(0)) = Underveisperiode(
+    private fun underveisperiode(
+        utfall: Utfall,
+        periode: Periode,
+        meldePeriode: Periode = periode,
+        trekk: Dagsatser = Dagsatser(0),
+        meldedato: LocalDate? = null,
+    ) = Underveisperiode(
         periode = periode,
         meldePeriode = meldePeriode,
         utfall = utfall,
@@ -908,6 +946,7 @@ class MeldekortApiTest : BaseApiTest() {
         institusjonsoppholdReduksjon = `0_PROSENT`,
         meldepliktStatus = MeldepliktStatus.MELDT_SEG,
         meldepliktGradering = `0_PROSENT`,
+        meldedato = meldedato,
     )
 
     private fun mottattMeldekortDokument(

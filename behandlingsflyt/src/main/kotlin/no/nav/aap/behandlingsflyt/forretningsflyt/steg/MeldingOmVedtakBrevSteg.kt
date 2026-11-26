@@ -91,7 +91,6 @@ class MeldingOmVedtakBrevSteg(
             )
         }
 
-        log.info("Skal bestille brev? $brevBehov avbrutt? $behandlingErAvbrutt bestilling om vedtak? $harBestillingOmVedtakBrev er migering? ${kontekst.erMigreringFraArena()}")
         if (brevBehov != null && !behandlingErAvbrutt && !harBestillingOmVedtakBrev && !kontekst.erMigreringFraArena()) {
             bestillBrev(kontekst, brevBehov)
         }
@@ -179,8 +178,10 @@ class MeldingOmVedtakBrevSteg(
 
     private fun brukApiV3(behandlingId: BehandlingId, typeBrev: TypeBrev): Boolean {
         val avklaringsbehovene = avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-        if (typeBrev != TypeBrev.VEDTAK_AVSLAG_11_5 &&
-            typeBrev != TypeBrev.KLAGE_OPPRETTHOLDELSE &&
+
+        if (typeBrev == TypeBrev.VEDTAK_AVSLAG_11_5) {
+          return true
+        } else if (typeBrev != TypeBrev.KLAGE_OPPRETTHOLDELSE &&
             avklaringsbehovene.hentBehovForDefinisjon(Definisjon.FATTE_VEDTAK) == null
         ) {
             return false

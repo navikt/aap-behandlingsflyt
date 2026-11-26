@@ -18,7 +18,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.Forutgående
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningVurderingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsakBeregningstidspunkt
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKravLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.test.FakeArenaOppslagGateway
@@ -33,6 +33,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.MigreringFraArena
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
+import no.nav.aap.behandlingsflyt.sakogbehandling.sak.ArenaMigreringRepository
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -160,6 +161,43 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
                     .hentTrukketSøknadVurderinger(behandling.id)
                 assertThat(trukket).hasSize(1)
                 assertThat(trukket.single().journalpostId).isNull()
+            }
+    }
+
+    @Test
+    fun `trekk av søknad i migreringsbehandling sletter migreringsdata og kobling til Arena-saken`() {
+        unleash = MigreringFraArenaMedAutomatiskeVurderingerFlytTestUnleash::class
+
+        val (sak, migreringsbehandling) = migrerFraArena()
+        val startDato = sak.rettighetsperiode.fom
+
+        migreringsbehandling
+            .løsLovvalg(startDato, medlem = true)
+            .medKontekst {
+                assertThat(
+                    repositoryProvider.provide<ArenaMigreringsdataRepository>()
+                        .hentAktivHvisEksisterer(behandling.id, StegType.AVKLAR_SYKDOM)
+                ).isNotNull
+                assertThat(repositoryProvider.provide<ArenaMigreringRepository>().hentForSakHvisEksisterer(sak.id))
+                    .isNotNull
+            }
+            .leggTilVurderingsbehov(Vurderingsbehov.SØKNAD_TRUKKET)
+            .løsAvklaringsBehov(
+                TrekkSøknadLøsning(
+                    begrunnelse = "trekker søknaden",
+                    aarsak = AarsakTilTrekkSoknadDto.ANNET
+                )
+            )
+            .medKontekst {
+                assertThat(behandling.status()).isEqualTo(AVSLUTTET)
+                val migreringsdataRepository = repositoryProvider.provide<ArenaMigreringsdataRepository>()
+                StegType.entries.forEach { steg ->
+                    assertThat(migreringsdataRepository.hentAktivHvisEksisterer(behandling.id, steg))
+                        .describedAs("migreringsdata for $steg")
+                        .isNull()
+                }
+                assertThat(repositoryProvider.provide<ArenaMigreringRepository>().hentForSakHvisEksisterer(sak.id))
+                    .isNull()
             }
     }
 
@@ -296,7 +334,7 @@ class MigreringFraArenaFlytTest : AbstraktFlytOrkestratorTest(AlleAvskruddUnleas
                 assertThat(avklaringsbehovSomMåLøses.map { it.definisjon }).doesNotContain(Definisjon.VURDER_KRAV)
 
                 val kravRepository: KravRepository = repositoryProvider.provide()
-                val krav = kravRepository.hentHvisEksisterer(behandling.id)!!.vurderinger.single() as MigrertKrav
+                val krav = kravRepository.hentHvisEksisterer(behandling.id)!!.vurderinger.single() as RelevantMigrertKrav
                 assertThat(krav.muligRettFra).isEqualTo(fraArena.migreringsdato)
                 assertThat(krav.virkningstidspunktArena).isEqualTo(fraArena.soknadsdato)
                 assertThat(krav.arenaSaksnummer).isEqualTo("${fraArena.aar}-${fraArena.lopenr}")

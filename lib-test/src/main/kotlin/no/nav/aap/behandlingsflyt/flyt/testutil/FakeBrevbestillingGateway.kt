@@ -25,7 +25,8 @@ import java.time.LocalDateTime
 import java.util.*
 
 class FakeBrevbestillingGateway : BrevbestillingGateway {
-    var brevbestillingResponse: BrevbestillingResponse? = null
+    private val bestillinger = mutableMapOf<Pair<BehandlingReferanse, String>, BrevbestillingReferanse>()
+    private val brevbestillinger = mutableMapOf<BrevbestillingReferanse, BrevbestillingResponse>()
 
     override fun bestillBrev(
         saksnummer: Saksnummer,
@@ -38,38 +39,40 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
         signaturer: List<SignaturGrunnlag>,
         brukApiV3: Boolean,
     ): BrevbestillingReferanse {
-        return BrevbestillingReferanse(UUID.randomUUID())
-            .also {
-                brevbestillingResponse = BrevbestillingResponse(
-                    referanse = it.brevbestillingReferanse,
-                    brev = null,
-                    brevmal = null,
-                    brevdata = null,
-                    opprettet = LocalDateTime.now(),
-                    oppdatert = LocalDateTime.now(),
-                    behandlingReferanse = behandlingReferanse.referanse,
-                    brevtype = Brevtype.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT,
-                    språk = Språk.NB,
-                    status = Status.UNDER_ARBEID
-                )
-            }
+        return bestillinger.getOrPut(behandlingReferanse to unikReferanse) {
+            BrevbestillingReferanse(UUID.randomUUID())
+                .also {
+                    brevbestillinger[it] = BrevbestillingResponse(
+                        referanse = it.brevbestillingReferanse,
+                        brev = null,
+                        brevmal = null,
+                        brevdata = null,
+                        opprettet = LocalDateTime.now(),
+                        oppdatert = LocalDateTime.now(),
+                        behandlingReferanse = behandlingReferanse.referanse,
+                        brevtype = Brevtype.FORHÅNDSVARSEL_BRUDD_AKTIVITETSPLIKT,
+                        språk = Språk.NB,
+                        status = Status.UNDER_ARBEID
+                    )
+                }
+        }
     }
 
     override fun ferdigstill(referanse: BrevbestillingReferanse, signaturer: List<SignaturGrunnlag>, mottakere: List<MottakerDto>): Boolean {
-        brevbestillingResponse = brevbestillingResponse!!.copy(status = Status.FERDIGSTILT)
+        brevbestillinger[referanse] = hent(referanse).copy(status = Status.FERDIGSTILT)
         return true
     }
 
     override fun oppdaterMottakere(referanse: BrevbestillingReferanse, mottaker: MottakerDto, kopimottaker: MottakerDto?) {
-        brevbestillingResponse = brevbestillingResponse!!.copy(mottaker = mottaker, kopimottaker = kopimottaker)
+        brevbestillinger[referanse] = hent(referanse).copy(mottaker = mottaker, kopimottaker = kopimottaker)
     }
 
     override fun avbryt(bestillingReferanse: BrevbestillingReferanse) {
-        brevbestillingResponse = brevbestillingResponse!!.copy(status = Status.AVBRUTT)
+        brevbestillinger[bestillingReferanse] = hent(bestillingReferanse).copy(status = Status.AVBRUTT)
     }
 
     override fun gjenoppta(bestillingReferanse: BrevbestillingReferanse) {
-        brevbestillingResponse = brevbestillingResponse!!.copy(status = Status.UNDER_ARBEID)
+        brevbestillinger[bestillingReferanse] = hent(bestillingReferanse).copy(status = Status.UNDER_ARBEID)
     }
 
     override fun kanDistribuereBrev(
@@ -90,18 +93,18 @@ class FakeBrevbestillingGateway : BrevbestillingGateway {
     }
 
     override fun hent(bestillingReferanse: BrevbestillingReferanse): BrevbestillingResponse {
-        return brevbestillingResponse!!
+        return brevbestillinger.getValue(bestillingReferanse)
     }
 
     override fun oppdater(bestillingReferanse: BrevbestillingReferanse, brev: Brev) {
-        brevbestillingResponse = brevbestillingResponse!!.copy(brev = brev)
+        brevbestillinger[bestillingReferanse] = hent(bestillingReferanse).copy(brev = brev)
     }
 
     override fun oppdaterV3(
         bestillingReferanse: BrevbestillingReferanse,
         brevdata: BrevdataDto
     ) {
-        brevbestillingResponse = brevbestillingResponse!!.copy(brevdata = brevdata)
+        brevbestillinger[bestillingReferanse] = hent(bestillingReferanse).copy(brevdata = brevdata)
     }
 
     override fun oppdaterBrevmal(bestillingReferanse: BrevbestillingReferanse) {

@@ -2,9 +2,9 @@ package no.nav.aap.behandlingsflyt.behandling
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
@@ -86,7 +86,7 @@ class MigrerKravServiceTest {
 
         assertThat(InMemoryKravRepository.hent(behandlingId).vurderinger).hasSize(antallFør)
         assertThat(
-            InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantKrav>()
+            InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantSøknadKrav>()
                 .single().overstyrMuligRettFra
         ).isNull()
     }
@@ -108,7 +108,7 @@ class MigrerKravServiceTest {
         service.oppdaterKravForOverstyrtMuligRett(sak.id, behandlingId, oppdaterVurdering)
 
         val etterOppdatering =
-            InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantKrav>().single()
+            InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantSøknadKrav>().single()
         assertThat(etterOppdatering.overstyrMuligRettFra).isNotNull
         assertThat(etterOppdatering.overstyrMuligRettFra!!.dato).isEqualTo(overstyrtDato)
         assertThat(etterOppdatering.overstyrMuligRettFra.årsak).isEqualTo(OverstyrMuligRettFraÅrsak.IkkeIStandTilÅSøkeTidligere)
@@ -121,7 +121,7 @@ class MigrerKravServiceTest {
         service.reverserKravForOverstyrtMuligRett(behandlingId, reverserVurdering, sak.rettighetsperiode.fom)
 
         val etterReversering =
-            InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantKrav>().single()
+            InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantSøknadKrav>().single()
         assertThat(etterReversering.overstyrMuligRettFra).isNull()
         assertThat(etterReversering.muligRettFra).isEqualTo(søknadsdato)
         assertThat(etterReversering.søknadsdato.dato).isEqualTo(søknadsdato)
@@ -151,7 +151,7 @@ class MigrerKravServiceTest {
         )
 
         val etterReversering =
-            InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantKrav>().single()
+            InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantSøknadKrav>().single()
         assertThat(etterReversering.overstyrMuligRettFra).isNull()
         assertThat(etterReversering.søknadsdato.dato).isEqualTo(sak.rettighetsperiode.fom)
         assertThat(etterReversering.muligRettFra).isEqualTo(sak.rettighetsperiode.fom)
@@ -181,7 +181,7 @@ class MigrerKravServiceTest {
             sak.rettighetsperiode.fom
         )
         
-        val forventetReversertVurdering = RelevantKrav(
+        val forventetReversertVurdering = RelevantSøknadKrav(
             referanse = vedtattOverstyrtKrav.referanse,
             journalpostId = vedtattOverstyrtKrav.journalpostId,
             vurdertAv = rettighetsperiodeVurdering.vurdertAv,
@@ -224,7 +224,7 @@ class MigrerKravServiceTest {
         )
 
         // etter oppdater: muligRettFra = overstyrtDato
-        val etterOppdater = InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantKrav>().single()
+        val etterOppdater = InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantSøknadKrav>().single()
         assertThat(etterOppdater.muligRettFra).isEqualTo(overstyrtDato)
 
         service.reverserKravForOverstyrtMuligRett(
@@ -234,7 +234,7 @@ class MigrerKravServiceTest {
         )
 
         // etter reverser: tilbakestille muligRettFra til søknadsdato fra mottatt dokument
-        val reversert = InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantKrav>().single()
+        val reversert = InMemoryKravRepository.hent(behandlingId).vurderinger.filterIsInstance<RelevantSøknadKrav>().single()
         assertThat(reversert.overstyrMuligRettFra).isNull()
         assertThat(reversert.muligRettFra).isEqualTo(sak.rettighetsperiode.fom)
         assertThat(reversert.søknadsdato.dato).isEqualTo(sak.rettighetsperiode.fom)
@@ -273,7 +273,7 @@ class MigrerKravServiceTest {
         søknadsdato: LocalDate,
         muligRettFra: LocalDate = søknadsdato,
         overstyrMuligRettFra: OverstyrMuligRettFra? = null,
-    ) = RelevantKrav(
+    ) = RelevantSøknadKrav(
         referanse = Kravreferanse.ny(),
         journalpostId = JournalpostId("JP-${behandlingId.id}"),
         vurdertAv = SYSTEMBRUKER,

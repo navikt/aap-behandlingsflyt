@@ -44,65 +44,21 @@ class SykestipendSteg private constructor(
     )
 
     override fun utfør(kontekst: FlytKontekstMedPerioder): StegResultat {
-        if (unleashGateway.isEnabled(BehandlingsflytFeature.DynamiskFrivilligSykestipend)) {
-            avklaringsbehovService.oppdaterAvklaringsbehovMedGrad(
-                definisjon = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
-                behov = { utledBehov(kontekst) },
-                erTilstrekkeligVurdert = {
-                    sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId) != null
-                },
-                tilbakestillGrunnlag = {
-                    // Manuelt frivillige skal ikke tilbakestilles
-                },
-                kontekst
-            )
-
-        } else {
-            avklaringsbehovServiceGammel(kontekst)
-        }
-
-        vurderSamordningAnnenLovgivningVilkår(kontekst)
-
-        return Fullført
-    }
-
-    private fun avklaringsbehovServiceGammel(kontekst: FlytKontekstMedPerioder) {
-        avklaringsbehovService.oppdaterAvklaringsbehov(
+        avklaringsbehovService.oppdaterAvklaringsbehovMedGrad(
             definisjon = Definisjon.AVKLAR_SAMORDNING_SYKESTIPEND,
-            vedtakBehøverVurdering = {
-                when (kontekst.vurderingType) {
-                    VurderingType.FØRSTEGANGSBEHANDLING, VurderingType.MIGERING_FRA_ARENA -> {
-                        val studentGrunnlag = studentRepository.hentHvisEksisterer(kontekst.behandlingId)
-                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
-                                && (studentGrunnlag.skalVurdereStudent() || studentGrunnlag?.gjeldendeStudentvurderinger()
-                            ?.any { it.erOppfylt() } == true)
-                    }
-
-                    VurderingType.REVURDERING ->
-                        tidligereVurderinger.muligMedRettTilAAP(kontekst, type())
-                                && kontekst.vurderingsbehovRelevanteForSteg.isNotEmpty()
-
-                    VurderingType.UTVID_VEDTAKSLENGDE,
-                    VurderingType.MIGRER_RETTIGHETSPERIODE,
-                    VurderingType.MELDEKORT,
-                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT,
-                    VurderingType.EFFEKTUER_AKTIVITETSPLIKT_11_9,
-                    VurderingType.AUTOMATISK_BREV,
-                    VurderingType.G_REGULERING,
-                    VurderingType.OVERGANG_UFORE_STANS,
-                    VurderingType.IKKE_RELEVANT ->
-                        false
-                }
-            },
+            behov = { utledBehov(kontekst) },
             erTilstrekkeligVurdert = {
-                val sykestipendGrunnlag = sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId)
-                sykestipendGrunnlag != null
+                sykestipendRepository.hentHvisEksisterer(kontekst.behandlingId) != null
             },
             tilbakestillGrunnlag = {
                 // Manuelt frivillige skal ikke tilbakestilles
             },
             kontekst
         )
+
+        vurderSamordningAnnenLovgivningVilkår(kontekst)
+
+        return Fullført
     }
 
     // Bør kanskje inn i et eget steg?

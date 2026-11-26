@@ -10,7 +10,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravNavn
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravOppdatert
 import no.nav.aap.behandlingsflyt.faktagrunnlag.InformasjonskravRegisterdata
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Informasjonskravkonstruktør
-import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.ikkeKjørtSisteKalenderdagForBehandling
 import no.nav.aap.behandlingsflyt.faktagrunnlag.informasjonskravExecutor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.ArbeidsInntektMåned
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.aordning.InntektkomponentenGateway
@@ -85,7 +85,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         }
 
         return fellesRegler
-                && (oppdatert.ikkeKjørtSisteKalenderdag() || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
+                && (oppdatert.ikkeKjørtSisteKalenderdagForBehandling(kontekst.behandlingId) || kontekst.rettighetsperiode != oppdatert?.rettighetsperiode)
     }
 
     override fun klargjør(kontekst: FlytKontekstMedPerioder): LovvalgInput {
@@ -150,7 +150,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
         val executor = informasjonskravExecutor
         val medlemskapPerioderFuture = CompletableFuture
             .supplyAsync(withMdc { medlemskapGateway.innhent(sak.person, sak.rettighetsperiode) }, executor)
-  
+
         val inntektGrunnlagFutures = if (input.skalHentePerKrav) {
             datoerSomInntektSkalHentesIForholdTil.map { dato ->
                 Pair(dato, CompletableFuture.supplyAsync(withMdc {
@@ -220,7 +220,7 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
 
         return IKKE_ENDRET
     }
-    
+
     private fun innhentEREGGrunnlag(inntektGrunnlag: List<ArbeidsInntektMåned>): List<EnhetGrunnlag> {
         if (inntektGrunnlag.isEmpty()) return emptyList()
 

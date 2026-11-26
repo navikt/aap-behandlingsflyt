@@ -158,6 +158,13 @@ class MeldeperiodeTilMeldekortBackendJobbUtfører(
                     .segmenter()
                     .map { it.periode }
                     .somKontraktperioder,
+                fritak = fritaksvurderinger
+                    .mapValue { it.harFritak }
+                    .filter { it.verdi }
+                    .komprimer()
+                    .segmenter()
+                    .map { it.periode }
+                    .somKontraktperioder,
                 meldeplikt = MeldepliktRegel.fastsatteDagerMedMeldeplikt(
                     vedtaksdatoFørsteInnvilgelse = vedtaksdatoFørsteInnvilgelse,
                     fritak = fritaksvurderinger,

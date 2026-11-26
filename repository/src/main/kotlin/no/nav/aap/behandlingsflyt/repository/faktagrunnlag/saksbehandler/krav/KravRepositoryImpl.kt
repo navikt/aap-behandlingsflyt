@@ -6,10 +6,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepositor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknad
@@ -75,7 +75,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 setLong(6, v.vurdertIBehandling.id)
                 setUUID(15, v.referanse.verdi)
 
-                // Feltene under gjelder kun MigrertKrav. Settes til null som standard,
+                // Feltene under gjelder kun RelevantMigrertKrav. Settes til null som standard,
                 // slik at hver enkelt when-gren slipper å gjenta dette.
                 setString(16, null)
                 setString(17, null)
@@ -83,7 +83,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 setLocalDate(19, null)
 
                 when (v) {
-                    is RelevantKrav -> {
+                    is RelevantSøknadKrav -> {
                         setEnumName(7, KravType.RELEVANT_KRAV)
                         setLocalDate(8, v.søknadsdato.dato)
                         setEnumName(9, v.søknadsdato.årsak)
@@ -127,7 +127,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                         setLocalDate(14, null)
                     }
 
-                    is MigrertKrav -> {
+                    is RelevantMigrertKrav -> {
                         setEnumName(7, KravType.MIGRERT_KRAV)
                         setLocalDate(8, null)
                         setEnumName(9, null as Enum<*>?)
@@ -199,7 +199,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
         val vurdertIBehandling = BehandlingId(row.getLong("vurdert_i_behandling"))
 
         return when (val kravType = row.getEnum<KravType>("krav_type")) {
-            KravType.RELEVANT_KRAV -> RelevantKrav(
+            KravType.RELEVANT_KRAV -> RelevantSøknadKrav(
                 referanse = referanse,
                 journalpostId = kreverJournalpostId(journalpostId, kravType, referanse), vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,
@@ -230,7 +230,7 @@ class KravRepositoryImpl(private val connection: DBConnection) : KravRepository 
                 vurdertIBehandling = vurdertIBehandling, opprettet = opprettet,
             )
 
-            KravType.MIGRERT_KRAV -> MigrertKrav(
+            KravType.MIGRERT_KRAV -> RelevantMigrertKrav(
                 referanse = referanse,
                 vurdertAv = vurdertAv,
                 begrunnelse = begrunnelse,

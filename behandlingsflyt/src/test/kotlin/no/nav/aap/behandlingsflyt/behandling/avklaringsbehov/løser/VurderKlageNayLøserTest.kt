@@ -105,6 +105,22 @@ class VurderKlageNayLøserTest {
     }
 
     @Test
+    fun `løs skal kaste UgyldigForespørselException og ikke lagre når påklaget vedtak ikke er fastsatt`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        every { påklagetBehandlingRepositoryMock.hentPåklagetVedtakstype(any()) } returns null
+
+        val exception = assertThrows<UgyldigForespørselException> {
+            lagLøser().løs(
+                kontekst = avklaringsbehovKontekst { this.behandling = behandling },
+                løsning = lagLøsning(KlageInnstilling.OPPRETTHOLD)
+            )
+        }
+
+        assertThat(exception.message).isEqualTo("Påklaget vedtak er ikke fastsatt")
+        verify(exactly = 0) { klagebehandlingNayRepositoryMock.lagre(any(), any()) }
+    }
+
+    @Test
     fun `løs skal tillate opprettholdelse av tilbakekreving`() {
         val (_, behandling) = opprettInMemorySakOgBehandling()
         every { påklagetBehandlingRepositoryMock.hentPåklagetVedtakstype(any()) } returns PåklagetVedtakType.TILBAKEKREVING
@@ -118,12 +134,61 @@ class VurderKlageNayLøserTest {
         assertThat(resultat.begrunnelse).isEqualTo("Begrunnelse for klage")
     }
 
+    @Test
+    fun `løs skal tillate opprettholdelse av flere hjemler uten støtte for omgjøring`() {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        val hjemler = listOf(
+            Hjemmel.FOLKETRYGDLOVEN_22_7,
+            Hjemmel.FOLKETRYGDLOVEN_22_8,
+            Hjemmel.FOLKETRYGDLOVEN_22_14_FJERDE_LEDD
+        )
+        every { påklagetBehandlingRepositoryMock.hentPåklagetVedtakstype(any()) } returns PåklagetVedtakType.KELVIN_BEHANDLING
+        every { klagebehandlingNayRepositoryMock.lagre(any(), any()) } returns Unit
+
+        lagLøser().løs(
+            kontekst = avklaringsbehovKontekst { this.behandling = behandling },
+            løsning = lagLøsning(KlageInnstilling.OPPRETTHOLD, hjemler)
+        )
+
+        verify(exactly = 1) {
+            klagebehandlingNayRepositoryMock.lagre(
+                behandling.id,
+                match { it.vilkårSomOpprettholdes == hjemler && it.vilkårSomOmgjøres.isEmpty() }
+            )
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+        Hjemmel::class,
+        names = ["FOLKETRYGDLOVEN_22_7", "FOLKETRYGDLOVEN_22_8", "FOLKETRYGDLOVEN_22_14_FJERDE_LEDD"]
+    )
+    fun `løs skal avvise hel og delvis omgjøring av nye hjemler`(hjemmel: Hjemmel) {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
+        every { påklagetBehandlingRepositoryMock.hentPåklagetVedtakstype(any()) } returns PåklagetVedtakType.KELVIN_BEHANDLING
+        every { klagebehandlingNayRepositoryMock.lagre(any(), any()) } returns Unit
+
+        for (innstilling in listOf(KlageInnstilling.OMGJØR, KlageInnstilling.DELVIS_OMGJØR)) {
+            val exception = assertThrows<UgyldigForespørselException> {
+                lagLøser().løs(
+                    kontekst = avklaringsbehovKontekst { this.behandling = behandling },
+                    løsning = lagLøsning(innstilling, listOf(hjemmel))
+                )
+            }
+
+            assertThat(exception.message).contains(hjemmel.hjemmel)
+        }
+    }
+
     private fun lagLøser() = VurderKlageNayLøser(
         klagebehandlingNayRepositoryMock,
         påklagetBehandlingRepositoryMock
     )
 
-    private fun lagLøsning(innstilling: KlageInnstilling) = VurderKlageNayLøsning(
+    private fun lagLøsning(
+        innstilling: KlageInnstilling,
+        hjemler: List<Hjemmel> = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
+    ) = VurderKlageNayLøsning(
         klagevurderingNay = KlagevurderingNayLøsningDto(
             begrunnelse = "Begrunnelse for klage",
             notat = "Notat",
@@ -131,12 +196,12 @@ class VurderKlageNayLøserTest {
             vilkårSomOpprettholdes = when (innstilling) {
                 KlageInnstilling.OMGJØR -> emptyList()
                 KlageInnstilling.OPPRETTHOLD, KlageInnstilling.DELVIS_OMGJØR ->
-                    listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
+                    hjemler
             },
             vilkårSomOmgjøres = when (innstilling) {
                 KlageInnstilling.OPPRETTHOLD -> emptyList()
                 KlageInnstilling.OMGJØR, KlageInnstilling.DELVIS_OMGJØR ->
-                    listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
+                    hjemler
             }
         )
     )

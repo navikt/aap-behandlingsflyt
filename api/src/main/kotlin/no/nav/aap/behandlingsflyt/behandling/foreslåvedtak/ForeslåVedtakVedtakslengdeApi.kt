@@ -79,9 +79,15 @@ fun NormalOpenAPIRoute.foreslaaVedtakVedtakslengdeApi(
                                             is GjeldendeStansEllerOpphør -> vurdering.vurdering.årsaker.toList()
                                             is OpphevetStansEllerOpphør -> emptyList()
                                         },
+                                        hjemler = when (vurdering) {
+                                            is GjeldendeStansEllerOpphør -> vurdering.vurdering.årsaker.toList()
+                                                .map { it.hjemmel }.distinct()
+
+                                            is OpphevetStansEllerOpphør -> emptyList()
+                                        },
                                         behandlingReferanse = requireNotNull(referanseOppslag[vurdering.vurdertIBehandling]) {
                                             "Finner ikke ytelsesbehandling i sak med behandlingsid"
-                                        }.referanse
+                                        }.referanse,
                                     )
                                 }
                             )

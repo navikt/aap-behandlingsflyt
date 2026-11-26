@@ -9,7 +9,9 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
+import org.slf4j.LoggerFactory
 import javax.sql.DataSource
+import kotlin.jvm.java
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -31,12 +33,23 @@ class InstitusjonsOppholdKafkaKonsument(
     consumerName = "AapBehandlingsflytInstitusjonsOppholdHendelse",
 ) {
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
     override fun håndter(meldinger: ConsumerRecords<String, InstitusjonsOppholdHendelseKafkaMelding>) {
         meldinger.forEach(::håndter)
     }
 
     fun håndter(melding: ConsumerRecord<String, InstitusjonsOppholdHendelseKafkaMelding>) {
         val meldingKey = "${melding.partition()}-${melding.offset()}"
+        if (melding.value().kilde == null) {
+            log.warn(
+                "Ignorerer institusjonsoppholdhendelse uten kilde. Topic={}, partisjon={}, offset={}",
+                melding.topic(),
+                melding.partition(),
+                melding.offset()
+            )
+            return
+        }
         dataSource.transaction { connection ->
             val repositoryProvider = repositoryRegistry.provider(connection)
             val institusjonsoppholdService = InstitusjonsOppholdService(repositoryProvider, gatewayProvider)
