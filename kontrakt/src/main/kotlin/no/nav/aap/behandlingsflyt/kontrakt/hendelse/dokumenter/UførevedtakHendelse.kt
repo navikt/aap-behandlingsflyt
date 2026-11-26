@@ -24,7 +24,7 @@ public data class UførevedtakKafkaMelding(
     val personId: String,
     val virkningsdato: LocalDate,
     val resultat: UførevedtakResultat,
-    @Suppress("PropertyName") val avslag12_5: Boolean,
+    @Suppress("PropertyName", "ConstructorParameterNaming") val avslag12_5: Boolean,
 ) {
     public fun tilUføreVedtakV0(): Uførevedtak =
         UførevedtakV0(
@@ -52,7 +52,7 @@ public data class UførevedtakKafkaMeldingV1(
     val personId: String,
     val virkningsdato: LocalDate,
     val resultat: UførevedtakResultat,
-    @Suppress("PropertyName") val avslag12_5: Boolean,
+    @Suppress("PropertyName", "ConstructorParameterNaming") val avslag12_5: Boolean,
     val vedtaksdato: LocalDate? = null,
 ) {
     public fun tilInnsending(meldingKey: String, saksnummer: Saksnummer): Innsending {
