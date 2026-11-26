@@ -159,7 +159,7 @@ class HåndterUførevedtakServiceTest {
     }
 
     @Test
-    fun `rettighet som slutter før vedtaksdato gir ikke automatisk opphør`() {
+    fun `rettighet som slutter før uførevedtakets vedtaksdato gir ikke automatisk opphør`() {
         rettighet(
             RettighetsType.VURDERES_FOR_UFØRETRYGD,
             vedtak.virkningsdato,
@@ -204,7 +204,7 @@ class HåndterUførevedtakServiceTest {
     }
 
     @Test
-    fun `opphør på vedtaksdato hindrer ny behandling selv om virkningsdato er senere`() {
+    fun `eksisterende opphør fra vedtaksdato hindrer ny behandling når virkningsdato er senere`() {
         val vedtaksdato = vedtak.virkningsdato.minusDays(1)
         vurderinger(vurdering(vedtaksdato))
         service.håndterMottattUførevedtakHendelse(

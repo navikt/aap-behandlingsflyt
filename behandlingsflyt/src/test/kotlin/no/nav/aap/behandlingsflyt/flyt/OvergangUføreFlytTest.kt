@@ -27,7 +27,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Endringstype
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KorrigerSøknadsdatoV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Opplysningstype
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlPersonHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Uførevedtak
@@ -62,44 +61,13 @@ import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
 class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTestUnleash::class) {
-
-    @Test
-    fun `uførehendelse krever en uførevedtaksmelding`() {
-        val (sak, _) = sendInnFørsteSøknad(mottattTidspunkt = LocalDateTime.now())
-        val meldinger = listOf(null, KorrigerSøknadsdatoV0("Feil meldingstype"))
-
-        for (melding in meldinger) {
-            val jobb = HendelseMottattHåndteringJobbUtfører.nyJobb(
-                sakId = sak.id,
-                dokumentReferanse = InnsendingReferanse(
-                    InnsendingReferanse.Type.UFØREVEDTAK_HENDELSE_ID,
-                    UUID.randomUUID().toString()
-                ),
-                brevkategori = InnsendingType.UFØRE_VEDTAK_HENDELSE,
-                kanal = Kanal.DIGITAL,
-                mottattTidspunkt = LocalDateTime.now(),
-                melding = melding
-            )
-            assertThatThrownBy {
-                dataSource.transaction { connection ->
-                    HendelseMottattHåndteringJobbUtfører
-                        .konstruer(postgresRepositoryRegistry.provider(connection), gatewayProvider)
-                        .utfør(jobb)
-                }
-            }.isInstanceOf(IllegalArgumentException::class.java)
-                .hasMessage("Melding må være av typen Uførevedtak")
-        }
-    }
 
     @Test
     fun `11-18 uføre underveis i en behandling`() {
@@ -389,11 +357,8 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
         assertThat(revurdering.id).isEqualTo(behandling.id)
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [false, true])
-    fun `innvilget uførevedtak fram i tid lagrer automatisk 11-18 vurdering som kan revurderes manuelt`(
-        medVedtaksdato: Boolean
-    ) {
+    @Test
+    fun `innvilget uførevedtak fram i tid lagrer automatisk 11-18 vurdering som kan revurderes manuelt`() {
         val overgangUførDato = LocalDate.now().plusMonths(1)
         val virkningsdato = LocalDate.now()
         val (sak, sisteBehandling) = sendInnFørsteSøknad(mottattTidspunkt = virkningsdato.atStartOfDay())
@@ -422,8 +387,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             behandling = sisteBehandling,
             virkningsdato = overgangUførDato,
             resultat = UførevedtakResultat.INNV,
-            avslag12_5 = false,
-            vedtaksdato = virkningsdato.takeIf { medVedtaksdato }
+            avslag12_5 = false
         )
 
         assertThat(hentAlleAvklaringsbehov(revurdering).map { it.definisjon }).doesNotContain(Definisjon.KVALITETSSIKRING)

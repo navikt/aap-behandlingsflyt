@@ -1,16 +1,58 @@
 package no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter
 
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 
 class InnsendingTest {
+
+    @Test
+    fun `uførehendelse krever en uførevedtaksmelding`() {
+        val meldinger = listOf(null, KorrigerSøknadsdatoV0("Feil meldingstype"))
+
+        for (melding in meldinger) {
+            assertThatThrownBy {
+                Innsending(
+                    saksnummer = Saksnummer("TEST_1"),
+                    referanse = InnsendingReferanse(InnsendingReferanse.Type.UFØREVEDTAK_HENDELSE_ID, "test"),
+                    type = InnsendingType.UFØRE_VEDTAK_HENDELSE,
+                    mottattTidspunkt = LocalDateTime.of(2026, 10, 10, 12, 0),
+                    melding = melding
+                )
+            }.isInstanceOf(IllegalArgumentException::class.java)
+        }
+    }
+
+    @Test
+    fun `uførehendelse godtar begge versjoner av uførevedtak`() {
+        val dato = LocalDate.of(2026, 10, 10)
+        val meldinger = listOf(
+            UførevedtakV0("12345678901", dato, UførevedtakResultat.INNV, false, UførevedtakKilde.PENSJON),
+            UførevedtakV1("12345678901", dato, UførevedtakResultat.INNV, false, UførevedtakKilde.PENSJON, dato)
+        )
+
+        for (melding in meldinger) {
+            val innsending = Innsending(
+                saksnummer = Saksnummer("TEST_1"),
+                referanse = InnsendingReferanse(InnsendingReferanse.Type.UFØREVEDTAK_HENDELSE_ID, "test"),
+                type = InnsendingType.UFØRE_VEDTAK_HENDELSE,
+                mottattTidspunkt = dato.atStartOfDay(),
+                melding = melding
+            )
+            assertThat(innsending.melding).isEqualTo(melding)
+        }
+    }
 
     @Test
     fun `deserialisering - komplett Søknad`() {

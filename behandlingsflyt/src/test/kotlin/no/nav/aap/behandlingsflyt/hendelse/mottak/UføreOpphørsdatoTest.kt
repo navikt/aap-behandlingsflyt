@@ -35,7 +35,7 @@ class UføreOpphørsdatoTest {
     }
 
     @Test
-    fun `opphørsdato er dagen uførevedtaket ble fattet`() {
+    fun `tilbakevirkende uførevedtak gir opphør fra vedtaksdato når det mottas fem dager senere`() {
         val vedtaksdato = LocalDate.of(2026, 10, 10)
         val vedtak = UførevedtakV1(
             personId = "12345678901",
