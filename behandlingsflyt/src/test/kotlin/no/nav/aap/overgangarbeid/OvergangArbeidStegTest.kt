@@ -1,18 +1,13 @@
 package no.nav.aap.overgangarbeid
 
-import io.mockk.every
-import io.mockk.mockk
+
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.vilkår.TidligereVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.Uføre
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.uføre.UføreRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.Sykdomsvurdering
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
@@ -26,6 +21,9 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.FakeTidligereVurderinger
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryOvergangArbeidRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySykdomRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUføreRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
@@ -41,33 +39,25 @@ class OvergangArbeidStegTest {
     private val gatewayProvider = createGatewayProvider {
         register<AlleAvskruddUnleash>()
     }
-    
+
     @Test
     fun `Overgang arbeid skal vurderes ved forutgående ordinær aap + nei 11-5`() {
         val søknadsdato = 1 januar 2020
         val (sak, behandling) = opprettInMemorySakOgBehandling()
         val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.FØRSTEGANGSBEHANDLING)
 
-
-        val uføreMock = mockk<UføreRepository> {
-            every { hentHvisEksisterer(any()) } returns null
-        }
-        val sykdomMock: SykdomRepository = mockk(relaxed = true) {
-            every { hentHvisEksisterer(any()) } returns SykdomGrunnlag(
-                yrkesskadevurdering = null,
-                sykdomsvurderinger = listOf(
-                    sykdom(erSyk = true, vurderingenGjelderFra = søknadsdato),
-                    sykdom(erSyk = false, vurderingenGjelderFra = søknadsdato.plusMonths(2))
-                )
+        InMemorySykdomRepository.lagre(
+            behandling.id, listOf(
+                sykdom(erSyk = true, vurderingenGjelderFra = søknadsdato),
+                sykdom(erSyk = false, vurderingenGjelderFra = søknadsdato.plusMonths(2))
             )
-        }
+        )
+
 
         val steg = OvergangArbeidSteg(
             vilkårService = VilkårService(inMemoryRepositoryProvider),
-            overgangArbeidRepository = mockk<OvergangArbeidRepository> {
-                every { hentHvisEksisterer(any()) } returns null
-            },
-            sykdomRepository = sykdomMock,
+            overgangArbeidRepository = InMemoryOvergangArbeidRepository,
+            sykdomRepository = InMemorySykdomRepository,
             tidligereVurderinger = FakeTidligereVurderinger(
                 tidslinjeOf(
                     Periode(
@@ -78,7 +68,7 @@ class OvergangArbeidStegTest {
                     )
                 )
             ),
-            uføreRepository = uføreMock,
+            uføreRepository = InMemoryUføreRepository,
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider),
         )
 
@@ -94,21 +84,21 @@ class OvergangArbeidStegTest {
         val (sak, behandling) = opprettInMemorySakOgBehandling()
         val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.FØRSTEGANGSBEHANDLING)
 
-        val sykdomMock: SykdomRepository = mockk(relaxed = true) {
-            every { hentHvisEksisterer(any()) } returns SykdomGrunnlag(
-                yrkesskadevurdering = null,
-                sykdomsvurderinger = listOf(
-                    sykdom(erSyk = true, vurderingenGjelderFra = søknadsdato),
-                )
+        InMemorySykdomRepository.lagre(
+            behandling.id, listOf(
+                sykdom(erSyk = true, vurderingenGjelderFra = søknadsdato),
             )
-        }
+        )
+
+        InMemoryUføreRepository.lagre(
+            behandling.id,
+            setOf(Uføre(virkningstidspunkt = 1 januar 2010, uføregrad = Prosent(50)))
+        )
 
         val steg = OvergangArbeidSteg(
             vilkårService = VilkårService(inMemoryRepositoryProvider),
-            overgangArbeidRepository = mockk<OvergangArbeidRepository> {
-                every { hentHvisEksisterer(any()) } returns null
-            },
-            sykdomRepository = sykdomMock,
+            overgangArbeidRepository = InMemoryOvergangArbeidRepository,
+            sykdomRepository = InMemorySykdomRepository,
             tidligereVurderinger = FakeTidligereVurderinger(
                 tidslinjeOf(
                     Periode(
@@ -120,11 +110,7 @@ class OvergangArbeidStegTest {
                 )
             ),
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider),
-            uføreRepository = mockk<UføreRepository> {
-                every { hentHvisEksisterer(any()) } returns UføreGrunnlag(
-                    vedtak = setOf(Uføre(virkningstidspunkt = 1 januar 2010, uføregrad = Prosent(50)))
-                )
-            }
+            uføreRepository = InMemoryUføreRepository
         )
 
         steg.utfør(kontekstMedPerioder)
@@ -142,26 +128,18 @@ class OvergangArbeidStegTest {
         val (sak, behandling) = opprettInMemorySakOgBehandling()
         val kontekstMedPerioder = flytKontekstMedPerioder(sak, behandling, VurderingType.FØRSTEGANGSBEHANDLING)
 
-        val uføreMock = mockk<UføreRepository> {
-            every { hentHvisEksisterer(any()) } returns null
-        }
 
-        val sykdomMock: SykdomRepository = mockk(relaxed = true) {
-            every { hentHvisEksisterer(any()) } returns SykdomGrunnlag(
-                yrkesskadevurdering = null,
-                sykdomsvurderinger = listOf(
-                    sykdom(erSyk = true, vurderingenGjelderFra = rettighetsperiode.fom),
-                    sykdomMedYrkesskadefordel(vurderingenGjelderFra = rettighetsperiode.fom.plusMonths(2))
-                )
+        InMemorySykdomRepository.lagre(
+            behandling.id, listOf(
+                sykdom(erSyk = true, vurderingenGjelderFra = rettighetsperiode.fom),
+                sykdomMedYrkesskadefordel(vurderingenGjelderFra = rettighetsperiode.fom.plusMonths(2))
             )
-        }
+        )
 
         val steg = OvergangArbeidSteg(
             vilkårService = VilkårService(inMemoryRepositoryProvider),
-            overgangArbeidRepository = mockk<OvergangArbeidRepository> {
-                every { hentHvisEksisterer(any()) } returns null
-            },
-            sykdomRepository = sykdomMock,
+            overgangArbeidRepository = InMemoryOvergangArbeidRepository,
+            sykdomRepository = InMemorySykdomRepository,
             tidligereVurderinger = FakeTidligereVurderinger(
                 tidslinjeOf(
                     Periode(
@@ -172,7 +150,7 @@ class OvergangArbeidStegTest {
                     )
                 )
             ),
-            uføreRepository = uføreMock,
+            uføreRepository = InMemoryUføreRepository,
             avklaringsbehovService = AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider),
         )
 
