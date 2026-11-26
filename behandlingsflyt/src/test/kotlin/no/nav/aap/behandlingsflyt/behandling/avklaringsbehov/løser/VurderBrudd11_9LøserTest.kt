@@ -7,6 +7,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Brudd
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Grunn
 import no.nav.aap.behandlingsflyt.help.avklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgRevurdering
+import no.nav.aap.behandlingsflyt.test.TestBruker
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAktivitetsplikt11_9Repository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.januar
@@ -77,7 +78,7 @@ class VurderBrudd11_9LøserTest {
                 dato = 1 januar 2020,
                 grunn = Grunn.RIMELIG_GRUNN,
                 brudd = Brudd.IKKE_MØTT_TIL_TILTAK,
-                vurdertAv = Bruker("SAKSBEHANDLER"),
+                vurdertAv = TestBruker.SAKSBEHANDLER,
                 opprettet = uthentet.vurderinger.find { it.begrunnelse == "Var ikke allikevel" }!!.opprettet,
                 vurdertIBehandling = revurdering.id
             ),
@@ -86,7 +87,7 @@ class VurderBrudd11_9LøserTest {
                 dato = 2 januar 2020,
                 grunn = Grunn.IKKE_RIMELIG_GRUNN,
                 brudd = Brudd.IKKE_MØTT_TIL_TILTAK,
-                vurdertAv = Bruker("SAKSBEHANDLER"),
+                vurdertAv = TestBruker.SAKSBEHANDLER,
                 opprettet = uthentet.vurderinger.find { it.begrunnelse == "Men det var det denne dagen" }!!.opprettet,
                 vurdertIBehandling = revurdering.id
             )
