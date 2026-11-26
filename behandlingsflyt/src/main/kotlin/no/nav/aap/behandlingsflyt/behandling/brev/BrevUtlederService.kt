@@ -437,7 +437,6 @@ class BrevUtlederService(
                 utvidetAapFomDato = utvidetAapFomDato,
                 sisteDagMedYtelse = sisteDagMedYtelse,
                 vedtakslengdeTypeBrev = avslagsårsakTilTypeBrev(prioritertAvslagsårsak),
-                avslagsårsaker = avslagsårsaker
             )
         }
 
@@ -445,7 +444,6 @@ class BrevUtlederService(
             utvidetAapFomDato = utvidetAapFomDato,
             sisteDagMedYtelse = sisteDagMedYtelse,
             vedtakslengdeTypeBrev = TypeBrev.VEDTAK_UTVID_VEDTAKSLENGDE,
-            avslagsårsaker = avslagsårsaker
         )
     }
 

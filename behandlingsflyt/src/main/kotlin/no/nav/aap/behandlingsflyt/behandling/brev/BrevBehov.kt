@@ -63,7 +63,6 @@ data class UtvidVedtakslengde(
     val utvidetAapFomDato: LocalDate,
     val sisteDagMedYtelse: LocalDate,
     val vedtakslengdeTypeBrev: TypeBrev,
-    val avslagsårsaker: Set<Avslagsårsak>
 ) : BrevBehov(vedtakslengdeTypeBrev)
 
 data class Vedtak11_18OpphørDelvisUfør(

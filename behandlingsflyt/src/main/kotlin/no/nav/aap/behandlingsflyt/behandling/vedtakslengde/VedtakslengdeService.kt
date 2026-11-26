@@ -441,6 +441,7 @@ class VedtakslengdeService(
             Avslagsårsak.BRUKER_OVER_67,
             Avslagsårsak.IKKE_MEDLEM,
             Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP,
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS,
             Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING,
             Avslagsårsak.ANNEN_FULL_YTELSE
         )
@@ -450,6 +451,7 @@ class VedtakslengdeService(
             Avslagsårsak.BRUKER_OVER_67,
             Avslagsårsak.IKKE_MEDLEM,
             Avslagsårsak.ORDINÆRKVOTE_BRUKT_OPP,
+            Avslagsårsak.BRUDD_PÅ_OPPHOLDSKRAV_STANS,
             Avslagsårsak.IKKE_RETT_UNDER_STRAFFEGJENNOMFØRING,
             Avslagsårsak.ANNEN_FULL_YTELSE
         )
