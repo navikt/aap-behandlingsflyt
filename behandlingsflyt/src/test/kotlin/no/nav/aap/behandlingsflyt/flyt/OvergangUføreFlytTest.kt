@@ -29,9 +29,11 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Endringstype
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Opplysningstype
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.PdlPersonHendelse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Uførevedtak
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakKafkaMelding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV1
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.tilInnsendingDødsfallBruker
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.periodisering.FlytKontekstMedPeriodeService
@@ -60,6 +62,8 @@ import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -355,8 +359,11 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
         assertThat(revurdering.id).isEqualTo(behandling.id)
     }
 
-    @Test
-    fun `innvilget uførevedtak fram i tid lagrer automatisk 11-18 vurdering som kan revurderes manuelt`() {
+    @ParameterizedTest
+    @ValueSource(booleans = [false, true])
+    fun `innvilget uførevedtak fram i tid lagrer automatisk 11-18 vurdering som kan revurderes manuelt`(
+        medVedtaksdato: Boolean
+    ) {
         val overgangUførDato = LocalDate.now().plusMonths(1)
         val virkningsdato = LocalDate.now()
         val (sak, sisteBehandling) = sendInnFørsteSøknad(mottattTidspunkt = virkningsdato.atStartOfDay())
@@ -386,6 +393,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             virkningsdato = overgangUførDato,
             resultat = UførevedtakResultat.INNV,
             avslag12_5 = false,
+            vedtaksdato = virkningsdato.takeIf { medVedtaksdato }
         )
 
         assertThat(hentAlleAvklaringsbehov(revurdering).map { it.definisjon }).doesNotContain(Definisjon.KVALITETSSIKRING)
@@ -469,11 +477,12 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
     }
 
     @Test
-    fun `tilbakevirkende uførevedtak gir automatisk opphør dagen etter mottak`() {
+    fun `tilbakevirkende uførevedtak gir automatisk opphør`() {
         val mottattDato = LocalDate.now().minusDays(3)
         val vurderingsdato = mottattDato.minusDays(20)
         val uføreVirkningsdato = mottattDato.minusDays(10)
-        val opphørsdato = mottattDato.plusDays(1)
+        val vedtaksdato = mottattDato.minusDays(2)
+        val opphørsdato = vedtaksdato
         val (sak, sisteBehandling) = sendInnFørsteSøknad(mottattTidspunkt = vurderingsdato.atStartOfDay())
 
         sisteBehandling
@@ -502,6 +511,7 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
             resultat = UførevedtakResultat.INNV,
             avslag12_5 = false,
             mottattTidspunkt = mottattDato.atTime(12, 0),
+            vedtaksdato = vedtaksdato
         )
 
         dataSource.transaction { connection ->
@@ -693,14 +703,20 @@ class OvergangUføreFlytTest : AbstraktFlytOrkestratorTest(OvergangUføreFlytTes
         resultat: UførevedtakResultat = UførevedtakResultat.AVSL,
         avslag12_5: Boolean = true,
         mottattTidspunkt: LocalDateTime = LocalDateTime.now(),
-    ): Pair<UførevedtakV0, Behandling> {
+        vedtaksdato: LocalDate? = null,
+    ): Pair<Uførevedtak, Behandling> {
         val dokumentReferanse = UUID.randomUUID().toString()
-        val melding = UførevedtakKafkaMelding(
+        val opprinneligMelding = UførevedtakKafkaMelding(
             personId = sak.person.aktivIdent().toString(),
             virkningsdato = virkningsdato,
             resultat = resultat,
             avslag12_5 = avslag12_5,
         ).tilUføreVedtakV0() as UførevedtakV0
+        val melding = vedtaksdato?.let {
+            UførevedtakV1(
+                opprinneligMelding.personId, virkningsdato, resultat, avslag12_5, opprinneligMelding.kilde, it
+            )
+        } ?: opprinneligMelding
         dataSource.transaction { connection ->
             val flytJobbRepository = FlytJobbRepository(connection)
             flytJobbRepository.leggTil(

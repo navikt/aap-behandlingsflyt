@@ -8,8 +8,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.Ufø
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Uførevedtak
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV1
 import no.nav.aap.behandlingsflyt.prosessering.OppdagEndretInformasjonskravJobbUtfører
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
@@ -59,7 +61,7 @@ class HåndterUførevedtakService(
     fun håndterMottattUførevedtakHendelse(
         sakId: SakId,
         referanse: InnsendingReferanse,
-        uførevedtak: UførevedtakV0,
+        uførevedtak: Uførevedtak,
         mottattTidspunkt: LocalDateTime
     ) {
         val sisteYtelsesBehandling = behandlingService.finnSisteGjeldendeEllerÅpneYtelsesbehandling(sakId)
@@ -79,10 +81,15 @@ class HåndterUførevedtakService(
                 rettighetstypeTidslinje.begrensetTil(Periode(uførevedtak.virkningsdato, Tid.MAKS)).isNotEmpty() ||
                         sisteYtelsesBehandling.status().erÅpen()
             val opphørsdato = uførevedtak.opphørsdato(mottattTidspunkt.toLocalDate())
+            val manglerVedtaksdato = uførevedtak is UførevedtakV0 &&
+                    uførevedtak.virkningsdato.isBefore(mottattTidspunkt.toLocalDate())
 
-            if (opphørErAlleredeVurdert(uførevedtak, opphørsdato, sisteYtelsesBehandling)) {
+            if (manglerVedtaksdato) {
+                log.info("Uførevedtak for sak $sakId mangler vedtaksdato, oppretter ikke automatisk opphør")
+            }
+            if (!manglerVedtaksdato && opphørErAlleredeVurdert(uførevedtak, opphørsdato, sisteYtelsesBehandling)) {
                 log.info("Gjeldende vurderinger dekker allerede uførevedtaket for sak $sakId, oppretter ikke ny behandling")
-            } else if (skalOppretteAutomatiskOpphør11_18(
+            } else if (!manglerVedtaksdato && skalOppretteAutomatiskOpphør11_18(
                     uførevedtak, rettighetstypeTidslinje, opphørsdato, mottattTidspunkt.toLocalDate()
                 )) {
                 log.info("Oppretter atomær 11_18 behandling for mottatt uførevedtak for sak $sakId")
@@ -131,7 +138,7 @@ class HåndterUførevedtakService(
     }
 
     private fun skalOppretteAutomatiskOpphør11_18(
-        uførevedtak: UførevedtakV0,
+        uførevedtak: Uførevedtak,
         rettighetstypeTidslinje: Tidslinje<RettighetsType>,
         opphørsdato: LocalDate,
         mottattDato: LocalDate,
@@ -141,12 +148,13 @@ class HåndterUførevedtakService(
             .any { it == RettighetsType.VURDERES_FOR_UFØRETRYGD }
         return harRettighetstypeForUføretrygd &&
                 uførevedtak.resultat == UførevedtakResultat.INNV &&
-                (uførevedtak.virkningsdato.isAfter(mottattDato) ||
+                (uførevedtak is UførevedtakV1 && uførevedtak.virkningsdato.isBefore(mottattDato) ||
+                        uførevedtak.virkningsdato.isAfter(mottattDato) ||
                         unleashGateway.isEnabled(BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende))
     }
 
     private fun opphørErAlleredeVurdert(
-        uførevedtak: UførevedtakV0,
+        uførevedtak: Uførevedtak,
         opphørsdato: LocalDate,
         behandling: Behandling,
     ): Boolean {
@@ -157,7 +165,7 @@ class HåndterUførevedtakService(
             .somOvergangUforevurderingstidslinje()
             .filter {
                 val vurdering = it.verdi
-                vurdering.fom >= uførevedtak.virkningsdato &&
+                vurdering.fom >= (if (uførevedtak is UførevedtakV1) opphørsdato else uførevedtak.virkningsdato) &&
                         vurdering.brukerRettPåAAP == false &&
                         vurdering.brukerHarFåttVedtakOmUføretrygd in setOf(
                     UføreSøknadVedtakResultat.JA_INNVILGET_FULL,

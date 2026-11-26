@@ -5,10 +5,17 @@ import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.SchemaRegistryConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.uføre.UførevedtakKafkaKonsument
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakKafkaMelding
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakKafkaMeldingV1
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakKilde
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV1
+import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.MockDataSource
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryFlytJobbRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryPersonRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemorySakRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryRegistry
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -55,17 +62,20 @@ class UførevedtakHendelseKafkaKonsumentTest {
     )
 
     @Test
-    fun `Uførevedtakhendelse konsumeres av kafka`() {
+    fun `uførevedtakhendelse med vedtaksdato konsumeres av kafka`() {
+        val person = InMemoryPersonRepository.finnEllerOpprett(listOf(Ident("12345678901")))
+        val sak = InMemorySakRepository.finnEllerOpprett(person, LocalDate.now())
         val pollThread = startConsumerThread {
             konsument.konsumer()
         }
 
         try {
-            val uførevedtakMelding = UførevedtakKafkaMelding(
+            val uførevedtakMelding = UførevedtakKafkaMeldingV1(
                 personId = "12345678901",
                 virkningsdato = LocalDate.now(),
-                resultat = UførevedtakResultat.AVSL,
-                avslag12_5 = false
+                resultat = UførevedtakResultat.INNV,
+                avslag12_5 = false,
+                vedtaksdato = LocalDate.now().minusDays(1)
             )
             val producerProps = Properties().apply {
                 put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, SharedKafkaTestContainer.kafka.bootstrapServers)
@@ -92,6 +102,17 @@ class UførevedtakHendelseKafkaKonsumentTest {
             assertThat(konsument.antallMeldinger)
                 .withFailMessage("Konsumenten ble lukket uten å motta forventet melding")
                 .isEqualTo(1)
+            val jobb = InMemoryFlytJobbRepository.hentJobberForSak(sak.id.toLong()).single()
+            assertThat(DefaultJsonMapper.fromJson<Melding>(jobb.payload())).isEqualTo(
+                UførevedtakV1(
+                    uførevedtakMelding.personId,
+                    uførevedtakMelding.virkningsdato,
+                    uførevedtakMelding.resultat,
+                    uførevedtakMelding.avslag12_5,
+                    UførevedtakKilde.PENSJON,
+                    requireNotNull(uførevedtakMelding.vedtaksdato)
+                )
+            )
         } finally {
             stopConsumerThread(konsument::lukk, pollThread)
         }
