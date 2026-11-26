@@ -16,8 +16,8 @@ class NomGatewayTest {
     @Test
     fun kanHenteAnsattInfo() {
         val nomGateway = NomInfoGateway()
-        val ansattinfo = nomGateway.hentAnsattInfo(Bruker("ABC123"))
-        assertEquals("Test Testesen", ansattinfo.navn)
+        val ansattinfo = nomGateway.hentAnsattInfo(Bruker("V123456"))
+        assertEquals("Veileder Etternavn", ansattinfo.navn)
         assertEquals("1234", ansattinfo.enhetsnummer)
     }
 }
