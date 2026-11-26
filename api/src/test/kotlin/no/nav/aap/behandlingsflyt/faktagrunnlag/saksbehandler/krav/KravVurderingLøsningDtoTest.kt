@@ -11,7 +11,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 class KravVurderingLøsningDtoTest {
 

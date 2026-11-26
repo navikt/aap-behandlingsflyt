@@ -6,7 +6,7 @@ import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.verdityper.dokument.JournalpostId
 import java.time.Instant
 import java.time.LocalDate
-import java.util.*
+import java.util.UUID
 
 @JvmInline
 value class Kravreferanse(val verdi: UUID) {

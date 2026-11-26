@@ -40,7 +40,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.stream.*
+import java.util.stream.Stream
 import no.nav.aap.behandlingsflyt.help.flytKontekstMedPerioder as byggFlytKontekstMedPerioder
 
 class SamordningStegTest {
