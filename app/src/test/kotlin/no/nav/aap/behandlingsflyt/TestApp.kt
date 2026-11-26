@@ -7,8 +7,10 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
+import io.ktor.server.auth.authenticate
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.server.routing.routing
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerForholdDto
@@ -70,6 +72,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlFolkeregisterPersonStatus
 import no.nav.aap.behandlingsflyt.test.JSONTestPersonService
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.TexasPortHolder
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository.hentSakId
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.testGatewayProvider
@@ -77,6 +80,7 @@ import no.nav.aap.dokumentinnhenting.kontrakt.BehandlerDto
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.server.auth.IdentityProvider
 import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
@@ -142,10 +146,13 @@ fun main() {
 
         BackfillStansOpphør(datasource, gatewayProvider).kjør()
 
-        apiRouting {
-            testRoutes(gatewayProvider, repositoryRegistry)
+        routing {
+            authenticate(IdentityProvider.ENTRA_ID.value) {
+                apiRouting {
+                    testRoutes(gatewayProvider, repositoryRegistry)
+                }
+            }
         }
-
     }.start(wait = true)
 }
 
