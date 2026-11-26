@@ -61,7 +61,7 @@ class AzureTokenGen(private val audience: String) {
                     "azp", azp
                 )
         } else {
-            builder.claim("NAVident", navIdent ?: "X123456")
+            builder.claim("NAVident", navIdent ?: TestBruker.SUPERBRUKER)
                 .claim(
                     "groups",
                     groups ?: listOf("saksbehandler-rolle", "veileder-rolle", "kvalitetssikrer-rolle", "beslutter-rolle")

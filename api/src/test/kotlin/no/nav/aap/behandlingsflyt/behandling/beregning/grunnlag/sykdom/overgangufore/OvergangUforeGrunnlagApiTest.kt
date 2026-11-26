@@ -42,7 +42,7 @@ class OvergangUforeGrunnlagApiTest : BaseApiTest() {
             brukerRettPåAAP = true,
             fom = LocalDate.now(),
             tom = null,
-            vurdertAv = Bruker("abc123"),
+            vurdertAv = Bruker("V123456"),
             vurdertIBehandling = behandling.id,
             opprettet = Instant.now()
         )
@@ -69,7 +69,12 @@ class OvergangUforeGrunnlagApiTest : BaseApiTest() {
             fom = vurdering.fom,
             tom = vurdering.tom,
             vurderingerMeta = VurderingerMetaResponse(
-                vurdertAv = VurdertAvResponse(vurdering.vurdertAv.ident, LocalDate.now(), "Test Testesen", "Lokalenhetsnavn"),
+                vurdertAv = VurdertAvResponse(
+                    vurdering.vurdertAv.ident,
+                    LocalDate.now(),
+                    "Veileder Etternavn",
+                    "Lokalenhetsnavn"
+                ),
                 kvalitetssikretAv = null,
                 besluttetAv = null,
             ),

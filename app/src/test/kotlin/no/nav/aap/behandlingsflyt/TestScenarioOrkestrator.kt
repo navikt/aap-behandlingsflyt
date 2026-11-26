@@ -65,6 +65,7 @@ import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
+import no.nav.aap.behandlingsflyt.test.TestBruker
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -108,7 +109,8 @@ class TestScenarioOrkestrator(
         vurderingGjelderFra: LocalDate,
         harNedsattArbeidsevne: ArbeidsevneNedsattValg,
         erNedsettelseIArbeidsevneMerEnnHalvparten: Boolean,
-        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null
+        erNedsettelseIArbeidsevneMerEnnYrkesskadeGrense: Boolean? = null,
+        bruker: Bruker,
     ): Behandling {
         return løsAvklaringsBehov(
             behandling,
@@ -129,11 +131,12 @@ class TestScenarioOrkestrator(
                         tom = null
                     )
                 )
-            )
+            ),
+            bruker = bruker
         )
     }
 
-    fun løsYrkesSkade(behandling: Behandling): Behandling {
+    fun løsYrkesSkade(behandling: Behandling, bruker: Bruker): Behandling {
         val yrkesskadeMedDato = hentFørsteYrkesskadeMedSkadeDato(behandling.id)
         requireNotNull(yrkesskadeMedDato) { "Kan ikke løse yrkesskade uten at det finnes en yrkesskade med skadedato" }
 
@@ -148,11 +151,12 @@ class TestScenarioOrkestrator(
                     andelAvNedsettelsen = 50,
                     erÅrsakssammenheng = true
                 )
-            )
+            ),
+            bruker
         )
     }
 
-    fun løsBistand(behandling: Behandling, fom: LocalDate): Behandling {
+    fun løsBistand(behandling: Behandling, fom: LocalDate, bruker: Bruker): Behandling {
         return løsAvklaringsBehov(
             behandling,
             AvklarBistandsbehovLøsning(
@@ -168,11 +172,12 @@ class TestScenarioOrkestrator(
                         tom = null
                     ),
                 )
-            )
+            ),
+            bruker
         )
     }
 
-    fun løsRefusjonskrav(behandling: Behandling): Behandling {
+    fun løsRefusjonskrav(behandling: Behandling, bruker: Bruker): Behandling {
         return løsAvklaringsBehov(
             behandling,
             RefusjonkravLøsning(
@@ -182,29 +187,32 @@ class TestScenarioOrkestrator(
                         navKontor = "",
                     )
                 )
-            )
+            ),
+            bruker
         )
     }
 
-    fun løsSykdomsvurderingBrev(behandling: Behandling): Behandling {
+    fun løsSykdomsvurderingBrev(behandling: Behandling, bruker: Bruker): Behandling {
         return løsAvklaringsBehov(
             behandling,
             avklaringsBehovLøsning = SykdomsvurderingForBrevLøsning(
                 vurdering = "Denne vurderingen skal vises i brev"
-            )
+            ),
+            bruker
         )
     }
 
-    fun løsVurderingerOppfølgning(behandling: Behandling): Behandling {
+    fun løsVurderingerOppfølgning(behandling: Behandling, bruker: Bruker): Behandling {
         return løsAvklaringsBehov(
             behandling,
-            avklaringsBehovLøsning = BekreftVurderingerOppfølgingLøsning()
+            avklaringsBehovLøsning = BekreftVurderingerOppfølgingLøsning(),
+            bruker
         )
     }
 
     fun kvalitetssikreOk(
         behandling: Behandling,
-        bruker: Bruker = Bruker("KVALITETSSIKRER")
+        bruker: Bruker = TestBruker.KVALITETSSIKRER
     ): Behandling {
         val alleAvklaringsbehov = hentAlleAvklaringsbehov(behandling.id, datasource)
         return løsAvklaringsBehov(
@@ -223,6 +231,7 @@ class TestScenarioOrkestrator(
         behandling: Behandling,
         dato: LocalDate = LocalDate.now(),
         ytterligereNedsattArbeidsevneDato: LocalDate? = null,
+        bruker: Bruker
     ): Behandling {
         return løsAvklaringsBehov(
             behandling,
@@ -234,10 +243,11 @@ class TestScenarioOrkestrator(
                     ytterligereNedsattBegrunnelse = ytterligereNedsattArbeidsevneDato?.let { "Satt ned enda mer, må sitte" },
                 ),
             ),
+            bruker
         )
     }
 
-    fun løsManuellInntektVurdering(behandling: Behandling, manglendeInntektsÅr: List<Int>): Behandling {
+    fun løsManuellInntektVurdering(behandling: Behandling, manglendeInntektsÅr: List<Int>, bruker: Bruker): Behandling {
         return løsAvklaringsBehov(
             behandling,
             AvklarManuellInntektVurderingLøsning(
@@ -252,11 +262,12 @@ class TestScenarioOrkestrator(
                         )
                     }
                 )
-            )
+            ),
+            bruker
         )
     }
 
-    fun løsFastsettYrkesskadeInntekt(behandling: Behandling): Behandling {
+    fun løsFastsettYrkesskadeInntekt(behandling: Behandling, bruker: Bruker): Behandling {
         val yrkesskadeMedDato = hentFørsteYrkesskadeMedSkadeDato(behandling.id)
         requireNotNull(yrkesskadeMedDato) { "Kan ikke løse fastsettYrkesskadeInntekt uten at det finnes en yrkesskade med skadedato" }
 
@@ -273,11 +284,12 @@ class TestScenarioOrkestrator(
                         )
                     )
                 )
-            )
+            ),
+            bruker
         )
     }
 
-    fun løsBarnetillegg(behandling: Behandling): Behandling {
+    fun løsBarnetillegg(behandling: Behandling, bruker: Bruker): Behandling {
         // Henter ut ident,fødselsdato og navn fra db.
         var vurderteBarnListe = listOf<VurdertBarnDto>()
         datasource.transaction { connection ->
@@ -314,20 +326,22 @@ class TestScenarioOrkestrator(
                     vurderteBarn = vurderteBarnListe,
                     saksbehandlerOppgitteBarn = emptyList(),
                 )
-            )
+            ),
+            bruker
         )
     }
 
-    fun løsUtenSamordning(behandling: Behandling): Behandling {
+    fun løsUtenSamordning(behandling: Behandling, bruker: Bruker): Behandling {
         return this.løsAvklaringsBehov(
             behandling,
             AvklarSamordningGraderingLøsning(
                 vurderingerForSamordning = VurderingerForSamordning("Ingen samordning", emptyList())
-            )
+            ),
+            bruker
         )
     }
 
-    fun løsSamordningAndreStatligeYtelser(behandling: Behandling): Behandling {
+    fun løsSamordningAndreStatligeYtelser(behandling: Behandling, bruker: Bruker): Behandling {
         return this.løsAvklaringsBehov(
             behandling,
             AvklarSamordningAndreStatligeYtelserLøsning(
@@ -340,11 +354,12 @@ class TestScenarioOrkestrator(
                         )
                     )
                 )
-            )
+            ),
+            bruker
         )
     }
 
-    fun løsSamordning(behandling: Behandling, sykepengerList: List<TestPerson.Sykepenger>): Behandling {
+    fun løsSamordning(behandling: Behandling, sykepengerList: List<TestPerson.Sykepenger>, bruker: Bruker): Behandling {
         val samordningVurderinger = sykepengerList.map { sykepenger ->
             SamordningVurderingData(
                 Ytelse.entries.random(), // tilfeldig ytelse
@@ -360,11 +375,12 @@ class TestScenarioOrkestrator(
                     "samordning ok",
                     samordningVurderinger
                 )
-            )
+            ),
+            bruker
         )
     }
 
-    fun løsTjenestepensjonRefusjonskravVurdering(behandling: Behandling): Behandling {
+    fun løsTjenestepensjonRefusjonskravVurdering(behandling: Behandling, bruker: Bruker): Behandling {
         return løsAvklaringsBehov(
             behandling,
             TjenestepensjonRefusjonskravLøsning(
@@ -374,11 +390,12 @@ class TestScenarioOrkestrator(
                     fom = null,
                     tom = null
                 )
-            )
+            ),
+            bruker
         )
     }
 
-    fun løsForutgåendeMedlemskap(behandling: Behandling, sak: Sak): Behandling {
+    fun løsForutgåendeMedlemskap(behandling: Behandling, sak: Sak, bruker: Bruker): Behandling {
         return løsAvklaringsBehov(
             behandling,
             AvklarPeriodisertForutgåendeMedlemskapLøsning(
@@ -392,11 +409,12 @@ class TestScenarioOrkestrator(
                         medlemMedUnntakAvMaksFemAar = null
                     )
                 )
-            )
+            ),
+            bruker
         )
     }
 
-    fun løsOppholdskrav(behandling: Behandling, sak: Sak): Behandling {
+    fun løsOppholdskrav(behandling: Behandling, sak: Sak, bruker: Bruker): Behandling {
         return løsAvklaringsBehov(
             behandling,
             AvklarOppholdskravLøsning(
@@ -409,11 +427,12 @@ class TestScenarioOrkestrator(
                         land = "Norge"
                     )
                 )
-            )
+            ),
+            bruker
         )
     }
 
-    fun løsSoningsforhold(behandling: Behandling): Behandling {
+    fun løsSoningsforhold(behandling: Behandling, bruker: Bruker): Behandling {
         return løsAvklaringsBehov(
             behandling,
             AvklarSoningsforholdLøsning(
@@ -426,7 +445,8 @@ class TestScenarioOrkestrator(
                         )
                     )
                 )
-            )
+            ),
+            bruker
         )
     }
 
@@ -436,7 +456,7 @@ class TestScenarioOrkestrator(
     fun løsAvklaringsBehov(
         behandling: Behandling,
         avklaringsBehovLøsning: AvklaringsbehovLøsning,
-        bruker: Bruker = Bruker("S123456"),
+        bruker: Bruker = TestBruker.SAKSBEHANDLER,
     ): Behandling {
         datasource.transaction {
             AvklaringsbehovOrkestrator(postgresRepositoryRegistry.provider(it), gatewayProvider)
@@ -446,11 +466,15 @@ class TestScenarioOrkestrator(
         return hentBehandling(behandling.referanse, datasource)
     }
 
-    fun løsForeslåVedtakLøsning(behandling: Behandling) {
-        løsAvklaringsBehov(behandling, ForeslåVedtakLøsning())
+    fun løsForeslåVedtakLøsning(behandling: Behandling, bruker: Bruker) {
+        løsAvklaringsBehov(behandling, ForeslåVedtakLøsning(), bruker)
     }
 
-    fun fattVedtakEllerSendRetur(behandling: Behandling, returVed: Definisjon? = null): Behandling =
+    fun fattVedtakEllerSendRetur(
+        behandling: Behandling,
+        returVed: Definisjon? = null,
+        bruker: Bruker = TestBruker.BESLUTTER
+    ): Behandling =
         løsAvklaringsBehov(
             behandling,
             FatteVedtakLøsning(
@@ -464,13 +488,21 @@ class TestScenarioOrkestrator(
                             emptyList()
                         )
                     }),
-            Bruker("BESLUTTER")
+            bruker
         )
 
-    fun løsVedtaksbrev(behandling: Behandling, typeBrev: TypeBrev = TypeBrev.VEDTAK_INNVILGELSE): Behandling {
+    fun løsVedtaksbrev(
+        behandling: Behandling,
+        typeBrev: TypeBrev = TypeBrev.VEDTAK_INNVILGELSE,
+        bruker: Bruker = TestBruker.BESLUTTER
+    ): Behandling {
         val brevbestilling = hentBrevAvType(behandling, typeBrev)
 
-        return this.løsAvklaringsBehov(behandling, vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse))
+        return this.løsAvklaringsBehov(
+            behandling,
+            vedtaksbrevLøsning(brevbestilling.referanse.brevbestillingReferanse),
+            bruker
+        )
     }
 
     private fun hentFørsteYrkesskadeMedSkadeDato(behandlingId: BehandlingId): Yrkesskade? {

@@ -18,6 +18,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomRessurserVisningsn
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.OrgEnhet
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.OrgTilknytning
 import no.nav.aap.behandlingsflyt.integrasjon.util.GraphQLResponse
+import no.nav.aap.behandlingsflyt.test.TestBruker
 import java.time.LocalDate
 
 class NomFake : FakeServer() {
@@ -34,7 +35,6 @@ class NomFake : FakeServer() {
         routing {
             post("/graphql") {
                 val jsonNode = call.receive<JsonNode>()
-                val navIdent = jsonNode["variables"]["navIdent"].asText()
                 val data = if (jsonNode["query"].asText().contains("ressurser")) {
                     NomRessurserVisningsnavn(
                         ressurser = listOf(
@@ -43,6 +43,8 @@ class NomFake : FakeServer() {
                         )
                     )
                 } else {
+                    val navIdent = jsonNode["variables"]["navIdent"].asText()
+
                     NomData(
                         NomDataRessurs(
                             orgTilknytning = listOf(
@@ -53,11 +55,11 @@ class NomFake : FakeServer() {
                                     null
                                 )
                             ), visningsnavn = when (navIdent) {
-                                "V123456" -> "Veileder Etternavn"
-                                "K123456" -> "Kvalitetssikrer Etternavn"
-                                "S123456" -> "Saksbehandler Etternavn"
-                                "B123456" -> "Beslutter Etternavn"
-                                "X123456" -> "Superbruker Etternavn"
+                                TestBruker.VEILDER.ident -> "Veileder Etternavn"
+                                TestBruker.KVALITETSSIKRER.ident -> "Kvalitetssikrer Etternavn"
+                                TestBruker.SAKSBEHANDLER.ident -> "Saksbehandler Etternavn"
+                                TestBruker.BESLUTTER.ident -> "Beslutter Etternavn"
+                                TestBruker.SUPERBRUKER.ident -> "Superbruker Etternavn"
                                 else -> "Ukjent Bruker"
                             }
                         )
