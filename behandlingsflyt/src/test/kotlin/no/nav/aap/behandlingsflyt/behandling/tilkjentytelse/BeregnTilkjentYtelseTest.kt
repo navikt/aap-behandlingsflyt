@@ -53,6 +53,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 import java.time.Instant
@@ -241,6 +242,49 @@ class BeregnTilkjentYtelseTest {
         assertThat(beregnTilkjentYtelse.segmenter()).hasSize(1)
         assertThat(beregnTilkjentYtelse.segmenter().first().verdi.utbetalingsdato)
             .isEqualTo(LocalDate.of(2025, 12, levererMeldekortPåDato))
+    }
+
+    @ParameterizedTest
+    @EnumSource(MeldepliktStatus::class)
+    fun `bare fritak gir utbetalingsdato en dag etter meldeperioden når opplysninger ikke er mottatt`(
+        meldepliktStatus: MeldepliktStatus
+    ) {
+        val periode = Periode(6 januar 2025, 19 januar 2025)
+        val underveisgrunnlag = UnderveisGrunnlag(
+            id = 1L,
+            perioder = listOf(
+                underveisperiode(
+                    periode = periode,
+                    meldePeriode = periode,
+                    gradering = Prosent.`100_PROSENT`,
+                    institusjonsOppholdReduksjon = Prosent.`0_PROSENT`,
+                    meldepliktStatus = meldepliktStatus,
+                    opplysningerMottatt = null
+                )
+            )
+        )
+
+        val tilkjentYtelse = BeregnTilkjentYtelse.beregnTilkjentYtelse(
+            TilkjentYtelseGrunnlag(
+                fødselsdato = Fødselsdato(2 januar 1985),
+                beregningsgrunnlag = GUnit(4),
+                underveisgrunnlag = underveisgrunnlag,
+                barnetilleggGrunnlag = utenBarnetillegg(),
+                samordningGrunnlag = utenSamordningGrunnlag(),
+                samordningUføre = utenSamordningUføre(),
+                samordningArbeidsgiver = utenSamordningArbeidsgiver(),
+                barnepensjonGrunnlag = utenBarnepensjon()
+            )
+        )
+
+        val forventetUtbetalingsdato = if (meldepliktStatus == MeldepliktStatus.FRITAK) {
+            20 januar 2025
+        } else {
+            28 januar 2025
+        }
+        val segment = tilkjentYtelse.segmenter().single()
+        assertThat(segment.periode).isEqualTo(periode)
+        assertThat(segment.verdi.utbetalingsdato).isEqualTo(forventetUtbetalingsdato)
     }
 
     @Test

@@ -439,14 +439,55 @@ class GraderingArbeidRegelTest {
         }
     }
 
-    private fun vurder(input: UnderveisInput): Tidslinje<Vurdering> {
+    @Test
+    fun `Fritak gir null timer og opplysninger mottatt allerede når helligdagsunntaket for utbetalingsdato ligger i meldeperioden og er passert, selv om meldeperioden ikke er over`() {
+        val fom = 5 januar 2026
+        val førsteMeldeperiode = Periode(fom, fom.plusDays(13))
+        val utbetalingsdato = førsteMeldeperiode.tom.plusDays(3)
+        // Unntaket flytter utbetalingen til siste dag i meldeperioden, altså før meldeperioden er over
+        val unntaksdatoIMeldeperiode = førsteMeldeperiode.tom.minusDays(1)
+        val rettighetsperiode = Periode(fom, fom.plusDays(27))
+        val input = underveisInput(
+            rettighetsperiode = rettighetsperiode,
+            fastsattArbeidsevne = `0_PROSENT`,
+            meldekort = emptyList(),
+            fritaksvurderinger = listOf(
+                Fritaksvurdering(
+                    harFritak = true,
+                    fom = fom,
+                    begrunnelse = "kan ikke",
+                    vurdertAv = Bruker("saksbehandler"),
+                    vurdertIBehandling = BehandlingId(1),
+                    opprettetTid = fom.atStartOfDay(),
+                )
+            )
+        )
+
+        val vurdering = vurder(
+            input,
+            GraderingArbeidRegel(
+                dagensDato = { unntaksdatoIMeldeperiode },
+                helligdagsunntakForFritaksutbetaling = mapOf(utbetalingsdato to unntaksdatoIMeldeperiode)
+            )
+        )
+
+        assertThat(vurdering.segment(fom)?.verdi?.arbeidsgradering()?.opplysningerMottatt).isEqualTo(unntaksdatoIMeldeperiode)
+        assertThat(vurdering.segment(fom)?.verdi?.arbeidsgradering()?.totaltAntallTimer).isEqualTo(TimerArbeid(BigDecimal.ZERO))
+        // sjekker at hele meldeperioden tolkes om opplysninger mottatt og settes til 0 timer arbeidet
+        assertThat(vurdering.segment(unntaksdatoIMeldeperiode.plusDays(1))?.verdi?.arbeidsgradering()?.opplysningerMottatt).isEqualTo(unntaksdatoIMeldeperiode)
+        assertThat(vurdering.segment(unntaksdatoIMeldeperiode.plusDays(1))?.verdi?.arbeidsgradering()?.totaltAntallTimer).isEqualTo(TimerArbeid(BigDecimal.ZERO))
+        // sjekker at påfølgende meldeperioden ikke tolkes som om opplysninger er mottatt
+        assertThat(vurdering.segment(førsteMeldeperiode.tom.plusDays(1))?.verdi?.arbeidsgradering()?.opplysningerMottatt).isNull()
+    }
+
+    private fun vurder(input: UnderveisInput, graderingArbeidRegel: GraderingArbeidRegel = GraderingArbeidRegel()): Tidslinje<Vurdering> {
         fun Tidslinje<Vurdering>.kjørRegel(regel: UnderveisRegel): Tidslinje<Vurdering> {
             return regel.vurder(input, this)
         }
         return Tidslinje(input.periodeForVurdering, Vurdering(fårAapEtter = RettighetsType.BISTANDSBEHOV))
             .kjørRegel(UtledMeldeperiodeRegel())
             .kjørRegel(FastsettGrenseverdiArbeidRegel())
-            .kjørRegel(GraderingArbeidRegel())
+            .kjørRegel(graderingArbeidRegel)
     }
 
     fun assertMeldekortutregning(

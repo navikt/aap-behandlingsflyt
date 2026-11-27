@@ -8,6 +8,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.Prosent.Companion.`0_PROSENT`
 import no.nav.aap.komponenter.verdityper.TimerArbeid
+import no.nav.aap.meldeplikt.Fritaksvurdering
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -45,7 +46,11 @@ private val ANTALL_TIMER_I_MELDEPERIODE =
  *
  * - Arbeid fra meldeplikt
  */
-class GraderingArbeidRegel : UnderveisRegel {
+class GraderingArbeidRegel(
+    private val dagensDato: () -> LocalDate = { LocalDate.now() },
+    private val helligdagsunntakForFritaksutbetaling: Map<LocalDate, LocalDate> =
+        aktiveHelligdagsunntakForFritaksutbetalingDatoer
+) : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         require(input.periodeForVurdering.inneholder(resultat.helePerioden())) {
             "kan ikke vurdere utenfor rettighetsperioden fordi meldeperioden ikke er definert"
@@ -128,25 +133,40 @@ class GraderingArbeidRegel : UnderveisRegel {
     }
 
     private fun nullTimerVedFritakFraMeldeplikt(
-        input: UnderveisInput,
-        dagensDato: LocalDate = LocalDate.now()
-    ): Tidslinje<OpplysningerOmArbeid> =
-        Tidslinje.map2(
+        input: UnderveisInput
+    ): Tidslinje<OpplysningerOmArbeid> {
+        val idag = dagensDato()
+        return Tidslinje.map2(
             input.meldeperioder.somTidslinje { it },
             input.meldepliktGrunnlag.tilTidslinje()
         ) { meldeperiode, fritaksvurdering ->
-            val harPassertMeldeperiodeITid = meldeperiode?.let { dagensDato >= meldeperiode.tom.plusDays(1) } ?: false
-            if (fritaksvurdering?.harFritak == true && harPassertMeldeperiodeITid) {
+            if (harPassertTidForNullTimerVedFritak(meldeperiode, idag, fritaksvurdering)) {
+                val utbetalingsdato = meldeperiode?.tom?.plusDays(3)
                 OpplysningerOmArbeid(
                     timerArbeid = TimerArbeid(BigDecimal.ZERO),
-                    opplysningerFørstMottatt = aktiveHelligdagsunntakForFritaksutbetalingDatoer[meldeperiode.tom.plusDays(3)]
-                        ?: meldeperiode.tom.plusDays(3)
+                    opplysningerFørstMottatt = helligdagsunntakForFritaksutbetaling[utbetalingsdato]
+                        ?: utbetalingsdato
                 )
             } else {
                 OpplysningerOmArbeid()
             }
         }
+    }
 
+    private fun harPassertTidForNullTimerVedFritak(meldeperiode: Periode?, dagensDato: LocalDate, fritaksvurdering: Fritaksvurdering.FritaksvurderingData?) : Boolean {
+        if (meldeperiode == null) return false
+        if (fritaksvurdering == null) return false
+
+        val harPassertMeldeperiodeITid = meldeperiode.let { dagensDato >= meldeperiode.tom.plusDays(1) }
+        return fritaksvurdering.harFritak && (harPassertMeldeperiodeITid || harPassertHelligdagsunntakITid(dagensDato, meldeperiode))
+    }
+
+    private fun harPassertHelligdagsunntakITid(dagensDato:LocalDate, meldeperiode: Periode): Boolean {
+        val utbetalingsdatoVedFritak = meldeperiode.tom.plusDays(3)
+        val unntakForUtbetalingsdatoVedFritak = helligdagsunntakForFritaksutbetaling[utbetalingsdatoVedFritak]
+
+        return unntakForUtbetalingsdatoVedFritak != null && dagensDato >= unntakForUtbetalingsdatoVedFritak
+    }
 
     private fun opplysningerFraMeldekort(input: UnderveisInput): Tidslinje<OpplysningerOmArbeid> {
         var tidslinje = Tidslinje<OpplysningerOmArbeid>()
