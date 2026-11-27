@@ -47,7 +47,7 @@ private val ANTALL_TIMER_I_MELDEPERIODE =
  * - Arbeid fra meldeplikt
  */
 class GraderingArbeidRegel(
-    private val dagensDato: LocalDate = LocalDate.now(),
+    private val dagensDato: () -> LocalDate = { LocalDate.now() },
     private val helligdagsunntakForFritaksutbetaling: Map<LocalDate, LocalDate> =
         aktiveHelligdagsunntakForFritaksutbetalingDatoer
 ) : UnderveisRegel {
@@ -134,12 +134,13 @@ class GraderingArbeidRegel(
 
     private fun nullTimerVedFritakFraMeldeplikt(
         input: UnderveisInput
-    ): Tidslinje<OpplysningerOmArbeid> =
-        Tidslinje.map2(
+    ): Tidslinje<OpplysningerOmArbeid> {
+        val idag = dagensDato()
+        return Tidslinje.map2(
             input.meldeperioder.somTidslinje { it },
             input.meldepliktGrunnlag.tilTidslinje()
         ) { meldeperiode, fritaksvurdering ->
-            if (harPassertTidForNullTimerVedFritak(meldeperiode, dagensDato, fritaksvurdering)) {
+            if (harPassertTidForNullTimerVedFritak(meldeperiode, idag, fritaksvurdering)) {
                 val utbetalingsdato = meldeperiode?.tom?.plusDays(3)
                 OpplysningerOmArbeid(
                     timerArbeid = TimerArbeid(BigDecimal.ZERO),
@@ -150,6 +151,7 @@ class GraderingArbeidRegel(
                 OpplysningerOmArbeid()
             }
         }
+    }
 
     private fun harPassertTidForNullTimerVedFritak(meldeperiode: Periode?, dagensDato: LocalDate, fritaksvurdering: Fritaksvurdering.FritaksvurderingData?) : Boolean {
         if (meldeperiode == null) return false

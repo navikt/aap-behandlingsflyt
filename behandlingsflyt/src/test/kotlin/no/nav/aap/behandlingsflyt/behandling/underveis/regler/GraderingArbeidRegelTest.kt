@@ -466,7 +466,7 @@ class GraderingArbeidRegelTest {
         val vurdering = vurder(
             input,
             GraderingArbeidRegel(
-                dagensDato = unntaksdatoIMeldeperiode,
+                dagensDato = { unntaksdatoIMeldeperiode },
                 helligdagsunntakForFritaksutbetaling = mapOf(utbetalingsdato to unntaksdatoIMeldeperiode)
             )
         )
