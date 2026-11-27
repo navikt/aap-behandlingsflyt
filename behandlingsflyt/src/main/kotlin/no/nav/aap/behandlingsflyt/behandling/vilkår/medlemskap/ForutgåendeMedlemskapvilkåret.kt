@@ -60,7 +60,7 @@ class ForutgåendeMedlemskapvilkåret(
             val vurderingsResultat = VurderingsResultat(Utfall.IKKE_RELEVANT, null, null)
             leggTilVurdering(grunnlag, vurderingsResultat)
         } else {
-            val kanBehandlesAutomatisk = ForutgåendeMedlemskapVurderingService().vurderTilhørighet(
+            val kanBehandlesAutomatisk = ForutgåendeMedlemskapVurderingService.vurderTilhørighet(
                 grunnlag,
                 rettighetsPeriode
             ).kanBehandlesAutomatisk

@@ -11,7 +11,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.utenlandsoppho
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.medlemskap.MedlemskapUnntakGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.PersonopplysningMedHistorikkGrunnlag
-import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.erGyldigIPeriode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.personopplysninger.overlapperPeriode
 import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapGapGjennomslipp
 import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapMedGapInntektsvurdering
 import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapMedGapUtfall
@@ -19,20 +19,18 @@ import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapNorskOgUtfallInntekt
 import no.nav.aap.behandlingsflyt.forutgåendeMedlemskapStandardGjennomslipp
 import no.nav.aap.behandlingsflyt.prometheus
 import no.nav.aap.komponenter.type.Periode
+import java.time.LocalDate
 import java.time.YearMonth
 
-class ForutgåendeMedlemskapVurderingService {
+object ForutgåendeMedlemskapVurderingService {
     fun vurderTilhørighet(
         grunnlag: ForutgåendeMedlemskapFaktaGrunnlag,
         rettighetsPeriode: Periode
     ): KanBehandlesAutomatiskVurdering {
         val forutgåendePeriode = Periode(rettighetsPeriode.fom.minusYears(5), rettighetsPeriode.tom)
-        val førsteDelVurderinger = vurderFørsteDelKriteier(grunnlag, forutgåendePeriode)
-        val andreDelVurdering = vurderAndreDelKriterier(grunnlag, forutgåendePeriode)
+        val (førsteDelVurderinger, andreDelVurdering) = vurderDeler(grunnlag, forutgåendePeriode)
 
-        val oppfyltMinstEttKrav = førsteDelVurderinger.any { it.resultat }
-        val ingenInntruffet = andreDelVurdering.all { !it.resultat }
-        val originalResultat = oppfyltMinstEttKrav && ingenInntruffet
+        val originalResultat = kanBehandlesAutomatisk(førsteDelVurderinger, andreDelVurdering)
 
         // No-op: sjekk om 1 måneds gap-toleranse i inntekt ville gitt annet utfall totalt sett
         val gapResultat = vurderTilhørighetMedGapToleranse(grunnlag, forutgåendePeriode, andreDelVurdering)
@@ -61,6 +59,34 @@ class ForutgåendeMedlemskapVurderingService {
         )
     }
 
+    /**
+     * Vurderer forutgående medlemskap for vinduet [[relevantDato] - 5 år, [relevantDato]], uten måling.
+     * Brukes til delvurderinger per relevant dato.
+     */
+    fun vurderTilhørighetForRelevantDato(
+        grunnlag: ForutgåendeMedlemskapFaktaGrunnlag,
+        relevantDato: LocalDate
+    ): KanBehandlesAutomatiskVurdering {
+        val (førsteDelVurderinger, andreDelVurdering) =
+            vurderDeler(grunnlag, Periode(relevantDato.minusYears(5), relevantDato))
+
+        return KanBehandlesAutomatiskVurdering(
+            kanBehandlesAutomatisk(førsteDelVurderinger, andreDelVurdering),
+            førsteDelVurderinger + andreDelVurdering,
+        )
+    }
+
+    private fun vurderDeler(
+        grunnlag: ForutgåendeMedlemskapFaktaGrunnlag,
+        forutgåendePeriode: Periode
+    ): Pair<List<TilhørighetVurdering>, List<TilhørighetVurdering>> =
+        vurderFørsteDelKriteier(grunnlag, forutgåendePeriode) to vurderAndreDelKriterier(grunnlag, forutgåendePeriode)
+
+    private fun kanBehandlesAutomatisk(
+        førsteDelVurderinger: List<TilhørighetVurdering>,
+        andreDelVurdering: List<TilhørighetVurdering>
+    ): Boolean = førsteDelVurderinger.any { it.resultat } && andreDelVurdering.all { !it.resultat }
+
     // Minst én må oppfylles
     private fun vurderFørsteDelKriteier(
         grunnlag: ForutgåendeMedlemskapFaktaGrunnlag,
@@ -82,7 +108,10 @@ class ForutgåendeMedlemskapVurderingService {
         val harJobbetIUtland = oppgittJobbetIUtland(grunnlag.nyeSoknadGrunnlag, forutgåendePeriode)
         val harHattUtenlandsOpphold = oppgittUtenlandsOpphold(grunnlag.nyeSoknadGrunnlag, forutgåendePeriode)
         val harUtenlandsAdresse = utenlandskAdresse(grunnlag.personopplysningGrunnlag, forutgåendePeriode)
-        val annetLovvalgsland = lovvalgslandIkkeErNorge(grunnlag.forutgåendeMedlemskapGrunnlag?.medlemskapUnntakGrunnlag)
+        val annetLovvalgsland = lovvalgslandIkkeErNorge(
+            grunnlag.forutgåendeMedlemskapGrunnlag?.medlemskapUnntakGrunnlag,
+            forutgåendePeriode
+        )
         val utenforEØS = manglerStatsborgerskapIEØSiPerioden(grunnlag.personopplysningGrunnlag, forutgåendePeriode)
         val bestemtArbeidsgruppe =
             bestemtArbeidsgruppe(
@@ -105,9 +134,7 @@ class ForutgåendeMedlemskapVurderingService {
         forutgåendePeriode: Periode
     ): TilhørighetVurdering {
         val relevantePerioder = grunnlag.filter {
-            (it.sluttdato != null && forutgåendePeriode.inneholder(it.sluttdato))
-                    || forutgåendePeriode.inneholder(it.startdato)
-                    || (it.sluttdato == null && it.startdato.isBefore(forutgåendePeriode.fom))
+            overlapperPeriode(it.startdato, it.sluttdato, forutgåendePeriode)
         }
 
         val bestemtArbeidsgruppe = relevantePerioder.filter {
@@ -158,9 +185,7 @@ class ForutgåendeMedlemskapVurderingService {
             )
         }
         val relevantePerioder = grunnlag.utenlandsOpphold?.filter {
-            (it.tilDato != null && forutgåendePeriode.inneholder(it.tilDato)) || (it.fraDato != null && forutgåendePeriode.inneholder(
-                it.fraDato
-            ))
+            overlapperPeriode(it.fraDato, it.tilDato, forutgåendePeriode)
         }
         val arbeidUtlandPerioder: MutableList<OppgittJobbetIUtlandGrunnlag> = mutableListOf()
 
@@ -228,9 +253,7 @@ class ForutgåendeMedlemskapVurderingService {
         }
 
         val relevantePerioder = grunnlag.utenlandsOpphold?.filter {
-            (it.tilDato != null && forutgåendePeriode.inneholder(it.tilDato)) || (it.fraDato != null && forutgåendePeriode.inneholder(
-                it.fraDato
-            )) && !it.iArbeid
+            overlapperPeriode(it.fraDato, it.tilDato, forutgåendePeriode) && !it.iArbeid
         }
 
         val oppholdUtlandPerioder = relevantePerioder?.map {
@@ -260,7 +283,7 @@ class ForutgåendeMedlemskapVurderingService {
 
         val adresser =
             grunnlag?.brukerPersonopplysning?.utenlandsAddresser
-                ?.filter { it.erGyldigIPeriode(forutgåendePeriode) }
+                ?.filter { it.overlapperPeriode(forutgåendePeriode) }
                 ?.map {
                     UtenlandskAdresseDto(
                         gyldigFraOgMed = it.gyldigFraOgMed,
@@ -287,8 +310,13 @@ class ForutgåendeMedlemskapVurderingService {
         )
     }
 
-    private fun lovvalgslandIkkeErNorge(grunnlag: MedlemskapUnntakGrunnlag?): TilhørighetVurdering {
-        val lovvalgslandErIkkeNorge = grunnlag?.unntak?.firstOrNull { it.verdi.lovvalgsland != "NOR" }
+    private fun lovvalgslandIkkeErNorge(
+        grunnlag: MedlemskapUnntakGrunnlag?,
+        forutgåendePeriode: Periode
+    ): TilhørighetVurdering {
+        val lovvalgslandErIkkeNorge = grunnlag?.unntak?.firstOrNull {
+            it.verdi.lovvalgsland != "NOR" && it.periode.overlapper(forutgåendePeriode)
+        }
 
         val medlGrunnlag = grunnlag?.unntak?.map {
             VedtakIMEDLGrunnlag(
@@ -316,14 +344,14 @@ class ForutgåendeMedlemskapVurderingService {
 
         val fantStatsborgerskapUtenforEØSiPerioden =
             grunnlag?.brukerPersonopplysning?.statsborgerskap
-                ?.any { it.erGyldigIPeriode(forutgåendePeriode) && it.land !in EØSLandEllerLandMedAvtale.gyldigeEØSLand.map { it.name } }
+                ?.any { it.overlapperPeriode(forutgåendePeriode) && it.land !in EØSLandEllerLandMedAvtale.gyldigeEØSLand.map { it.name } }
         val harNorskStatsborgerskap =
             grunnlag?.brukerPersonopplysning?.statsborgerskap
-                ?.any { it.land == EØSLandEllerLandMedAvtale.NOR.toString() && it.erGyldigIPeriode(forutgåendePeriode) }
+                ?.any { it.land == EØSLandEllerLandMedAvtale.NOR.toString() && it.overlapperPeriode(forutgåendePeriode) }
 
         val manglerStatsborgerskapGrunnlag =
             grunnlag?.brukerPersonopplysning?.statsborgerskap
-                ?.filter { it.erGyldigIPeriode(forutgåendePeriode) }
+                ?.filter { it.overlapperPeriode(forutgåendePeriode) }
                 ?.map {
                     ManglerStatsborgerskapGrunnlag(
                         land = it.land,
