@@ -6,7 +6,6 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import no.nav.aap.behandlingsflyt.Azp
-import no.nav.aap.behandlingsflyt.EMPTY_JSON_RESPONSE
 import no.nav.aap.behandlingsflyt.Tags
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Innsending
@@ -25,9 +24,11 @@ fun NormalOpenAPIRoute.mottattHendelseApi(
     dataSource: DataSource,
     repositoryRegistry: RepositoryRegistry,
 ) {
+    data class HendelseMottatt(val ignorert: Boolean)
+
     route("/api/hendelse") {
         route("/send") {
-            authorizedPost<Unit, String, Innsending>(
+            authorizedPost<Unit, HendelseMottatt, Innsending>(
                 modules = arrayOf(TagModule(listOf(Tags.Sak))),
                 routeConfig = AuthorizationMachineToMachineConfig(
                     authorizedAzps = mutableListOf(
@@ -36,32 +37,32 @@ fun NormalOpenAPIRoute.mottattHendelseApi(
                     )
                 )
             ) { _, dto ->
-                MDC.putCloseable("saksnummer", dto.saksnummer.toString()).use {
+                val respons = MDC.putCloseable("saksnummer", dto.saksnummer.toString()).use {
                     dataSource.transaction { connection ->
                         val repositoryRegistry = repositoryRegistry.provider(connection)
                         MottattHendelseService(repositoryRegistry).registrerMottattHendelse(dto)
                     }
                 }
-                respond(EMPTY_JSON_RESPONSE, HttpStatusCode.Accepted)
+                respond(HendelseMottatt(ignorert = !respons), HttpStatusCode.Accepted)
             }
         }
 
         route("/sak/{saksnummer}/send") {
             // TODO: Fikse bug i tilgang for å sikre endepunktet
-            authorizedPost<SaksnummerParameter, String, Innsending>(
+            authorizedPost<SaksnummerParameter, HendelseMottatt, Innsending>(
                 modules = arrayOf(TagModule(listOf(Tags.Sak))),
                 routeConfig = AuthorizationParamPathConfig(
                     relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
                     sakPathParam = SakPathParam("saksnummer"),
                 )
             ) { _, dto ->
-                MDC.putCloseable("saksnummer", dto.saksnummer.toString()).use {
+                val respons = MDC.putCloseable("saksnummer", dto.saksnummer.toString()).use {
                     dataSource.transaction { connection ->
                         val repositoryRegistry = repositoryRegistry.provider(connection)
                         MottattHendelseService(repositoryRegistry).registrerMottattHendelse(dto)
                     }
                 }
-                respond(EMPTY_JSON_RESPONSE, HttpStatusCode.Accepted)
+                respond(HendelseMottatt(ignorert = !respons), HttpStatusCode.Accepted)
             }
         }
     }
