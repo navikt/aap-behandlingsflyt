@@ -21,18 +21,17 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.UførevedtakReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakKilde
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV1
 import no.nav.aap.behandlingsflyt.prosessering.ProsesserBehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBase
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryFlytJobbRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryOvergangUføreRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.somTidslinje
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -64,8 +63,6 @@ class HåndterUførevedtakServiceTest {
     private val rettighetstypeService = mockk<RettighetstypeService>()
     private val overgangUføreRepository = InMemoryOvergangUføreRepository
     private val mottaDokumentService = MottaDokumentService(InMemoryMottattDokumentRepository)
-    private val flags = mutableMapOf(BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende to true)
-    private val unleashGateway = FakeUnleashBase(flags)
     private val service = HåndterUførevedtakService(
         behandlingService = behandlingService,
         trukketSøknadService = trukketSøknadService,
@@ -73,7 +70,6 @@ class HåndterUførevedtakServiceTest {
         mottaDokumentService = mottaDokumentService,
         prosesserBehandlingService = mockk<ProsesserBehandlingService>(relaxed = true),
         flytJobbRepository = InMemoryFlytJobbRepository,
-        unleashGateway = unleashGateway,
         overgangUføreRepository = overgangUføreRepository,
     )
     private val vedtak = UførevedtakV0(
@@ -124,6 +120,14 @@ class HåndterUførevedtakServiceTest {
         håndter()
         verify(exactly = 0) { behandlingService.finnEllerOpprettBehandling(sakId, any()) }
     }
+
+    @Test
+    fun `opphør mellom virkningsdato og vedtaksdato hindrer ny behandling`() {
+        vurderinger(vurdering(dato.minusDays(7)))
+        håndter()
+        verify(exactly = 0) { behandlingService.finnEllerOpprettBehandling(sakId, any()) }
+    }
+
     @Test
     fun `senere manuell vurdering overstyrer gammelt automatisk opphør`() {
         vurderinger(
@@ -155,11 +159,11 @@ class HåndterUførevedtakServiceTest {
     }
 
     @Test
-    fun `rettighet som slutter på mottaksdato gir ikke automatisk opphør`() {
+    fun `rettighet som slutter før uførevedtakets vedtaksdato gir ikke automatisk opphør`() {
         rettighet(
             RettighetsType.VURDERES_FOR_UFØRETRYGD,
             vedtak.virkningsdato,
-            dato,
+            dato.minusDays(6),
         )
         håndter()
         verify(exactly = 1) {
@@ -170,9 +174,8 @@ class HåndterUførevedtakServiceTest {
     }
 
     @Test
-    fun `tilbakevirkende uførevedtak håndteres manuelt når toggle er av`() {
-        flags[BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende] = false
-        håndter()
+    fun `manglende vedtaksdato gir manuell behandling`() {
+        service.håndterMottattUførevedtakHendelse(sakId, referanse, vedtak, dato.atTime(12, 0))
         verify(exactly = 1) {
             behandlingService.finnEllerOpprettBehandling(sakId, match {
                 it.vurderingsbehov.single().type == Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
@@ -181,8 +184,42 @@ class HåndterUførevedtakServiceTest {
     }
 
     @Test
-    fun `fremtidig uførevedtak håndteres automatisk selv om toggle er av`() {
-        flags[BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende] = false
+    fun `automatisk opphør sjekker rettighet fra uførevedtakets vedtaksdato`() {
+        val vedtaksdato = dato.minusDays(5)
+        rettighet(RettighetsType.VURDERES_FOR_UFØRETRYGD, vedtaksdato, vedtaksdato)
+        service.håndterMottattUførevedtakHendelse(
+            sakId,
+            referanse,
+            UførevedtakV1(
+                personId = vedtak.personId,
+                virkningsdato = vedtak.virkningsdato,
+                resultat = vedtak.resultat,
+                avslag12_5 = vedtak.avslag12_5,
+                kilde = vedtak.kilde,
+                vedtaksdato = vedtaksdato
+            ),
+            dato.atTime(12, 0)
+        )
+        forventAutomatiskOpphør()
+    }
+
+    @Test
+    fun `eksisterende opphør fra vedtaksdato hindrer ny behandling når virkningsdato er senere`() {
+        val vedtaksdato = vedtak.virkningsdato.minusDays(1)
+        vurderinger(vurdering(vedtaksdato))
+        service.håndterMottattUførevedtakHendelse(
+            sakId,
+            referanse,
+            UførevedtakV1(
+                vedtak.personId, vedtak.virkningsdato, vedtak.resultat, vedtak.avslag12_5, vedtak.kilde, vedtaksdato
+            ),
+            dato.atTime(12, 0)
+        )
+        verify(exactly = 0) { behandlingService.finnEllerOpprettBehandling(sakId, any()) }
+    }
+
+    @Test
+    fun `fremtidig uførevedtak håndteres automatisk`() {
         service.håndterMottattUførevedtakHendelse(
             sakId, referanse, vedtak.copy(virkningsdato = dato.plusDays(10)), dato.atTime(12, 0)
         )
@@ -190,20 +227,34 @@ class HåndterUførevedtakServiceTest {
     }
 
     @Test
-    fun `uførevedtak med virkningsdato på mottaksdagen håndteres manuelt når toggle er av`() {
-        flags[BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende] = false
+    fun `uførevedtak med vedtaksdato og virkningsdato på mottaksdagen håndteres automatisk`() {
+        service.håndterMottattUførevedtakHendelse(
+            sakId, referanse,
+            UførevedtakV1(
+                vedtak.personId, dato, vedtak.resultat, vedtak.avslag12_5, vedtak.kilde, dato.minusDays(1)
+            ),
+            dato.atTime(12, 0)
+        )
+        forventAutomatiskOpphør()
+    }
+
+    @Test
+    fun `uførevedtak med virkningsdato på mottaksdagen håndteres automatisk`() {
         service.håndterMottattUførevedtakHendelse(
             sakId, referanse, vedtak.copy(virkningsdato = dato), dato.atTime(12, 0)
         )
-        verify(exactly = 1) {
-            behandlingService.finnEllerOpprettBehandling(sakId, match {
-                it.vurderingsbehov.single().type == Vurderingsbehov.SYKDOM_ARBEVNE_BEHOV_FOR_BISTAND
-            })
-        }
+        forventAutomatiskOpphør()
     }
 
     private fun håndter() =
-        service.håndterMottattUførevedtakHendelse(sakId, referanse, vedtak, dato.atTime(12, 0))
+        service.håndterMottattUførevedtakHendelse(
+            sakId, referanse,
+            UførevedtakV1(
+                vedtak.personId, vedtak.virkningsdato, vedtak.resultat, vedtak.avslag12_5, vedtak.kilde,
+                dato.minusDays(5)
+            ),
+            dato.atTime(12, 0)
+        )
 
     private fun forventAutomatiskOpphør() {
         verify(exactly = 1) {

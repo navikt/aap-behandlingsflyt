@@ -7,8 +7,10 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
+import io.ktor.server.auth.authenticate
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.server.routing.routing
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.YtelseTypeCode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.tjenestepensjon.gateway.SamhandlerForholdDto
@@ -28,7 +30,7 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
@@ -70,6 +72,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.pdl.PdlFolkeregisterPersonStatus
 import no.nav.aap.behandlingsflyt.test.JSONTestPersonService
 import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.TexasPortHolder
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository.hentSakId
 import no.nav.aap.behandlingsflyt.test.modell.TestPerson
 import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.testGatewayProvider
@@ -77,6 +80,8 @@ import no.nav.aap.dokumentinnhenting.kontrakt.BehandlerDto
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.repository.RepositoryRegistry
+import no.nav.aap.komponenter.server.auth.IdentityProvider
+import no.nav.aap.komponenter.server.auth.bruker
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.motor.FlytJobbRepository
@@ -141,10 +146,13 @@ fun main() {
 
         BackfillStansOpphør(datasource, gatewayProvider).kjør()
 
-        apiRouting {
-            testRoutes(gatewayProvider, repositoryRegistry)
+        routing {
+            authenticate(IdentityProvider.ENTRA_ID.value) {
+                apiRouting {
+                    testRoutes(gatewayProvider, repositoryRegistry)
+                }
+            }
         }
-
     }.start(wait = true)
 }
 
@@ -154,7 +162,7 @@ fun NormalOpenAPIRoute.testRoutes(gatewayProvider: GatewayProvider, repositoryRe
     route("/test") {
         route("/opprett") {
             post<Unit, OpprettTestcaseDTO, OpprettTestcaseDTO> { _, dto ->
-                opprettNySakOgBehandling(dto, gatewayProvider, repositoryRegistry)
+                opprettNySakOgBehandling(dto, gatewayProvider, repositoryRegistry, bruker())
                 respond(dto)
             }
         }
@@ -592,7 +600,8 @@ private fun genererFastlege(dto: OpprettTestcaseDTO): BehandlerDto? = if (dto.fa
 private fun opprettNySakOgBehandling(
     dto: OpprettTestcaseDTO,
     gatewayProvider: GatewayProvider,
-    repositoryRegistry: RepositoryRegistry
+    repositoryRegistry: RepositoryRegistry,
+    bruker: Bruker
 ): Sak {
     val sak = sendInnSøknad(dto, gatewayProvider, repositoryRegistry)
 
@@ -622,103 +631,105 @@ private fun opprettNySakOgBehandling(
             behandling = behandling,
             vurderingGjelderFra = dto.søknadsdato ?: sak.rettighetsperiode.fom,
             harNedsattArbeidsevne = if (dto.harNedsattArbeidsevne) ArbeidsevneNedsattValg.JA else ArbeidsevneNedsattValg.NEI,
-            erNedsettelseIArbeidsevneMerEnnHalvparten = dto.erNedsettelseIArbeidsevneMerEnnHalvparten
+            erNedsettelseIArbeidsevneMerEnnHalvparten = dto.erNedsettelseIArbeidsevneMerEnnHalvparten,
+            bruker = bruker,
         )
 
         val harBehandlingsgrunnlag = dto.harNedsattArbeidsevne && dto.erNedsettelseIArbeidsevneMerEnnHalvparten
 
         if (harBehandlingsgrunnlag) {
             if (dto.steg == StegType.VURDER_BISTANDSBEHOV) return sak
-            løsBistand(behandling, dto.søknadsdato ?: sak.rettighetsperiode.fom)
+            løsBistand(behandling, dto.søknadsdato ?: sak.rettighetsperiode.fom, bruker)
 
             // Vurderinger i sykdom
             if (dto.steg == StegType.REFUSJON_KRAV) return sak
-            løsRefusjonskrav(behandling)
+            løsRefusjonskrav(behandling, bruker)
         }
 
         if (dto.steg == StegType.SYKDOMSVURDERING_BREV) return sak
-        else if (!dto.student) løsSykdomsvurderingBrev(behandling)
+        else if (!dto.student) løsSykdomsvurderingBrev(behandling, bruker)
 
         if (dto.steg == StegType.BEKREFT_VURDERINGER_OPPFØLGING) return sak
-        løsVurderingerOppfølgning(behandling)
+        løsVurderingerOppfølgning(behandling, bruker)
 
         if (dto.steg == StegType.KVALITETSSIKRING) return sak
-        kvalitetssikreOk(behandling)
+        kvalitetssikreOk(behandling, bruker)
 
         if (harBehandlingsgrunnlag) {
             // Yrkesskade
             val harYrkesskade = dto.yrkesskader.any { it.kilde == Kilde.REGISTER }
             if (harYrkesskade) {
                 if (dto.steg == StegType.VURDER_YRKESSKADE) return sak
-                løsYrkesSkade(behandling)
+                løsYrkesSkade(behandling, bruker)
             }
 
             // Inntekt
             if (dto.steg == StegType.FASTSETT_BEREGNINGSTIDSPUNKT) return sak
             løsBeregningstidspunkt(
                 behandling,
-                ytterligereNedsattArbeidsevneDato = dto.ytterligereNedsattArbeidsevneDato
+                ytterligereNedsattArbeidsevneDato = dto.ytterligereNedsattArbeidsevneDato,
+                bruker = bruker
             )
 
             if (harYrkesskade) {
-                løsFastsettYrkesskadeInntekt(behandling)
+                løsFastsettYrkesskadeInntekt(behandling, bruker)
             }
 
             val manglendeInntektsÅr = manglendeInntektsår(dto)
             if (manglendeInntektsÅr.isNotEmpty()) {
                 if (dto.steg == StegType.MANGLENDE_LIGNING) return sak
-                løsManuellInntektVurdering(behandling, manglendeInntektsÅr)
+                løsManuellInntektVurdering(behandling, manglendeInntektsÅr, bruker)
             }
 
             // Forutgående medlemskap
             if (!harYrkesskade) {
                 if ((dto.steg == StegType.VURDER_MEDLEMSKAP)) return sak
-                løsForutgåendeMedlemskap(behandling, sak)
+                løsForutgåendeMedlemskap(behandling, sak, bruker)
             }
 
             // Oppholdskrav
             if (dto.steg == StegType.VURDER_OPPHOLDSKRAV) return sak
-            løsOppholdskrav(behandling, sak)
+            løsOppholdskrav(behandling, sak, bruker)
 
             // Institusjonsopphold
             if (dto.steg == StegType.DU_ER_ET_ANNET_STED) return sak
             if (dto.institusjoner.fengsel == true) {
-                løsSoningsforhold(behandling)
+                løsSoningsforhold(behandling, bruker)
             }
 
             // Barnetillegg
             if (dto.steg == StegType.BARNETILLEGG) return sak
             if (dto.barn.isNotEmpty()) {
-                løsBarnetillegg(behandling)
+                løsBarnetillegg(behandling, bruker)
             }
 
             // Samordning
             if (dto.steg == StegType.SAMORDNING_GRADERING) return sak
             if (dto.sykepenger.isEmpty()) {
-                løsUtenSamordning(behandling)
+                løsUtenSamordning(behandling, bruker)
             } else {
-                løsSamordning(behandling, dto.sykepenger)
+                løsSamordning(behandling, dto.sykepenger, bruker)
             }
 
             if (dto.steg == StegType.SAMORDNING_ANDRE_STATLIGE_YTELSER) return sak
-            løsSamordningAndreStatligeYtelser(behandling)
+            løsSamordningAndreStatligeYtelser(behandling, bruker)
 
             if (dto.tjenestePensjon == true) {
                 if (dto.steg == StegType.SAMORDNING_TJENESTEPENSJON_REFUSJONSKRAV) return sak
-                løsTjenestepensjonRefusjonskravVurdering(behandling)
+                løsTjenestepensjonRefusjonskravVurdering(behandling, bruker)
             }
 
             // Vedtak
             if (dto.steg == StegType.FORESLÅ_VEDTAK) return sak
-            løsForeslåVedtakLøsning(behandling)
+            løsForeslåVedtakLøsning(behandling, bruker)
         }
 
         if (dto.steg == StegType.FATTE_VEDTAK) return sak
         fattVedtakEllerSendRetur(behandling)
 
         if (dto.steg == StegType.BREV) return sak
-        else if (harBehandlingsgrunnlag) løsVedtaksbrev(behandling)
-        else løsVedtaksbrev(behandling, TypeBrev.VEDTAK_AVSLAG)
+        else if (harBehandlingsgrunnlag) løsVedtaksbrev(behandling, bruker = bruker)
+        else løsVedtaksbrev(behandling, TypeBrev.VEDTAK_AVSLAG, bruker)
 
         return sak
     }
@@ -800,7 +811,7 @@ private fun mapKravVurdering(
 
     val now = Instant.now()
     return when (krav.kravType) {
-        KravType.RELEVANT_KRAV -> RelevantKrav(
+        KravType.RELEVANT_KRAV -> RelevantSøknadKrav(
             referanse = referanse,
             journalpostId = journalpostId,
             vurdertAv = Bruker("Testbruker"),

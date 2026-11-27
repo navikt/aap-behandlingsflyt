@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.behandling.underveis
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySak
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
@@ -23,7 +23,6 @@ import kotlin.test.Test
 
 class KvoteServiceTest {
 
-    private val behandlingRepository = InMemoryBehandlingRepository
     private val kravRepository = InMemoryKravRepository
 
     private val kvoteService = KvoteService(inMemoryRepositoryProvider, minimalGatewayProvider { })
@@ -61,7 +60,7 @@ class KvoteServiceTest {
         )
 
     private fun lagMigrertKrav(behandlingId: BehandlingId, resterendeKvoteOrdinaer: Int) =
-        MigrertKrav(
+        RelevantMigrertKrav(
             referanse = Kravreferanse.ny(),
             vurdertAv = SYSTEMBRUKER,
             begrunnelse = "Migrert fra Arena",

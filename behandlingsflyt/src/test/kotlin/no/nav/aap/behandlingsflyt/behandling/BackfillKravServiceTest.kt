@@ -9,7 +9,7 @@ import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.gjeldendeVurderinger
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
@@ -70,7 +70,7 @@ class BackfillKravServiceTest {
     }
 
     @Test
-    fun `første søknad i sak gir RelevantKrav med riktig dato`() {
+    fun `første søknad i sak gir RelevantSøknadKrav med riktig dato`() {
         val søknadsdato = 10 januar 2024
         val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato)
 
@@ -90,7 +90,7 @@ class BackfillKravServiceTest {
         service.backfillBehandling(sak, listOf(behandling), behandling, erNyesteBehandling = true)
 
         val vurderinger = InMemoryKravRepository.hent(behandling.id).gjeldendeVurderinger()
-        assertThat(vurderinger.filterIsInstance<RelevantKrav>()).hasSize(1)
+        assertThat(vurderinger.filterIsInstance<RelevantSøknadKrav>()).hasSize(1)
         assertThat(vurderinger.filterIsInstance<Tilleggsopplysning>()).hasSize(1)
     }
 
@@ -147,7 +147,7 @@ class BackfillKravServiceTest {
     @Test
     fun `trukket-søknad-sak hoppes over`() {
         val søknadsdato = 10 januar 2024
-        val (sak, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato)
+        val (_, behandling) = opprettSakOgBehandlingMedSøknad(søknadsdato)
 
         InMemoryTrukketSøknadRepository.lagreTrukketSøknadVurdering(
             behandling.id,
@@ -265,7 +265,7 @@ class BackfillKravServiceTest {
 
         assertThat(vedtatt).isEqualTo(opprinneligKrav)
 
-        val gjeldendeKrav = kravRevurdering.gjeldendeRelevanteKrav().single()
+        val gjeldendeKrav = kravRevurdering.gjeldendeSøknadKrav().single()
         assertThat(gjeldendeKrav).isEqualTo(nytt)
         // OverstyrMuligRettFra skal matche rettighetsperiodevurderingen
         assertThat(gjeldendeKrav.overstyrMuligRettFra).isNotNull
@@ -319,10 +319,10 @@ class BackfillKravServiceTest {
 
         assertThat(InMemoryKravRepository.hent(revurdering.id).vurderinger).hasSize(2)
         assertThat(
-            InMemoryKravRepository.hent(revurdering.id).gjeldendeRelevanteKrav().single().overstyrMuligRettFra
+            InMemoryKravRepository.hent(revurdering.id).gjeldendeSøknadKrav().single().overstyrMuligRettFra
         ).isNull()
         assertThat(
-            InMemoryKravRepository.hent(revurdering.id).gjeldendeRelevanteKrav().single().muligRettFra
+            InMemoryKravRepository.hent(revurdering.id).gjeldendeSøknadKrav().single().muligRettFra
         ).isEqualTo(søknadsdato)
     }
 
@@ -368,7 +368,7 @@ class BackfillKravServiceTest {
 
         // Rettighetsperiodevurderingen er uendret fra forrige behandling – ingen ny kravvurdering skal opprettes
         assertThat(kravRevurdering.vurderinger).hasSize(1)
-        val gjeldendeKrav = kravRevurdering.gjeldendeRelevanteKrav().single()
+        val gjeldendeKrav = kravRevurdering.gjeldendeSøknadKrav().single()
         assertThat(gjeldendeKrav).isEqualTo(opprinneligKrav)
         assertThat(gjeldendeKrav.vurdertIBehandling).isEqualTo(førstegangsbehandling.id)
     }
@@ -437,14 +437,14 @@ class BackfillKravServiceTest {
         )
 
         val kravFørstegangsbehandling = InMemoryKravRepository.hent(førstegangsbehandling.id)
-        assertThat(kravFørstegangsbehandling.gjeldendeRelevanteKrav()).hasSize(1)
-        val relevantKravFørstegangsbehandling = kravFørstegangsbehandling.gjeldendeRelevanteKrav().single()
+        assertThat(kravFørstegangsbehandling.gjeldendeSøknadKrav()).hasSize(1)
+        val relevantKravFørstegangsbehandling = kravFørstegangsbehandling.gjeldendeSøknadKrav().single()
         assertThat(relevantKravFørstegangsbehandling.muligRettFra).isEqualTo(senereSøknadsdato)
 
         val kravRevurdering = InMemoryKravRepository.hent(revurdering.id)
         val gjeldendeVurderinger = kravRevurdering.gjeldendeVurderinger()
 
-        val relevanteKrav = gjeldendeVurderinger.filterIsInstance<RelevantKrav>()
+        val relevanteKrav = gjeldendeVurderinger.filterIsInstance<RelevantSøknadKrav>()
         val tilleggsopplysninger = gjeldendeVurderinger.filterIsInstance<Tilleggsopplysning>()
 
         assertThat(relevanteKrav).hasSize(1)
@@ -506,7 +506,7 @@ class BackfillKravServiceTest {
             erNyesteBehandling = false,
         )
         // Sett overstyrMuligRettFra manuelt på det lagrede kravet
-        val gammeltKrav = InMemoryKravRepository.hent(førstegangsbehandling.id).gjeldendeRelevanteKrav().single()
+        val gammeltKrav = InMemoryKravRepository.hent(førstegangsbehandling.id).gjeldendeSøknadKrav().single()
         InMemoryKravRepository.lagre(
             førstegangsbehandling.id,
             setOf(
@@ -531,7 +531,7 @@ class BackfillKravServiceTest {
         )
 
         val gjeldendeVurderinger = InMemoryKravRepository.hent(revurdering.id).gjeldendeVurderinger()
-        val relevanteKrav = gjeldendeVurderinger.filterIsInstance<RelevantKrav>()
+        val relevanteKrav = gjeldendeVurderinger.filterIsInstance<RelevantSøknadKrav>()
         assertThat(relevanteKrav).hasSize(1)
         assertThat(relevanteKrav.single().søknadsdato.dato).isEqualTo(nySøknadsdato)
         assertThat(relevanteKrav.single().muligRettFra).isEqualTo(overstyrtDato)
@@ -555,7 +555,7 @@ class BackfillKravServiceTest {
             førstegangsbehandling,
             erNyesteBehandling = false,
         )
-        val gammeltKrav = InMemoryKravRepository.hent(førstegangsbehandling.id).gjeldendeRelevanteKrav().single()
+        val gammeltKrav = InMemoryKravRepository.hent(førstegangsbehandling.id).gjeldendeSøknadKrav().single()
         InMemoryKravRepository.lagre(
             førstegangsbehandling.id,
             setOf(
@@ -580,7 +580,7 @@ class BackfillKravServiceTest {
             erNyesteBehandling = true,
         )
 
-        val nyttKrav = InMemoryKravRepository.hent(revurdering.id).gjeldendeRelevanteKrav().single()
+        val nyttKrav = InMemoryKravRepository.hent(revurdering.id).gjeldendeSøknadKrav().single()
         assertThat(nyttKrav.overstyrMuligRettFra).isNotNull
         assertThat(nyttKrav.overstyrMuligRettFra!!.dato).isEqualTo(overstyrtDato)
         assertThat(nyttKrav.muligRettFra).isEqualTo(overstyrtDato) // min(5 jan 2024, 1 mar 2023)
@@ -639,7 +639,7 @@ class BackfillKravServiceTest {
             erNyesteBehandling = false
         )
         val relevantKravFørstegangsbehandling =
-            InMemoryKravRepository.hent(førstegangsbehandling.id).gjeldendeRelevanteKrav().single()
+            InMemoryKravRepository.hent(førstegangsbehandling.id).gjeldendeSøknadKrav().single()
 
         service.backfillBehandling(
             lagSakMedRettighetsperiode(sak, tidligereSøknadsdato),
@@ -657,7 +657,7 @@ class BackfillKravServiceTest {
 
         // ...men skal filtreres bort når den vurderes mot gjeldende krav (nedgradert krav er ikke lenger relevant)
         val kravRevurdering = InMemoryKravRepository.hent(revurdering.id)
-        val gjeldendeKravReferanser = kravRevurdering.gjeldendeRelevanteKrav().map { it.referanse }
+        val gjeldendeKravReferanser = kravRevurdering.gjeldendeSøknadKrav().map { it.referanse }
         assertThat(gjeldendeKravReferanser).doesNotContain(relevantKravFørstegangsbehandling.referanse)
     }
 
@@ -719,8 +719,8 @@ class BackfillKravServiceTest {
         )
     }
 
-    private fun assertHarNøyaktigEttRelevantKrav(vurderinger: Set<KravVurdering>): RelevantKrav {
-        val relevanteKrav = vurderinger.gjeldendeVurderinger().filterIsInstance<RelevantKrav>()
+    private fun assertHarNøyaktigEttRelevantKrav(vurderinger: Set<KravVurdering>): RelevantSøknadKrav {
+        val relevanteKrav = vurderinger.gjeldendeVurderinger().filterIsInstance<RelevantSøknadKrav>()
         assertThat(relevanteKrav).hasSize(1)
         return relevanteKrav.single()
     }

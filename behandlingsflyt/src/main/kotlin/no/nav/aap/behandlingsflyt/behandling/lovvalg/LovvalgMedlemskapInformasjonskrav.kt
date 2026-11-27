@@ -40,7 +40,6 @@ import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.behandlingsflyt.utils.withMdc
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
-import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.concurrent.*
@@ -57,8 +56,6 @@ class LovvalgMedlemskapInformasjonskrav internal constructor(
     private val kravRepository: KravRepository,
     private val unleashGateway: UnleashGateway,
 ) : Informasjonskrav<LovvalgMedlemskapInformasjonskrav.LovvalgInput, LovvalgMedlemskapInformasjonskrav.LovvalgRegisterData> {
-    private val log = LoggerFactory.getLogger(javaClass)
-
     data class LovvalgInput(
         val sak: Sak,
         val datoerSomInntektSkalHentesIForholdTil: Set<LocalDate>,

@@ -27,7 +27,7 @@ class AvklarPeriodisertOverstyrtLovvalgMedlemskapLøsning(
         defaultValue = MANUELL_OVERSTYRING_LOVVALG
     ) val behovstype: AvklaringsbehovKode = AvklaringsbehovKode.`5021`,
     override val løsningerForPerioder: List<PeriodisertManuellVurderingForLovvalgMedlemskapDto>
-) : PeriodisertAvklaringsbehovLøsning<PeriodisertManuellVurderingForLovvalgMedlemskapDto>, LøsningMedPeriodiserteVurderinger {
+) : PeriodisertAvklaringsbehovLøsning<PeriodisertManuellVurderingForLovvalgMedlemskapDto>{
     override fun løs(repositoryProvider: RepositoryProvider, kontekst: AvklaringsbehovKontekst, gatewayProvider: GatewayProvider): LøsningsResultat {
         return AvklarPeriodisertOverstyrtLovvalgMedlemskapLøser(repositoryProvider).løs(kontekst, this)
     }

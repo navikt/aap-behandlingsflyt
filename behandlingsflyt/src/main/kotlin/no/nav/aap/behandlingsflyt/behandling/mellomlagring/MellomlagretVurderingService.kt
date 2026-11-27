@@ -1,8 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.mellomlagring
 
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
@@ -11,7 +9,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.lookup.repository.RepositoryProvider
 import no.nav.aap.tilgang.Rolle
-import kotlin.collections.filter
 
 class MellomlagretVurderingService(
     private val mellomlagretVurderingRepository: MellomlagretVurderingRepository,
@@ -38,15 +35,6 @@ class MellomlagretVurderingService(
         return mellomlagretVurderingRepository.hentForAvklaringsbehov(
             behandling.id,
             relevanteAvklaringsbehov.map { it.kode })
-    }
-
-    fun hentMellomlagredeVurderingerFørSteg(
-        behandlingsreferanse: BehandlingReferanse,
-        steg: StegType,
-        løsesAv: List<Rolle>
-    ): List<MellomlagretVurdering> {
-        val behandling = behandlingRepository.hent(behandlingsreferanse)
-        return hentMellomlagredeVurderingerFørSteg(behandling, steg, løsesAv)
     }
 
     fun hentMellomlagredeVurderingerFørSteg(

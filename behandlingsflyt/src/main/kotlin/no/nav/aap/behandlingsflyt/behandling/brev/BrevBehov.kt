@@ -90,6 +90,8 @@ sealed class AvslagBrev(typeBrev: TypeBrev) : BrevBehov(typeBrev) {
 }
 
 data class KlageOpprettholdelse(
+    val påklagetVedtaksdato: LocalDate?,
+    val klagedato: LocalDate,
     val begrunnelseNavKontor: String?,
     val begrunnelseNay: String?
 ) : BrevBehov(TypeBrev.KLAGE_OPPRETTHOLDELSE)
@@ -103,6 +105,7 @@ object KlageAvvist : BrevBehov(TypeBrev.KLAGE_AVVIST)
 object KlageTrukket : BrevBehov(TypeBrev.KLAGE_TRUKKET)
 object KlageMottatt : BrevBehov(TypeBrev.KLAGE_MOTTATT)
 object Forvaltningsmelding : BrevBehov(TypeBrev.FORVALTNINGSMELDING)
+object ForvaltningsmeldingKantIKant : BrevBehov(TypeBrev.FORVALTNINGSMELDING_KANT_I_KANT)
 object VedtakAktivitetsplikt11_7 : BrevBehov(TypeBrev.VEDTAK_11_7)
 object VedtakAktivitetsplikt11_9 : BrevBehov(TypeBrev.VEDTAK_11_9)
 object VedtakArbeidsopptrapping11_23SjetteLedd : BrevBehov(TypeBrev.VEDTAK_11_23_SJETTE_LEDD)

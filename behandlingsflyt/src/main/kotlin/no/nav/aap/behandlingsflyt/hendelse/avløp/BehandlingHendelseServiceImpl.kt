@@ -20,7 +20,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Uførevedtak
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.tilUføreVedtakDto
 import no.nav.aap.behandlingsflyt.pip.PipService
 import no.nav.aap.behandlingsflyt.prosessering.MeldeperiodeTilMeldekortBackendJobbUtfører
@@ -36,7 +36,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.Factory
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -55,7 +54,6 @@ class BehandlingHendelseServiceImpl(
     private val pipService: PipService,
     private val behandlingService: BehandlingService,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val unleashGateway: UnleashGateway,
     private val gjenståendeSykedagerRepository: GjenståendeSykedagerRepository,
 ) : BehandlingHendelseService {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
@@ -65,7 +63,6 @@ class BehandlingHendelseServiceImpl(
         pipService = PipService(repositoryProvider),
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
-        unleashGateway = gatewayProvider.provide(),
         gjenståendeSykedagerRepository = repositoryProvider.provide(),
     )
 
@@ -106,6 +103,8 @@ class BehandlingHendelseServiceImpl(
             hendelsesTidspunkt = LocalDateTime.now(),
             versjon = ApplikasjonsVersjon.versjon,
             gjenståendeSykedager = hentGjenståendeSykedager(behandling, faktiskBehandlingstype),
+            saksbehandlereSomIkkeKanBeslutte = avklaringsbehovene.brukereSomIkkeKanBeslutte()
+                .map { it.ident }
         ).copy(behandlingType = faktiskBehandlingstype)
 
         log.info("Legger til flytjobber til statistikk og stoppethendelse for behandling: ${behandling.id}")
@@ -259,7 +258,7 @@ class BehandlingHendelseServiceImpl(
         val uføreDokument =
             dokumentRepository.hentDokumenterAvType(behandling.id, InnsendingType.UFØRE_VEDTAK_HENDELSE).toList()
                 .maxByOrNull { it.opprettetTid }
-        return uføreDokument?.strukturerteData<UførevedtakV0>()?.data?.tilUføreVedtakDto()
+        return uføreDokument?.strukturerteData<Uførevedtak>()?.data?.tilUføreVedtakDto()
     }
 
     private fun hentMottattDokumenter(

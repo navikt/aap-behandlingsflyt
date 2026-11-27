@@ -4,8 +4,8 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentReposito
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravValidering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeHarRett
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.rettighetsperiode.RettighetsperiodeVurdering
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
@@ -14,7 +14,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.lookup.repository.RepositoryProvider
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 class MigrerKravService(
@@ -43,15 +42,15 @@ class MigrerKravService(
         // Vi kan få flere ved rent avslag
         val nyesteKrav = eksisterendeKravGrunnlag?.kravtidslinje()?.segmenter()?.maxByOrNull { it.fom() }?.verdi
 
-        if (nyesteKrav == null) {
-            log.info("Fant ikke NyttKrav for sak ${sakId}, lagrer ikke ned kravvurdering for rettighetsperiodeløsning")
+        if (nyesteKrav !is RelevantSøknadKrav) {
+            log.info("Fant ikke krav fra søknad for sak ${sakId}, lagrer ikke ned kravvurdering for rettighetsperiodeløsning")
             return
         }
 
         val søknadForKrav = mottattDokumentRepository.hentDokumenterAvType(sakId, InnsendingType.SØKNAD)
             .find { it.referanse == nyesteKrav.journalpostId }
 
-        val nyVurdering = RelevantKrav(
+        val nyVurdering = RelevantSøknadKrav(
             referanse = nyesteKrav.referanse,
             journalpostId = nyesteKrav.journalpostId,
             vurdertAv = rettighetsperiodeVurdering.vurdertAv,
@@ -90,7 +89,7 @@ class MigrerKravService(
         val eksisterendeKravGrunnlag = kravRepository.hentHvisEksisterer(behandlingId)
 
         val kravSomSkalTilbakestilles = eksisterendeKravGrunnlag?.vurderinger
-            ?.filterIsInstance<RelevantKrav>()
+            ?.filterIsInstance<RelevantSøknadKrav>()
             ?.filter { it.erRettighetsperiodeVurdering() }
             ?.maxByOrNull { it.opprettet }
 
@@ -103,7 +102,7 @@ class MigrerKravService(
             "Ved reversering av krav er søknadsdato utledet i vurderRettighetsperiodeLøser ulik søknadsdato for kravet som skal tilbakestilles. Søknadsdato fra eldste mottatte dokument: ${søknadsdato}, søknadsdato for krav: ${kravSomSkalTilbakestilles.søknadsdato.dato}"
         }
 
-        val relevantKrav = RelevantKrav(
+        val relevantKrav = RelevantSøknadKrav(
             referanse = kravSomSkalTilbakestilles.referanse,
             journalpostId = kravSomSkalTilbakestilles.journalpostId,
             vurdertAv = rettighetsperiodeVurdering.vurdertAv,
@@ -124,6 +123,6 @@ class MigrerKravService(
     }
 
     private fun KravVurdering.erRettighetsperiodeVurdering(): Boolean {
-        return this is RelevantKrav && this.overstyrMuligRettFra != null
+        return this is RelevantSøknadKrav && this.overstyrMuligRettFra != null
     }
 }

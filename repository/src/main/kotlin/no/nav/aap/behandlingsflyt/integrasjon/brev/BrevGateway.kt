@@ -388,6 +388,9 @@ class BrevGateway : BrevbestillingGateway {
         TypeBrev.KLAGE_TRUKKET -> Brevtype.KLAGE_TRUKKET
         TypeBrev.FORHÅNDSVARSEL_KLAGE_FORMKRAV -> Brevtype.FORHÅNDSVARSEL_KLAGE_FORMKRAV
         TypeBrev.FORVALTNINGSMELDING -> Brevtype.FORVALTNINGSMELDING
+        // TODO: Bytt til egen Brevtype når den finnes i aap-brev sin kontrakt. Inntil da får kant i kant-saker
+        //  samme brev som før, så ingen sak blir stående om toggelen er på.
+        TypeBrev.FORVALTNINGSMELDING_KANT_I_KANT -> Brevtype.FORVALTNINGSMELDING_KANT_I_KANT
         TypeBrev.VEDTAK_11_17 -> Brevtype.VEDTAK_11_17
         TypeBrev.VEDTAK_11_18 -> Brevtype.VEDTAK_11_18
         TypeBrev.VEDTAK_11_7 -> Brevtype.VEDTAK_11_7
@@ -526,14 +529,14 @@ class BrevGateway : BrevbestillingGateway {
             is VedtakEndringDødsfall ->
                 setOf(Faktagrunnlag.Dødsfall(brevBehov.dødsdato, brevBehov.navn))
 
-            is KlageOpprettholdelse -> buildSet {
-                brevBehov.begrunnelseNavKontor?.let {
-                    add(Faktagrunnlag.NavKontorKlagevurdering(it))
-                }
-                brevBehov.begrunnelseNay?.let {
-                    add(Faktagrunnlag.NayKlagevurdering(it))
-                }
-            }
+            is KlageOpprettholdelse -> setOf(
+                Faktagrunnlag.Klage(
+                    påklagetVedtaksdato = brevBehov.påklagetVedtaksdato,
+                    klagedato = brevBehov.klagedato,
+                    nayVurdering = brevBehov.begrunnelseNay,
+                    navKontorVurdering = brevBehov.begrunnelseNavKontor
+                )
+            )
 
             else -> emptySet()
         }

@@ -3,11 +3,9 @@ package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.VurderingEndretService
-import no.nav.aap.behandlingsflyt.exception.KanIkkeVurdereEgneVurderingerException
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.vedtak.TotrinnsVurdering
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.KvalitetssikringLøsning
-import no.nav.aap.behandlingsflyt.forretningsflyt.steg.KvalitetssikringsSteg
+import no.nav.aap.behandlingsflyt.exception.KanIkkeVurdereEgneVurderingerException
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
@@ -18,13 +16,11 @@ import no.nav.aap.lookup.repository.RepositoryProvider
 class KvalitetssikrerLøser(
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val unleashGateway: UnleashGateway,
-    private val vurderingEndretService: VurderingEndretService,
 ) : AvklaringsbehovsLøser<KvalitetssikringLøsning> {
 
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         avklaringsbehovRepository = repositoryProvider.provide(),
         unleashGateway = gatewayProvider.provide(),
-        vurderingEndretService = VurderingEndretService(repositoryProvider),
     )
 
     override fun løs(

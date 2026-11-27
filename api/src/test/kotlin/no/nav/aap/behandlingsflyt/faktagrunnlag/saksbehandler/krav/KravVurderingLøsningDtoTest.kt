@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.test.desember
 import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
@@ -54,7 +53,7 @@ class KravVurderingLøsningDtoTest {
         assertThat(faktisk).isEqualTo(forventet)
 
         val vurdering = faktisk.tilVurdering(BehandlingId(1), Bruker("En ident"), Instant.now())
-        assertThat(vurdering).isInstanceOf(RelevantKrav::class.java)
+        assertThat(vurdering).isInstanceOf(RelevantSøknadKrav::class.java)
     }
 
     @Test

@@ -28,6 +28,7 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
+import no.nav.aap.behandlingsflyt.sakogbehandling.lås.TaSkriveLåsRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersonOgSakService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
@@ -65,7 +66,6 @@ fun NormalOpenAPIRoute.saksApi(
     repositoryRegistry: RepositoryRegistry,
     gatewayProvider: GatewayProvider,
 ) {
-    val tilgangGateway = gatewayProvider.provide<TilgangGateway>()
     val personinfoGateway = gatewayProvider.provide(PersoninfoGateway::class)
     val ansattInfoService = AnsattInfoService(gatewayProvider)
 
@@ -113,34 +113,35 @@ fun NormalOpenAPIRoute.saksApi(
                 respond(dto)
             }
 
+        route("/{saksnummer}/opprettUtenlandsoppholdBehandling")
+            .authorizedPost<SaksnummerParameter, BehandlingAvTypeDTO, OpprettUtenlandsoppholdBehandlingDto>(
+                routeConfig = AuthorizationParamPathConfig(
+                    relevanteIdenterResolver = relevanteIdenterForSakResolver(repositoryRegistry, dataSource),
+                    sakPathParam = SakPathParam("saksnummer"),
+                    operasjon = Operasjon.SE, // TODO: Skriveoperasjon krever behandlingsreferanse - bruker 'SE' enn så lenge
+                )
+            ) { req, body ->
+                val dto = dataSource.transaction { connection ->
+                    val repositoryProvider = repositoryRegistry.provider(connection)
+                    val sakId = repositoryProvider.provide<SakRepository>().hent(Saksnummer(req.saksnummer)).id
+                    val låsRepository = repositoryProvider.provide<TaSkriveLåsRepository>()
+                    
+                    val skrivelås = låsRepository.låsSak(sakId)
 
-        @Suppress("UnauthorizedPost") route("/finn").post<Unit, List<SaksinfoDTO>, FinnSakForIdentDTO> { _, dto ->
-            val saker = dataSource.transaction(readOnly = true) { connection ->
-                SakOgBehandlingService(repositoryRegistry.provider(connection), gatewayProvider)
-                    .finnSaksinfo(Ident(dto.ident))
-            }
+                    val behandling = BehandlingService(repositoryProvider, gatewayProvider)
+                        .opprettManuellUtenlandsoppholdBehandling(sakId, body.beskrivelse)
 
-            // Midlertidig fiks for ikke å brekke postmottak
-            val token = token()
-            if (token.isClientCredentials()) {
-                respond(saker)
-            } else {
-                val sakerMedTilgang = saker.filter { sak ->
-                    tilgangGateway.sjekkTilgangTilSak(
-                        Saksnummer(sak.saksnummer), token, Operasjon.SE,
-                        relevanteIdenterForSakResolver(repositoryRegistry, dataSource).resolve(sak.saksnummer)
+                    ProsesserBehandlingService(repositoryProvider, gatewayProvider).triggProsesserBehandling(behandling)
+                    låsRepository.verifiserSkrivelås(skrivelås)
+
+                    BehandlingAvTypeDTO(
+                        behandlingsReferanse = behandling.referanse.referanse,
+                        opprettetDato = behandling.opprettetTidspunkt
                     )
                 }
-
-                if (sakerMedTilgang.isNotEmpty()) {
-                    respond(sakerMedTilgang)
-                } else {
-                    // TODO:
-                    //  Bedre skille på om sak faktisk ikke finnes eller om sb mangler tilgang (unntak på gradering)
-                    throw VerdiIkkeFunnetException("Fant ikke sak for ident")
-                }
+                respond(dto)
             }
-        }
+
 
         route("/finnSisteBehandlinger") {
             authorizedPost<Unit, NullableSakOgBehandlingDTO, FinnBehandlingForIdentDTO>(

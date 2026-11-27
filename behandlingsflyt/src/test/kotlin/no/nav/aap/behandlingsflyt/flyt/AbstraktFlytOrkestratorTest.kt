@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.flyt
 
+import no.nav.aap.barnetillegg.VurderingerForBarnetillegg
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehov
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOrkestrator
@@ -68,16 +69,13 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.lovvalgmedlemskap.PeriodisertMan
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.InntektPerÅr
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.avslag11_27.flate.Avslag11_27VurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.avslag11_27.flate.Avslag11_27VurderingerDto
-import no.nav.aap.barnetillegg.VurderingerForBarnetillegg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningYrkeskaderBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.BeregningstidspunktVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.InntektsbortfallVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ManuellInntektVurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.YrkesskadeBeløpVurderingDTO
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.beregning.ÅrsVurdering
-import no.nav.aap.bistandsbehov.BistandLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
-import no.nav.aap.meldeplikt.PeriodisertFritaksvurderingDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangarbeid.flate.OvergangArbeidVurderingLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.UføreSøknadVedtakResultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.overgangufore.flate.OvergangUføreLøsningDto
@@ -119,6 +117,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Melding
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.OppfølgingsoppgaveV0
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Søknad
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.SøknadUtenlandsoppholdV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.prosessering.ProsesseringsJobber
@@ -150,6 +149,7 @@ import no.nav.aap.behandlingsflyt.test.modell.TestYrkesskade
 import no.nav.aap.behandlingsflyt.test.modell.defaultInntekt
 import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.bistandsbehov.BistandLøsningDto
 import no.nav.aap.komponenter.dbconnect.transaction
 import no.nav.aap.komponenter.dbtest.TestDataSource
 import no.nav.aap.komponenter.gateway.GatewayProvider
@@ -159,6 +159,7 @@ import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.lookup.repository.RepositoryProvider
+import no.nav.aap.meldeplikt.PeriodisertFritaksvurderingDto
 import no.nav.aap.motor.testutil.ManuellMotorImpl
 import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
@@ -677,26 +678,6 @@ open class AbstraktFlytOrkestratorTest(
         )
     }
 
-    protected fun Behandling.løsSamordningUføre(
-        fraDato: LocalDate,
-        gradering: Int = 100,
-        begrunnelse: String = "Samordning uføre",
-    ): Behandling {
-        return this.løsAvklaringsBehov(
-            AvklarSamordningUføreLøsning(
-                samordningUføreVurdering = SamordningUføreVurderingDto(
-                    begrunnelse = begrunnelse,
-                    vurderingPerioder = listOf(
-                        SamordningUføreVurderingPeriodeDto(
-                            virkningstidspunkt = fraDato,
-                            uføregradTilSamordning = gradering,
-                        )
-                    )
-                )
-            )
-        )
-    }
-
     protected fun Behandling.løsUtenSamordning(): Behandling {
         return this.løsAvklaringsBehov(
             AvklarSamordningGraderingLøsning(
@@ -726,7 +707,7 @@ open class AbstraktFlytOrkestratorTest(
             postgresRepositoryRegistry.provider(connection)
                 .provide<KravRepository>()
                 .hentHvisEksisterer(this.id)
-                ?.gjeldendeRelevanteKrav()
+                ?.gjeldendeRelevanteKravInkludertMigrerteKrav()
                 .orEmpty()
                 .map { it.referanse }
         }
@@ -973,6 +954,7 @@ open class AbstraktFlytOrkestratorTest(
         }
     }
 
+
     protected fun hentAlleAvklaringsbehov(behandling: Behandling): List<Avklaringsbehov> {
         return dataSource.transaction(readOnly = true) {
             AvklaringsbehovRepositoryImpl(it).hentAvklaringsbehovene(
@@ -1066,6 +1048,21 @@ open class AbstraktFlytOrkestratorTest(
             kanal = Kanal.DIGITAL,
             mottattTidspunkt = mottattTidspunkt,
             melding = oppfølgingsoppgave,
+        )
+        return hentSisteOpprettedeBehandlingForSak(saksnummer)
+    }
+
+    protected fun Sak.sendInnSøknadUtenlandsopphold(
+        referanse: InnsendingReferanse = InnsendingReferanse(journalpostId()),
+        mottattTidspunkt: LocalDateTime = LocalDateTime.now(),
+        søknad: SøknadUtenlandsoppholdV0 = SøknadUtenlandsoppholdV0(mottattDato = mottattTidspunkt.toLocalDate()),
+    ): Behandling {
+        sendInn(
+            referanse = referanse,
+            type = InnsendingType.SØKNAD_UTENLANDSOPPHOLD,
+            kanal = Kanal.PAPIR,
+            mottattTidspunkt = mottattTidspunkt,
+            melding = søknad,
         )
         return hentSisteOpprettedeBehandlingForSak(saksnummer)
     }
@@ -1374,6 +1371,7 @@ open class AbstraktFlytOrkestratorTest(
     ): Behandling {
         val alleAvklaringsbehov =
             hentAlleAvklaringsbehov(this).filter { behov -> behov.definisjon in behovÅKvalitetssikre }
+                .filter { behov -> behov.kreverKvalitetssikring() && behov.aktivHistorikk.any { it.status.erAvsluttet() } }
         return løsAvklaringsBehov(
             this,
             KvalitetssikringLøsning(alleAvklaringsbehov.filter { behov -> behov.erTotrinn() || behov.kreverKvalitetssikring() }
@@ -1485,11 +1483,12 @@ open class AbstraktFlytOrkestratorTest(
         behovÅKontrollere: List<Definisjon> = Definisjon.entries,
         underkjennVurderinger: List<Definisjon> = emptyList()
     ): Behandling {
+        val alleAvklaringsbehov = hentAlleAvklaringsbehov(this)
+            .filter { behov -> behov.definisjon in behovÅKontrollere }
+            .filter { behov -> behov.erTotrinn() && behov.aktivHistorikk.any { it.status.erAvsluttet() } }
         return this.løsAvklaringsBehov(
             FatteVedtakLøsning(
-                hentAlleAvklaringsbehov(this)
-                    .filter { behov -> behov.definisjon in behovÅKontrollere }
-                    .filter { behov -> behov.erTotrinn() }
+                alleAvklaringsbehov
                     .map { behov ->
                         TotrinnsVurdering(
                             behov.definisjon.kode,

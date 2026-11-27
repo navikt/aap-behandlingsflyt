@@ -39,8 +39,7 @@ class UføreSøknadRepositoryImpl(private val connection: DBConnection) : Uføre
     }
 
     override fun slett(behandlingId: BehandlingId) {
-
-        val deletedRows = connection.executeReturnUpdated(
+        connection.executeReturnUpdated(
             """
             delete from UFORE_SOKNAD_GRUNNLAG where behandling_id = ?;
         """.trimIndent()

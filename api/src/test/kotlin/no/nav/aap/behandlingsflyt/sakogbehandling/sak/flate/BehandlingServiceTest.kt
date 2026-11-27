@@ -48,7 +48,7 @@ class BehandlingServiceTest {
         dataSource.transaction { connection ->
             val sakOgBehandlingService = SakOgBehandlingService(postgresRepositoryRegistry.provider(connection), minimalGatewayProvider())
             val sak = sak(connection)
-            val behandlingId1 = behandling(connection, sak)
+            behandling(connection, sak)
             val resultat = sakOgBehandlingService.finnSakOgBehandlinger(sak.saksnummer)
             assertThat(resultat.behandlinger).hasSize(1)
         }

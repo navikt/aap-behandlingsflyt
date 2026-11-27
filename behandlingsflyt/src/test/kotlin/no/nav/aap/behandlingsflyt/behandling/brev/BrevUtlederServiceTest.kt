@@ -36,6 +36,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårsresultat
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.VilkårsresultatRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vilkårtype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.Hjemmel
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.behandlendeenhet.BehandlendeEnhetVurdering
@@ -46,6 +49,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.Kla
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.kontor.KlagevurderingKontor
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagebehandlingNayRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.klagebehandling.nay.KlagevurderingNay
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetBehandlingVurdering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.klage.påklagetbehandling.PåklagetVedtakType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.register.inntekt.Grunnbeløp
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.arbeidsopptrapping.ArbeidsopptrappingVurdering
@@ -65,14 +71,20 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbr
 import no.nav.aap.behandlingsflyt.integrasjon.createGatewayProvider
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.KlageV0
+import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.StegTilstand
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovMedPeriode
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.VurderingsbehovOgÅrsak
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.Vurderingsbehov
+import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.StegStatus
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.PersoninfoBulkGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.adapters.Personinfo
@@ -87,9 +99,9 @@ import no.nav.aap.behandlingsflyt.test.juni
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.behandlingsflyt.test.oktober
 import no.nav.aap.behandlingsflyt.test.september
+import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.tidslinje.Tidslinje
 import no.nav.aap.komponenter.tidslinje.tidslinjeOf
-import no.nav.aap.behandlingsflyt.unleash.BehandlingsflytFeature
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Beløp
 import no.nav.aap.komponenter.verdityper.Bruker
@@ -97,8 +109,10 @@ import no.nav.aap.komponenter.verdityper.Dagsatser
 import no.nav.aap.komponenter.verdityper.GUnit
 import no.nav.aap.komponenter.verdityper.Prosent
 import no.nav.aap.komponenter.verdityper.TimerArbeid
+import no.nav.aap.verdityper.dokument.Kanal
 import no.nav.aap.student.StudentRepository
 import no.nav.aap.student.StudentVurdering
+import no.nav.aap.verdityper.dokument.JournalpostId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
@@ -110,7 +124,6 @@ import org.junit.jupiter.api.util.ReadsSystemProperty
 import org.junit.jupiter.api.util.RestoreSystemProperties
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
-import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.time.Instant
@@ -118,6 +131,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 import java.util.stream.Stream
 import kotlin.random.Random
 import kotlin.test.assertEquals
@@ -1896,6 +1910,52 @@ class BrevUtlederServiceTest {
 
     @Nested
     inner class Klagebrev {
+        private val påklagetVedtaksdato = 10 januar 2025
+        private val klagedato = 20 januar 2025
+
+        @Test
+        fun `klage på avvisningsvedtak henter vedtaksdato fra steghistorikken til påklaget klage`() {
+            val behandling = gittKlageMedVurderinger(
+                begrunnelseNavKontor = "Avvisningen opprettholdes",
+                begrunnelseNay = null
+            )
+            val påklagetKlage = behandlingRepository.opprettBehandling(
+                sakId = behandling.sakId,
+                typeBehandling = TypeBehandling.Klage,
+                forrigeBehandlingId = null,
+                vurderingsbehovOgÅrsak = VurderingsbehovOgÅrsak(
+                    vurderingsbehov = listOf(VurderingsbehovMedPeriode(Vurderingsbehov.MOTATT_KLAGE)),
+                    årsak = ÅrsakTilOpprettelse.KLAGE
+                )
+            )
+            behandlingRepository.leggTilNyttAktivtSteg(
+                påklagetKlage.id,
+                StegTilstand(
+                    stegType = StegType.FATTE_VEDTAK,
+                    stegStatus = StegStatus.AVSLUTTER,
+                    tidspunkt = påklagetVedtaksdato.atTime(12, 0)
+                )
+            )
+            repositoryProvider.provide<PåklagetBehandlingRepository>().lagre(
+                behandling.id,
+                PåklagetBehandlingVurdering(
+                    påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
+                    påklagetBehandling = påklagetKlage.id,
+                    påklagetTilbakekrevingsbehandling = null,
+                    vurdertAv = Bruker("Saksbehandler"),
+                    opprettet = Instant.now()
+                )
+            )
+
+            assertThat(brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)).isEqualTo(
+                KlageOpprettholdelse(
+                    påklagetVedtaksdato = påklagetVedtaksdato,
+                    klagedato = klagedato,
+                    begrunnelseNavKontor = "Avvisningen opprettholdes",
+                    begrunnelseNay = null
+                )
+            )
+        }
 
         @Test
         fun `opprettholdt klage med bare vurdering fra Nav-kontor tar med begrunnelsen`() {
@@ -1909,7 +1969,9 @@ class BrevUtlederServiceTest {
             assertThat(resultat).isEqualTo(
                 KlageOpprettholdelse(
                     begrunnelseNavKontor = "Begrunnelse fra Nav-kontor",
-                    begrunnelseNay = null
+                    begrunnelseNay = null,
+                    påklagetVedtaksdato = påklagetVedtaksdato,
+                    klagedato = klagedato
                 )
             )
         }
@@ -1926,7 +1988,9 @@ class BrevUtlederServiceTest {
             assertThat(resultat).isEqualTo(
                 KlageOpprettholdelse(
                     begrunnelseNavKontor = null,
-                    begrunnelseNay = "Begrunnelse fra NAY"
+                    begrunnelseNay = "Begrunnelse fra NAY",
+                    påklagetVedtaksdato = påklagetVedtaksdato,
+                    klagedato = klagedato
                 )
             )
         }
@@ -1935,7 +1999,7 @@ class BrevUtlederServiceTest {
         fun `opprettholdt klage tar med begrunnelsene fra begge enheter`() {
             val behandling = gittKlageMedVurderinger(
                 begrunnelseNavKontor = "Begrunnelse fra Nav-kontor",
-                begrunnelseNay = "Begrunnelse fra NAY"
+                begrunnelseNay = "Begrunnelse fra NAY",
             )
 
             val resultat = brevUtlederService.utledBehovForMeldingOmVedtak(behandling.id)
@@ -1943,7 +2007,9 @@ class BrevUtlederServiceTest {
             assertThat(resultat).isEqualTo(
                 KlageOpprettholdelse(
                     begrunnelseNavKontor = "Begrunnelse fra Nav-kontor",
-                    begrunnelseNay = "Begrunnelse fra NAY"
+                    begrunnelseNay = "Begrunnelse fra NAY",
+                    påklagetVedtaksdato = påklagetVedtaksdato,
+                    klagedato = klagedato
                 )
             )
         }
@@ -1961,7 +2027,9 @@ class BrevUtlederServiceTest {
             assertThat(resultat).isEqualTo(
                 KlageOpprettholdelse(
                     begrunnelseNavKontor = "Nav-kontoret opprettholder",
-                    begrunnelseNay = "NAY omgjør"
+                    begrunnelseNay = "NAY omgjør",
+                    påklagetVedtaksdato = påklagetVedtaksdato,
+                    klagedato = klagedato
                 )
             )
         }
@@ -1971,9 +2039,62 @@ class BrevUtlederServiceTest {
             begrunnelseNay: String?,
             innstillingNay: KlageInnstilling = KlageInnstilling.OPPRETTHOLD
         ): Behandling {
-            val behandling = gittBehandling(typeBehandling = TypeBehandling.Klage)
+            val sakId = SakId(Random.nextLong())
+            val behandling = gittBehandling(typeBehandling = TypeBehandling.Klage, sakId = sakId)
             val vurdertAv = Bruker("Saksbehandler")
             val opprettet = Instant.now()
+            val påklagetBehandling = gittBehandling(
+                sakId = behandling.sakId,
+                status = Status.AVSLUTTET,
+                vedtakstidspunkt = påklagetVedtaksdato.atTime(12, 0)
+            )
+
+            repositoryProvider.provide<PåklagetBehandlingRepository>().lagre(
+                behandling.id,
+                PåklagetBehandlingVurdering(
+                    påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
+                    påklagetBehandling = påklagetBehandling.id,
+                    påklagetTilbakekrevingsbehandling = null,
+                    vurdertAv = vurdertAv,
+                    opprettet = opprettet
+                )
+            )
+            repositoryProvider.provide<MottattDokumentRepository>().lagre(
+                MottattDokument(
+                    referanse = InnsendingReferanse(JournalpostId(Random.nextLong().toString())),
+                    sakId = behandling.sakId,
+                    behandlingId = behandling.id,
+                    mottattTidspunkt = klagedato.plusDays(1).atStartOfDay(),
+                    type = InnsendingType.KLAGE,
+                    kanal = Kanal.DIGITAL,
+                    strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = klagedato))
+                )
+            )
+
+            repositoryProvider.provide<PåklagetBehandlingRepository>().lagre(
+                behandling.id,
+                PåklagetBehandlingVurdering(
+                    påklagetVedtakType = PåklagetVedtakType.KELVIN_BEHANDLING,
+                    påklagetBehandling = påklagetBehandling.id,
+                    påklagetTilbakekrevingsbehandling = null,
+                    vurdertAv = vurdertAv,
+                    opprettet = opprettet
+                )
+            )
+            repositoryProvider.provide<MottattDokumentRepository>().lagre(
+                MottattDokument(
+                    referanse = InnsendingReferanse(
+                        InnsendingReferanse.Type.JOURNALPOST,
+                        UUID.randomUUID().toString()
+                    ),
+                    sakId = behandling.sakId,
+                    behandlingId = behandling.id,
+                    mottattTidspunkt = klagedato.atStartOfDay(),
+                    type = InnsendingType.KLAGE,
+                    kanal = Kanal.DIGITAL,
+                    strukturertDokument = StrukturertDokument(KlageV0(kravMottatt = klagedato))
+                )
+            )
 
             repositoryProvider.provide<FormkravRepository>().lagre(
                 behandling.id,
@@ -2266,8 +2387,8 @@ class BrevUtlederServiceTest {
         val førstePeriode = Periode(1 januar 2025, 30 juni 2025)
         val andrePeriode = Periode(1 juli 2025, 30 desember 2025)
         return tidslinjeOf(
-                førstePeriode to tilkjentYtelse(dagsats, førstePeriode.tom),
-                andrePeriode to tilkjentYtelse(dagsats, andrePeriode.tom),
+            førstePeriode to tilkjentYtelse(dagsats, førstePeriode.tom),
+            andrePeriode to tilkjentYtelse(dagsats, andrePeriode.tom),
         )
     }
 
@@ -2365,7 +2486,6 @@ class BrevUtlederServiceTest {
         )
     }
 }
-
 
 
 object BrevUtlederServiceTestUnleash : FakeUnleashBaseWithDefaultDisabled(

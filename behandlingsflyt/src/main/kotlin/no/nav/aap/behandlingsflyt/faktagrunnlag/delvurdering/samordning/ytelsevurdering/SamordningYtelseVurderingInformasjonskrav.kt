@@ -193,13 +193,10 @@ class SamordningYtelseVurderingInformasjonskrav(
 
         // Sjekker på vurderinger
         val samordningVurderinger = samordningVurderingRepository.hentHvisEksisterer(behandlingId)
-        harEndringerIYtelserIkkeDekketAvManuelleVurderinger(samordningVurderinger, samordningYtelser)
 
         return if (!gikkFraNullTilTomtGrunnlag
-            && harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(
-                eksisterendeData,
-                samordningYtelser
-            ) && harEndringerIYtelserIkkeDekketAvManuelleVurderinger(samordningVurderinger, samordningYtelser)
+            && harEndringerIYtelserIkkeDekketAvEksisterendeGrunnlag(eksisterendeData, samordningYtelser)
+            && harEndringerIYtelserIkkeDekketAvManuelleVurderinger(samordningVurderinger, samordningYtelser, sak.rettighetsperiode)
         ) listOf(
             VurderingsbehovMedPeriode(Vurderingsbehov.REVURDER_SAMORDNING_ANDRE_FOLKETRYGDYTELSER)
         )
@@ -248,7 +245,9 @@ class SamordningYtelseVurderingInformasjonskrav(
         }
 
         fun harEndringerIYtelserIkkeDekketAvManuelleVurderinger(
-            eksisterendeVurderinger: SamordningVurderingGrunnlag?, samordningYtelser: Set<SamordningYtelse>
+            eksisterendeVurderinger: SamordningVurderingGrunnlag?,
+            samordningYtelser: Set<SamordningYtelse>,
+            rettighetsperiode: Periode
         ): Boolean {
             if (eksisterendeVurderinger == null) return true
 
@@ -263,7 +262,7 @@ class SamordningYtelseVurderingInformasjonskrav(
                         // Vi er interessert i graderingsendringer på foreldrepenger, men om det er sykepenger, er vi bare interessert dersom vi ikke allerede har registrert en 100% gradering. Da regnes det om at "vi kjenner til" Sykepenger
                         .filter { it.gradering == nyPeriode.gradering || (it.gradering == Prosent.`100_PROSENT` && ny.ytelseType == Ytelse.SYKEPENGER) }
 
-                    if (!isPeriodeDekketAvEksisterendePerioder(relevanteEksPerioder, nyPeriode)) {
+                    if (!isPeriodeDekketAvEksisterendePerioder(relevanteEksPerioder, nyPeriode) && nyPeriode.periode.overlapper(rettighetsperiode)) {
                         return true
                     }
                 }

@@ -26,7 +26,6 @@ import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekstMedPerioder
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
 import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 import java.time.LocalDate
@@ -38,7 +37,6 @@ class FormkravSteg (
     private val trekkKlageService: TrekkKlageService,
     private val brevbestillingService: BrevbestillingService,
     private val avklaringsbehovService: AvklaringsbehovService,
-    private val unleashGateway: UnleashGateway
 ): BehandlingSteg {
     private val brevBehov = ForhåndsvarselKlageFormkrav
 
@@ -206,7 +204,6 @@ class FormkravSteg (
                 TrekkKlageService(repositoryProvider),
                 BrevbestillingService(repositoryProvider, gatewayProvider),
                 AvklaringsbehovService(repositoryProvider, gatewayProvider),
-                gatewayProvider.provide(),
             )
         }
 

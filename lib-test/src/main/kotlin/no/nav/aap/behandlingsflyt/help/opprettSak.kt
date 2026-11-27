@@ -30,7 +30,7 @@ import no.nav.aap.behandlingsflyt.repository.sak.ArenaMigreringRepositoryImpl
 import no.nav.aap.behandlingsflyt.test.FakeArenaOppslagGateway
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
@@ -156,7 +156,7 @@ private fun opprettKravOgStønadsperiode(behandling: Behandling, søknadsdato: L
     InMemoryKravRepository.lagre(
         behandling.id,
         setOf(
-            RelevantKrav(
+            RelevantSøknadKrav(
                 referanse = referanse,
                 journalpostId = JournalpostId(søknadsdato.toString()),
                 vurdertAv = SYSTEMBRUKER,

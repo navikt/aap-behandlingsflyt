@@ -11,6 +11,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.aap.behandlingsflyt.test.AzureTokenGen
+import no.nav.aap.behandlingsflyt.test.TestBruker
 import no.nav.aap.behandlingsflyt.test.TexasPortHolder
 
 @Suppress("PropertyName", "ConstructorParameterNaming")
@@ -39,18 +40,20 @@ class TexasFake : FakeServer() {
 
             post("/saksbehandler") {
                 val token = AzureTokenGen("behandlingsflyt")
-                    .generate(isApp = false, azp = "behandlingsflyt", navIdent = "X123456")
+                    .generate(isApp = false, azp = "behandlingsflyt", navIdent = TestBruker.SUPERBRUKER.ident)
                 call.respond(TestToken(access_token = token))
             }
 
             post("/token/exchange") {
                 val body = call.receive<JsonNode>()
-                val NAVident = JWTParser.parse(body["user_token"].asText())
+                val claims = JWTParser.parse(body["user_token"].asText())
                     .jwtClaimsSet
-                    .getClaimAsString("NAVident")
+
+                val navIdent = claims.getClaimAsString("NAVident")
+                val groups = claims.getStringListClaim("groups")
 
                 val token = AzureTokenGen(body["target"].asText())
-                    .generate(isApp = false, azp = "behandlingsflyt", navIdent = NAVident)
+                    .generate(isApp = false, azp = "behandlingsflyt", navIdent = navIdent, groups)
                 call.respond(TestToken(access_token = token))
             }
 

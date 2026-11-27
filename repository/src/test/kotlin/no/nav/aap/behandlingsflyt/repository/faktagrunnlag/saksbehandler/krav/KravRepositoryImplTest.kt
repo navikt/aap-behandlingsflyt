@@ -1,12 +1,12 @@
 package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.krav
 
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
@@ -50,7 +50,7 @@ internal class KravRepositoryImplTest {
         @JvmStatic
         fun tearDown() = dataSource.close()
 
-        private fun nyttKrav(behandlingId: BehandlingId) = RelevantKrav(
+        private fun nyttKrav(behandlingId: BehandlingId) = RelevantSøknadKrav(
             referanse = Kravreferanse.ny(),
             journalpostId = JournalpostId("JP-001"),
             vurdertAv = Bruker("Z123456"),
@@ -71,7 +71,7 @@ internal class KravRepositoryImplTest {
             opprettet = Instant.now(),
         )
 
-        private fun migrertKrav(behandlingId: BehandlingId) = MigrertKrav(
+        private fun migrertKrav(behandlingId: BehandlingId) = RelevantMigrertKrav(
             referanse = Kravreferanse.ny(),
             vurdertAv = SYSTEMBRUKER,
             begrunnelse = "Migrert fra Arena",
@@ -151,7 +151,7 @@ internal class KravRepositoryImplTest {
     }
 
     @Test
-    fun `kan lagre og hente MigrertKrav uten journalpostId`() {
+    fun `kan lagre og hente RelevantMigrertKrav uten journalpostId`() {
         dataSource.transaction { connection ->
             val repo = KravRepositoryImpl(connection)
             val sak = sak(connection)
@@ -169,7 +169,7 @@ internal class KravRepositoryImplTest {
     }
 
     @Test
-    fun `kan lagre MigrertKrav sammen med krav som har journalpostId`() {
+    fun `kan lagre RelevantMigrertKrav sammen med krav som har journalpostId`() {
         dataSource.transaction { connection ->
             val repo = KravRepositoryImpl(connection)
             val sak = sak(connection)

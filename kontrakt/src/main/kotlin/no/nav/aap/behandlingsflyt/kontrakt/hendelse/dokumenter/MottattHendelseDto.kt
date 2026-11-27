@@ -138,7 +138,7 @@ public class Innsending(
             InnsendingType.UFØRE_VEDTAK_HENDELSE -> {
                 require(referanse.type == InnsendingReferanse.Type.UFØREVEDTAK_HENDELSE_ID)
                 requireNotNull(melding) {"Melding fra uførevedtakhendelse kan ikke være null"}
-                require(melding is UførevedtakV0)
+                require(melding is Uførevedtak)
             }
 
             InnsendingType.MIGRERING_FRA_ARENA -> {
@@ -151,6 +151,12 @@ public class Innsending(
                 require(referanse.type == InnsendingReferanse.Type.MANUELL_OPPRETTELSE)
                 requireNotNull(melding) { "Melding for korriger søknadsdato kan ikke være null" }
                 require(melding is KorrigerSøknadsdato)
+            }
+
+            InnsendingType.SØKNAD_UTENLANDSOPPHOLD -> {
+                require(referanse.type == InnsendingReferanse.Type.JOURNALPOST)
+                requireNotNull(melding) { "Melding for søknad om opphold i utlandet kan ikke være null" }
+                require(melding is SøknadUtenlandsopphold)
             }
         }
     }

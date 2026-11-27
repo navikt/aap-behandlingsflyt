@@ -134,7 +134,7 @@ class SamordningYtelseRepositoryImplTest {
         assertThat(samordningYtelser2).containsExactlyInAnyOrderElementsOf(uthentet2.ytelser)
 
         // Kopier:
-        val kopiertBehandling = dataSource.transaction {
+        dataSource.transaction {
             val nyBehandling = finnEllerOpprettBehandling(it, sak(it))
 
             SamordningYtelseRepositoryImpl(it).kopier(behandling.id, nyBehandling.id)
@@ -271,7 +271,7 @@ class SamordningYtelseRepositoryImplTest {
         assertThat(samordningYtelser2).isEqualTo(uthentet2!!.ytelser)
 
         // Kopier:
-        val kopiertBehandling = dataSource.transaction {
+        dataSource.transaction {
             val nyBehandling = finnEllerOpprettBehandling(it, sak(it))
 
             SamordningYtelseRepositoryImpl(it).kopier(behandling1.id, nyBehandling.id)

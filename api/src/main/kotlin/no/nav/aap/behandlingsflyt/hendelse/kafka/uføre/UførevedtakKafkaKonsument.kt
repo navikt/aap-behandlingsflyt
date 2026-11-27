@@ -3,7 +3,7 @@ package no.nav.aap.behandlingsflyt.hendelse.kafka.uføre
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaConsumerConfig
 import no.nav.aap.behandlingsflyt.hendelse.kafka.KafkaKonsument
 import no.nav.aap.behandlingsflyt.hendelse.mottak.MottattHendelseService
-import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakKafkaMelding
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakKafkaMeldingV1
 import no.nav.aap.behandlingsflyt.sakogbehandling.Ident
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.IdentGateway
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Person
@@ -49,7 +49,7 @@ class UførevedtakKafkaKonsument(
     }
 
     fun håndter(meldingKey: String, meldingVerdi: String) {
-        val uførevedtakMelding = DefaultJsonMapper.fromJson<UførevedtakKafkaMelding>(meldingVerdi)
+        val uførevedtakMelding = DefaultJsonMapper.fromJson<UførevedtakKafkaMeldingV1>(meldingVerdi)
         dataSource.transaction {
             val repositoryProvider = repositoryRegistry.provider(it)
             val sakRepository: SakRepository = repositoryProvider.provide()
@@ -62,10 +62,7 @@ class UførevedtakKafkaKonsument(
                 for (saken in saker) {
                     log.info("Oppretter mottatt uførevedtakshendelse for sak ${saken.saksnummer}")
                     hendelseService.registrerMottattHendelse(
-                        dto = uførevedtakMelding.tilInnsending(
-                            meldingKey,
-                            saken.saksnummer
-                        )
+                        dto = uførevedtakMelding.tilInnsending(meldingKey, saken.saksnummer)
                     )
                 }
             } else {

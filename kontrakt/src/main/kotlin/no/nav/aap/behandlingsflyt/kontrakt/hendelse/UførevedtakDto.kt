@@ -1,6 +1,7 @@
 package no.nav.aap.behandlingsflyt.kontrakt.hendelse
 
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakResultat
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.Uførevedtak
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.UførevedtakV0
 import java.time.LocalDate
 
@@ -17,9 +18,17 @@ public enum class UførevedtakResultatDto {
 }
 
 public fun UførevedtakV0.tilUføreVedtakDto(): UførevedtakDto {
+    return lagUføreVedtakDto(this)
+}
+
+public fun Uførevedtak.tilUføreVedtakDto(): UførevedtakDto {
+    return lagUføreVedtakDto(this)
+}
+
+private fun lagUføreVedtakDto(vedtak: Uførevedtak): UførevedtakDto {
     return UførevedtakDto(
-        resultat = this.resultat.tilDto(),
-        virkningsdato = this.virkningsdato,
+        resultat = vedtak.resultat.tilDto(),
+        virkningsdato = vedtak.virkningsdato,
     )
 }
 

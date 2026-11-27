@@ -12,7 +12,6 @@ enum class BehandlingsflytFeature(
 ): FeatureToggle {
     // Se: https://aap-unleash-web.iap.nav.cloud.nais.io/projects/default
     IngenValidering,
-    AutomatiskOpphorUforeTilbakevirkende,
     BrevtyperTilNyBrevbygger,
     Under18,
     VisIkkeRelevantPeriode,
@@ -23,7 +22,9 @@ enum class BehandlingsflytFeature(
     IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag,
     SynkroniserArenaMeldeperiodesyklus,
     HandtereMaksdatoForKantTilKant,
+    NykantIkantForvaltningsmelding,
     MaksdatoSykepenger,
+    ForvaltningsmeldingBrevbygger,
 
     // --- Krav ---
     BackfillKrav,
