@@ -37,7 +37,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.test.LokalUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryFlytJobbRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryGjenståendeSykedagerRepository
@@ -271,7 +270,6 @@ class BehandlingHendelseServiceTest {
             PipService(inMemoryRepositoryProvider),
             BehandlingService(inMemoryRepositoryProvider, gatewayProvider),
             AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider),
-            LokalUnleash,
             InMemoryGjenståendeSykedagerRepository,
         )
     }

@@ -275,20 +275,6 @@ class PersonopplysningRepositoryImpl(
         }
     }
 
-    private fun getPersonOpplysningerIds(behandlingId: BehandlingId): List<Long> = connection.queryList(
-        """
-                    SELECT personopplysninger_id
-                    FROM personopplysning_grunnlag
-                    WHERE behandling_id = ? AND personopplysninger_id is not null
-                 
-                """.trimIndent()
-    ) {
-        setParams { setLong(1, behandlingId.id) }
-        setRowMapper { row ->
-            row.getLong("personopplysninger_id")
-        }
-    }
-
     private fun getUtenlandsAdresserIds(brukerPersonopplysningIds: List<Long>): List<Long> = connection.queryList(
         """
                     SELECT utenlandsadresser_id

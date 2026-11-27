@@ -30,10 +30,6 @@ sealed interface KravVurdering {
     fun forJournalpostId(journalpostId: JournalpostId): Boolean {
         return this.journalpostId == journalpostId
     }
-
-    fun forJournalpostId(journalpostId: String): Boolean {
-        return this.journalpostId?.identifikator == journalpostId
-    }
 }
 
 /**

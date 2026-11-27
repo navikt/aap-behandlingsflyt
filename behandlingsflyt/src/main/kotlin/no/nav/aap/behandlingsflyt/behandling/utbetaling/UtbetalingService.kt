@@ -68,7 +68,6 @@ class UtbetalingService(
             samordningAndreStatligeYtelserRepository = repositoryProvider.provide<SamordningAndreStatligeYtelserRepository>(),
             vedtakService = VedtakService(repositoryProvider, gatewayProvider),
             behandlingRepository = repositoryProvider.provide<BehandlingRepository>(),
-            unleashGateway = gatewayProvider.provide()
         ),
         meldeperiodeRepository = repositoryProvider.provide<MeldeperiodeRepository>(),
     )

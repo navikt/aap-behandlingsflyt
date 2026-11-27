@@ -5,9 +5,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.tilgang.TilgangGateway
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.tilgang.Operasjon
-import java.util.*
-import no.nav.aap.behandlingsflyt.pip.IdentPåSak
 import no.nav.aap.tilgang.RelevanteIdenter
+import java.util.*
 
 object FakeTilgangGateway : TilgangGateway {
     override suspend fun sjekkTilgangTilBehandling(

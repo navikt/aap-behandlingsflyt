@@ -21,7 +21,6 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
-import no.nav.aap.behandlingsflyt.test.FakeUnleashBaseWithDefaultDisabled
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.komponenter.verdityper.Bruker
 import no.nav.aap.utbetal.kodeverk.AvventÅrsak
@@ -78,7 +77,6 @@ class AvventUtbetalingServiceTest {
         samordningAndreStatligeYtelserRepositoryMock,
         vedtakServiceMock,
         behandlingRepositoryMock,
-        FakeUnleashBaseWithDefaultDisabled(emptyList())
     )
 
 
