@@ -149,6 +149,7 @@ class SykdomUungåligAvslagTest(val unleashGateway: KClass<UnleashGateway>) :
             }
             .løsAvklaringsBehov(ForeslåVedtakLøsning())
             .fattVedtak()
+            .løsVedtaksbrev(TypeBrev.VEDTAK_AVSLAG)
             .medKontekst {
                 assertThat(this.behandling.status()).isEqualTo(Status.AVSLUTTET)
 

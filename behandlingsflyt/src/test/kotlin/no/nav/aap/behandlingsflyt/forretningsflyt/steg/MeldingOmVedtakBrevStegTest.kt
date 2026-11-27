@@ -52,7 +52,7 @@ class MeldingOmVedtakBrevStegTest {
     @BeforeEach
     fun setup() {
         every { trekkKlageService.klageErTrukket(any()) } returns false
-        every { brevUtlederService.utledBehovForMeldingOmVedtak(any()) } returns VedtakAktivitetsplikt11_7
+        every { brevUtlederService.utledBehovForMeldingOmVedtak(any(), any()) } returns VedtakAktivitetsplikt11_7
         every { brevbestillingService.bestill(any(), any(), any(), any()) } returns UUID.randomUUID()
         every { brevbestillingService.erAlleBestillingerOmVedtakIEndeTilstand(any()) } returns true
         every { brevbestillingService.harBestillingOmVedtak(any()) } returns false
@@ -143,6 +143,12 @@ class MeldingOmVedtakBrevStegTest {
         val resultat2 = steg.utfør(kontekst)
 
         assertThat(resultat2).isEqualTo(Fullført)
+        verify(exactly = 2) {
+            brevUtlederService.utledBehovForMeldingOmVedtak(
+                kontekst.behandlingId,
+                kontekst.rettighetsperiode
+            )
+        }
         val avklaringsbehovene2 = avklaringsbehovRepository.hentAvklaringsbehovene(kontekst.behandlingId)
         val avklaringsbehov2 = avklaringsbehovene2.hentBehovForDefinisjon(Definisjon.SKRIV_VEDTAKSBREV)
         assertThat(avklaringsbehov2!!.historikk).hasSize(2)
@@ -186,7 +192,7 @@ class MeldingOmVedtakBrevStegTest {
             unleashGateway = AlleAvskruddUnleash,
             avbrytAktivitetspliktbehandlingService = avbrytAktivitetspliktbehandlingService
         )
-        every { brevUtlederService.utledBehovForMeldingOmVedtak(any()) } returns null
+        every { brevUtlederService.utledBehovForMeldingOmVedtak(any(), any()) } returns null
 
         val resultat1 = steg.utfør(kontekst)
 
