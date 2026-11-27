@@ -4,6 +4,7 @@ import io.mockk.checkUnnecessaryStub
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedager
@@ -12,6 +13,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaVedtakStatus
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.help.person
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -22,6 +29,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.GjenståendeSykedagerDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.GjenståendeSykedagerGrunnlagDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.NySakEtterOpphørArenaDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
 import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
@@ -39,14 +47,18 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryArenaMaksdatoRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryGjenståendeSykedagerRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
+import no.nav.aap.behandlingsflyt.test.februar
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
+import no.nav.aap.verdityper.dokument.JournalpostId
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -54,6 +66,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.random.Random
@@ -69,6 +82,8 @@ class BehandlingHendelseServiceTest {
     @BeforeEach
     fun beforeEach() {
         InMemoryGjenståendeSykedagerRepository.slett(BehandlingId(0))
+        InMemoryKravRepository.slett(BehandlingId(0))
+        InMemoryArenaMaksdatoRepository.slett(BehandlingId(0))
         every { avklaringsbehovService.finnAktivtAvklaringsbehov(any()) } returns null
     }
 
@@ -157,6 +172,93 @@ class BehandlingHendelseServiceTest {
         behandlingHendelseService.stoppet(behandling, avklaringsbehoveneMedÉttÅpent())
 
         assertThat(oppgaveHendelse().gjenståendeSykedager).isNull()
+    }
+
+    @Test
+    fun `sender kant i kant med maksdato og kravdato til oppgave når kravet dekker overgangen fra Arena`() {
+        val (behandlingHendelseService, behandling) = settOppFlyt()
+        lagreArenaMaksdato(behandling.id, MAKSDATO_FREDAG)
+        lagreSøknadKrav(behandling.id, MANDAG_ETTER_MAKSDATO)
+
+        behandlingHendelseService.stoppet(behandling, avklaringsbehoveneMedÉttÅpent())
+
+        assertThat(oppgaveHendelse().nySakEtterOpphørArena).isEqualTo(
+            NySakEtterOpphørArenaDto(
+                erKantIKant = true,
+                maksdato = MAKSDATO_FREDAG,
+                kravdato = MANDAG_ETTER_MAKSDATO
+            )
+        )
+    }
+
+    @Test
+    fun `sender ikke kant i kant til oppgave når det er opphold etter maksdato i Arena`() {
+        val (behandlingHendelseService, behandling) = settOppFlyt()
+        lagreArenaMaksdato(behandling.id, MAKSDATO_FREDAG)
+        lagreSøknadKrav(behandling.id, MANDAG_ETTER_MAKSDATO.plusDays(1))
+
+        behandlingHendelseService.stoppet(behandling, avklaringsbehoveneMedÉttÅpent())
+
+        assertThat(oppgaveHendelse().nySakEtterOpphørArena).isEqualTo(
+            NySakEtterOpphørArenaDto(
+                erKantIKant = false,
+                maksdato = MAKSDATO_FREDAG,
+                kravdato = MANDAG_ETTER_MAKSDATO.plusDays(1)
+            )
+        )
+    }
+
+    @Test
+    fun `bruker tidligste søknadskrav som kravdato når ingen krav er kant i kant`() {
+        val (behandlingHendelseService, behandling) = settOppFlyt()
+        lagreArenaMaksdato(behandling.id, MAKSDATO_FREDAG)
+        lagreSøknadKrav(behandling.id, 1 februar 2026, 15 januar 2026)
+
+        behandlingHendelseService.stoppet(behandling, avklaringsbehoveneMedÉttÅpent())
+
+        assertThat(oppgaveHendelse().nySakEtterOpphørArena?.kravdato).isEqualTo(15 januar 2026)
+    }
+
+    @Test
+    fun `sender ikke ny sak etter opphør til oppgave når Arena-saken mangler maksdato`() {
+        val (behandlingHendelseService, behandling) = settOppFlyt()
+        lagreArenaMaksdato(behandling.id, maksdato = null)
+        lagreSøknadKrav(behandling.id, MANDAG_ETTER_MAKSDATO)
+
+        behandlingHendelseService.stoppet(behandling, avklaringsbehoveneMedÉttÅpent())
+
+        assertThat(oppgaveHendelse().nySakEtterOpphørArena).isNull()
+    }
+
+    @Test
+    fun `sender ikke ny sak etter opphør til oppgave uten Arena-sak`() {
+        val (behandlingHendelseService, behandling) = settOppFlyt()
+        lagreSøknadKrav(behandling.id, MANDAG_ETTER_MAKSDATO)
+
+        behandlingHendelseService.stoppet(behandling, avklaringsbehoveneMedÉttÅpent())
+
+        assertThat(oppgaveHendelse().nySakEtterOpphørArena).isNull()
+    }
+
+    @Test
+    fun `sender ikke ny sak etter opphør til oppgave uten søknadskrav`() {
+        val (behandlingHendelseService, behandling) = settOppFlyt()
+        lagreArenaMaksdato(behandling.id, MAKSDATO_FREDAG)
+
+        behandlingHendelseService.stoppet(behandling, avklaringsbehoveneMedÉttÅpent())
+
+        assertThat(oppgaveHendelse().nySakEtterOpphørArena).isNull()
+    }
+
+    @Test
+    fun `sender ikke ny sak etter opphør til oppgave for revurdering`() {
+        val (behandlingHendelseService, behandling) = settOppFlyt(TypeBehandling.Revurdering)
+        lagreArenaMaksdato(behandling.id, MAKSDATO_FREDAG)
+        lagreSøknadKrav(behandling.id, MANDAG_ETTER_MAKSDATO)
+
+        behandlingHendelseService.stoppet(behandling, avklaringsbehoveneMedÉttÅpent())
+
+        assertThat(oppgaveHendelse().nySakEtterOpphørArena).isNull()
     }
 
     @Test
@@ -275,6 +377,39 @@ class BehandlingHendelseServiceTest {
 
     private fun nyBehandlingId() = BehandlingId(Random.nextLong(1_000_000, Long.MAX_VALUE))
 
+    private fun lagreArenaMaksdato(behandlingId: BehandlingId, maksdato: LocalDate?) {
+        InMemoryArenaMaksdatoRepository.lagre(
+            behandlingId,
+            ArenaMaksdato(
+                arenaSaksnummer = "2023-5",
+                vedtakStatus = ArenaVedtakStatus.AVSLUTTET,
+                maksdato = maksdato,
+                vedtakTil = maksdato,
+                vedtakId = 1,
+                harForlengelseEtter11_12 = false
+            )
+        )
+    }
+
+    private fun lagreSøknadKrav(behandlingId: BehandlingId, vararg muligRettFra: LocalDate) {
+        InMemoryKravRepository.lagre(
+            behandlingId,
+            muligRettFra.map { dato ->
+                RelevantSøknadKrav(
+                    referanse = Kravreferanse.ny(),
+                    journalpostId = JournalpostId("123"),
+                    vurdertAv = SYSTEMBRUKER,
+                    begrunnelse = "Test",
+                    vurdertIBehandling = behandlingId,
+                    opprettet = Instant.now(),
+                    søknadsdato = Søknadsdato(dato, SøknadsdatoÅrsak.SøknadMottatt, begrunnelse = "Test"),
+                    overstyrMuligRettFra = null,
+                    muligRettFra = dato
+                )
+            }.toSet()
+        )
+    }
+
     private fun oppgaveHendelse(): BehandlingFlytStoppetHendelse {
         val calls = mutableListOf<JobbInput>()
         verify { flytJobbRepository.leggTil(capture(calls)) }
@@ -330,6 +465,8 @@ class BehandlingHendelseServiceTest {
                 behandlingService,
                 avklaringsbehovService,
                 InMemoryGjenståendeSykedagerRepository,
+                InMemoryKravRepository,
+                InMemoryArenaMaksdatoRepository,
             )
 
         val behandling = Behandling(
@@ -350,5 +487,10 @@ class BehandlingHendelseServiceTest {
             rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
         )
         return Pair(behandlingHendelseService, behandling)
+    }
+
+    private companion object {
+        val MAKSDATO_FREDAG: LocalDate = 2 januar 2026
+        val MANDAG_ETTER_MAKSDATO: LocalDate = 5 januar 2026
     }
 }

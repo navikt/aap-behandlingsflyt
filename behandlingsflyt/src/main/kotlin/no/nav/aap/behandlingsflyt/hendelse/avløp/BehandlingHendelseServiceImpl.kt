@@ -8,6 +8,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdatoRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.kravVedOvergangFraArena
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
@@ -15,6 +18,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.GjenståendeSykedagerDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.GjenståendeSykedagerGrunnlagDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattDokumentDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.NySakEtterOpphørArenaDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.UførevedtakDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
@@ -55,6 +59,8 @@ class BehandlingHendelseServiceImpl(
     private val behandlingService: BehandlingService,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val gjenståendeSykedagerRepository: GjenståendeSykedagerRepository,
+    private val kravRepository: KravRepository,
+    private val arenaMaksdatoRepository: ArenaMaksdatoRepository,
 ) : BehandlingHendelseService {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         flytJobbRepository = repositoryProvider.provide(),
@@ -64,6 +70,8 @@ class BehandlingHendelseServiceImpl(
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         gjenståendeSykedagerRepository = repositoryProvider.provide(),
+        kravRepository = repositoryProvider.provide(),
+        arenaMaksdatoRepository = repositoryProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -104,7 +112,8 @@ class BehandlingHendelseServiceImpl(
             versjon = ApplikasjonsVersjon.versjon,
             gjenståendeSykedager = hentGjenståendeSykedager(behandling, faktiskBehandlingstype),
             saksbehandlereSomIkkeKanBeslutte = avklaringsbehovene.brukereSomIkkeKanBeslutte()
-                .map { it.ident }
+                .map { it.ident },
+            nySakEtterOpphørArena = hentNySakEtterOpphørArena(behandling, faktiskBehandlingstype)
         ).copy(behandlingType = faktiskBehandlingstype)
 
         log.info("Legger til flytjobber til statistikk og stoppethendelse for behandling: ${behandling.id}")
@@ -169,6 +178,29 @@ class BehandlingHendelseServiceImpl(
         vurdertTilOgMed = vurdertTilOgMed,
         maksdato = utledMaksdato(),
     )
+
+    /**
+     * Kant i kant avgjøres som i [kravVedOvergangFraArena]. Kravdatoen er mulig rett fra for kravet som er kant i
+     * kant, ellers for det tidligste søknadskravet. Bare førstegangsbehandlinger: i en revurdering er
+     * Arena-maksdatoen kopiert fra forrige behandling.
+     */
+    private fun hentNySakEtterOpphørArena(
+        behandling: Behandling,
+        faktiskBehandlingstype: TypeBehandling
+    ): NySakEtterOpphørArenaDto? {
+        if (faktiskBehandlingstype != TypeBehandling.Førstegangsbehandling) return null
+        val arenaMaksdato = arenaMaksdatoRepository.hentHvisEksisterer(behandling.id)?.arenaMaksdato ?: return null
+        val maksdato = arenaMaksdato.maksdato ?: return null
+        val søknadKrav = kravRepository.hentHvisEksisterer(behandling.id)?.gjeldendeSøknadKrav().orEmpty()
+        val kantIKantKrav = kravVedOvergangFraArena(søknadKrav, arenaMaksdato)
+        val kravdato = (kantIKantKrav ?: søknadKrav.minByOrNull { it.muligRettFra })?.muligRettFra ?: return null
+
+        return NySakEtterOpphørArenaDto(
+            erKantIKant = kantIKantKrav != null,
+            maksdato = maksdato,
+            kravdato = kravdato
+        )
+    }
 
     private fun hentReservertTil(behandlingId: BehandlingId): Bruker? {
         val oppfølgingsoppgavedokument =
