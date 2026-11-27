@@ -46,7 +46,11 @@ private val ANTALL_TIMER_I_MELDEPERIODE =
  *
  * - Arbeid fra meldeplikt
  */
-class GraderingArbeidRegel : UnderveisRegel {
+class GraderingArbeidRegel(
+    private val dagensDato: LocalDate = LocalDate.now(),
+    private val helligdagsunntakForFritaksutbetaling: Map<LocalDate, LocalDate> =
+        aktiveHelligdagsunntakForFritaksutbetalingDatoer
+) : UnderveisRegel {
     override fun vurder(input: UnderveisInput, resultat: Tidslinje<Vurdering>): Tidslinje<Vurdering> {
         require(input.periodeForVurdering.inneholder(resultat.helePerioden())) {
             "kan ikke vurdere utenfor rettighetsperioden fordi meldeperioden ikke er definert"
@@ -129,8 +133,7 @@ class GraderingArbeidRegel : UnderveisRegel {
     }
 
     private fun nullTimerVedFritakFraMeldeplikt(
-        input: UnderveisInput,
-        dagensDato: LocalDate = LocalDate.now()
+        input: UnderveisInput
     ): Tidslinje<OpplysningerOmArbeid> =
         Tidslinje.map2(
             input.meldeperioder.somTidslinje { it },
@@ -140,7 +143,7 @@ class GraderingArbeidRegel : UnderveisRegel {
                 val utbetalingsdato = meldeperiode?.tom?.plusDays(3)
                 OpplysningerOmArbeid(
                     timerArbeid = TimerArbeid(BigDecimal.ZERO),
-                    opplysningerFørstMottatt = aktiveHelligdagsunntakForFritaksutbetalingDatoer[utbetalingsdato]
+                    opplysningerFørstMottatt = helligdagsunntakForFritaksutbetaling[utbetalingsdato]
                         ?: utbetalingsdato
                 )
             } else {
@@ -159,7 +162,7 @@ class GraderingArbeidRegel : UnderveisRegel {
     private fun harPassertHelligdagsunntakIMeldeperiode(dagensDato:LocalDate, meldeperiode: Periode): Boolean {
         val førsteDatoEtterMeldeperiode = meldeperiode.tom.plusDays(1)
         val utbetalingsdatoVedFritak = meldeperiode.tom.plusDays(3)
-        val unntakForUtbetalingsdatoVedFritak = aktiveHelligdagsunntakForFritaksutbetalingDatoer[utbetalingsdatoVedFritak]
+        val unntakForUtbetalingsdatoVedFritak = helligdagsunntakForFritaksutbetaling[utbetalingsdatoVedFritak]
 
         if (unntakForUtbetalingsdatoVedFritak == null) return false
         return unntakForUtbetalingsdatoVedFritak < førsteDatoEtterMeldeperiode && dagensDato >= unntakForUtbetalingsdatoVedFritak
