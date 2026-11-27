@@ -156,16 +156,14 @@ class GraderingArbeidRegel(
         if (fritaksvurdering == null) return false
 
         val harPassertMeldeperiodeITid = meldeperiode.let { dagensDato >= meldeperiode.tom.plusDays(1) }
-        return fritaksvurdering.harFritak && (harPassertMeldeperiodeITid || harPassertHelligdagsunntakIMeldeperiode(dagensDato, meldeperiode))
+        return fritaksvurdering.harFritak && (harPassertMeldeperiodeITid || harPassertHelligdagsunntakITid(dagensDato, meldeperiode))
     }
 
-    private fun harPassertHelligdagsunntakIMeldeperiode(dagensDato:LocalDate, meldeperiode: Periode): Boolean {
-        val førsteDatoEtterMeldeperiode = meldeperiode.tom.plusDays(1)
+    private fun harPassertHelligdagsunntakITid(dagensDato:LocalDate, meldeperiode: Periode): Boolean {
         val utbetalingsdatoVedFritak = meldeperiode.tom.plusDays(3)
         val unntakForUtbetalingsdatoVedFritak = helligdagsunntakForFritaksutbetaling[utbetalingsdatoVedFritak]
 
-        if (unntakForUtbetalingsdatoVedFritak == null) return false
-        return unntakForUtbetalingsdatoVedFritak < førsteDatoEtterMeldeperiode && dagensDato >= unntakForUtbetalingsdatoVedFritak
+        return unntakForUtbetalingsdatoVedFritak != null && dagensDato >= unntakForUtbetalingsdatoVedFritak
     }
 
     private fun opplysningerFraMeldekort(input: UnderveisInput): Tidslinje<OpplysningerOmArbeid> {
