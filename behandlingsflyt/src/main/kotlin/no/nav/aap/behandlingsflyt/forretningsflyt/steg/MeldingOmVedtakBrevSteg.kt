@@ -64,7 +64,7 @@ class MeldingOmVedtakBrevSteg(
         val behandlingErAvbrutt =
             avbrytAktivitetspliktbehandlingService.behandlingErAvbrutt(kontekst.behandlingId)
                     || trekkKlageService.klageErTrukket(kontekst.behandlingId)
-        val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId)
+        val brevBehov = brevUtlederService.utledBehovForMeldingOmVedtak(kontekst.behandlingId, kontekst.rettighetsperiode)
         log.info("Har brevbehov " + brevBehov?.typeBrev)
         val harBestillingOmVedtakBrev = brevbestillingService.harBestillingOmVedtak(kontekst.behandlingId)
 

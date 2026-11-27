@@ -4,7 +4,6 @@ import no.nav.aap.barnetillegg.BarnRepository
 import no.nav.aap.barnetillegg.VurderingAvForeldreAnsvar
 import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.brev.bestilling.TypeBrev
 import no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling.TilbakekrevingRepository
 import no.nav.aap.behandlingsflyt.behandling.tilkjentytelse.BeregnTilkjentYtelse
@@ -61,7 +60,6 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.samordning.refusjo
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.student.sykestipend.SykestipendRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.SykdomRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdomsvurderingbrev.SykdomsvurderingForBrevRepository
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -126,7 +124,6 @@ class BrevUtlederService(
     private val barnepensjonRepository: BarnepensjonRepository,
     private val samordningAndreStatligeYtelserRepository: SamordningAndreStatligeYtelserRepository,
     private val sykdomRepository: SykdomRepository,
-    private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val yrkesskadeRepository: YrkesskadeRepository,
     private val barnRepository: BarnRepository,
     private val meldepliktRepository: MeldepliktRepository,
@@ -167,7 +164,6 @@ class BrevUtlederService(
         barnepensjonRepository = repositoryProvider.provide(),
         samordningAndreStatligeYtelserRepository = repositoryProvider.provide(),
         sykdomRepository = repositoryProvider.provide(),
-        avklaringsbehovRepository = repositoryProvider.provide(),
         yrkesskadeRepository = repositoryProvider.provide(),
         barnRepository = repositoryProvider.provide(),
         meldepliktRepository = repositoryProvider.provide(),
@@ -186,7 +182,7 @@ class BrevUtlederService(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId): BrevBehov? {
+    fun utledBehovForMeldingOmVedtak(behandlingId: BehandlingId, rettighetsperiode: Periode): BrevBehov? {
         val behandling = behandlingRepository.hent(behandlingId)
         val forrigeBehandlingId = behandling.forrigeBehandlingId
         val harBehandlingenArbeidsopptrapping =
@@ -234,7 +230,7 @@ class BrevUtlederService(
                     }
 
                     Resultat.AVSLAG -> {
-                        brevBehovAvslag(behandling)
+                        brevBehovAvslag(behandling, rettighetsperiode)
                     }
 
                     Resultat.TRUKKET -> null
@@ -319,7 +315,7 @@ class BrevUtlederService(
                     behandlingService.utledFaktiskBehandlingstype(behandling) == TypeBehandling.Førstegangsbehandling &&
                     resultatUtleder.erRentAvslag(behandling)
                 ) {
-                    val avslagsbrev = brevBehovAvslag(behandling)
+                    val avslagsbrev = brevBehovAvslag(behandling, rettighetsperiode)
                     if (avslagsbrev is AvslagBrev.AvslagSykdomsvilkåret) {
                         return avslagsbrev
                     }
@@ -345,6 +341,7 @@ class BrevUtlederService(
                         begrunnelseNay = klageBehandlingNAYVurderingForBrevRepository
                             .hentHvisEksisterer(behandlingId)?.vurdering?.begrunnelse
                     )
+
                     else -> null
                 }
             }
@@ -559,7 +556,7 @@ class BrevUtlederService(
             .toSet()
     }
 
-    private fun brevBehovAvslag(behandling: Behandling): AvslagBrev {
+    private fun brevBehovAvslag(behandling: Behandling, rettighetsperiode: Periode): AvslagBrev {
         val sykdomsvurdering = hentSykdomsvurdering(behandling.id)
         val vedtaksdato = checkNotNull(vedtakRepository.hent(behandling.id)?.vedtakstidspunkt) {
             "Mangler vedtakstidspunkt for behandling ${behandling.id}"
@@ -573,6 +570,8 @@ class BrevUtlederService(
             avslagsårsak
         )
         if (avslagsårsak != null && !sykdomsvurdering.isNullOrBlank()) {
+            val sykdomGrunnlag = sykdomRepository.hent(behandling.id)
+
             val erAvslag11_5 = avslagsårsak in setOf(
                 Avslagsårsak.IKKE_SYKDOM_AV_VISS_VARIGHET,
                 Avslagsårsak.IKKE_SYKDOM_SKADE_LYTE,
@@ -580,7 +579,7 @@ class BrevUtlederService(
                 Avslagsårsak.IKKE_NOK_REDUSERT_ARBEIDSEVNE
             )
 
-            if (erAvslag11_5 && sisteAvklaringsbehovErKvalitetssikring(behandling.id)) {
+            if (erAvslag11_5 && sykdomGrunnlag.avslagSykdomForHelePerioden(rettighetsperiode)) {
                 return AvslagBrev.AvslagSykdomsvilkåret(
                     sykdomsvurdering = sykdomsvurdering,
                     yrkesSkadeISøknadIkkeIRegister = hentYrkesskadeISøknadIkkeIRegister(behandling.id)
@@ -591,15 +590,6 @@ class BrevUtlederService(
             sykdomsvurdering = sykdomsvurdering, avslagsårsak = avslagsårsak,
             avslagsårsaker = alleAvslagsårsaker
         )
-    }
-
-    private fun sisteAvklaringsbehovErKvalitetssikring(behandlingId: BehandlingId): Boolean {
-        val nyesteAvklaringsbehov =
-            avklaringsbehovRepository.hentAvklaringsbehovene(behandlingId)
-                .alle()
-                .maxByOrNull { it.id }
-
-        return nyesteAvklaringsbehov?.definisjon == Definisjon.KVALITETSSIKRING
     }
 
     private fun hentYrkesskadeISøknadIkkeIRegister(behandlingId: BehandlingId): Boolean {
