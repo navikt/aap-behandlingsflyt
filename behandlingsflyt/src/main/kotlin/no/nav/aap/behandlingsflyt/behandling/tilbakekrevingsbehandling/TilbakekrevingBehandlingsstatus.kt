@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.tilbakekrevingsbehandling
 
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.TilbakekrevingBehandlingsstatus as KontraktTilbakekrevingBehandlingsstatus
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 
 enum class TilbakekrevingBehandlingsstatus {
     OPPRETTET,

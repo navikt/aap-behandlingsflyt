@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.flyt
 
 import no.nav.aap.behandlingsflyt.flyt.TestPersoner.PERSON_62
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.prosessering.HendelseMottattHåndteringJobbUtfører

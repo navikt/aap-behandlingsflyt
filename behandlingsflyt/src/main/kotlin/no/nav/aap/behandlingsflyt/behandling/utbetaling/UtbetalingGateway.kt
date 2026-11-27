@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.utbetaling
 
 import no.nav.aap.komponenter.gateway.Gateway
-import no.nav.aap.utbetal.simulering.SimuleringDto
 import no.nav.aap.utbetal.simulering.UtbetalingOgSimuleringDto
 import no.nav.aap.utbetal.simuleringv2.SimuleringsresponseDto
 import no.nav.aap.utbetal.tilkjentytelse.TilkjentYtelseDto

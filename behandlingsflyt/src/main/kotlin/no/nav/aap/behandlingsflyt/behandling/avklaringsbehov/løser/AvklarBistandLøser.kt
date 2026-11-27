@@ -18,7 +18,7 @@ class AvklarBistandLøser(
         kontekst: AvklaringsbehovKontekst,
         løsning: AvklarBistandsbehovLøsning
     ): LøsningsResultat {
-        løsning.løsningerForPerioder.map { it.valider() }
+        løsning.løsningerForPerioder.forEach { it.valider() }
 
         val forrigeBehandlingId = kontekst.kontekst.forrigeBehandlingId
 

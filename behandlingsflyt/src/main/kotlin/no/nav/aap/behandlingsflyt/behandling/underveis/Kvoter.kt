@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.behandling.underveis
 
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
 
 class Kvoter(
     val ordinærkvote: Hverdager,
@@ -12,14 +11,6 @@ class Kvoter(
             ordinærkvote = Hverdager(ordinærkvote),
             sykepengeerstatningkvote = Hverdager(sykepengeerstatningkvote)
         )
-    }
-
-    fun hentKvoteForRettighetstype(type: RettighetsType): Hverdager? {
-        return when (type) {
-            RettighetsType.BISTANDSBEHOV -> this.ordinærkvote
-            RettighetsType.SYKEPENGEERSTATNING -> this.sykepengeerstatningkvote
-            else -> null
-        }
     }
 
     override fun equals(other: Any?): Boolean {

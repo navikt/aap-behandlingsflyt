@@ -6,12 +6,12 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedagerGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedager
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedagerGrunnlag
 import no.nav.aap.behandlingsflyt.help.person
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
@@ -39,16 +39,15 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettels
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
-import no.nav.aap.behandlingsflyt.unleash.UnleashGateway
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryGjenståendeSykedagerRepository
+import no.nav.aap.behandlingsflyt.test.januar
+import no.nav.aap.behandlingsflyt.test.mars
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.komponenter.type.Periode
 import no.nav.aap.motor.FlytJobbRepository
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.dokument.Kanal
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryGjenståendeSykedagerRepository
-import no.nav.aap.behandlingsflyt.test.januar
-import no.nav.aap.behandlingsflyt.test.mars
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -66,7 +65,6 @@ class BehandlingHendelseServiceTest {
     private val pipRepository = mockk<PipService>()
     private val behandlingService = mockk<BehandlingService>()
     private val avklaringsbehovService = mockk<AvklaringsbehovService>(relaxed = true)
-    private val unleashGateway = mockk<UnleashGateway>()
 
     @BeforeEach
     fun beforeEach() {
@@ -82,7 +80,6 @@ class BehandlingHendelseServiceTest {
             mottattDokumentRepository,
             pipRepository,
             behandlingService,
-            unleashGateway
         )
     }
 
@@ -332,7 +329,6 @@ class BehandlingHendelseServiceTest {
                 pipRepository,
                 behandlingService,
                 avklaringsbehovService,
-                unleashGateway,
                 InMemoryGjenståendeSykedagerRepository,
             )
 

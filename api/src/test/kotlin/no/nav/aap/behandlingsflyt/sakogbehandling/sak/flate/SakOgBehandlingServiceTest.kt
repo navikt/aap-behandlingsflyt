@@ -177,7 +177,7 @@ class SakOgBehandlingServiceTest {
         val sak = dataSource.transaction { connection -> opprettSak(connection, LocalDate.now()) }
 
         // Opprett og avslutt førstegangsbehandling med vedtak - dette gjør den til gjeldende vedtatt behandling
-        val førstegangsbehandling = dataSource.transaction { connection ->
+        dataSource.transaction { connection ->
             val behandling = finnEllerOpprettBehandling(connection, sak)
             BehandlingRepositoryImpl(connection).oppdaterBehandlingStatus(behandling.id, Status.AVSLUTTET)
             VedtakRepositoryImpl(connection).lagre(behandling.id, LocalDateTime.now(), LocalDate.now())

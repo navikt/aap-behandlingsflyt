@@ -62,7 +62,6 @@ class UnderveisService(
     private val vedtakService: VedtakService,
     private val vedtakslengdeRepository: VedtakslengdeRepository,
     private val behandlingRepository: BehandlingRepository,
-    private val unleashGateway: UnleashGateway,
     private val rettighetstypeRepository: RettighetstypeRepository,
     private val virkningstidspunktService: VirkningstidspunktService,
     private val kvoteService: KvoteService,
@@ -81,7 +80,6 @@ class UnderveisService(
         vedtakService = VedtakService(repositoryProvider, gatewayProvider),
         vedtakslengdeRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
-        unleashGateway = gatewayProvider.provide(),
         rettighetstypeRepository = repositoryProvider.provide(),
         virkningstidspunktService = VirkningstidspunktService(repositoryProvider, gatewayProvider),
         kvoteService = KvoteService(repositoryProvider, gatewayProvider)

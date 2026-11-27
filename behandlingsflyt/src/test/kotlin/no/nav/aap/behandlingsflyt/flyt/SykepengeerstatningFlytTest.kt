@@ -10,6 +10,7 @@ import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companio
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plusHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.Hverdager.Companion.plussEtÅrMedHverdager
 import no.nav.aap.behandlingsflyt.behandling.underveis.regler.ÅrMedHverdager
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.UnderveisRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
@@ -19,14 +20,12 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Vi
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.ArbeidsevneNedsattValg
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.sykdom.flate.SykdomsvurderingLøsningDto
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.GradBehov
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.Status
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
-import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.rettighetstype.RettighetstypeRepository
-import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.sykdom.SykdomRepositoryImpl
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.repository.postgresRepositoryRegistry
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
 import no.nav.aap.behandlingsflyt.test.april
 import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.behandlingsflyt.unleash.UnleashGateway

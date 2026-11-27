@@ -1,7 +1,6 @@
 package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering
 
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.lookup.repository.Repository
 
 interface SamordningVurderingRepository : Repository {

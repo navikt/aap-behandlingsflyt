@@ -2,7 +2,6 @@ package no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning
 
 import no.nav.aap.behandlingsflyt.behandling.samordning.AvklaringsType
 import no.nav.aap.behandlingsflyt.behandling.samordning.SamordningGradering
-import no.nav.aap.behandlingsflyt.behandling.samordning.Ytelse
 import no.nav.aap.behandlingsflyt.behandling.samordning.YtelseGradering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.SamordningVurderingGrunnlag

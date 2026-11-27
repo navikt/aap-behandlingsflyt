@@ -30,10 +30,8 @@ import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.AlleAvskruddUnleash
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
-import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryKravRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryTrukketSøknadRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
-import no.nav.aap.behandlingsflyt.test.testGatewayProvider
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach

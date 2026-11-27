@@ -15,7 +15,6 @@ import no.nav.aap.motor.JobbUtfører
 import no.nav.aap.motor.ProvidersJobbSpesifikasjon
 import org.slf4j.LoggerFactory
 import java.time.Clock
-import java.time.LocalDate
 import java.time.LocalDate.now
 
 class OpprettBehandlingUtvidVedtakslengdeJobbUtfører(
