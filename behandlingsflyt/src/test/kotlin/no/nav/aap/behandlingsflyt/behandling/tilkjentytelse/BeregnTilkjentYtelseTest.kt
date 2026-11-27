@@ -246,7 +246,7 @@ class BeregnTilkjentYtelseTest {
 
     @ParameterizedTest
     @EnumSource(MeldepliktStatus::class)
-    fun `bare fritak gir utbetalingsdato tre dager etter meldeperioden når opplysninger ikke er mottatt`(
+    fun `bare fritak gir utbetalingsdato en dag etter meldeperioden når opplysninger ikke er mottatt`(
         meldepliktStatus: MeldepliktStatus
     ) {
         val periode = Periode(6 januar 2025, 19 januar 2025)
@@ -278,7 +278,7 @@ class BeregnTilkjentYtelseTest {
         )
 
         val forventetUtbetalingsdato = if (meldepliktStatus == MeldepliktStatus.FRITAK) {
-            22 januar 2025
+            20 januar 2025
         } else {
             28 januar 2025
         }
@@ -1504,7 +1504,7 @@ class BeregnTilkjentYtelseTest {
         assertThat(beregnTilkjentYtelse.segmenter()).usingRecursiveComparison().isEqualTo(
             listOf(
                 Segment(periode = periode1, verdi = tilkjent.copy(utbetalingsdato = periode1.tom.plusDays(9))),
-                Segment(periode = periode2, verdi = tilkjent.copy(utbetalingsdato = periode2.tom.plusDays(3))), // TODO: er det virkelig det vi ønsker ?
+                Segment(periode = periode2, verdi = tilkjent.copy(utbetalingsdato = periode2.tom.plusDays(1))),
                 Segment(
                     periode = Periode(periode3.fom, LocalDate.of(2023, 1, 31)),
                     verdi = tilkjent.copy(utbetalingsdato = periode3.tom.plusDays(1))

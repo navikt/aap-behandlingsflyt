@@ -263,12 +263,14 @@ object BeregnTilkjentYtelse : Sporbar<TilkjentYtelseGrunnlag, Tidslinje<Tilkjent
         // Hvis fritak fra meldeplikt, så kjøres fritaksjobben og setter opplysningermottatt til datoen jobben kjører.
         // Ved meldekort settes opplysninger mottatt.
         // Fallback til siste meldedag for meldeperiode - kunne vært null ettersom vi ikke ønsker å betale ut i fremtiden
+        // Ved helligdagsunntakjustering må normal utbetalingsdato for fritak benyttes, da unntak alltid baseres på normal utbetalingsdato (tom+3)
+        // tom+1 blir uansett tom+3 i fritaksjobben når ingen unntak foreligger (se OpprettJobbForFritakMeldepliktJobbUtfører.kt)
         val muligUtbetalingsdato = when {
             opplysningerMottatt != null -> opplysningerMottatt
             underveisperiode.meldepliktStatus == MeldepliktStatus.FRITAK -> {
                 log.info("Traff sjekk for meldepliktstatus == FRITAK. Første meldedag for meldeperiode: $førsteMeldedagForMeldeperiode")
                 aktiveHelligdagsunntakForFritaksutbetalingDatoer[utbetalingsdatoVedFritak]
-                    ?: utbetalingsdatoVedFritak
+                    ?: førsteMeldedagForMeldeperiode
             }
 
             else -> sisteMeldedagForMeldeperiode
