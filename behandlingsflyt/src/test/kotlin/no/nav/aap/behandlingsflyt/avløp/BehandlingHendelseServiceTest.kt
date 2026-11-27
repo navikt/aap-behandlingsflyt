@@ -1,29 +1,29 @@
 package no.nav.aap.behandlingsflyt.avløp
 
-import io.mockk.checkUnnecessaryStub
-import io.mockk.every
-import io.mockk.mockk
+import io.mockk.spyk
 import io.mockk.verify
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovService
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
+import no.nav.aap.behandlingsflyt.faktagrunnlag.Faktagrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedager
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.samordning.ytelsevurdering.gateway.GjenståendeSykedagerGrunnlag
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.ArbeidsGradering
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.underveis.Underveisperiode
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.RettighetsType
+import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Utfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
-import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.StrukturertDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.arbeid.Status
-import no.nav.aap.behandlingsflyt.help.person
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgRevurdering
 import no.nav.aap.behandlingsflyt.hendelse.avløp.BehandlingHendelseServiceImpl
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.BehandlingReferanse
-import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.GjenståendeSykedagerDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.GjenståendeSykedagerGrunnlagDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingReferanse
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.NyÅrsakTilBehandlingV0
-import no.nav.aap.behandlingsflyt.kontrakt.sak.Saksnummer
 import no.nav.aap.behandlingsflyt.kontrakt.statistikk.Vurderingsbehov
 import no.nav.aap.behandlingsflyt.kontrakt.steg.StegType
 import no.nav.aap.behandlingsflyt.pip.PipService
@@ -35,53 +35,34 @@ import no.nav.aap.behandlingsflyt.prosessering.statistikk.StatistikkJobbUtfører
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingService
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.ÅrsakTilOpprettelse
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.Sak
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
 import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakService
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryFlytJobbRepository
 import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryGjenståendeSykedagerRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryMottattDokumentRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryUnderveisRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.inMemoryRepositoryProvider
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.behandlingsflyt.test.mars
+import no.nav.aap.behandlingsflyt.test.minimalGatewayProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.komponenter.type.Periode
-import no.nav.aap.motor.FlytJobbRepository
+import no.nav.aap.komponenter.verdityper.Dagsatser
+import no.nav.aap.komponenter.verdityper.Prosent
+import no.nav.aap.komponenter.verdityper.TimerArbeid
+import no.nav.aap.meldeplikt.MeldepliktStatus
 import no.nav.aap.motor.JobbInput
 import no.nav.aap.verdityper.dokument.Kanal
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
-import java.time.LocalDate
+import java.math.BigDecimal
 import java.time.LocalDateTime
 import kotlin.random.Random
 
 class BehandlingHendelseServiceTest {
-    private val sakService = mockk<SakService>()
-    private val flytJobbRepository = mockk<FlytJobbRepository>()
-    private val mottattDokumentRepository = mockk<MottattDokumentRepository>()
-    private val pipRepository = mockk<PipService>()
-    private val behandlingService = mockk<BehandlingService>()
-    private val avklaringsbehovService = mockk<AvklaringsbehovService>(relaxed = true)
-
-    @BeforeEach
-    fun beforeEach() {
-        InMemoryGjenståendeSykedagerRepository.slett(BehandlingId(0))
-        every { avklaringsbehovService.finnAktivtAvklaringsbehov(any()) } returns null
-    }
-
-    @AfterEach
-    fun afterEach() {
-        checkUnnecessaryStub(
-            sakService,
-            flytJobbRepository,
-            mottattDokumentRepository,
-            pipRepository,
-            behandlingService,
-        )
-    }
+    private val flytJobbRepository = spyk(InMemoryFlytJobbRepository)
 
     @Test
     fun `verifiser at FlytJobbRepository blir kalt med riktige argumenter`() {
@@ -96,7 +77,6 @@ class BehandlingHendelseServiceTest {
         behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
 
         // VERIFY
-
         val calls = mutableListOf<JobbInput>()
         verify {
             flytJobbRepository.leggTil(capture(calls))
@@ -139,13 +119,15 @@ class BehandlingHendelseServiceTest {
 
     @Test
     fun `sender ikke gjenstående sykedager til oppgave for revurdering`() {
-        val (behandlingHendelseService, behandling) = settOppFlyt(TypeBehandling.Revurdering)
+        val (sak, behandling, revurdering) = opprettInMemorySakOgRevurdering()
+        lagreInnvilgelsePåForrigeBehandling(behandling, sak)
+
         InMemoryGjenståendeSykedagerRepository.lagre(
-            behandling.id,
+            revurdering.id,
             GjenståendeSykedager(GjenståendeSykedagerGrunnlag.VEDTAK_I_NY_LØSNING, 42, 1 januar 2026)
         )
 
-        behandlingHendelseService.stoppet(behandling, avklaringsbehoveneMedÉttÅpent())
+        behandlingHendelseService().stoppet(revurdering, avklaringsbehoveneMedÉttÅpent())
 
         assertThat(oppgaveHendelse().gjenståendeSykedager).isNull()
     }
@@ -187,7 +169,6 @@ class BehandlingHendelseServiceTest {
         assertThat(jobbTyperOpprettet).contains(MeldeperiodeTilMeldekortBackendJobbUtfører.type)
     }
 
-
     @Test
     fun `Hvis vurderingsbehov opprettet flere ganger på samme sak, utled reserverTil basert på senest mottatte dokument`() {
         val (behandlingHendelseService, behandling) = settOppFlyt()
@@ -195,18 +176,13 @@ class BehandlingHendelseServiceTest {
         val avklaringsbehovene = avklaringsbehoveneMedÉttÅpent()
 
         // To trekk søknad-"dokumenter"
-        every {
-            mottattDokumentRepository.hentDokumenterAvType(
-                any<BehandlingId>(),
-                InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
-            )
-        } returns setOf(
+        InMemoryMottattDokumentRepository.lagre(
             MottattDokument(
                 referanse = InnsendingReferanse(
                     type = InnsendingReferanse.Type.MANUELL_OPPRETTELSE,
                     verdi = "123"
                 ),
-                sakId = SakId(123),
+                sakId = behandling.sakId,
                 behandlingId = behandling.id,
                 mottattTidspunkt = LocalDateTime.now().minusDays(1),
                 opprettetTid = LocalDateTime.now().minusDays(1),
@@ -221,13 +197,15 @@ class BehandlingHendelseServiceTest {
                         beskrivelse = "Søknad skal kanskje trekkes"
                     )
                 )
-            ),
+            )
+        )
+        InMemoryMottattDokumentRepository.lagre(
             MottattDokument(
                 referanse = InnsendingReferanse(
                     type = InnsendingReferanse.Type.MANUELL_OPPRETTELSE,
                     verdi = "123"
                 ),
-                sakId = SakId(123),
+                sakId = behandling.sakId,
                 behandlingId = behandling.id,
                 mottattTidspunkt = LocalDateTime.now().minusHours(2),
                 opprettetTid = LocalDateTime.now().minusHours(2),
@@ -242,7 +220,7 @@ class BehandlingHendelseServiceTest {
                         beskrivelse = "Søknad skal kanskje trekkes"
                     )
                 )
-            ),
+            )
         )
 
         behandlingHendelseService.stoppet(behandling, avklaringsbehovene)
@@ -267,6 +245,7 @@ class BehandlingHendelseServiceTest {
 
     }
 
+
     private fun avklaringsbehoveneMedÉttÅpent(): Avklaringsbehovene {
         val avklaringsbehovene = Avklaringsbehovene(InMemoryAvklaringsbehovRepository, nyBehandlingId())
         avklaringsbehovene.leggTil(Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP, StegType.VURDER_LOVVALG, null, null, null)
@@ -282,73 +261,53 @@ class BehandlingHendelseServiceTest {
         return DefaultJsonMapper.fromJson<BehandlingFlytStoppetHendelse>(jobb.payload())
     }
 
-    private fun settOppFlyt(
-        typeBehandling: TypeBehandling = TypeBehandling.Førstegangsbehandling,
-        faktiskBehandlingstype: TypeBehandling = typeBehandling,
-    ): Pair<BehandlingHendelseServiceImpl, Behandling> {
-        every { flytJobbRepository.leggTil(any()) } returns Unit
-
-        every {
-            mottattDokumentRepository.hentDokumenterAvType(
-                any<BehandlingId>(),
-                InnsendingType.OPPFØLGINGSOPPGAVE
-            )
-        } returns emptySet()
-
-        every {
-            mottattDokumentRepository.hentDokumenterAvType(
-                any<BehandlingId>(),
-                InnsendingType.NY_ÅRSAK_TIL_BEHANDLING
-            )
-        } returns emptySet()
-
-        every {
-            mottattDokumentRepository.hentDokumenterAvType(
-                any<BehandlingId>(),
-                InnsendingType.MANUELL_REVURDERING
-            )
-        } returns emptySet()
-
-        every {
-            mottattDokumentRepository.hentDokumenterAvType(
-                any<BehandlingId>(),
-                InnsendingType.UFØRE_VEDTAK_HENDELSE
-            )
-        } returns emptySet()
-
-
-
-        every { pipRepository.finnIdenterPåBehandling(any<BehandlingReferanse>()) } returns emptyList()
-
-
-        val behandlingHendelseService =
-            BehandlingHendelseServiceImpl(
-                flytJobbRepository,
-                sakService,
-                mottattDokumentRepository,
-                pipRepository,
-                behandlingService,
-                avklaringsbehovService,
-                InMemoryGjenståendeSykedagerRepository,
-            )
-
-        val behandling = Behandling(
-            BehandlingId(0),
-            sakId = SakId(1),
-            typeBehandling = typeBehandling,
-            årsakTilOpprettelse = ÅrsakTilOpprettelse.SØKNAD,
-            forrigeBehandlingId = null,
-            versjon = 1
+    private fun behandlingHendelseService(): BehandlingHendelseServiceImpl {
+        val gatewayProvider = minimalGatewayProvider()
+        return BehandlingHendelseServiceImpl(
+            flytJobbRepository = flytJobbRepository,
+            SakService(inMemoryRepositoryProvider, gatewayProvider),
+            InMemoryMottattDokumentRepository,
+            PipService(inMemoryRepositoryProvider),
+            BehandlingService(inMemoryRepositoryProvider, gatewayProvider),
+            AvklaringsbehovService(inMemoryRepositoryProvider, gatewayProvider),
+            InMemoryGjenståendeSykedagerRepository,
         )
+    }
 
-        every { behandlingService.utledFaktiskBehandlingstype(behandling) }.returns(faktiskBehandlingstype)
+    private fun settOppFlyt(): Pair<BehandlingHendelseServiceImpl, Behandling> {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
 
-        every { sakService.hent(SakId(1)) } returns Sak(
-            id = SakId(1),
-            saksnummer = Saksnummer("1"),
-            person = person(),
-            rettighetsperiode = Periode(LocalDate.now(), LocalDate.now())
-        )
-        return Pair(behandlingHendelseService, behandling)
+        return Pair(behandlingHendelseService(), behandling)
+    }
+
+    private fun lagreInnvilgelsePåForrigeBehandling(
+        behandling: Behandling,
+        sak: Sak
+    ) {
+        InMemoryUnderveisRepository.lagre(
+            behandling.id, listOf(
+                Underveisperiode(
+                    periode = sak.rettighetsperiodeEttÅrFraStartDato(),
+                    meldePeriode = sak.rettighetsperiode,
+                    utfall = Utfall.OPPFYLT,
+                    rettighetsType = RettighetsType.BISTANDSBEHOV,
+                    avslagsårsak = null,
+                    grenseverdi = Prosent.`66_PROSENT`,
+                    institusjonsoppholdReduksjon = Prosent.`0_PROSENT`,
+                    arbeidsgradering = ArbeidsGradering(
+                        totaltAntallTimer = TimerArbeid(antallTimer = BigDecimal(0)),
+                        andelArbeid = Prosent.`0_PROSENT`,
+                        fastsattArbeidsevne = Prosent.`0_PROSENT`,
+                        gradering = Prosent.`0_PROSENT`,
+                        opplysningerMottatt = null
+                    ),
+                    trekk = Dagsatser(antall = 0),
+                    brukerAvKvoter = setOf(),
+                    meldepliktStatus = MeldepliktStatus.FØR_VEDTAK,
+                    meldepliktGradering = null,
+                    backFillStansOpphorEnabled = false,
+                    meldedato = null
+                )
+            ), object : Faktagrunnlag {})
     }
 }
