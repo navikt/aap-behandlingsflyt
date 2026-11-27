@@ -1,3 +1,4 @@
+test
 # aap-behandlingsflyt
 
 Behandlingsflyt for Arbeidsavklaringspenger (AAP). Definerer flyten for ulike behandlingstyper, og styrer prosessen med
