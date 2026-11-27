@@ -18,7 +18,7 @@ data class PeriodisertForutgåendeMedlemskapGrunnlagResponse(
     override val ikkeRelevantePerioder: List<Periode>,
     override val behøverVurderinger: List<Periode>,
     val overstyrt: Boolean = false
-): PeriodiserteVurderingerDto<PeriodisertManuellVurderingForForutgåendeMedlemskapResponse>
+) : PeriodiserteVurderingerDto<PeriodisertManuellVurderingForForutgåendeMedlemskapResponse>
 
 data class PeriodisertManuellVurderingForForutgåendeMedlemskapResponse(
     override val fom: LocalDate,
@@ -29,7 +29,7 @@ data class PeriodisertManuellVurderingForForutgåendeMedlemskapResponse(
     val varMedlemMedNedsattArbeidsevne: Boolean?,
     val medlemMedUnntakAvMaksFemAar: Boolean?,
     val overstyrt: Boolean = false,
-): VurderingDto
+) : VurderingDto
 
 fun ManuellVurderingForForutgåendeMedlemskap.toResponse(
     vurdertAvService: VurdertAvService,
@@ -40,7 +40,7 @@ fun ManuellVurderingForForutgåendeMedlemskap.toResponse(
         fom = fom,
         tom = tom,
         vurderingerMeta = vurdertAvService.byggVurderingerMeta(
-            definisjon = Definisjon.AVKLAR_LOVVALG_MEDLEMSKAP,
+            definisjon = if (overstyrt) Definisjon.MANUELL_OVERSTYRING_MEDLEMSKAP else Definisjon.AVKLAR_FORUTGÅENDE_MEDLEMSKAP,
             behandlingId = vurdertIBehandling,
             vurdertAv = vurdertAvService.medNavnOgEnhet(vurdertAv, vurdertTidspunkt.toLocalDate()),
         ),

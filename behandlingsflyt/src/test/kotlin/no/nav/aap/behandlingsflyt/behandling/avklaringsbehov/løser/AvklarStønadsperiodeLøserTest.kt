@@ -5,7 +5,9 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.AvklarStønadsperiodeLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
@@ -341,8 +343,34 @@ class AvklarStønadsperiodeLøserTest {
     }
 
 
-    private fun krav(behandlingId: BehandlingId, referanse: Kravreferanse, søknadsdato: LocalDate): RelevantKrav {
-        return RelevantKrav(
+    @Test
+    fun `Skal kunne lagre vurdering for migrert krav`() {
+        val sakId = SakId(Random.nextLong())
+        val behandlingId = BehandlingId(Random.nextLong())
+        val kravreferanse = Kravreferanse.ny()
+        lagre(behandlingId, setOf(migrertKrav(behandlingId, kravreferanse, 15 januar 2026)))
+
+        val løsning = AvklarStønadsperiodeLøsning(
+            stønadsperiodeVurderinger = setOf(
+                StønadsperiodeLøsningDto(
+                    referanse = kravreferanse,
+                    begrunnelse = "test",
+                    harHattOrdinærSiste52Uker = false,
+                    harGjenværendeKvote = false,
+                    stansOpphør = null,
+                    startDato = 15 januar 2026,
+                )
+            )
+        )
+
+        løser.løs(kontekst(sakId, behandlingId), løsning)
+
+        val grunnlag = InMemoryStønadsperiodeRepository.hentHvisEksisterer(behandlingId)
+        assertEquals(kravreferanse, grunnlag?.vurderinger?.single()?.referanse)
+    }
+
+    private fun krav(behandlingId: BehandlingId, referanse: Kravreferanse, søknadsdato: LocalDate): RelevantSøknadKrav {
+        return RelevantSøknadKrav(
             referanse = referanse,
             journalpostId = JournalpostId("JP123"),
             vurdertAv = SYSTEMBRUKER,
@@ -354,6 +382,20 @@ class AvklarStønadsperiodeLøserTest {
             muligRettFra = søknadsdato,
         )
     }
+
+    private fun migrertKrav(behandlingId: BehandlingId, referanse: Kravreferanse, muligRettFra: LocalDate) =
+        RelevantMigrertKrav(
+            referanse = referanse,
+            vurdertAv = SYSTEMBRUKER,
+            begrunnelse = "Test",
+            vurdertIBehandling = behandlingId,
+            opprettet = Instant.now(),
+            virkningstidspunktArena = muligRettFra.minusYears(1),
+            muligRettFra = muligRettFra,
+            arenaSaksnummer = "ARENA-1",
+            rettighetstype = MigrertRettighetstype.ORDINÆR,
+            resterendeKvoteOrdinær = 100,
+        )
 
     private fun tilleggsopplysning(behandlingId: BehandlingId, referanse: Kravreferanse): Tilleggsopplysning {
         return Tilleggsopplysning(

@@ -372,6 +372,9 @@ class BrevUtlederService(
 
             TypeBehandling.Tilbakekreving, TypeBehandling.SvarFraAndreinstans, TypeBehandling.OppfølgingsBehandling, TypeBehandling.Aktivitetsplikt11_9 ->
                 return null // TODO
+
+            // TODO: Placeholder til egne brevmaler for søknad om opphold i utlandet er på plass
+            TypeBehandling.Utenlandsopphold -> return VedtakEndring
         }
     }
 

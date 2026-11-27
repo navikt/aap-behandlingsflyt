@@ -37,8 +37,9 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.register.yrkesskade.YrkesskadeRe
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Klage
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravType
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Tilleggsopplysning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.TrukketSøknad
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
@@ -267,33 +268,33 @@ fun NormalOpenAPIRoute.driftApi(
                             KravDto(
                                 referanse = krav.referanse.verdi.toString(),
                                 type = when (krav) {
-                                    is RelevantKrav -> KravType.RELEVANT_KRAV
+                                    is RelevantSøknadKrav -> KravType.RELEVANT_KRAV
                                     is Tilleggsopplysning -> KravType.TILLEGGSOPPLYSNING
                                     is TrukketSøknad -> KravType.TRUKKET_SØKNAD
-                                    is MigrertKrav -> KravType.MIGRERT_KRAV
+                                    is RelevantMigrertKrav -> KravType.MIGRERT_KRAV
                                     is Klage -> KravType.KLAGE
                                 },
                                 journalpostId = krav.journalpostId?.identifikator,
                                 opprettet = krav.opprettet,
                                 vurdertAv = krav.vurdertAv.ident,
                                 søknadsdato = when {
-                                    krav is RelevantKrav -> krav.søknadsdato.dato
+                                    krav is RelevantSøknadKrav -> krav.søknadsdato.dato
                                     else -> null
                                 },
                                 søknadsdatoÅrsak = when (krav) {
-                                    is RelevantKrav -> krav.søknadsdato.årsak.toString()
+                                    is RelevantSøknadKrav -> krav.søknadsdato.årsak.toString()
                                     else -> null
                                 },
-                                muligRettFra = when {
-                                    krav is RelevantKrav -> krav.muligRettFra
+                                muligRettFra = when (krav) {
+                                    is RelevantKrav -> krav.muligRettFra
                                     else -> null
                                 },
                                 overstyrMuligRettFra = when (krav) {
-                                    is RelevantKrav -> krav.overstyrMuligRettFra?.dato
+                                    is RelevantSøknadKrav -> krav.overstyrMuligRettFra?.dato
                                     else -> null
                                 },
                                 overstyrMuligRettFraÅrsak = when (krav) {
-                                    is RelevantKrav -> krav.overstyrMuligRettFra?.årsak?.toString()
+                                    is RelevantSøknadKrav -> krav.overstyrMuligRettFra?.årsak?.toString()
                                     else -> null
                                 },
                                 erNy = krav.vurdertIBehandling == behandling.id

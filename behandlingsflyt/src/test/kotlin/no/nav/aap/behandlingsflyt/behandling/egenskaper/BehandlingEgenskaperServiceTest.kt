@@ -3,11 +3,13 @@ package no.nav.aap.behandlingsflyt.behandling.egenskaper
 import no.nav.aap.arenaoppslag.kontrakt.apiv1.HarHistorikkResponse
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Søknadsdato
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.SøknadsdatoÅrsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.KantIKantMedArena
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.KantIKantUtfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
@@ -124,7 +126,7 @@ class BehandlingEgenskaperServiceTest {
         behandlingId: BehandlingId,
         referanse: Kravreferanse,
         opprettet: Instant = Instant.now(),
-    ) = RelevantKrav(
+    ) = RelevantSøknadKrav(
         referanse = referanse,
         journalpostId = JournalpostId("123"),
         vurdertAv = SYSTEMBRUKER,
@@ -140,7 +142,7 @@ class BehandlingEgenskaperServiceTest {
         behandlingId: BehandlingId,
         referanse: Kravreferanse,
         opprettet: Instant = Instant.now(),
-    ) = MigrertKrav(
+    ) = RelevantMigrertKrav(
         referanse = referanse,
         vurdertAv = SYSTEMBRUKER,
         begrunnelse = "Migrert fra Arena",
@@ -167,7 +169,7 @@ class BehandlingEgenskaperServiceTest {
         harGjenværendeKvote = false,
         relevantKravType = RelevantKravType.NY_STØNADSPERIODE,
         startDato = MULIG_RETT_FRA,
-        erKantIKantMedArena = erKantIKantMedArena,
+        kantIKant = if (erKantIKantMedArena) KantIKantMedArena(KantIKantUtfall.KANT_I_KANT, arenaMaksdatoId = 1) else null,
     )
 
     private companion object {

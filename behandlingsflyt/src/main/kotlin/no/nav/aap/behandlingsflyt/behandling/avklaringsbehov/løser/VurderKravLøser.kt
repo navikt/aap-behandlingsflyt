@@ -4,12 +4,14 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKont
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKravLøsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravGrunnlag
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravValidering
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravValidering.validerRelevantKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravVurdering
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
@@ -48,10 +50,12 @@ class VurderKravLøser(
 
         val alleVurderinger = nyeVurderinger + iverksatteVurderinger
 
+        KravValidering.validerIkkeBådeMigrertKravOgSøknadKrav(KravGrunnlag(alleVurderinger).gjeldendeRelevanteKravInkludertMigrerteKrav())
+
         kravRepository.lagre(kontekst.behandlingId(), alleVurderinger)
 
         // Midlertidig hack for å overstyre startdato. På sikt burde kravet i seg selv være nok til å sette datoen
-        nyeVurderinger.filterIsInstance<MigrertKrav>().singleOrNull()?.let {
+        nyeVurderinger.filterIsInstance<RelevantMigrertKrav>().singleOrNull()?.let {
             val sak = sakService.hent(kontekst.sakId())
             sakService.overstyrRettighetsperioden(
                 sak = sak,
@@ -74,21 +78,19 @@ class VurderKravLøser(
             throw UgyldigForespørselException("Mangler vurdering av krav for innsendt søknad.")
         }
 
-        val migrerteKravVurderinger = vurderinger.filterIsInstance<MigrertKrav>()
+        val migrerteKravVurderinger = vurderinger.filterIsInstance<RelevantMigrertKrav>()
 
         if (migrerteKravVurderinger.size > 1) {
             throw UgyldigForespørselException("Man kan kun sende inn 1 migrert krav.")
         }
 
-        vurderinger.forEach { vurdering ->
-            if (vurdering is RelevantKrav) {
-                validerRelevantKrav(
+        vurderinger.filterIsInstance<RelevantKrav>().forEach { vurdering ->
+            when (vurdering) {
+                is RelevantSøknadKrav -> validerRelevantKrav(
                     vurdering,
                     søknaderISak.find { it.referanse.asJournalpostId == vurdering.journalpostId })
-            }
 
-            if (vurdering is MigrertKrav) {
-                KravValidering.validerMigrertKrav(vurdering)
+                is RelevantMigrertKrav -> KravValidering.validerMigrertKrav(vurdering)
             }
         }
     }

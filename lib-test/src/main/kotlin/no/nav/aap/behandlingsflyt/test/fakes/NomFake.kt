@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.test.fakes
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
@@ -17,6 +18,7 @@ import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.NomRessurserVisningsn
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.OrgEnhet
 import no.nav.aap.behandlingsflyt.integrasjon.organisasjon.OrgTilknytning
 import no.nav.aap.behandlingsflyt.integrasjon.util.GraphQLResponse
+import no.nav.aap.behandlingsflyt.test.TestBruker
 import java.time.LocalDate
 
 class NomFake : FakeServer() {
@@ -32,8 +34,8 @@ class NomFake : FakeServer() {
         installerStatusPages("NOM")
         routing {
             post("/graphql") {
-                val requestBody = call.receiveText()
-                val data = if (requestBody.contains("ressurser")) {
+                val jsonNode = call.receive<JsonNode>()
+                val data = if (jsonNode["query"].asText().contains("ressurser")) {
                     NomRessurserVisningsnavn(
                         ressurser = listOf(
                             NomRessursResponse(NomRessursVisningsnavn("ABC1245", "Sak Behandlersen")),
@@ -41,6 +43,8 @@ class NomFake : FakeServer() {
                         )
                     )
                 } else {
+                    val navIdent = jsonNode["variables"]["navIdent"].asText()
+
                     NomData(
                         NomDataRessurs(
                             orgTilknytning = listOf(
@@ -50,7 +54,14 @@ class NomFake : FakeServer() {
                                     LocalDate.now(),
                                     null
                                 )
-                            ), visningsnavn = "Test Testesen"
+                            ), visningsnavn = when (navIdent) {
+                                TestBruker.VEILDER.ident -> "Veileder Etternavn"
+                                TestBruker.KVALITETSSIKRER.ident -> "Kvalitetssikrer Etternavn"
+                                TestBruker.SAKSBEHANDLER.ident -> "Saksbehandler Etternavn"
+                                TestBruker.BESLUTTER.ident -> "Beslutter Etternavn"
+                                TestBruker.SUPERBRUKER.ident -> "Superbruker Etternavn"
+                                else -> "Ukjent Bruker"
+                            }
                         )
                     )
                 }

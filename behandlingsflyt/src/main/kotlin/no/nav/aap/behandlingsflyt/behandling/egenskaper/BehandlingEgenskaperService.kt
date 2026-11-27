@@ -42,7 +42,7 @@ class BehandlingEgenskaperGrunnlagService(
         return BehandlingEgenskaperGrunnlag(
             ident = sakRepository.hent(behandling.sakId).person.aktivIdent(),
             erMigrertFraArena = kravGrunnlag?.gjeldendeMigrertKrav() != null,
-            erKantIKantMedArena = erKantIKantMedArena(behandling, kravGrunnlag?.gjeldendeRelevanteKrav().orEmpty()),
+            erKantIKantMedArena = erKantIKantMedArena(behandling, kravGrunnlag?.gjeldendeRelevanteKravInkludertMigrerteKrav().orEmpty()),
         )
     }
 

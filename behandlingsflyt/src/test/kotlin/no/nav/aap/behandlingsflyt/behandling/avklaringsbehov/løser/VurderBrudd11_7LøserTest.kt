@@ -1,61 +1,38 @@
 package no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser
 
-import io.mockk.checkUnnecessaryStub
-import io.mockk.clearMocks
-import io.mockk.every
-import io.mockk.mockk
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovKontekst
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovOperasjonerRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
-import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderBrudd11_7Løsning
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7LøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Aktivitetsplikt11_7Repository
 import no.nav.aap.behandlingsflyt.faktagrunnlag.aktivitetsplikt.Utfall
+import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
-import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingRepository
+import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.Behandling
 import no.nav.aap.behandlingsflyt.sakogbehandling.flyt.FlytKontekst
-import no.nav.aap.behandlingsflyt.sakogbehandling.sak.SakId
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAktivitetsplikt11_7Repository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryAvklaringsbehovRepository
+import no.nav.aap.behandlingsflyt.test.inmemoryrepo.InMemoryBehandlingRepository
 import no.nav.aap.komponenter.httpklient.exception.UgyldigForespørselException
 import no.nav.aap.komponenter.verdityper.Bruker
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 
 class VurderBrudd11_7LøserTest {
-    private val aktivitetsplikt11_7Repository = mockk<Aktivitetsplikt11_7Repository>()
-    private val behandlingRepository = mockk<BehandlingRepository>()
-    private val avklaringsbehovRepository = mockk<AvklaringsbehovRepository>()
-    private val avklaringsbehovOperasjonerRepository = mockk<AvklaringsbehovOperasjonerRepository>()
-
-    @AfterEach
-    fun tearDown() {
-        checkUnnecessaryStub(
-            aktivitetsplikt11_7Repository,
-            behandlingRepository,
-            avklaringsbehovRepository,
-            avklaringsbehovOperasjonerRepository
-        )
-        clearMocks(
-            aktivitetsplikt11_7Repository,
-            behandlingRepository,
-            avklaringsbehovRepository,
-            avklaringsbehovOperasjonerRepository
-        )
-    }
+    private val aktivitetsplikt11_7Repository = InMemoryAktivitetsplikt11_7Repository
+    private val behandlingRepository = InMemoryBehandlingRepository
+    private val avklaringsbehovRepository = InMemoryAvklaringsbehovRepository
 
     @ParameterizedTest
     @MethodSource("ugyldigeLøsninger")
     fun `Skal kaste ugyldig forespørsel-exception dersom innsendt løsning er ugyldig`(løsning: VurderBrudd11_7Løsning) {
+        val (_, behandling) = opprettInMemorySakOgBehandling()
         val løser = VurderBrudd11_7Løser(aktivitetsplikt11_7Repository, behandlingRepository, avklaringsbehovRepository)
 
         val exception = assertThrows<UgyldigForespørselException> {
             løser.løs(
-                kontekst = lagAvklaringsvehovKontekst(),
+                kontekst = lagAvklaringsvehovKontekst(behandling),
                 løsning = løsning
             )
         }
@@ -66,30 +43,24 @@ class VurderBrudd11_7LøserTest {
     @ParameterizedTest
     @MethodSource("gyldigeLøsninger")
     fun `Gydlig løsning skal validere`(løsning: VurderBrudd11_7Løsning) {
-        every { aktivitetsplikt11_7Repository.lagre(any(), any()) } returns Unit
-        every { behandlingRepository.hent(any() as BehandlingId).forrigeBehandlingId } returns null
-        every { avklaringsbehovOperasjonerRepository.hent(any()) } returns emptyList()
-        every { avklaringsbehovRepository.hentAvklaringsbehovene(any()) } returns Avklaringsbehovene(
-            avklaringsbehovOperasjonerRepository,
-            BehandlingId(1L)
-        )
+        val (_, behandling) = opprettInMemorySakOgBehandling()
 
         val løser = VurderBrudd11_7Løser(aktivitetsplikt11_7Repository, behandlingRepository, avklaringsbehovRepository)
 
         val resultat = løser.løs(
-            kontekst = lagAvklaringsvehovKontekst(),
+            kontekst = lagAvklaringsvehovKontekst(behandling),
             løsning = løsning
         )
 
         assertThat(resultat.begrunnelse).isEqualTo("Gyldig")
     }
 
-    private fun lagAvklaringsvehovKontekst(): AvklaringsbehovKontekst =
+    private fun lagAvklaringsvehovKontekst(behandling: Behandling): AvklaringsbehovKontekst =
         AvklaringsbehovKontekst(
             bruker = Bruker("12345678901"),
             kontekst = FlytKontekst(
-                sakId = SakId(1L),
-                behandlingId = BehandlingId(1L),
+                sakId = behandling.sakId,
+                behandlingId = behandling.id,
                 forrigeBehandlingId = null,
                 behandlingType = TypeBehandling.Aktivitetsplikt
             )

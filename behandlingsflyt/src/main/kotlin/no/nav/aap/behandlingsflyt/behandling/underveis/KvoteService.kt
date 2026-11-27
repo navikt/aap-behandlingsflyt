@@ -22,7 +22,7 @@ class KvoteService(
 
     /** Kvoter som skal brukes i alle nye og åpne behandlinger.
      *
-     * Hvis behandlingen har en gjeldende [no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav]-vurdering,
+     * Hvis behandlingen har en gjeldende [no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav]-vurdering,
      * overstyrer feltet resterendeKvoteOrdinaer på denne vurderingen [Kvoter.ordinærkvote]. Dette brukes for saker som er
      * migrert fra Arena, der gjenstående kvote ved migreringstidspunktet skal legges til grunn i stedet for standardkvoten.
      * */

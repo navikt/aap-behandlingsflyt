@@ -73,7 +73,6 @@ open class FakeUnleashBaseWithDefaultDisabled(
 object LokalUnleash : FakeUnleashBase(
     mapOf(
         BehandlingsflytFeature.IngenValidering to true,
-        BehandlingsflytFeature.AutomatiskOpphorUforeTilbakevirkende to false,
         BehandlingsflytFeature.BrevtyperTilNyBrevbygger to false,
         BehandlingsflytFeature.Under18 to true,
         BehandlingsflytFeature.VisIkkeRelevantPeriode to true,
@@ -84,6 +83,7 @@ object LokalUnleash : FakeUnleashBase(
         BehandlingsflytFeature.IkkeSjekkInformasjonskravLovvalgMedlemsskapGrunnlag to false,
         BehandlingsflytFeature.SynkroniserArenaMeldeperiodesyklus to false,
         BehandlingsflytFeature.HandtereMaksdatoForKantTilKant to true,
+        BehandlingsflytFeature.NykantIkantForvaltningsmelding to true,
         BehandlingsflytFeature.MaksdatoSykepenger to true,
         BehandlingsflytFeature.ForvaltningsmeldingBrevbygger to true,
 

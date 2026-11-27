@@ -5,10 +5,10 @@ import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løsning.VurderKrav
 import no.nav.aap.behandlingsflyt.behandling.underveis.KvoteService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KlageKravLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantMigrertKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertRettighetstype
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.MigrertKravLøsningDto
-import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKrav
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantSøknadKrav
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.RelevantKravLøsningDto
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFra
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.OverstyrMuligRettFraÅrsak
@@ -172,7 +172,7 @@ class VurderKravLøserTest {
 
         val resultat = løser.løs(kontekst(sakId, behandlingId), løsning)
 
-        val lagretVurdering = InMemoryKravRepository.hentHvisEksisterer(behandlingId)!!.vurderinger.single() as RelevantKrav
+        val lagretVurdering = InMemoryKravRepository.hentHvisEksisterer(behandlingId)!!.vurderinger.single() as RelevantSøknadKrav
         assertThat(lagretVurdering.journalpostId).isEqualTo(JournalpostId("1112223"))
         assertThat(lagretVurdering.søknadsdato.dato).isEqualTo(15 januar 2026)
         assertThat(lagretVurdering.begrunnelse).isEqualTo("Gyldig krav")
@@ -255,7 +255,7 @@ class VurderKravLøserTest {
 
         val resultat = løser.løs(kontekst(sak.id, behandlingId), løsning)
 
-        val lagretVurdering = InMemoryKravRepository.hentHvisEksisterer(behandlingId)!!.vurderinger.single() as MigrertKrav
+        val lagretVurdering = InMemoryKravRepository.hentHvisEksisterer(behandlingId)!!.vurderinger.single() as RelevantMigrertKrav
         assertThat(lagretVurdering.journalpostId).isNull()
         assertThat(lagretVurdering.arenaSaksnummer).isEqualTo("ARENA-4711")
         assertThat(lagretVurdering.rettighetstype).isEqualTo(MigrertRettighetstype.ORDINÆR)
@@ -372,8 +372,35 @@ class VurderKravLøserTest {
 
         løser.løs(kontekst(sak.id, behandlingId), løsning)
 
-        val lagretVurdering = InMemoryKravRepository.hentHvisEksisterer(behandlingId)!!.vurderinger.single() as MigrertKrav
+        val lagretVurdering = InMemoryKravRepository.hentHvisEksisterer(behandlingId)!!.vurderinger.single() as RelevantMigrertKrav
         assertThat(lagretVurdering.resterendeKvoteOrdinær).isEqualTo(maksKvote)
+    }
+
+    @Test
+    fun `skal feile hvis behandlingen får både migrert krav og relevant krav fra søknad`() {
+        val sak = opprettInMemorySak()
+        val behandlingId = BehandlingId(Random.nextLong())
+        InMemoryMottattDokumentRepository.lagre(
+            mottattDokument(behandlingId, sak.id, journalpostId = "1112223", mottattTidspunkt = (15 januar 2026).atStartOfDay())
+        )
+
+        val løsning = VurderKravLøsning(
+            kravVurderinger = setOf(
+                migrertKravLøsningDto(),
+                RelevantKravLøsningDto(
+                    journalpostId = JournalpostId("1112223"),
+                    begrunnelse = "test",
+                    søknadsdato = Søknadsdato(15 januar 2026, SøknadsdatoÅrsak.SøknadMottatt, begrunnelse = "Test"),
+                    overstyrMuligRettFra = null,
+                ),
+            )
+        )
+
+        val exception = assertThrows<UgyldigForespørselException> {
+            løser.løs(kontekst(sak.id, behandlingId), løsning)
+        }
+        assertThat(exception.message).contains("både migrert krav og relevant krav fra søknad")
+        assertThat(InMemoryKravRepository.hentHvisEksisterer(behandlingId)).isNull()
     }
 
     private fun migrertKravLøsningDto(

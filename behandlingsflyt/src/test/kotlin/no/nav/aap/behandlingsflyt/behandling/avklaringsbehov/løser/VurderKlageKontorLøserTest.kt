@@ -131,12 +131,60 @@ class VurderKlageKontorLøserTest {
         assertThat(resultat.begrunnelse).isEqualTo("Begrunnelse for klage")
     }
 
+    @Test
+    fun `løs skal tillate opprettholdelse av flere hjemler uten støtte for omgjøring`() {
+        val kontekst = lagAvklaringsbehovKontekst()
+        val hjemler = listOf(
+            Hjemmel.FOLKETRYGDLOVEN_22_7,
+            Hjemmel.FOLKETRYGDLOVEN_22_8,
+            Hjemmel.FOLKETRYGDLOVEN_22_14_FJERDE_LEDD
+        )
+        every { påklagetBehandlingRepositoryMock.hentPåklagetVedtakstype(any()) } returns PåklagetVedtakType.KELVIN_BEHANDLING
+        every { klagebehandlingKontorRepositoryMock.lagre(any(), any()) } returns Unit
+
+        lagLøser().løs(
+            kontekst = kontekst,
+            løsning = lagLøsning(KlageInnstilling.OPPRETTHOLD, hjemler)
+        )
+
+        verify(exactly = 1) {
+            klagebehandlingKontorRepositoryMock.lagre(
+                kontekst.kontekst.behandlingId,
+                match { it.vilkårSomOpprettholdes == hjemler && it.vilkårSomOmgjøres.isEmpty() }
+            )
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+        Hjemmel::class,
+        names = ["FOLKETRYGDLOVEN_22_7", "FOLKETRYGDLOVEN_22_8", "FOLKETRYGDLOVEN_22_14_FJERDE_LEDD"]
+    )
+    fun `løs skal avvise hel og delvis omgjøring av nye hjemler`(hjemmel: Hjemmel) {
+        every { påklagetBehandlingRepositoryMock.hentPåklagetVedtakstype(any()) } returns PåklagetVedtakType.KELVIN_BEHANDLING
+        every { klagebehandlingKontorRepositoryMock.lagre(any(), any()) } returns Unit
+
+        for (innstilling in listOf(KlageInnstilling.OMGJØR, KlageInnstilling.DELVIS_OMGJØR)) {
+            val exception = assertThrows<UgyldigForespørselException> {
+                lagLøser().løs(
+                    kontekst = lagAvklaringsbehovKontekst(),
+                    løsning = lagLøsning(innstilling, listOf(hjemmel))
+                )
+            }
+
+            assertThat(exception.message).contains(hjemmel.name)
+        }
+    }
+
     private fun lagLøser() = VurderKlageKontorLøser(
         klagebehandlingKontorRepositoryMock,
         påklagetBehandlingRepositoryMock
     )
 
-    private fun lagLøsning(innstilling: KlageInnstilling) = VurderKlageKontorLøsning(
+    private fun lagLøsning(
+        innstilling: KlageInnstilling,
+        hjemler: List<Hjemmel> = listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
+    ) = VurderKlageKontorLøsning(
         klagevurderingKontor = KlagevurderingKontorLøsningDto(
             begrunnelse = "Begrunnelse for klage",
             notat = "Notat",
@@ -144,12 +192,12 @@ class VurderKlageKontorLøserTest {
             vilkårSomOpprettholdes = when (innstilling) {
                 KlageInnstilling.OMGJØR -> emptyList()
                 KlageInnstilling.OPPRETTHOLD, KlageInnstilling.DELVIS_OMGJØR ->
-                    listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
+                    hjemler
             },
             vilkårSomOmgjøres = when (innstilling) {
                 KlageInnstilling.OPPRETTHOLD -> emptyList()
                 KlageInnstilling.OMGJØR, KlageInnstilling.DELVIS_OMGJØR ->
-                    listOf(Hjemmel.FOLKETRYGDLOVEN_11_5)
+                    hjemler
             }
         )
     )

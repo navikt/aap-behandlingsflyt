@@ -39,6 +39,11 @@ value class Hverdager(val asInt: Int) : Comparable<Hverdager> {
         private val LocalDate.erHverdag: Boolean
             get() = dayOfWeek in hverdagene
 
+        /** Første hverdag (mandag–fredag) etter denne datoen. Tar ikke hensyn til helligdager. */
+        fun LocalDate.nesteHverdag(): LocalDate {
+            return hverdagerFraOgMed(this.plusDays(1)).first()
+        }
+
         fun Periode.antallHverdager(): Hverdager {
             return Hverdager(this.antallDager(*hverdagene.toTypedArray()))
         }

@@ -2,11 +2,16 @@ package no.nav.aap.behandlingsflyt.repository.faktagrunnlag.saksbehandler.støna
 
 import no.nav.aap.behandlingsflyt.SYSTEMBRUKER
 import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Avslagsårsak
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdato
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaVedtakStatus
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.Kravreferanse
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.KantIKantMedArena
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.KantIKantUtfall
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.RelevantKravType
 import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeVurdering
 import no.nav.aap.behandlingsflyt.help.finnEllerOpprettBehandling
 import no.nav.aap.behandlingsflyt.help.opprettSak
+import no.nav.aap.behandlingsflyt.repository.faktagrunnlag.register.arena.ArenaMaksdatoRepositoryImpl
 import no.nav.aap.behandlingsflyt.sakogbehandling.behandling.BehandlingId
 import no.nav.aap.behandlingsflyt.test.januar
 import no.nav.aap.komponenter.dbconnect.transaction
@@ -199,21 +204,33 @@ class StønadsperiodeRepositoryImplTest {
     }
 
     @Test
-    fun `kant i kant med Arena lagres og hentes`() {
+    fun `kant-i-kant-utfall og peker til Arena-maksdato lagres og hentes`() {
         val behandlingId = opprettBehandlingId()
-        val kantIKant = vurdering(behandlingId).copy(erKantIKantMedArena = true)
-        val vanlig = vurdering(behandlingId)
+        val arenaMaksdatoId = dataSource.transaction { connection ->
+            ArenaMaksdatoRepositoryImpl(connection).lagre(
+                behandlingId, ArenaMaksdato("123", ArenaVedtakStatus.AVSLUTTET, LocalDate.of(2026, 12, 31), null, 42, false)
+            )
+            ArenaMaksdatoRepositoryImpl(connection).hentHvisEksisterer(behandlingId)!!.arenaMaksdatoId!!
+        }
+        val kantIKant = vurdering(behandlingId).copy(
+            kantIKant = KantIKantMedArena(KantIKantUtfall.KANT_I_KANT, arenaMaksdatoId),
+        )
+        val ingenArenasak = vurdering(behandlingId).copy(
+            kantIKant = KantIKantMedArena(KantIKantUtfall.INGEN_ARENASAK, arenaMaksdatoId = null),
+        )
+        val utenUtfall = vurdering(behandlingId)
 
         dataSource.transaction { connection ->
-            StønadsperiodeRepositoryImpl(connection).lagre(behandlingId, setOf(kantIKant, vanlig))
+            StønadsperiodeRepositoryImpl(connection).lagre(behandlingId, setOf(kantIKant, ingenArenasak, utenUtfall))
         }
 
         val vurderinger = dataSource.transaction(readOnly = true) { connection ->
             StønadsperiodeRepositoryImpl(connection).hentHvisEksisterer(behandlingId)
         }!!.vurderinger.associateBy { it.referanse }
 
-        assertThat(vurderinger.getValue(kantIKant.referanse).erKantIKantMedArena).isTrue()
-        assertThat(vurderinger.getValue(vanlig.referanse).erKantIKantMedArena).isFalse()
+        assertThat(vurderinger.getValue(kantIKant.referanse).kantIKant).isEqualTo(kantIKant.kantIKant)
+        assertThat(vurderinger.getValue(ingenArenasak.referanse).kantIKant).isEqualTo(ingenArenasak.kantIKant)
+        assertThat(vurderinger.getValue(utenUtfall.referanse).kantIKant).isNull()
     }
 
     val eksempelKravTyper = listOf(
