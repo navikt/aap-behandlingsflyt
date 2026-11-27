@@ -228,6 +228,170 @@ class ForutgåendeMedlemskapVurderingServiceTest {
         assertThat(opphold(perRelevantDato)).isEmpty()
     }
 
+    @Test
+    fun `NIS-turistskip som omslutter hele vinduet gir treff per relevant dato`() {
+        val relevantDato = LocalDate.of(2024, 6, 1)
+        val grunnlag = lagGrunnlagMedNisTuristskip(
+            startdato = LocalDate.of(2018, 1, 1),
+            sluttdato = LocalDate.of(2025, 1, 1)
+        )
+
+        val resultat = ForutgåendeMedlemskapVurderingService.vurderTilhørighetForRelevantDato(grunnlag, relevantDato)
+
+        val vurdering = resultat.tilhørighetVurdering
+            .single { it.opplysning == "Har hatt arbeidsforhold på NIS-registrert turistskip" }
+        assertThat(vurdering.resultat).isTrue
+        assertThat(resultat.kanBehandlesAutomatisk).isFalse
+    }
+
+    @Test
+    fun `NIS-turistskip som slutter før vinduet gir ikke treff`() {
+        val relevantDato = LocalDate.of(2024, 6, 1)
+        val grunnlag = lagGrunnlagMedNisTuristskip(
+            startdato = LocalDate.of(2010, 1, 1),
+            sluttdato = LocalDate.of(2019, 5, 31)
+        )
+
+        val vurdering = ForutgåendeMedlemskapVurderingService.vurderTilhørighetForRelevantDato(grunnlag, relevantDato)
+            .tilhørighetVurdering
+            .single { it.opplysning == "Har hatt arbeidsforhold på NIS-registrert turistskip" }
+
+        assertThat(vurdering.resultat).isFalse
+    }
+
+    @Test
+    fun `NIS-turistskip som starter etter relevant dato gir ikke treff`() {
+        val relevantDato = LocalDate.of(2024, 6, 1)
+        val grunnlag = lagGrunnlagMedNisTuristskip(startdato = LocalDate.of(2024, 6, 2), sluttdato = null)
+
+        val vurdering = ForutgåendeMedlemskapVurderingService.vurderTilhørighetForRelevantDato(grunnlag, relevantDato)
+            .tilhørighetVurdering
+            .single { it.opplysning == "Har hatt arbeidsforhold på NIS-registrert turistskip" }
+
+        assertThat(vurdering.resultat).isFalse
+    }
+
+    @Test
+    fun `utenlandsopphold som omslutter hele vinduet gir treff per relevant dato`() {
+        val relevantDato = LocalDate.of(2024, 6, 1)
+        val omsluttendeOpphold = UtenlandsPeriode(
+            land = "SWE",
+            fraDato = LocalDate.of(2018, 1, 1),
+            tilDato = LocalDate.of(2025, 1, 1),
+            iArbeid = false,
+            utenlandsId = null
+        )
+        val grunnlag = lagGrunnlag(false, true, false).copy(
+            nyeSoknadGrunnlag = UtenlandsOppholdData(true, true, false, false, listOf(omsluttendeOpphold))
+        )
+
+        val vurdering = ForutgåendeMedlemskapVurderingService.vurderTilhørighetForRelevantDato(grunnlag, relevantDato)
+
+        assertThat(opphold(vurdering)).hasSize(1)
+    }
+
+    @Test
+    fun `arbeid i utlandet som omslutter hele vinduet gir treff per relevant dato`() {
+        val relevantDato = LocalDate.of(2024, 6, 1)
+        val omsluttendeArbeid = UtenlandsPeriode(
+            land = "SWE",
+            fraDato = LocalDate.of(2018, 1, 1),
+            tilDato = LocalDate.of(2025, 1, 1),
+            iArbeid = true,
+            utenlandsId = null
+        )
+        val grunnlag = lagGrunnlag(false, true, false).copy(
+            nyeSoknadGrunnlag = UtenlandsOppholdData(
+                harBoddINorgeSiste5År = false,
+                harArbeidetINorgeSiste5År = false,
+                arbeidetUtenforNorgeFørSykdom = false,
+                iTilleggArbeidUtenforNorge = false,
+                utenlandsOpphold = listOf(omsluttendeArbeid)
+            )
+        )
+
+        val vurdering = ForutgåendeMedlemskapVurderingService.vurderTilhørighetForRelevantDato(grunnlag, relevantDato)
+            .tilhørighetVurdering
+            .single { it.opplysning == "Arbeidet i utlandet siste 5 år" }
+
+        assertThat(vurdering.resultat).isTrue
+        assertThat(vurdering.oppgittJobbetIUtlandGrunnlag).hasSize(1)
+    }
+
+    @Test
+    fun `statsborgerskap utenfor EØS som omslutter hele vinduet gir treff per relevant dato`() {
+        val relevantDato = LocalDate.of(2024, 6, 1)
+        val grunnlag = lagGrunnlag(false, true, false)
+        val personopplysning = grunnlag.personopplysningGrunnlag!!.brukerPersonopplysning
+        val medOmsluttendeStatsborgerskap = grunnlag.copy(
+            personopplysningGrunnlag = PersonopplysningMedHistorikkGrunnlag(
+                brukerPersonopplysning = personopplysning.copy(
+                    statsborgerskap = listOf(
+                        Statsborgerskap("ETH", LocalDate.of(2018, 1, 1), LocalDate.of(2025, 1, 1))
+                    )
+                )
+            )
+        )
+
+        val vurdering = ForutgåendeMedlemskapVurderingService
+            .vurderTilhørighetForRelevantDato(medOmsluttendeStatsborgerskap, relevantDato)
+            .tilhørighetVurdering
+            .single { it.opplysning == "Har statsborgerskap utenfor EØS i perioden" }
+
+        assertThat(vurdering.resultat).isTrue
+    }
+
+    @Test
+    fun `åpent statsborgerskap utenfor EØS som starter etter relevant dato gir ikke treff`() {
+        val relevantDato = LocalDate.of(2024, 6, 1)
+        val grunnlag = lagGrunnlag(false, true, false)
+        val personopplysning = grunnlag.personopplysningGrunnlag!!.brukerPersonopplysning
+        val medFremtidigStatsborgerskap = grunnlag.copy(
+            personopplysningGrunnlag = PersonopplysningMedHistorikkGrunnlag(
+                brukerPersonopplysning = personopplysning.copy(
+                    statsborgerskap = listOf(Statsborgerskap("ETH", LocalDate.of(2025, 1, 1), null))
+                )
+            )
+        )
+
+        val vurdering = ForutgåendeMedlemskapVurderingService
+            .vurderTilhørighetForRelevantDato(medFremtidigStatsborgerskap, relevantDato)
+            .tilhørighetVurdering
+            .single { it.opplysning == "Har statsborgerskap utenfor EØS i perioden" }
+
+        assertThat(vurdering.resultat).isFalse
+    }
+
+    @Test
+    fun `vedtak om annet lovvalgsland etter relevant dato gir ikke treff, men gjør det før`() {
+        val relevantDato = LocalDate.of(2024, 6, 1)
+        val grunnlag = lagGrunnlag(false, true, false)
+
+        fun medLovvalgsland(periode: Periode) = grunnlag.copy(
+            forutgåendeMedlemskapGrunnlag = grunnlag.forutgåendeMedlemskapGrunnlag!!.copy(
+                medlemskapUnntakGrunnlag = MedlemskapUnntakGrunnlag(
+                    unntak = listOf(
+                        Segment(
+                            periode = periode,
+                            verdi = Unntak("unntak", null, true, "grunnlag", "lovvalg", false, "SWE", null)
+                        )
+                    )
+                )
+            )
+        )
+
+        fun annetLovvalgsland(grunnlag: ForutgåendeMedlemskapFaktaGrunnlag) = ForutgåendeMedlemskapVurderingService
+            .vurderTilhørighetForRelevantDato(grunnlag, relevantDato)
+            .tilhørighetVurdering
+            .single { it.opplysning == "Vedtak om annet lovvalgsland finnes" }
+            .resultat
+
+        assertThat(annetLovvalgsland(medLovvalgsland(Periode(LocalDate.of(2024, 7, 1), LocalDate.of(2025, 1, 1)))))
+            .isFalse
+        assertThat(annetLovvalgsland(medLovvalgsland(Periode(LocalDate.of(2023, 1, 1), LocalDate.of(2023, 12, 31)))))
+            .isTrue
+    }
+
     private fun opphold(vurdering: KanBehandlesAutomatiskVurdering) = vurdering.tilhørighetVurdering
         .single { it.opplysning == "Opphold i utlandet siste 5 år" }.oppgittUtenlandsOppholdGrunnlag
 
