@@ -289,9 +289,16 @@ public sealed interface BehandlingHendelse {
 
     public data class FerdigBehandlet(
         override val sistEndret: LocalDateTime?,
-        override val progresjon: BehandlingHendelseProgresjon
+        override val progresjon: BehandlingHendelseProgresjon,
+        val status: Status? = null,
     ) : BehandlingHendelse {
         override val navn: BehandlingHendelseNavn = BehandlingHendelseNavn.FERDIG_BEHANDLET
+
+        public enum class Status {
+            INNVILGELSE,
+            AVSLAG,
+            SØKNAD_TRUKKET,
+        }
     }
 }
 
@@ -299,6 +306,7 @@ public data class BehandlingVisningDto(
     val behandlingReferanse: BehandlingReferanse,
     val avsluttet: Boolean,
     val behandlingType: BehandlingHendelseType,
+    val opprettet: LocalDateTime,
     val hendelser: List<BehandlingHendelse>
 )
 

@@ -35,6 +35,7 @@ class BehandlingVisningDtoTest {
             BehandlingHendelse.FerdigBehandlet(
                 sistEndret = LocalDateTime.of(2026, 10, 5, 10, 0),
                 progresjon = BehandlingHendelseProgresjon.FULLFØRT,
+                status = BehandlingHendelse.FerdigBehandlet.Status.INNVILGELSE,
             ),
         )
         val request = BehandlingVisningRequest(
@@ -44,6 +45,7 @@ class BehandlingVisningDtoTest {
                 behandlingReferanse = BehandlingReferanse(),
                 avsluttet = false,
                 behandlingType = BehandlingHendelseType.SØKNAD,
+                opprettet = LocalDateTime.of(2026, 10, 1, 9, 0),
                 hendelser = hendelser,
             ),
         )
