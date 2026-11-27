@@ -8,6 +8,10 @@ import no.nav.aap.behandlingsflyt.faktagrunnlag.delvurdering.vilkårsresultat.Ap
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottaDokumentService
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokument
 import no.nav.aap.behandlingsflyt.faktagrunnlag.dokument.MottattDokumentRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.register.arena.ArenaMaksdatoRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.krav.KravRepository
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.KantIKantUtfall
+import no.nav.aap.behandlingsflyt.faktagrunnlag.saksbehandler.stønadsperiode.StønadsperiodeRepository
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.behandling.TypeBehandling
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.BehandlingFlytStoppetHendelse
@@ -15,6 +19,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.hendelse.GjenståendeSykedagerDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.GjenståendeSykedagerGrunnlagDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.InnsendingType
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.MottattDokumentDto
+import no.nav.aap.behandlingsflyt.kontrakt.hendelse.NySakEtterOpphørArenaDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.UførevedtakDto
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.HvemSkalFølgeOpp
 import no.nav.aap.behandlingsflyt.kontrakt.hendelse.dokumenter.ManuellRevurderingV0
@@ -55,6 +60,9 @@ class BehandlingHendelseServiceImpl(
     private val behandlingService: BehandlingService,
     private val avklaringsbehovService: AvklaringsbehovService,
     private val gjenståendeSykedagerRepository: GjenståendeSykedagerRepository,
+    private val kravRepository: KravRepository,
+    private val arenaMaksdatoRepository: ArenaMaksdatoRepository,
+    private val stønadsperiodeRepository: StønadsperiodeRepository,
 ) : BehandlingHendelseService {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
         flytJobbRepository = repositoryProvider.provide(),
@@ -64,6 +72,9 @@ class BehandlingHendelseServiceImpl(
         behandlingService = BehandlingService(repositoryProvider, gatewayProvider),
         avklaringsbehovService = AvklaringsbehovService(repositoryProvider, gatewayProvider),
         gjenståendeSykedagerRepository = repositoryProvider.provide(),
+        kravRepository = repositoryProvider.provide(),
+        arenaMaksdatoRepository = repositoryProvider.provide(),
+        stønadsperiodeRepository = repositoryProvider.provide(),
     )
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -104,7 +115,8 @@ class BehandlingHendelseServiceImpl(
             versjon = ApplikasjonsVersjon.versjon,
             gjenståendeSykedager = hentGjenståendeSykedager(behandling, faktiskBehandlingstype),
             saksbehandlereSomIkkeKanBeslutte = avklaringsbehovene.brukereSomIkkeKanBeslutte()
-                .map { it.ident }
+                .map { it.ident },
+            nySakEtterOpphørArena = hentNySakEtterOpphørArena(behandling, faktiskBehandlingstype)
         ).copy(behandlingType = faktiskBehandlingstype)
 
         log.info("Legger til flytjobber til statistikk og stoppethendelse for behandling: ${behandling.id}")
@@ -169,6 +181,40 @@ class BehandlingHendelseServiceImpl(
         vurdertTilOgMed = vurdertTilOgMed,
         maksdato = utledMaksdato(),
     )
+
+    /**
+     * Kant i kant leses fra stønadsperiodevurderingen, slik at oppgave får samme svar som flyten brukte. Null før
+     * [no.nav.aap.behandlingsflyt.forretningsflyt.steg.AvklarStønadsperiodeSteg] har vurdert saken mot en
+     * Arena-sak med maksdato, og når Arena-grunnlaget er byttet siden vurderingen. Kravdatoen er mulig rett fra
+     * for kravet som er kant i kant, ellers for det tidligste søknadskravet. Bare førstegangsbehandlinger: i en
+     * revurdering er Arena-maksdatoen kopiert fra forrige behandling.
+     */
+    private fun hentNySakEtterOpphørArena(
+        behandling: Behandling,
+        faktiskBehandlingstype: TypeBehandling
+    ): NySakEtterOpphørArenaDto? {
+        if (faktiskBehandlingstype != TypeBehandling.Førstegangsbehandling) return null
+        val søknadKrav = kravRepository.hentHvisEksisterer(behandling.id)?.gjeldendeSøknadKrav().orEmpty()
+        val søknadKravreferanser = søknadKrav.map { it.referanse }.toSet()
+        val arenaVurderinger = stønadsperiodeRepository.hentHvisEksisterer(behandling.id)
+            ?.gjeldendeVurderinger().orEmpty()
+            .filter { it.referanse in søknadKravreferanser && it.kantIKant?.utfall in UTFALL_MED_ARENA_MAKSDATO }
+        val arenaMaksdatoId = arenaVurderinger.firstOrNull()?.kantIKant?.arenaMaksdatoId ?: return null
+
+        val arenaMaksdatoGrunnlag = arenaMaksdatoRepository.hentHvisEksisterer(behandling.id)
+        if (arenaMaksdatoGrunnlag?.arenaMaksdatoId != arenaMaksdatoId) return null
+        val maksdato = arenaMaksdatoGrunnlag.arenaMaksdato?.maksdato ?: return null
+
+        val kantIKantReferanse = arenaVurderinger.firstOrNull { it.erKantIKantMedArena }?.referanse
+        val kravdato = (søknadKrav.firstOrNull { it.referanse == kantIKantReferanse }
+            ?: søknadKrav.minByOrNull { it.muligRettFra })?.muligRettFra ?: return null
+
+        return NySakEtterOpphørArenaDto(
+            erKantIKant = kantIKantReferanse != null,
+            maksdato = maksdato,
+            kravdato = kravdato
+        )
+    }
 
     private fun hentReservertTil(behandlingId: BehandlingId): Bruker? {
         val oppfølgingsoppgavedokument =
@@ -294,6 +340,14 @@ class BehandlingHendelseServiceImpl(
             referanse = this.referanse,
             mottattTidspunkt = this.mottattTidspunkt
         )
+
+    private companion object {
+        val UTFALL_MED_ARENA_MAKSDATO = setOf(
+            KantIKantUtfall.KANT_I_KANT,
+            KantIKantUtfall.ANNET_KRAV_ER_KANT_I_KANT,
+            KantIKantUtfall.OPPHOLD_ETTER_MAKSDATO,
+        )
+    }
 }
 
 class BehandlingHendelseServiceFactory : BehandlingHendelseServiceProvider {
