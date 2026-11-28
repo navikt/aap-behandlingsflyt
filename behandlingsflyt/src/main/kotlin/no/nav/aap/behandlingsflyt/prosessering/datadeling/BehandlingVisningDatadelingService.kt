@@ -1,8 +1,9 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
+import no.nav.aap.behandlingsflyt.behandling.Resultat
+import no.nav.aap.behandlingsflyt.behandling.ResultatUtleder
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.AvklaringsbehovRepository
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
-import no.nav.aap.behandlingsflyt.behandling.søknad.TrukketSøknadService
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Status
 import no.nav.aap.behandlingsflyt.kontrakt.datadeling.BehandlingHendelse
@@ -18,14 +19,14 @@ import no.nav.aap.komponenter.gateway.GatewayProvider
 import no.nav.aap.lookup.repository.RepositoryProvider
 
 class BehandlingVisningDatadelingService(
-    private val trukketSøknadService: TrukketSøknadService,
     private val avklaringsbehovRepository: AvklaringsbehovRepository,
     private val behandlingRepository: BehandlingRepository,
+    private val resultatUtleder: ResultatUtleder,
 ) {
     constructor(repositoryProvider: RepositoryProvider, gatewayProvider: GatewayProvider) : this(
-        trukketSøknadService = TrukketSøknadService(repositoryProvider),
         avklaringsbehovRepository = repositoryProvider.provide(),
         behandlingRepository = repositoryProvider.provide(),
+        resultatUtleder = ResultatUtleder(repositoryProvider, gatewayProvider),
     )
 
     fun hendelseSøknadMottatt(behandling: Behandling): BehandlingHendelse.SøknadMottatt {
@@ -177,49 +178,70 @@ class BehandlingVisningDatadelingService(
         )
     }
 
-    fun hendelseFerdigBehandlet(behandling: Behandling): BehandlingHendelse.FerdigBehandlet {
+    fun hendelseFerdigBehandlet(behandling: Behandling, resultat: Resultat?): BehandlingHendelse.FerdigBehandlet {
         val alleAvklaringsbehov = avklaringsbehovRepository
             .hentAvklaringsbehovene(behandling.id).alle()
+        val ferdigBehandletDefinisjon = if (resultat == Resultat.TRUKKET) {
+            Definisjon.VURDER_TREKK_AV_SØKNAD
+        } else {
+            Definisjon.FATTE_VEDTAK
+        }
         val ferdigBehandletAvklaringsbehov = alleAvklaringsbehov.filter {
-            it.definisjon == Definisjon.FATTE_VEDTAK
+            it.definisjon == ferdigBehandletDefinisjon
         }
 
         val progresjon = when {
-            behandling.status().erAvsluttet() ->
+            behandling.status().erAvsluttet() || resultat == Resultat.TRUKKET ->
                 BehandlingHendelseProgresjon.FULLFØRT
 
             else ->
                 BehandlingHendelseProgresjon.IKKE_PÅBEGYNT
         }
+        val status = when {
+            progresjon == BehandlingHendelseProgresjon.FULLFØRT && resultat == Resultat.INNVILGELSE ->
+                BehandlingHendelse.FerdigBehandlet.Status.INNVILGELSE
+
+            progresjon == BehandlingHendelseProgresjon.FULLFØRT && resultat == Resultat.AVSLAG ->
+                BehandlingHendelse.FerdigBehandlet.Status.AVSLAG
+
+            resultat == Resultat.TRUKKET ->
+                BehandlingHendelse.FerdigBehandlet.Status.SØKNAD_TRUKKET
+
+            else -> null
+        }
         return BehandlingHendelse.FerdigBehandlet(
             sistEndret = ferdigBehandletAvklaringsbehov.filter { it.erAvsluttet() }.maxOfOrNull { it.sistEndret() },
             progresjon = progresjon,
+            status = status,
         )
     }
 
-    fun utledBehandlingVisningHendelser(behandling: Behandling): List<BehandlingHendelse> {
+    fun utledBehandlingVisningHendelser(behandling: Behandling, resultat: Resultat?): List<BehandlingHendelse> {
+        if (resultat == Resultat.TRUKKET) {
+            return listOf(
+                hendelseSøknadMottatt(behandling),
+                hendelseFerdigBehandlet(behandling, resultat)
+            )
+        }
         val hendelser = listOf(
             hendelseSøknadMottatt(behandling),
             hendelseAlderLovvalgMedlemskap(behandling),
             hendelseNavKontor(behandling),
             hendelseNay(behandling),
-            hendelseFerdigBehandlet(behandling)
+            hendelseFerdigBehandlet(behandling, resultat)
         )
         return fjernForbigåtteHendelser(avstemHendelser(hendelser))
     }
 
     fun utledBehandlingVisning(behandling: Behandling): BehandlingVisningDto? {
-        val søknadErTrukket = trukketSøknadService.søknadErTrukket(behandling.id)
         if (behandling.erYtelsesbehandling() && behandling.årsakTilOpprettelse == ÅrsakTilOpprettelse.SØKNAD) {
+            val resultat = resultatUtleder.utledResultat(behandling)
             return BehandlingVisningDto(
                 behandlingReferanse = behandling.referanse,
-                avsluttet = søknadErTrukket || behandling.status().erAvsluttet(),
+                avsluttet = resultat == Resultat.TRUKKET || behandling.status().erAvsluttet(),
                 behandlingType = BehandlingHendelseType.SØKNAD,
-                hendelser = if (søknadErTrukket) {
-                    emptyList()
-                } else {
-                    utledBehandlingVisningHendelser(behandling)
-                }
+                hendelser = utledBehandlingVisningHendelser(behandling, resultat),
+                opprettet = behandling.opprettetTidspunkt,
             )
         }
         return null

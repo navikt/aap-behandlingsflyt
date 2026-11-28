@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
+import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
@@ -31,7 +32,7 @@ class BehandlingVisningDatadelingServiceTest {
     fun `hendelseslisten har riktig rekkefølge og progresjon i starttilstanden`() {
         val behandling = nyBehandling()
 
-        val hendelser = service.utledBehandlingVisningHendelser(behandling)
+        val hendelser = service.utledBehandlingVisningHendelser(behandling, null)
 
         assertThat<Class<*>>(hendelser.map { it.javaClass }).containsExactly(
             BehandlingHendelse.SøknadMottatt::class.java,
@@ -168,7 +169,7 @@ class BehandlingVisningDatadelingServiceTest {
         opprettAvklaringsbehov(behandling, Definisjon.KVALITETSSIKRING, avsluttet = true)
         oppdaterBehandlingStatus(behandling, BehandlingStatus.AVSLUTTET)
 
-        val hendelser = service.utledBehandlingVisningHendelser(behandling)
+        val hendelser = service.utledBehandlingVisningHendelser(behandling, null)
 
         assertThat(hendelser.map { it.navn }).containsExactly(
             BehandlingHendelseNavn.SØKNAD_MOTTATT,
@@ -184,7 +185,7 @@ class BehandlingVisningDatadelingServiceTest {
         val behandling = nyBehandling()
         opprettAvklaringsbehov(behandling, Definisjon.FATTE_VEDTAK, avsluttet = true)
 
-        val hendelser = service.utledBehandlingVisningHendelser(behandling)
+        val hendelser = service.utledBehandlingVisningHendelser(behandling, null)
 
         assertThat(hendelser.map { it.navn }).containsExactly(
             BehandlingHendelseNavn.SØKNAD_MOTTATT,
@@ -203,7 +204,7 @@ class BehandlingVisningDatadelingServiceTest {
         )
         opprettAvklaringsbehov(behandling, Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT)
 
-        assertThat(service.utledBehandlingVisningHendelser(behandling).map { it.navn }).containsExactly(
+        assertThat(service.utledBehandlingVisningHendelser(behandling, null).map { it.navn }).containsExactly(
             BehandlingHendelseNavn.SØKNAD_MOTTATT,
             BehandlingHendelseNavn.ALDER_LOVVALG_MEDLEMSKAP,
             BehandlingHendelseNavn.NAY,
@@ -572,6 +573,31 @@ class BehandlingVisningDatadelingServiceTest {
             .isEqualTo(BehandlingHendelseProgresjon.FULLFØRT)
     }
 
+    @Test
+    fun `trukket søknad gir bare søknad mottatt og fullført FerdigBehandlet med trekkstatus`() {
+        val behandling = nyBehandling()
+        leggTilSteghistorikk(behandling, StegType.VURDER_LOVVALG to StegStatus.AVSLUTTER)
+        opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_SYKDOM)
+        opprettAvklaringsbehov(behandling, Definisjon.VURDER_TREKK_AV_SØKNAD, avsluttet = true)
+        val trekktidspunkt = InMemoryAvklaringsbehovRepository
+            .hentAvklaringsbehovene(behandling.id)
+            .alle()
+            .single { it.definisjon == Definisjon.VURDER_TREKK_AV_SØKNAD }
+            .sistEndret()
+
+        val hendelser = service.utledBehandlingVisningHendelser(behandling, Resultat.TRUKKET)
+
+        assertThat(hendelser.map { it.navn }).containsExactly(
+            BehandlingHendelseNavn.SØKNAD_MOTTATT,
+            BehandlingHendelseNavn.FERDIG_BEHANDLET,
+        )
+        val ferdigBehandlet = hendelser.filterIsInstance<BehandlingHendelse.FerdigBehandlet>().single()
+        assertThat(behandling.status()).isEqualTo(BehandlingStatus.OPPRETTET)
+        assertThat(ferdigBehandlet.progresjon).isEqualTo(BehandlingHendelseProgresjon.FULLFØRT)
+        assertThat(ferdigBehandlet.status).isEqualTo(BehandlingHendelse.FerdigBehandlet.Status.SØKNAD_TRUKKET)
+        assertThat(ferdigBehandlet.sistEndret).isEqualTo(trekktidspunkt)
+    }
+
     private fun nyBehandling(): Behandling = opprettInMemorySakOgBehandling().second
 
     private fun leggTilSteghistorikk(
@@ -622,13 +648,13 @@ class BehandlingVisningDatadelingServiceTest {
     }
 
     private fun alleProgresjoner(behandling: Behandling) =
-        service.utledBehandlingVisningHendelser(behandling).map { it.progresjon }
+        service.utledBehandlingVisningHendelser(behandling, null).map { it.progresjon }
 
     private inline fun <reified T : BehandlingHendelse> progresjon(behandling: Behandling) =
         hendelse<T>(behandling).progresjon
 
     private inline fun <reified T : BehandlingHendelse> hendelse(behandling: Behandling) =
-        service.utledBehandlingVisningHendelser(behandling)
+        service.utledBehandlingVisningHendelser(behandling, null)
             .filterIsInstance<T>()
             .single()
 }
