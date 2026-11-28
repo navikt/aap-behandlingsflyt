@@ -1,5 +1,6 @@
 package no.nav.aap.behandlingsflyt.prosessering.datadeling
 
+import no.nav.aap.behandlingsflyt.behandling.Resultat
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.Avklaringsbehovene
 import no.nav.aap.behandlingsflyt.behandling.avklaringsbehov.løser.ÅrsakTilSettPåVent
 import no.nav.aap.behandlingsflyt.help.opprettInMemorySakOgBehandling
@@ -570,6 +571,31 @@ class BehandlingVisningDatadelingServiceTest {
 
         assertThat(progresjon<BehandlingHendelse.FerdigBehandlet>(behandling))
             .isEqualTo(BehandlingHendelseProgresjon.FULLFØRT)
+    }
+
+    @Test
+    fun `trukket søknad gir bare søknad mottatt og fullført FerdigBehandlet med trekkstatus`() {
+        val behandling = nyBehandling()
+        leggTilSteghistorikk(behandling, StegType.VURDER_LOVVALG to StegStatus.AVSLUTTER)
+        opprettAvklaringsbehov(behandling, Definisjon.AVKLAR_SYKDOM)
+        opprettAvklaringsbehov(behandling, Definisjon.VURDER_TREKK_AV_SØKNAD, avsluttet = true)
+        val trekktidspunkt = InMemoryAvklaringsbehovRepository
+            .hentAvklaringsbehovene(behandling.id)
+            .alle()
+            .single { it.definisjon == Definisjon.VURDER_TREKK_AV_SØKNAD }
+            .sistEndret()
+
+        val hendelser = service.utledBehandlingVisningHendelser(behandling, Resultat.TRUKKET)
+
+        assertThat(hendelser.map { it.navn }).containsExactly(
+            BehandlingHendelseNavn.SØKNAD_MOTTATT,
+            BehandlingHendelseNavn.FERDIG_BEHANDLET,
+        )
+        val ferdigBehandlet = hendelser.filterIsInstance<BehandlingHendelse.FerdigBehandlet>().single()
+        assertThat(behandling.status()).isEqualTo(BehandlingStatus.OPPRETTET)
+        assertThat(ferdigBehandlet.progresjon).isEqualTo(BehandlingHendelseProgresjon.FULLFØRT)
+        assertThat(ferdigBehandlet.status).isEqualTo(BehandlingHendelse.FerdigBehandlet.Status.SØKNAD_TRUKKET)
+        assertThat(ferdigBehandlet.sistEndret).isEqualTo(trekktidspunkt)
     }
 
     private fun nyBehandling(): Behandling = opprettInMemorySakOgBehandling().second
